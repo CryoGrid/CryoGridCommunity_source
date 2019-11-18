@@ -34,8 +34,6 @@ kappa=0.4;
 g=9.81;
 
 
-
-
 if TForcing<=273.15
     Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(ground, z./Lstar, z0./Lstar)).*(q-satPresIce(ground, TForcing)./p)./(log(z./z0)- psi_H(ground, z./Lstar, z0./Lstar));
 else

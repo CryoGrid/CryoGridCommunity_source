@@ -61,7 +61,7 @@ classdef SNOW_seb_simple < SNOW_base_class
             snow.STATVAR.target_density(1) = (snow.STATVAR.ice(1) + timestep .* snow.TEMP.snowfall) ./ snow.STATVAR.layerThick(1);
         end
         
-        function snow = compute_diagnostic_first_cell(snow, forcing);
+        function snow = compute_diagnostic_first_cell(snow, forcing)
             snow = L_star(snow, forcing);
         end
         

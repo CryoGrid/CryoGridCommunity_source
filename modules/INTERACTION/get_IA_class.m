@@ -11,34 +11,32 @@ elseif strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'GROUND_fre
     ia_class = IA_HEAT();
 elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'GROUND_freeW_seb')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'GROUND_freeW_seb'))
     ia_class = IA_HEAT();
-elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'SNOW_simple_seb_bucketW')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'SNOW_simple_seb_bucketW'))
+elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'SNOW_seb_simple')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'SNOW_seb_simple'))
     ia_class = IA_HEAT();
-elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'SNOW_simple_seb_crocus')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'SNOW_simple_seb_crocus'))
+elseif (strcmp((class1), 'GROUND_freeW_seb') && strcmp((class2), 'SNOW_seb_simple')) || (strcmp((class2), 'GROUND_freeW_seb') && strcmp((class1), 'SNOW_seb_simple'))
     ia_class = IA_HEAT();
-elseif strcmp((class1), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class2), 'SNOW_simple_seb_bucketW') || strcmp((class2), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class1), 'SNOW_simple_seb_bucketW')
-    ia_class = IA_HEAT();
-elseif strcmp((class1), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class2), 'SNOW_crocus_no_inheritance') || strcmp((class2), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class1), 'SNOW_crocus_no_inheritance')
-    ia_class = IA_HEAT();
+elseif strcmp((class1), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class2), 'SNOW_seb_simple') || strcmp((class2), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class1), 'SNOW_seb_simple')
+    ia_class = IA_HEAT_SALT();
 elseif strcmp((class1), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class2), 'GROUND_freeW_seb') || strcmp((class2), 'GROUND_fcSimple_salt_seb_snow') && strcmp((class1), 'GROUND_freeW_seb')
     ia_class = IA_HEAT_SALT();
 elseif strcmp((class1), 'GROUND_fcSimple_salt_seb') && strcmp((class2), 'GROUND_freeW_seb') || strcmp((class2), 'GROUND_fcSimple_salt_seb') && strcmp((class1), 'GROUND_freeW_seb')
     ia_class = IA_HEAT_SALT();
 elseif strcmp((class1), 'GROUND_fcSimple_salt_seb') && strcmp((class2), 'GROUND_freeW_seb_snow') || strcmp((class2), 'GROUND_fcSimple_salt_seb') && strcmp((class1), 'GROUND_freeW_seb_snow')
     ia_class = IA_HEAT_SALT();
-elseif strcmp((class1), 'GROUND_freeW_bucketW_seb') && strcmp((class2), 'GROUND_freeW_seb')
-    ia_class = IA_HEAT_WATER_1();
-elseif strcmp((class1), 'GROUND_freeW_bucketW_seb_snow') && strcmp((class2), 'GROUND_freeW_seb')
-    ia_class = IA_HEAT_WATER_1();
-elseif strcmp((class1), 'SNOW_simple_seb_bucketW') && strcmp((class2), 'GROUND_freeW_bucketW_seb_snow')
-    ia_class = IA_HEAT_WATER_SNOW_GROUND();
-elseif strcmp((class1), 'SNOW_simple_seb_crocus') && strcmp((class2), 'GROUND_freeW_bucketW_seb_snow')
-    ia_class = IA_HEAT_WATER_SNOW_GROUND();
-elseif strcmp((class1), 'SNOW_crocus_no_inheritance') && strcmp((class2), 'GROUND_freeW_bucketW_seb_snow')
-    ia_class = IA_HEAT_WATER_SNOW_GROUND();
-elseif strcmp((class1), 'SNOW_crocus_no_inheritance') && strcmp((class2), 'GROUND_freeW_bucketW_seb_snow')
-    ia_class = IA_HEAT_WATER_SNOW_GROUND();
-elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'SNOW_simple_seb')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'SNOW_simple_seb'))
-    ia_class = IA_HEAT();
+elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'GROUND_vegetation')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'GROUND_vegetation'))
+    ia_class = IA_HEAT_VEGETATION();
+elseif (strcmp((class1), 'GROUND_vegetation') && strcmp((class2), 'GROUND_freeW_seb')) || (strcmp((class2), 'GROUND_vegetation') && strcmp((class1), 'GROUND_freeW_seb'))
+    ia_class = IA_HEAT_VEGETATION();
+elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'GROUND_vegetation_snow')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'GROUND_vegetation_snow'))
+    ia_class = IA_HEAT_VEGETATION();
+    
+elseif (strcmp((class1), 'GROUND_vegetation_snow') && strcmp((class2), 'GROUND_freeW_seb')) || (strcmp((class2), 'GROUND_vegetation_snow') && strcmp((class1), 'GROUND_freeW_seb'))  %%%% Used at the moment!!
+    ia_class = IA_HEAT_VEGETATION();
+elseif (strcmp((class1), 'GROUND_vegetation_snow') && strcmp((class2), 'SNOW_seb_simple_vegetation')) || (strcmp((class2), 'GROUND_vegetation_snow') && strcmp((class1), 'SNOW_seb_simple_vegetation'))  %%%% Used at the moment!!
+    ia_class = IA_SNOW_GROUND_VEGETATION();
+    
+elseif (strcmp((class1), 'GROUND_vegetation_snow') && strcmp((class2), 'SNOW_seb_simple_vegetation_below')) || (strcmp((class2), 'GROUND_vegetation_snow') && strcmp((class1), 'SNOW_seb_simple_vegetation_below'))
+    ia_class = IA_SNOW_GROUND_VEGETATION();
 else
     ia_class=0;
     disp('combination of classes not supported')

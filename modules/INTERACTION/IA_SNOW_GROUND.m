@@ -96,7 +96,7 @@ classdef IA_SNOW_GROUND
                 snow.STATVAR.energy = snow.STATVAR.ice .* (c_i.*T - L_f); %redistribute energy between snow and ground cell
                 ground.STATVAR.energy(1) = energy - snow.STATVAR.energy;
                 
-                if snow.STATVAR.waterIce == 0;
+                if snow.STATVAR.waterIce == 0
                     ia_snow_ground.STATUS = 0;
                     snow = initialize_zero_snow(snow, ground); %set all variables to zero
                 end
