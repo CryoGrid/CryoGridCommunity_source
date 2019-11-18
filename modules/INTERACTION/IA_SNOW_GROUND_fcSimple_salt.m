@@ -23,7 +23,7 @@ classdef IA_SNOW_GROUND_fcSimple_salt
                 fraction_snow = min(1, fraction_snow);
                 
                 %change parent variable
-                ground.TEMP.F_ub = (1-fraction_snow) .* ground.TEMP.F_ub + fraction_snow.* snow.TEMP.F_ub; %mix the surface heat fluxes from snow and ground
+                ground.TEMP.heatFlux_ub = (1-fraction_snow) .* ground.TEMP.heatFlux_ub + fraction_snow.* snow.TEMP.heatFlux_ub; %mix the surface heat fluxes from snow and ground
                 
                 ground.STATVAR.Lout = (1-fraction_snow) .* ia_snow_ground.IA_PARENT_GROUND.STATVAR.Lout + fraction_snow.* snow.STATVAR.Lout; %mix the surface heat fluxes from snow and ground
                 ground.STATVAR.Sout = (1-fraction_snow) .* ia_snow_ground.IA_PARENT_GROUND.STATVAR.Sout + fraction_snow.* snow.STATVAR.Sout; %mix the surface heat fluxes from snow and ground
@@ -37,9 +37,9 @@ classdef IA_SNOW_GROUND_fcSimple_salt
                     (ground.STATVAR.thermCond(1:end-1).* layerThick(2:end)./2 +  ground.STATVAR.thermCond(2:end).* layerThick(1:end-1)./2 );
                 
                 d_energy=ground.STATVAR.energy.*0;
-                d_energy(1) = ground.TEMP.F_ub - fluxes(1);
+                d_energy(1) = ground.TEMP.heatFlux_ub - fluxes(1);
                 d_energy(2:end-1) = fluxes(1:end-1) - fluxes(2:end);
-                d_energy(end) = ground.TEMP.F_lb + fluxes(end);
+                d_energy(end) = ground.TEMP.heatFlux_lb + fluxes(end);
                 
                 ground.TEMP.d_energy = d_energy;
 

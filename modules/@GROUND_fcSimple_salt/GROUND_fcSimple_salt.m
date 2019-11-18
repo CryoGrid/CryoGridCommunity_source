@@ -75,9 +75,9 @@ classdef GROUND_fcSimple_salt < GROUND_base_class
                 (ground.STATVAR.diffusivitySalt(1:end-1).* ground.STATVAR.layerThick(2:end)./2 +  ground.STATVAR.diffusivitySalt(2:end).* ground.STATVAR.layerThick(1:end-1)./2 );
             %unit mole/m2, so flux through 1m2 unit cross section between cells!
             d_salt=ground.STATVAR.energy.*0;
-            d_salt(1) = ground.TEMP.F_ub_salt - fluxes(1);
+            d_salt(1) = ground.TEMP.saltConcFlux_ub - fluxes(1);
             d_salt(2:end-1) = fluxes(1:end-1) - fluxes(2:end);
-            d_salt(end) = ground.TEMP.F_lb_salt + fluxes(end);
+            d_salt(end) = ground.TEMP.saltConcFlux_lb + fluxes(end);
             
             ground.TEMP.d_salt = d_salt;
         end

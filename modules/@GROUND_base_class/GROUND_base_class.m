@@ -62,7 +62,7 @@ classdef GROUND_base_class < matlab.mixin.Copyable
         end
         
         function ground = get_boundary_condition_l(ground, forcing)
-            ground = get_F_lb(ground, forcing);
+            ground = get_heatFlux_lb(ground, forcing);
         end
         
         
@@ -102,9 +102,9 @@ classdef GROUND_base_class < matlab.mixin.Copyable
             
             d_energy=ground.STATVAR.energy.*0;
 
-            d_energy(1) = ground.TEMP.F_ub - fluxes(1);
+            d_energy(1) = ground.TEMP.heatFlux_ub - fluxes(1);
             d_energy(2:end-1) = fluxes(1:end-1) - fluxes(2:end);
-            d_energy(end) = ground.TEMP.F_lb + fluxes(end);
+            d_energy(end) = ground.TEMP.heatFlux_lb + fluxes(end);
             
             ground.TEMP.d_energy = d_energy;
         end

@@ -31,12 +31,12 @@ classdef GROUND_fcSimple_salt_seb < GROUND_fcSimple_salt
         
         function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
             ground = surface_energy_balance(ground, forcing);
-            ground.TEMP.F_ub_salt=0; %zero flux bc, could be changed to Dirichlet BC, but this makes only sense when temperature bc is also Dirichlet             
+            ground.TEMP.saltConcFlux_ub=0; %zero flux bc, could be changed to Dirichlet BC, but this makes only sense when temperature bc is also Dirichlet             
         end
         
         function ground = get_boundary_condition_l(ground) 
             ground = get_boundary_condition_l@GROUND_fcSimple_salt(ground);
-            ground.TEMP.F_lb_salt=0; %zero flux bc (default, but could be changed)
+            ground.TEMP.saltConcFlux_lb=0; %zero flux bc (default, but could be changed)
         end
         
         function ground = get_derivatives_prognostic(ground)
@@ -68,7 +68,7 @@ classdef GROUND_fcSimple_salt_seb < GROUND_fcSimple_salt
             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
             ground.STATVAR.Qh = Q_h(ground, forcing);
             ground.STATVAR.Qe = Q_eq(ground, forcing);
-            ground.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
+            ground.TEMP.heatFlux_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
         end
 
         
