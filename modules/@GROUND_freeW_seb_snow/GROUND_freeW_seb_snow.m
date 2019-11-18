@@ -9,6 +9,10 @@ classdef GROUND_freeW_seb_snow < GROUND_freeW_seb
     methods
         
         %mandatory functions for each class
+        
+        function xls_out = write_excel(snow)
+           xls_out ={'CLASS','index',NaN,NaN,NaN;'GROUND_freeW_seb_snow',1,NaN,NaN,NaN;NaN,NaN,NaN,NaN,NaN;NaN,'value','default','unit',NaN;'albedo',0.150000000000000,0.150000000000000,'[-]','surface albedo';'epsilon',0.990000000000000,0.990000000000000,'[-]','surface emissivity';'rs',100,100,'[-]','surface resistance against evapotransipration';'z0',0.00100000000000000,0.00100000000000000,'[m]','roughness length';'    ','    ','    ',NaN,'    ';'dt_max',3600,3600,'[sec]','longest possible timestep';'dE_max',50000,50000,'[J/m3]','maximum change of energy per timestep';'CLASS_END',NaN,NaN,NaN,NaN};
+        end
 
         function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
             ground = provide_variables@GROUND_freeW_seb(ground);
@@ -75,6 +79,7 @@ classdef GROUND_freeW_seb_snow < GROUND_freeW_seb
             end
         end
         
+       
         
         %functions required from base classes
         

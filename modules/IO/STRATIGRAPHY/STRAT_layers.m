@@ -8,6 +8,11 @@ classdef STRAT_layers
     end
     
     methods
+        
+        function xls_out = write_excel(strat)
+            xls_out = {'STRATIGRAPHY','index',NaN,'both time-invariable parameters and initial state of time-variable parameters, add more cells if necessary',NaN,NaN,NaN,NaN,NaN;'STRAT_layers',1,NaN,NaN,NaN,NaN,NaN,NaN,NaN;NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN;'depth','waterIce','mineral','organic','Xice','field_capacity','soil_type','saltConc','deltaT';'[m]','[-]','[-]','[-]','[-]','[-]','code','mol/m3',NaN;'TOP',NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN;0,0.500000000000000,0.500000000000000,0,0,0.500000000000000,0,500,0;0.500000000000000,0.500000000000000,0.500000000000000,0,0,0.500000000000000,0,1000,1;10,0.0300000000000000,0.970000000000000,0,0,0.500000000000000,0,0,1;'BOTTOM',NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN;'STRATIGRAPHY_END',NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN};
+        end
+        
         function strat = initalize_from_file(strat, section)
             pos_list = get_range_TOP_BOTTOM(section);
             strat.depth = cell2mat(section(pos_list(1,1):pos_list(1,2), 1));
