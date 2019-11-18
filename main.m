@@ -11,7 +11,7 @@ addpath(genpath('modules'))
 %this folder must contain an Excel spreadsheet called "run_number".xlsx deifining the properties of all classes requried for the run and the
 %spreadsheet "CONSTANTS_excel.xlsx" containing all constants
 
-run_number = 'test_crocus_salt';
+run_number = 'test_crocus';
 result_path = 'results/';
 parameter_file_type = 'xlsx';
 const_file = 'CONSTANTS_excel.xlsx';
