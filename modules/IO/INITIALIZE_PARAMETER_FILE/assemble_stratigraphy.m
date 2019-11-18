@@ -31,13 +31,13 @@ for i=2:size(class_stratigraphy.class_name,1)
     for j=1:size(class_list,1)
         if strcmp(class(class_list{j,1}), class_stratigraphy.class_name{i,1}) && class_list{j,2}==class_stratigraphy.class_index(i,1)
             CURRENT.NEXT = copy(class_list{j,1}); %make an identical copy of the class stored in class_list 
-            CURRENT.NEXT = initialize_STATVAR_from_file(CURRENT.NEXT, grid, forcing, class_stratigraphy.depth(i,:));
             CURRENT.NEXT.PREVIOUS = CURRENT;
+            CURRENT.NEXT = initialize_STATVAR_from_file(CURRENT.NEXT, grid, forcing, class_stratigraphy.depth(i,:));
+            
             CURRENT = CURRENT.NEXT;
         end
     end
 end
-
 BOTTOM_CLASS = CURRENT;
 BOTTOM=Bottom();
 BOTTOM = init_bottom(BOTTOM, BOTTOM_CLASS);
