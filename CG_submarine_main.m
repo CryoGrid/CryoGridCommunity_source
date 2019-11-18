@@ -16,7 +16,7 @@ addpath(genpath('modules'))
 %spreadsheet "CONSTANTS_excel.xlsx" containing all constants
 
 if nargin < 1
-    run_number = 'submarine_PF_test1'; %submarine_Benchmark_Testlocation2/3/4
+    run_number = 'submarine_PF_test_salt'; %submarine_PF_test1
 end
 result_path = 'results/';
 parameter_file_type = 'xlsx';
