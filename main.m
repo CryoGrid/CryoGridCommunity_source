@@ -11,8 +11,8 @@ addpath(genpath('modules'))
 %this folder must contain an Excel spreadsheet called "run_number".xlsx deifining the properties of all classes requried for the run and the
 %spreadsheet "CONSTANTS_excel.xlsx" containing all constants
 
-run_number = 'Finse_full_rain';
-result_path = 'results/test_SNOW_simple_seb_crocus/';
+run_number = 'test_oldCG';
+result_path = 'results/';
 parameter_file_type = 'xlsx';
 const_file = 'CONSTANTS_excel.xlsx';
 
@@ -39,7 +39,7 @@ end
 %assemble the model stratigraphy and define interactions between classes
 [TOP_CLASS, BOTTOM_CLASS, TOP, BOTTOM] = assemble_stratigraphy(class_list, stratigraphy_list, grid, forcing);
 TOP_CLASS = assemble_interactions(TOP_CLASS, BOTTOM_CLASS);  %BOTTOM_CLASS is changed automatically
-TOP_CLASS = add_CHILD_snow(TOP_CLASS, class_list, stratigraphy_list);
+%TOP_CLASS = add_CHILD_snow(TOP_CLASS, class_list, stratigraphy_list);
 
 out = read_out_from_file(parameter_info);
 out = complete_init_out(out, forcing);
@@ -49,6 +49,7 @@ day_sec = 24.*3600;
 t = forcing.PARA.start_time;
 %t is in days, timestep should also be in days
 while t < forcing.PARA.end_time
+    
     
     forcing = interpolate_forcing(t, forcing);
     %---------boundary conditions

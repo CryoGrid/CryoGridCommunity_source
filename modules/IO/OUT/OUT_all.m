@@ -59,6 +59,7 @@ classdef OUT_all
             
         
         function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path)
+            id=1;
             
             if t==out.OUTPUT_TIME
                 if id == 1
