@@ -22,9 +22,13 @@ elseif strcmp(class(ground), 'GROUND_freeW_seb_snow') && strcmp(class(snow), 'SN
     ground.IA_CHILD = IA_SNOW_GROUND_crocus();
 elseif strcmp(class(ground), 'GROUND_fcSimple_salt_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_bucketW')
     ground.IA_CHILD = IA_SNOW_GROUND_fcSimple_salt();
+elseif strcmp(class(ground), 'GROUND_fcSimple_salt_seb_snow') && strcmp(class(snow), 'SNOW_crocus_no_inheritance')
+    ground.IA_CHILD = IA_SNOW_GROUND_fcSimple_salt_crocus();
 elseif strcmp(class(ground), 'GROUND_freeW_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_bucketW')
     ground.IA_CHILD = IA_SNOW_GROUND();
 elseif strcmp(class(ground), 'GROUND_freeW_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_crocus')
+    ground.IA_CHILD = IA_SNOW_GROUND_crocus();
+elseif strcmp(class(ground), 'GROUND_freeW_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_crocus_no_inheritance')
     ground.IA_CHILD = IA_SNOW_GROUND_crocus();
 elseif strcmp(class(ground), 'GROUND_freeW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb')
     ground.IA_CHILD = IA_SNOW_GROUND();

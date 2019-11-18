@@ -61,9 +61,9 @@ classdef OUT_all
         function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path)
             
             if t==out.OUTPUT_TIME
-                if id == 1
+                %if id == 1
                     disp([datestr(t)])
-                end
+              %  end
                 labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
