@@ -126,19 +126,4 @@ end
 toc()
 
 
-% maxT = max(out.STRATIGRAPHY(:,2));
-
-% fname = 'C:\Users\sstuenzi\Seafile\sync\AWI\programing\CryoGrid\coupling\20191021_CryoVeg_Git\Output';
-% mkdir 'C:\Users\sstuenzi\Seafile\sync\AWI\programing\CryoGrid\coupling\20191021_CryoVeg_Git\Output\20191029'
-% fname = 'C:\Users\sstuenzi\Seafile\sync\AWI\programing\CryoGrid\coupling\20191021_CryoVeg_Git\Output\20191029';
-% saveas(figure(20), 'Ground_temp.fig');
-% saveas(figure(1), fullfile(fname, 'Vegetation_temp'), 'fig');
-% saveas(figure(2), fullfile(fname, 'Storage_heat_flux'), 'fig');
-% saveas(figure(3), fullfile(fname, 'Sensible_heat_flux'), 'fig');
-% saveas(figure(9), fullfile(fname, 'Photosnthesis'), 'fig');
-% saveas(figure(4), fullfile(fname, 'Latent_heat_flux'), 'fig');
-% saveas(figure(5), fullfile(fname, 'Net_radiation'), 'fig');
-% saveas(figure(6), fullfile(fname, 'Wind_profile'), 'fig');
-% saveas(figure(11), fullfile(fname, 'Sunny_shaded_leaves'), 'fig');
-
 

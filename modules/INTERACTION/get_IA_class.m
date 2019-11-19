@@ -12,9 +12,9 @@ classes = [ {'GROUND_fcSimple_salt'};
     {'SNOW_simple_seb_bucketW'};
     {'SNOW_simple_seb_crocus'};
     {'SNOW_crocus_no_inheritance'};
-    {'GROUND_vegetation'};
-    {'GROUND_vegetation_snow'};
-    {'SNOW_seb_simple_vegetation'}
+%     {'GROUND_vegetation'};
+%     {'GROUND_vegetation_snow'};
+%     {'SNOW_seb_simple_vegetation'}
     ];
 
 ia = [  0,0,0,0,0,0,0,0,0,0,0,0;

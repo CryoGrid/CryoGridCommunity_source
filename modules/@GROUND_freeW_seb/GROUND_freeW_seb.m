@@ -41,12 +41,12 @@ classdef GROUND_freeW_seb < GROUND_base_class
         function ground = get_boundary_condition_l(ground, forcing)
             ground = get_boundary_condition_l@GROUND_base_class(ground, forcing);
             
-            figure(20)
-            plot(ground.STATVAR.T)
-            title('Ground temp')
-            xlabel('Ground layer')
-            ylabel('Temperature')
-            hold on
+%             figure(20)
+%             plot(ground.STATVAR.T)
+%             title('Ground temp')
+%             xlabel('Ground layer')
+%             ylabel('Temperature')
+%             hold on
         end
         
         

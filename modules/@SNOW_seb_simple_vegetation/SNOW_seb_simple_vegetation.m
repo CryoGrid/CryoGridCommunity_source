@@ -2,7 +2,10 @@
 % designed to function as CHILD of a GROUND class that is compatible with
 % SNOW classes; compatible with interaction classes IA_SNOW_GROUND and IA_SNOW_GROUND_fcSimple_salt
 
-classdef SNOW_seb_simple_vegetation < SNOW_base_class
+classdef SNOW_seb_simple_vegetation < matlab.mixin.Copyable 
+    
+% % %     < SNOW_base_class
+    
     properties
         CONST %constants
         PARA %external service parameters, all other
