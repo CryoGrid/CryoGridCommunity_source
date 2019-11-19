@@ -59,6 +59,7 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
             
             ground = initializeExcessIce(ground); 
             ground = initialize_lookup(ground); % initializes lookup tables for liquid water content, thermal conductivity and heat capacity, as well as vector for T_frozen
+            ground.STATVAR.water = ground.STATVAR.waterIce; 
             ground = compute_diagnostic_oldCG(ground); %computes initial values of diagnostic variables
             ground.PARA.airT_height = forcing.PARA.airT_height;
         end
@@ -66,17 +67,22 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
         
         
         function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
-            ground = surface_energy_balance(ground, forcing);
+            ground = surfaceEnergyBalanceInfiltration(ground, forcing);
+            % add rain water
+            ground.TEMP.F_ub_water = forcing.TEMP.rainfall./1000 ./ (24.*3600); %in m/sec
         end
         
         function ground = get_boundary_condition_l(ground, forcing)
             ground = get_F_lb(ground, forcing);
+            ground.TEMP.F_lb_water = 0;
         end
         
         
         function ground = get_derivatives_prognostic(ground)
                 ground = get_derivative_energy(ground);
                 ground.TEMP.d_T = ground.TEMP.d_energy ./ ground.STATVAR.heatCapacity ./ ground.STATVAR.layerThick; % derivative of temperature in K/sec 
+                ground.TEMP.dwc_dt(1) = ground.TEMP.dwc_dt(1) + ground.TEMP.F_ub_water;  %in m/sec
+                ground.TEMP.dwc_dt(end) = ground.TEMP.dwc_dt(end) + ground.TEMP.F_lb_water;  %in m/sec
          end
         
         function timestep = get_timestep(ground)  %could involve check for several state variables
@@ -85,6 +91,8 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
         
         function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
             ground.STATVAR.T = ground.STATVAR.T + timestep .* ground.TEMP.d_T;
+            % multiply dwc_dt with timestep
+            ground.TEMP.dwc = ground.TEMP.dwc_dt .* timestep;  %in m
         end
         
         function ground = compute_diagnostic_first_cell(ground, forcing);
@@ -92,8 +100,20 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
         end
         
         function ground = compute_diagnostic(ground, forcing)
-            ground = compute_diagnostic_oldCG(ground);
+            %melt Xice and calculate water pool for that melting
+            %add to water change per cell, change ground.TEMP.dwc
+            
+            %do water balance with infiltration
+            ground = bucketScheme(ground);
+            ground = compute_diagnostic_oldCG(ground);  %conductivity, water content and heat capacity from lookup table
+            ground = compute_diagnostic_unfrozenZone(ground); %change conductivity and heat capacity for unfrozen zone
+            %recalculate lookup tables when refreezing of cells
+            if sum(double(ground.STATVAR.waterIce ./ ground.STATVAR.layerThick ~= ground.LOOKUP.liquidWaterContent(:,end) & ground.STATVAR.T<=0))>0
+                disp('infiltration - reinitializing LUT - freezing of infiltrated cell(s)');
+                ground = initialize_lookup(ground);
+            end
         end
+    
         
         
         

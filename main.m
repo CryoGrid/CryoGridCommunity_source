@@ -100,7 +100,7 @@ while t < forcing.PARA.end_time
     %some effects only happen in the first cell
     TOP.NEXT = compute_diagnostic_first_cell(TOP.NEXT, forcing);
     if isnan(TOP.NEXT.STATVAR.Lstar)
-        keyboard
+        dwgfeef
     end
     
     CURRENT = BOTTOM.PREVIOUS;

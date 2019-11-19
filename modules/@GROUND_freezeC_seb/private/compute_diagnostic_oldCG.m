@@ -37,6 +37,5 @@ k_eff=conductivity(indices);
 
 ground.STATVAR.heatCapacity = c_temp;
 ground.STATVAR.thermCond = k_eff;
-
-ground.STATVAR.water = double(ground.STATVAR.T<=0) .* lwc_temp .* ground.STATVAR.layerThick + double(ground.STATVAR.T>0) .* ground.STATVAR.water;
-ground.STATVAR.ice = ground.STATVAR.waterIce - ground.STATVAR.water;
+ground.STATVAR.water = lwc_temp .* ground.STATVAR.layerThick;
+ground.STATVAR.ice = ground.STATVAR.waterIce - lwc_temp .* ground.STATVAR.layerThick;

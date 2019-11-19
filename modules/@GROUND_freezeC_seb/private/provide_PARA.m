@@ -15,9 +15,5 @@ function ground = provide_PARA(ground)
     ground.PARA.arraySizeT = []; % number of points in the lookup table
     ground.PARA.kh_mineral = []; %thermal conductivity of mineral
     
-    ground.PARA.evaporationDepth = [];
-    ground.PARA.rootDepth = [];
-    ground.PARA.ratioET = [];
-    
     
     

@@ -1,7 +1,7 @@
 %base class for a GROUND object with a free water freeze curve - upper
 %boundary condition is not specified; %superclass that cannot be run alone
 
-classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
+classdef GROUND_freezeC_seb < matlab.mixin.Copyable
     properties
         CONST %constants
         PARA %external service parameters, all other
@@ -57,7 +57,10 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
             end
             ground = finalize_STATVAR(ground); %assign all variables, that must be calculated or assigned otherwise, including energy, water and ice contents, thermal conductivity
             
+            ground = initializeExcessIce(ground); 
             ground = initialize_lookup(ground); % initializes lookup tables for liquid water content, thermal conductivity and heat capacity, as well as vector for T_frozen
+            ground = compute_diagnostic_oldCG(ground); %computes initial values of diagnostic variables
+            ground.PARA.airT_height = forcing.PARA.airT_height;
         end
         
         
@@ -73,7 +76,7 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
         
         function ground = get_derivatives_prognostic(ground)
                 ground = get_derivative_energy(ground);
-                ground.TEMP.d_T = ground.STATVAR.d_energy ./ ground.STAVAR.heatCapacity ./ ground.STATVAR.layerThick; % derivative of temperature in K/sec 
+                ground.TEMP.d_T = ground.TEMP.d_energy ./ ground.STATVAR.heatCapacity ./ ground.STATVAR.layerThick; % derivative of temperature in K/sec 
          end
         
         function timestep = get_timestep(ground)  %could involve check for several state variables
@@ -85,12 +88,11 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
         end
         
         function ground = compute_diagnostic_first_cell(ground, forcing);
-            %empty here
+            ground = L_star(ground, forcing);
         end
         
         function ground = compute_diagnostic(ground, forcing)
-            
-            ground = conductivity(ground);
+            ground = compute_diagnostic_oldCG(ground);
         end
         
         
@@ -98,15 +100,13 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
         %non-mandatory functions -> required here so that they are usable
         %in subclasses
         
-        function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
-        end
+
         
         function ground = get_derivative_energy(ground)
             fluxes = (ground.STATVAR.T(1:end-1) - ground.STATVAR.T(2:end)) .* ground.STATVAR.thermCond(1:end-1) .* ground.STATVAR.thermCond(2:end) ./...
                 (ground.STATVAR.thermCond(1:end-1).* ground.STATVAR.layerThick(2:end)./2 +  ground.STATVAR.thermCond(2:end).* ground.STATVAR.layerThick(1:end-1)./2 );
             
-            d_energy=ground.STATVAR.energy.*0;
+            d_energy=ground.STATVAR.T.*0;
 
             d_energy(1) = ground.TEMP.F_ub - fluxes(1);
             d_energy(2:end-1) = fluxes(1:end-1) - fluxes(2:end);
@@ -115,7 +115,7 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
             ground.TEMP.d_energy = d_energy;
         end
         
-        function ground = get_T_water(ground)
+        function ground = get_T_water(ground)  % from new CG without freeze curve, is not used, but required so that the mudule initializes correctly
 
             Lf = ground.CONST.L_f;
             c_w = ground.CONST.c_w;
@@ -130,6 +130,10 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
             ground.STATVAR.ice = double(ground.STATVAR.energy <= E_frozen) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > E_frozen & ground.STATVAR.energy < 0) .* ground.STATVAR.energy ./ (-Lf);
             ground.STATVAR.water = double(ground.STATVAR.energy >= 0) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > - Lf.*ground.STATVAR.waterIce & ground.STATVAR.energy < 0) .* (ground.STATVAR.energy + Lf.*ground.STATVAR.waterIce) ./ Lf;
             
+        end
+        
+        function ground = conductivity(ground)  % same as above
+            ground = conductivity_mixing_squares(ground);
         end
         
     end
