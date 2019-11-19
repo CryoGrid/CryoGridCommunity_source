@@ -1,5 +1,6 @@
 function ia_class = get_IA_class(class1, class2) %change this later, class1 and 2 are strings
 
+
 if strcmp((class1), 'GROUND_freeW_seb') && strcmp((class2), 'GROUND_freeW_seb')
     ia_class = IA_HEAT();
 elseif strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'GROUND_freeW_seb_snow')
@@ -7,6 +8,8 @@ elseif strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'GROUND_fre
 elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'GROUND_freeW_seb')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'GROUND_freeW_seb'))
     ia_class = IA_HEAT();
 elseif (strcmp((class1), 'GROUND_freeW_seb_snow') && strcmp((class2), 'SNOW_seb_simple')) || (strcmp((class2), 'GROUND_freeW_seb_snow') && strcmp((class1), 'SNOW_seb_simple'))
+    ia_class = IA_HEAT();
+elseif (strcmp((class1), 'GROUND_freeW_seb') && strcmp((class2), 'SNOW_seb_simple')) || (strcmp((class2), 'GROUND_freeW_seb') && strcmp((class1), 'SNOW_seb_simple'))
     ia_class = IA_HEAT();
 elseif (strcmp((class1), 'GROUND_freeW_seb') && strcmp((class2), 'SNOW_seb_simple')) || (strcmp((class2), 'GROUND_freeW_seb') && strcmp((class1), 'SNOW_seb_simple'))
     ia_class = IA_HEAT();
