@@ -15,10 +15,6 @@ classdef OUT_all
     
     methods
         
-        function xls_out = write_excel(out)
-            xls_out = {'OUT','index',NaN,NaN;'OUT_all',1,NaN,NaN;'output_timestep',0.250000000000000,'[days]',NaN;'save_date','01.09.','provide in format dd.mm.',NaN;'save_interval',1,'[y]','if left empty, the entire output will be written out at the end';'OUT_END',NaN,NaN,NaN};
-        end
-        
         function res = initialize_OUT_all(run_info) %discontinued
             res.PARA.output_timestep = 1/4;
             res.PARA.save_date = '01.09.';
@@ -58,13 +54,10 @@ classdef OUT_all
         end
             
         
-        function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path)
-            
+        function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number)
             if t==out.OUTPUT_TIME
-                %if id == 1
-                    disp([datestr(t)])
-              %  end
-                labBarrier
+                disp(datestr(t))
+                
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 %out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = copy(TOP_CLASS);  %append new stratigraphy, should be made more sophisticated by not adding instaneous values, but averaging/accumulating variables
@@ -95,7 +88,7 @@ classdef OUT_all
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
                 if t==out.SAVE_TIME 
                    
-                   save([result_path run_number '/' run_number num2str(labindex) '_' datestr(t,'yyyy') '.mat'], 'out')
+                   save(['Results/' run_number '/' run_number '_' datestr(t,'yyyy') '.mat'], 'out')
                    out.STRATIGRAPHY=[];
                    out.TIMESTAMP=[];
                    out.MISC=[];

@@ -61,11 +61,11 @@ classdef GROUND_fcSimple_salt_seb_snow < GROUND_fcSimple_salt_seb
             end
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
             ground = compute_diagnostic_first_cell@GROUND_fcSimple_salt_seb(ground, forcing);
         end
         
-        function ground = compute_diagnostic(ground, forcing)
+        function ground = compute_diagnostic(ground, ~)
 
             ground = get_T_water_salt_FreezeDepress_Xice(ground);
             if ~isempty(ground.IA_CHILD)

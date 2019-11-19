@@ -1,6 +1,6 @@
 function ground = surface_energy_balance(ground, forcing)
 
-
+SEB.Qsurf = 0;  % for EB checks
 ground.STATVAR.Lout = (1-ground.PARA.epsilon) .* forcing.TEMP.Lin + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ 273.15).^4;
 ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
 ground.STATVAR.Qh = Q_h(ground, forcing);

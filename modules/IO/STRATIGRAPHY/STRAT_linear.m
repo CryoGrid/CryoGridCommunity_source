@@ -8,11 +8,6 @@ classdef STRAT_linear
     end
     
     methods
-        
-        function xls_out = write_excel(strat)
-            xls_out = {'STRATIGRAPHY','index';'STRAT_linear',1;NaN,NaN;'depth','T';'[m]','[degree C]';'TOP',NaN;0,1;1,0;10,-5;100,0;5000,20;'BOTTOM',NaN;'STRATIGRAPHY_END',NaN};
-        end
-        
         function strat = initalize_from_file(strat, section)
             pos_list = get_range_TOP_BOTTOM(section);
             strat.depth = cell2mat(section(pos_list(1,1):pos_list(1,2), 1));

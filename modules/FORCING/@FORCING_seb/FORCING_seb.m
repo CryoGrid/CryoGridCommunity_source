@@ -12,10 +12,6 @@ classdef FORCING_seb
     
     methods
         
-        function xls_out = write_excel(forcing)
-            xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};
-        end
-        
         function forcing = initalize_from_file(forcing, section)
             for i=1:size(section,1)
                 if strcmp(section{i,1}, 'filename')
@@ -51,7 +47,42 @@ classdef FORCING_seb
                 if strcmp(section{i,1}, 'end_time')
                     forcing.PARA.end_time = section{i,2};
                 end
+                %%NC added 
+                if strcmp(section{i,1}, 'leaching_rate')
+                    forcing.PARA.leaching_rate = section{i,2};
+                end
                 
+                if strcmp(section{i,1}, 'total_tracer')
+                    forcing.PARA.total_tracer = section{i,2};
+                end
+                
+                if strcmp(section{i,1}, 'infiltration_cutoff')
+                    forcing.PARA.infiltration_cutoff = section{i,2};
+                end
+                
+                if strcmp(section{i,1}, 'infiltration')
+                    forcing.PARA.module.infiltration = section{i,2};
+                end
+                
+                if strcmp(section{i,1}, 'xice')
+                    forcing.PARA.module.xice = section{i,2};
+                end
+                
+                if strcmp(section{i,1}, 'lateral')
+                    forcing.PARA.module.lateral = section{i,2};
+                end
+                
+                if strcmp(section{i,1}, 'exchange_heat')
+                    forcing.PARA.module.exchange_heat = section{i,2};
+                end 
+                
+                if strcmp(section{i,1}, 'exchange_water')
+                    forcing.PARA.module.exchange_water = section{i,2};
+                end
+                
+                if strcmp(section{i,1}, 'exchange_snow')
+                    forcing.PARA.module.exchange_snow = section{i,2};
+                end
                 
             end
         end

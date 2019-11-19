@@ -12,6 +12,11 @@ function class_list = read_classes_from_file(status_info)
             class = class_handle();
             class = provide_variables(class);
             class.PARA = initialize_from_file(class, class.PARA, section);
+            if strcmp(status_info{pos_list(i)+1,1}, 'GROUND_subsi') %NC added provide surf PARA function
+              class = provide_surfPARA(class);
+              
+            end
+%             class = initializeSoilThermalProperties(class);
             index = section{2,2};
             class_list = [class_list; {class index}];
     end

@@ -1,19 +1,17 @@
 classdef GRID_user_defined
-
+    
     properties
         GRID
         MIDPOINTS
         LAYERTHICK
         variable_names
         variable_gridded
+        length %added grid length
+        air_MIDPOINTS;
+        MIDPOINTS_delta;
     end
     
     methods
-        
-        function xls_out = write_excel(grid)
-            xls_out = {'GRID','index',NaN;'GRID_user_defined',1,NaN;NaN,NaN,NaN;'upper','spacing','lower';'[m]','[m]','[m]';'TOP',NaN,NaN;0,0.0500000000000000,2;2,0.100000000000000,10;10,0.500000000000000,30;30,1,50;50,5,100;100,10,150;150,50,500;500,100,1000;'BOTTOM',NaN,NaN;'GRID_END',NaN,NaN};
-        end
-        
         function grid = initalize_from_file(grid, section)
             pos_list = get_range_TOP_BOTTOM(section);
             grid_breaks = cell2mat(section(pos_list(1,1):pos_list(1,2), 1:3));
@@ -25,10 +23,24 @@ classdef GRID_user_defined
         end
         
         function grid = reduce_grid(grid, forcing)
-            grid.GRID(grid.GRID > forcing.PARA.domain_depth)=[]; 
-            grid.MIDPOINTS = (grid.GRID(2:end,1) + grid.GRID(1:end-1,1))./2;
-            grid.LAYERTHICK = (grid.GRID(2:end,1) - grid.GRID(1:end-1,1));
+            grid.GRID(grid.GRID > forcing.PARA.domain_depth)=[];
+            grid.MIDPOINTS = (grid.GRID(2:end,1) + grid.GRID(1:end-1,1))./2; %CT_grid
+            grid.LAYERTHICK = (grid.GRID(2:end,1) - grid.GRID(1:end-1,1)); %K_grid
+            
+            %%NC added
+            grid.MIDPOINTS_delta = (-grid.MIDPOINTS(1:end-1,1)+grid.MIDPOINTS(2:end,1));%CT_delta
+            grid.MIDPOINTS_delta = [grid.MIDPOINTS_delta; grid.MIDPOINTS_delta(end)];
+            grid.length = 1:size(grid.GRID)-1; %NC -added grid length
+            grid.length = grid.length';
+            grid.air_MIDPOINTS = ones(80,1);
         end
+        
+        function grid = initializeExcessIce2(grid)
+            
+            grid.excessGroundIce = grid.waterIce>grid.natPor;
+            
+        end
+        
     end
     
 end

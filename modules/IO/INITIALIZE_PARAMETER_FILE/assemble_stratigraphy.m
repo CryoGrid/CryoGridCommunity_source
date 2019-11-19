@@ -37,7 +37,6 @@ for i=2:size(class_stratigraphy.class_name,1)
         end
     end
 end
-
 BOTTOM_CLASS = CURRENT;
 BOTTOM=Bottom();
 BOTTOM = init_bottom(BOTTOM, BOTTOM_CLASS);

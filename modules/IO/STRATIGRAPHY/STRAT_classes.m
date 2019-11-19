@@ -9,11 +9,6 @@ classdef STRAT_classes
     end
     
     methods
-        
-        function xls_out = write_excel(strat)
-            xls_out = {'STRATIGRAPHY','index',NaN;'STRAT_classes',1,NaN;'depth - top of layer','classname','index';'[m]',NaN,NaN;'TOP',NaN,NaN;0,NaN,1;2,NaN,1;'BOTTOM',NaN,NaN;NaN,NaN,NaN;'snow_class',NaN,1;NaN,NaN,NaN;'STRATIGRAPHY_END',NaN,NaN};
-        end
-        
         function strat = initalize_from_file(strat, section)
             for i=1:size(section,1)
                 if strcmp(section{i,1}, 'snow_class')

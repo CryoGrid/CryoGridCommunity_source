@@ -13,7 +13,6 @@ classdef SNOW_base_class < matlab.mixin.Copyable
         PREVIOUS
         IA_NEXT
         IA_PREVIOUS
-        IA_LATERAL
     end
     
     
@@ -53,8 +52,19 @@ classdef SNOW_base_class < matlab.mixin.Copyable
             snow.STATVAR.upperPos = parentGround.STATVAR.upperPos;
             snow.STATVAR.lowerPos = parentGround.STATVAR.upperPos;
             snow.STATVAR.water_reservoir = 0;
+            
+            snow = initializeSnow(snow);
         end
         
+        %%NC added
+        
+        function snow = initializeSnow(snow)
+            
+            snow.STATVAR.Snow_i=zeros(size(snow.STATVAR.midpoints));
+            snow.STATVAR.Snow_w=zeros(size(snow.STATVAR.midpoints));
+            snow.STATVAR.Snow_a=zeros(size(snow.STATVAR.midpoints));
+            snow.STATVAR.SWEinitial=0;
+        end
         
         function snow = get_boundary_condition_u(snow, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
             %empty here, define in subclass
@@ -77,11 +87,11 @@ classdef SNOW_base_class < matlab.mixin.Copyable
             snow.STATVAR.energy = snow.STATVAR.energy + timestep .* snow.TEMP.d_energy;
         end
         
-        function snow = compute_diagnostic_first_cell(snow, forcing)
+        function snow = compute_diagnostic_first_cell(snow, forcing);
             %empty here
         end
         
-        function snow = compute_diagnostic(snow, ~)
+        function snow = compute_diagnostic(snow, forcing)
             snow = get_T_water(snow);
             snow = modify_grid(snow);
             snow = conductivity(snow);
@@ -119,24 +129,18 @@ classdef SNOW_base_class < matlab.mixin.Copyable
             snow.STATVAR.T = double(snow.STATVAR.energy<=E_frozen) .* (snow.STATVAR.energy-E_frozen) ./ (snow.STATVAR.waterIce .* snow.CONST.c_i);
             snow.STATVAR.water = double(snow.STATVAR.energy > E_frozen) .*  snow.STATVAR.waterIce .* (E_frozen - snow.STATVAR.energy) ./E_frozen;
             snow.STATVAR.ice = double(snow.STATVAR.energy > E_frozen) .*  snow.STATVAR.waterIce .* (snow.STATVAR.energy) ./E_frozen + double(snow.STATVAR.energy <= E_frozen) .* snow.STATVAR.waterIce;
-
+            
             %subtract water----------------
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, snow.STATVAR.ice ./ snow.STATVAR.target_density); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
-            snow.STATVAR.waterIce = min(snow.STATVAR.layerThick,snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
-            snow.STATVAR.water = min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice);
+            max_water = snow.PARA.field_capacity .* (snow.STATVAR.layerThick - snow.STATVAR.ice);
             
-            % below used to be commented out
-%             max_water = snow.PARA.field_capacity .* (snow.STATVAR.layerThick - snow.STATVAR.ice);
-%             
-%             water_left = min(snow.STATVAR.water, max_water);
-%             excess_water= max(0, snow.STATVAR.water - water_left);  %should be routed later! Here, just added to water_reservoir.
-%             
-%             snow.STATVAR.water = water_left;
-%             
-%             snow.STATVAR.waterIce = snow.STATVAR.ice + snow.STATVAR.water;
-%             
-%             snow.STATVAR.water_reservoir = snow.STATVAR.water_reservoir + sum(excess_water);
-%             
+            water_left = min(snow.STATVAR.water, max_water);
+            excess_water= max(0, snow.STATVAR.water - water_left);  %should be routed later! Here, just added to water_reservoir.
+            
+            snow.STATVAR.water = water_left;
+            
+            snow.STATVAR.waterIce = snow.STATVAR.ice + snow.STATVAR.water;
+            snow.STATVAR.water_reservoir = snow.STATVAR.water_reservoir + sum(excess_water);
         end
         
         
@@ -146,17 +150,6 @@ classdef SNOW_base_class < matlab.mixin.Copyable
                 i=1;
                 while i<size(snow.STATVAR.layerThick,1)
                     if snow.STATVAR.ice(i) < 0.5.*snow.PARA.swe_per_cell
-                        if strcmp(class(snow), 'SNOW_simple_seb_crocus')
-                            snow.STATVAR.d(i+1) = (snow.STATVAR.d(i+1).*snow.STATVAR.ice(i+1) + snow.STATVAR.d(i).*snow.STATVAR.ice(i))./(snow.STATVAR.ice(i+1) + snow.STATVAR.ice(i));
-                            snow.STATVAR.s(i+1) = (snow.STATVAR.s(i+1).*snow.STATVAR.ice(i+1) + snow.STATVAR.s(i).*snow.STATVAR.ice(i))./(snow.STATVAR.ice(i+1) + snow.STATVAR.ice(i));
-                            snow.STATVAR.gs(i+1) = (snow.STATVAR.gs(i+1).*snow.STATVAR.ice(i+1) + snow.STATVAR.gs(i).*snow.STATVAR.ice(i))./(snow.STATVAR.ice(i+1) + snow.STATVAR.ice(i));
-                            snow.STATVAR.time_snowfall(i+1) = (snow.STATVAR.time_snowfall(i+1).*snow.STATVAR.ice(i+1) + snow.STATVAR.time_snowfall(i).*snow.STATVAR.ice(i))...
-                                ./(snow.STATVAR.ice(i+1) + snow.STATVAR.ice(i)); 
-                            snow.STATVAR.d(i) = [];
-                            snow.STATVAR.s(i) = [];
-                            snow.STATVAR.gs(i) = [];
-                            snow.STATVAR.time_snowfall(i) = [];
-                        end
                         snow.STATVAR.waterIce(i+1) = snow.STATVAR.waterIce(i+1) + snow.STATVAR.waterIce(i);
                         snow.STATVAR.energy (i+1) = snow.STATVAR.energy (i+1) + snow.STATVAR.energy (i);
                         snow.STATVAR.layerThick(i+1) = snow.STATVAR.layerThick(i+1) + snow.STATVAR.layerThick(i);
@@ -176,17 +169,6 @@ classdef SNOW_base_class < matlab.mixin.Copyable
                     end
                 end
                 if size(snow.STATVAR.layerThick,1)>1 && snow.STATVAR.ice(end) < 0.5.*snow.PARA.swe_per_cell   %last cell melts
-                    if strcmp(class(snow), 'SNOW_simple_seb_crocus')
-                        snow.STATVAR.d(end-1) = (snow.STATVAR.d(end-1).*snow.STATVAR.ice(end-1) + snow.STATVAR.d(end).*snow.STATVAR.ice(end))./(snow.STATVAR.ice(end-1) + snow.STATVAR.ice(end));
-                        snow.STATVAR.s(end-1) = (snow.STATVAR.s(end-1).*snow.STATVAR.ice(end-1) + snow.STATVAR.s(end).*snow.STATVAR.ice(end))./(snow.STATVAR.ice(end-1) + snow.STATVAR.ice(end));
-                        snow.STATVAR.gs(end-1) = (snow.STATVAR.gs(end-1).*snow.STATVAR.ice(end-1) + snow.STATVAR.gs(end).*snow.STATVAR.ice(end))./(snow.STATVAR.ice(end-1) + snow.STATVAR.ice(end));
-                        snow.STATVAR.time_snowfall(end-1) = (snow.STATVAR.time_snowfall(end-1).*snow.STATVAR.ice(end-1) + snow.STATVAR.time_snowfall(end).*snow.STATVAR.ice(end))...
-                            ./(snow.STATVAR.ice(end-1) + snow.STATVAR.ice(end));
-                        snow.STATVAR.d(end) = [];
-                        snow.STATVAR.s(end) = [];
-                        snow.STATVAR.gs(end) = [];
-                        snow.STATVAR.time_snowfall(end) = [];
-                    end
                     snow.STATVAR.waterIce(end-1) = snow.STATVAR.waterIce(end-1) + snow.STATVAR.waterIce(end);
                     snow.STATVAR.energy (end-1) = snow.STATVAR.energy (end-1) + snow.STATVAR.energy (end);
                     snow.STATVAR.layerThick(end-1) = snow.STATVAR.layerThick(end-1) + snow.STATVAR.layerThick(end);
@@ -205,7 +187,7 @@ classdef SNOW_base_class < matlab.mixin.Copyable
             end
             
             if snow.STATVAR.ice(1) > 1.5.*snow.PARA.swe_per_cell  %expand, check only first cell
-                split_fraction = snow.STATVAR.ice(1) ./ snow.PARA.swe_per_cell; %e.g. 1.6
+                split_fraction = snow.STATVAR.ice(2) ./ snow.PARA.swe_per_cell; %e.g. 1.6
                 sf1 = (split_fraction-1)./split_fraction;
                 sf2 = 1./split_fraction;
                 
@@ -216,12 +198,6 @@ classdef SNOW_base_class < matlab.mixin.Copyable
                 snow.STATVAR.ice = [sf1.*snow.STATVAR.ice(1); sf2.*snow.STATVAR.ice(1); snow.STATVAR.ice(2:end)];
                 snow.STATVAR.T = [snow.STATVAR.T(1); snow.STATVAR.T];
                 
-                if strcmp(class(snow), 'SNOW_simple_seb_crocus')
-                    snow.STATVAR.d = [snow.STATVAR.d(1); snow.STATVAR.d];
-                    snow.STATVAR.s = [snow.STATVAR.s(1); snow.STATVAR.s];
-                    snow.STATVAR.gs = [snow.STATVAR.gs(1); snow.STATVAR.gs];
-                    snow.STATVAR.time_snowfall = [snow.STATVAR.time_snowfall(1); snow.STATVAR.time_snowfall ];
-                end
             end
         end
         

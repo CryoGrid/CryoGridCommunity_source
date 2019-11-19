@@ -5,4 +5,5 @@ ground.PARA.epsilon = [];
 ground.PARA.rs = [];
 ground.PARA.airT_height = []; %measurement height [m]
 ground.PARA.z0 = []; %roughness length [m]
+ground.PARA.tortuosity = [];
 

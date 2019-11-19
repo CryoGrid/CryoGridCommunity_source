@@ -14,6 +14,6 @@ snow.STATVAR.ice = [];
 snow.STATVAR.thermCond = [];
 
 snow.STATVAR.water_reservoir = [];
-
+snow.STATVAR.midpoints =[];
     
     

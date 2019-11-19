@@ -24,11 +24,13 @@ classdef GROUND_fcSimple_salt < GROUND_base_class
         
         function ground = initialize_STATVAR_from_file(ground, grid, forcing, depths)
             ground = initialize_STATVAR_from_file@GROUND_base_class(ground, grid, forcing, depths);
+           
             %overwrite energy values assigned in base class
             ground.STATVAR.saltConc = ground.STATVAR.saltConc .* ground.STATVAR.waterIce; %total number of moles
             ground = get_E_water_salt_FreezeDepress_Xice(ground); %energy, water, ice, salt_c_brine
             ground = conductivity(ground);
             ground = diffusivity_salt(ground); % [m2/sec]
+%             ground = initialize_STATVAR_from_file@GROUND_subsi(ground, forcing, grid);
         end
         
         function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
@@ -55,7 +57,7 @@ classdef GROUND_fcSimple_salt < GROUND_base_class
             ground.STATVAR.saltConc = max(0,ground.STATVAR.saltConc + timestep .*ground.TEMP.d_salt);
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
              %assigned in subclass
         end
         

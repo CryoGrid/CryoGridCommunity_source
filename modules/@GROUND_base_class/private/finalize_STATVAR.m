@@ -5,7 +5,7 @@ mineral= ground.STATVAR.mineral;
 organic= ground.STATVAR.organic;
 waterIce= ground.STATVAR.waterIce;
 layerThick= ground.STATVAR.layerThick;
-
+fieldC = ground.STATVAR.field_capacity; %NC
 
 energy = T.*(mineral .* ground.CONST.c_m + organic .* ground.CONST.c_o + double(T>=0).*(waterIce .* ground.CONST.c_w) + ...
     double(T<0).*(waterIce .* ground.CONST.c_i )) - double(T<0) .* (waterIce) .* ground.CONST.L_f;
@@ -19,5 +19,6 @@ ground.STATVAR.energy = energy .* layerThick;  % [J/m2]
 ground.STATVAR.water = double(T>=0) .* waterIce .* layerThick;  % [m]
 ground.STATVAR.ice = double(T<0) .* waterIce .* layerThick;
 ground.STATVAR.air = (1-mineral-organic-waterIce) .* layerThick;  % [m]
+ground.STATVAR.field_capacity = double(T<0) .* fieldC .* layerThick;  %NC
 ground = conductivity(ground);
 

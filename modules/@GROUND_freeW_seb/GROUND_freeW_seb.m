@@ -2,17 +2,13 @@
 % no interaction with snow is possible here
 
 classdef GROUND_freeW_seb < GROUND_base_class
-
+    
     
     
     methods
         
         %mandatory functions for each class
         
-        function xls_out = write_excel(ground) %xls_out is a cell array corresponding to the class-specific content of the parameter excel file
-            xls_out = {'CLASS','index',NaN,NaN,NaN;'GROUND_freeW_seb',1,NaN,NaN,NaN;NaN,NaN,NaN,NaN,NaN;NaN,'value','default','unit',NaN;'albedo',0.150000000000000,0.150000000000000,'[-]','surface albedo';'epsilon',0.990000000000000,0.990000000000000,'[-]','surface emissivity';'rs',100,100,'[-]','surface resistance against evapotransipration';'z0',0.00100000000000000,0.00100000000000000,'[m]','roughness length';'    ','    ','    ',NaN,'    ';'dt_max',3600,3600,'[sec]','longest possible timestep';'dE_max',50000,50000,'[J/m3]','maximum change of energy per timestep';'CLASS_END',NaN,NaN,NaN,NaN};
-        end
-
         function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
             
             ground = provide_variables@GROUND_base_class(ground); %call function of the base class
@@ -28,7 +24,6 @@ classdef GROUND_freeW_seb < GROUND_base_class
         
         function ground = initialize_STATVAR_from_file(ground, grid, forcing, depths)
             ground = initialize_STATVAR_from_file@GROUND_base_class(ground, grid, forcing, depths);
-
             ground = finalize_STATVAR(ground); %assign all variables, that must be calculated or assigned otherwise
         end
         
@@ -48,7 +43,7 @@ classdef GROUND_freeW_seb < GROUND_base_class
         end
         
         function timestep = get_timestep(ground)  %could involve check for several state variables
-           timestep = get_timestep@GROUND_base_class(ground);
+            timestep = get_timestep@GROUND_base_class(ground);
         end
         
         function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
@@ -64,7 +59,7 @@ classdef GROUND_freeW_seb < GROUND_base_class
         end
         
         
-        %non-mandatory fucntions
+        %non-mandatory functions
         function ground = surface_energy_balance(ground, forcing)
             ground.STATVAR.Lout = (1-ground.PARA.epsilon) .* forcing.TEMP.Lin + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ 273.15).^4;
             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
@@ -73,7 +68,7 @@ classdef GROUND_freeW_seb < GROUND_base_class
             
             ground.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
         end
-    
+        
     end
-    
-end
+        
+    end

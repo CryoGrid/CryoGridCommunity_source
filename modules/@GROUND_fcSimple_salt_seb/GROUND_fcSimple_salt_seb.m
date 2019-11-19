@@ -51,7 +51,7 @@ classdef GROUND_fcSimple_salt_seb < GROUND_fcSimple_salt
             ground = advance_prognostic@GROUND_fcSimple_salt(ground, timestep);
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
             ground = L_star(ground, forcing);
         end
         
