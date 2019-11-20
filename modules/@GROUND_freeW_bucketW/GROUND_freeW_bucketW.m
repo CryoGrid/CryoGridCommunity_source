@@ -88,15 +88,17 @@ classdef GROUND_freeW_bucketW < GROUND_base_class
             ground.TEMP.d_water_in = min(ground.TEMP.d_water_in, ground.STATVAR.layerThick - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce);
             ground.TEMP.d_water_out(1:end-1,1) = ground.TEMP.d_water_in(2:end,1);
             
-            finalize_boundary_condition_water_m(ground.IA_NEXT, timestep);
+%             finalize_boundary_condition_water_m(ground.IA_NEXT, timestep);
+            finalize_boundary_condition_water_m(ground.IA_PREVIOUS, timestep); %%% changed by Simone, originally ground.IA_NEXT, because ground is bottom and vegetation is above (PREVIOUS) 
             
-            energy_out = ground.CONST.c_w .* ground.STATVAR.T .* ground.TEMP.d_water_out;
-            energy_in = energy_out.*0;
-            energy_in (2:end,1) = energy_out(1:end-1,1);
-            energy_in(1,1) = ground.CONST.c_w .* ground.TEMP.T_rainWater .* ground.TEMP.d_water_in(1,1);
-            
-            ground.STATVAR.waterIce = ground.STATVAR.waterIce - ground.TEMP.d_water_out + ground.TEMP.d_water_in;
-            ground.STATVAR.energy = ground.STATVAR.energy -energy_out + energy_in;
+% % % %           changed by Simone
+% % %             energy_out = ground.CONST.c_w .* ground.STATVAR.T .* ground.TEMP.d_water_out;
+% % %             energy_in = energy_out.*0;
+% % %             energy_in (2:end,1) = energy_out(1:end-1,1);
+% % %             energy_in(1,1) = ground.CONST.c_w .* ground.TEMP.T_rainWater .* ground.TEMP.d_water_in(1,1);
+% % %             
+% % %             ground.STATVAR.waterIce = ground.STATVAR.waterIce - ground.TEMP.d_water_out + ground.TEMP.d_water_in;
+% % %             ground.STATVAR.energy = ground.STATVAR.energy -energy_out + energy_in;
 
         end
         

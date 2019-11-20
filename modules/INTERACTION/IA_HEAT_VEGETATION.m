@@ -39,7 +39,8 @@ classdef IA_HEAT_VEGETATION < matlab.mixin.Copyable
             
             % Influx of water into the ground
             stratigraphy2.STATVAR.water(1) = stratigraphy1.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain + stratigraphy1.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_snow;
-            
+            stratigraphy1.STATVAR.water(40,1) = stratigraphy2.STATVAR.water(1);
+            stratigraphy1.STATVAR.ice(40,1) = stratigraphy2.STATVAR.waterIce(1);
             % Ground water content / saturation / saturation vapor pressure --> Available water for plants
             % At the moment the root fraction per layer is 0.2 -> 5 layers
             
@@ -128,6 +129,34 @@ classdef IA_HEAT_VEGETATION < matlab.mixin.Copyable
                 
             end  
             
+        end   
+        
+        function get_boundary_condition_water_m(ia_heat_water)
+            saturation = ia_heat_water.PREVIOUS.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain + ia_heat_water.PREVIOUS.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_snow;
+            ia_heat_water.NEXT.TEMP.F_ub_water = saturation ./ ia_heat_water.NEXT.STATVAR.layerThick(1,1);
+        end
+        
+% % %         function get_boundary_condition_water_m(ia_heat_water)
+% % %             saturation = ia_heat_water.PREVIOUS.STATVAR.water(end,1) ./ max(1e-12, ia_heat_water.PREVIOUS.STATVAR.layerThick(end,1) - ia_heat_water.PREVIOUS.STATVAR.ice(end,1));
+% % %             waterMobile = double(saturation > ia_heat_water.PREVIOUS.PARA.field_capacity);
+% % %             ia_heat_water.PREVIOUS.TEMP.d_water_out(end,1) = waterMobile .* ia_heat_water.PREVIOUS.PARA.hydraulicConductivity .* ia_heat_water.PREVIOUS.STATVAR.water(end,1) ./ ia_heat_water.PREVIOUS.STATVAR.layerThick(end,1);
+% % %             ia_heat_water.NEXT.TEMP.F_ub_water = ia_heat_water.PREVIOUS.TEMP.d_water_out(end,1);
+% % %         end
+        
+        function finalize_boundary_condition_water_m(ia_heat_water, timestep)
+            
+            ia_heat_water.PREVIOUS.TEMP.F_lb_water = -ia_heat_water.NEXT.TEMP.F_ub_water;
+
+            
+% % %              %limit outflow to field capacity
+% % %             ia_heat_water.PREVIOUS.TEMP.d_water_out(end,1)  = min(ia_heat_water.PREVIOUS.TEMP.d_water_out(end,1), max(0, ia_heat_water.PREVIOUS.STATVAR.water(end,1) - ia_heat_water.PREVIOUS.PARA.field_capacity .* (ia_heat_water.PREVIOUS.STATVAR.layerThick(end,1) - ia_heat_water.PREVIOUS.STATVAR.ice(end,1))));
+% % %             ia_heat_water.NEXT.TEMP.d_water_in(1,1) = ia_heat_water.PREVIOUS.TEMP.d_water_out(end,1);
+% % %             %limit inflow so that unity is not exceeded
+% % %             ia_heat_water.NEXT.TEMP.d_water_in(1,1) = min(ia_heat_water.NEXT.TEMP.d_water_in(1,1), ground.STATVAR.layerThick(1,1) - ground.STATVAR.mineral(1,1) - ground.STATVAR.organic(1,1) - ground.STATVAR.waterIce(1,1));
+% % %             ia_heat_water.PREVIOUS.TEMP.d_water_out(end,1) = ia_heat_water.NEXT.TEMP.d_water_in(1,1);
+% % %             
+% % %             ia_heat_water.NEXT.TEMP.d_water_in(1,1) = ia_heat_water.NEXT.TEMP.d_water_in(1,1) ./timestep;
+
         end
     end
 end

@@ -12,23 +12,26 @@ classes = [ {'GROUND_fcSimple_salt'};
     {'SNOW_simple_seb_bucketW'};
     {'SNOW_simple_seb_crocus'};
     {'SNOW_crocus_no_inheritance'};
-%     {'GROUND_vegetation'};
-%     {'GROUND_vegetation_snow'};
-%     {'SNOW_seb_simple_vegetation'}
+    {'GROUND_vegetation'};
+    {'GROUND_vegetation_snow'};
+    {'SNOW_seb_simple_vegetation'}
     ];
 
-ia = [  0,0,0,0,0,0,0,0,0,0,0,0;
-        0,0,0,0,0,0,2,2,0,0,0,0;
-        0,0,0,0,0,0,2,0,0,1,0,1;
-        0,0,0,0,0,0,0,0,0,0,0,0;
-        0,0,0,0,0,0,3,0,0,0,0,0;
-        0,0,0,0,0,0,3,0,0,0,0,0;
-        0,2,2,0,0,0,1,1,0,0,0,0;
-        0,2,0,0,0,0,1,1,1,1,1,0;
-        0,0,0,0,0,0,0,1,0,0,0,0;
-        0,0,1,0,0,4,0,1,0,0,0,0;
-        0,0,0,0,0,4,0,1,0,0,0,0;
-        0,0,1,0,0,4,0,0,0,0,0,0 ];
+ia = [  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
+        0,0,0,0,0,0,2,2,0,0,0,0,0,0,0;
+        0,0,0,0,0,0,2,0,0,1,0,1,0,0,0;
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
+        0,0,0,0,0,0,3,0,0,0,0,0,5,5,5;
+        0,0,0,0,0,0,3,0,0,0,0,0,5,5,5;
+        0,2,2,0,0,0,1,1,0,0,0,0,0,0,0;
+        0,2,0,0,0,0,1,1,1,1,1,0,0,0,0;
+        0,0,0,0,0,0,0,1,0,0,0,0,0,0,0;
+        0,0,1,0,0,4,0,1,0,0,0,0,0,0,0;
+        0,0,0,0,0,4,0,1,0,0,0,0,0,0,0;
+        0,0,1,0,0,4,0,0,0,0,0,0,0,0,0;
+        0,0,0,0,5,5,0,0,0,0,0,0,0,0,0;
+        0,0,0,0,0,5,0,0,0,0,0,0,0,0,0;
+        0,0,0,0,0,5,0,0,0,0,0,0,0,0,0];
 
 
 for i = 1:length(classes)
@@ -48,6 +51,10 @@ elseif ia(id_b,id_a) == 3
     ia_class = IA_HEAT_WATER_1();
 elseif ia(id_b,id_a) == 4
     ia_class = IA_HEAT_WATER_SNOW_GROUND();
+elseif ia(id_b,id_a) == 5
+    ia_class = IA_HEAT_VEGETATION();
+elseif ia(id_b,id_a) == 6
+    ia_class = IA_SNOW_GROUND_VEGETATION();
 else
     ia_class=0;
     disp('combination of classes not supported')

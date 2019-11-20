@@ -6,19 +6,6 @@ classdef GROUND_vegetation_snow < GROUND_vegetation
         IA_CHILD
     end
     
-    % Here comes the documentation of your new module
-    % classdef GROUND_vegetation (Simone Stünzi, 20191010)
-    % properties
-    % CONST %constants
-    % PARA %external service parameters, all other
-    % STATVAR %state variables - choose wisely
-    % TEMP %derivatives in prognostic
-    % PREVIOUS %pointer to previous module
-    % NEXT %pointer to next module
-    % IA_PREVIOUS %pointer to interaction with previous module
-    % IA_NEXT %pointer to interaction with next module
-    %%%%%
-    
     methods
         
         %mandatory functions for each class

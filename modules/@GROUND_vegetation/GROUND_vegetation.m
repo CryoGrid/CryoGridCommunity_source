@@ -80,11 +80,11 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
                 ground.STATVAR.vegetation = vegetation;
                 ground.STATVAR.execution_t = ground.STATVAR.execution_t + 1/24;
             end
+        
             
             %             ground.TEMP.F_ub = ground.STATVAR.vegetation.mlcanopyinst.gsoi;
             %             ground.STATVAR.T(end) = ground.STATVAR.vegetation.mlcanopyinst.tveg(:,2,1)-273.15;
             %             ground.STATVAR.thermCond(end) = 0.025; % Thermal conductivity of air
-            %             ground.STATVAR.layerThick(end) = ground.STATVAR.vegetation.mlcanopyinst.tveg(:,2);
             %             ground.STATVAR.Lout = ground.STATVAR.vegetation.mlcanopyinst.ircan;
             %             ground.STATVAR.Qh = ground.STATVAR.vegetation.mlcanopyinst.shveg;
             %             ground.STATVAR.Qe = ground.STATVAR.vegetation.mlcanopyinst.lhveg;
@@ -105,8 +105,7 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
         end
         
         function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
-            
-            
+
             %ground = advance_prognostic@GROUND_base_class(ground, timestep);
             %             ground.STATVAR.current_t = forcing.TEMP.t + timestep;
         end
@@ -125,19 +124,6 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
         function ground = conductivity(ground)
             ground = conductivity_mixing_squares(ground);
         end
-        % % %         function ground = surface_energy_balance(ground, forcing)
-        % % %             % Set up required forcing structure
-        % % %             [ground] = SetUpForcing(ground, forcing);
-        % % %             % Run the Bonan Model
-        % % %             [ground] = CanopyFluxesMultilayer(ground); % , counter
-        % % %             % Si:  ground.TEMP.F_ub = ground.STATVAR.vegetation.[GroundHeatFlux (da wo er jetzt halt grad drinn ist in meinem Bonan Vegi Modell)]
-        % % %             ground.TEMP.F_ub = ground.STATVAR.vegetation.mlcanopyinst.gsoi; %ground.STATVAR.vegetation.mlcanopyinst.gsoi;
-        % % % %             % Si:  ground.TEMP.F_ub = ground.STATVAR.vegetation.[GroundHeatFlux (da wo er jetzt halt grad drinn ist in meinem Bonan Vegi Modell)]
-        % % % %             % ground.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
-        % % %         end
-        
-        
-        
     end
     
     
