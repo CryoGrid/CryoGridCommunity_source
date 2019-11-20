@@ -3,7 +3,7 @@ clear all
 
 addpath(genpath('modules'))
 
-filename = 'Holtedahl_upper';
+filename = 'test_crocus';
 cols = 0;
 rows = 0;
 
@@ -12,7 +12,7 @@ lateral_class = {'LATERAL_snow'};
 structural_classes = {'FORCING_seb'; 'GRID_user_defined'; 'STRAT_layers'; 'STRAT_classes'; 'STRAT_linear'};
 ground_classes = {'GROUND_freeW_bucketW_seb_snow';
                 'GROUND_freeW_seb';
-                'SNOW_simple_seb'};
+                'SNOW_crocus_no_inheritance'};
 classlist = [out_class; lateral_class; structural_classes; ground_classes];
 
 for i = 1:size(classlist,1)

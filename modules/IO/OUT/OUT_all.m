@@ -62,9 +62,9 @@ classdef OUT_all
             id=1;
             
             if t==out.OUTPUT_TIME
-                if id == 1
+                %if id == 1
                     disp([datestr(t)])
-                end
+              %  end
                 labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
