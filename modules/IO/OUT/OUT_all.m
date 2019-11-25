@@ -88,6 +88,9 @@ classdef OUT_all
                     if isprop(res, 'IA_CHILD')
                         res.IA_CHILD =[];
                     end
+                    if isprop(res, 'LOOKUP') %delete any existing lookup table to prevent memory overflow
+                        res.LOOKUP = [];
+                    end
                     result=[result; {res}];
                     CURRENT = CURRENT.NEXT;
                 end

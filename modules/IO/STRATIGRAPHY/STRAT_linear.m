@@ -30,7 +30,8 @@ classdef STRAT_linear
         
        function strat = interpolate_to_grid(strat, grid)
            strat.variable_gridded = [];
-           size(strat.variable_values,2)
+           size(strat.variable_values,2);
+           
             for i=1:size(strat.variable_values,2)
                     strat.variable_gridded = [strat.variable_gridded; interp1(strat.depth, strat.variable_values(:,i), grid.MIDPOINTS, 'linear')];
             end

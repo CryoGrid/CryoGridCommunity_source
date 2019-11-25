@@ -34,8 +34,8 @@ classdef GROUND_fcSimple_salt_seb < GROUND_fcSimple_salt
             ground.TEMP.F_ub_salt=0; %zero flux bc, could be changed to Dirichlet BC, but this makes only sense when temperature bc is also Dirichlet             
         end
         
-        function ground = get_boundary_condition_l(ground) 
-            ground = get_boundary_condition_l@GROUND_fcSimple_salt(ground);
+        function ground = get_boundary_condition_l(ground, forcing) 
+            ground = get_boundary_condition_l@GROUND_fcSimple_salt(ground, forcing);
             ground.TEMP.F_lb_salt=0; %zero flux bc (default, but could be changed)
         end
         

@@ -4,7 +4,7 @@
 %displays them as color plots
 
 %define the grid to which variables are interpolated
-new_grid = [395:0.02:400]'-100;
+new_grid = [395:0.02:402]';
 
 %define target variables
 result.T = [];

@@ -11,6 +11,7 @@ classdef SNOW_base_class < matlab.mixin.Copyable
         TEMP  %derivatives in prognostic timestep and optimal timestep
         NEXT
         PREVIOUS
+        IA_PARENT
         IA_NEXT
         IA_PREVIOUS
         IA_LATERAL
@@ -123,7 +124,7 @@ classdef SNOW_base_class < matlab.mixin.Copyable
             %subtract water----------------
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, snow.STATVAR.ice ./ snow.STATVAR.target_density); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
             snow.STATVAR.waterIce = min(snow.STATVAR.layerThick,snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
-            snow.STATVAR.water = min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice);
+            snow.STATVAR.water = max(0, min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice));
             
             % below used to be commented out
 %             max_water = snow.PARA.field_capacity .* (snow.STATVAR.layerThick - snow.STATVAR.ice);

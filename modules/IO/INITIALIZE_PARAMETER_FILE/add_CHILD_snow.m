@@ -32,6 +32,15 @@ elseif strcmp(class(ground), 'GROUND_freeW_bucketW_seb_snow') && strcmp(class(sn
     ground.IA_CHILD = IA_SNOW_GROUND_crocus();
 elseif strcmp(class(ground), 'GROUND_freeW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb')
     ground.IA_CHILD = IA_SNOW_GROUND();
+elseif strcmp(class(ground), 'GROUND_freezeC_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_crocus')
+    ground.IA_CHILD = IA_SNOW_GROUND_crocus_SW();
+elseif strcmp(class(ground), 'GROUND_freezeC_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb')
+    ground.IA_CHILD = IA_SNOW_GROUND_crocus_SW();
+elseif strcmp(class(ground), 'GROUND_fcSimple_salt_seb_snow_test') && strcmp(class(snow), 'SNOW_simple_seb_crocus')
+    ground.IA_CHILD = IA_SNOW_GROUND_crocus_SW();
+elseif strcmp(class(ground), 'GROUND_fcSimple_salt_seb_snow_test') && strcmp(class(snow), 'SNOW_simple_seb')
+    ground.IA_CHILD = IA_SNOW_GROUND_crocus_SW();    
+
 end
 
 
@@ -39,6 +48,7 @@ CURRENT = ground.IA_CHILD; %change to interaction class
 CURRENT.STATUS = 0; %snow initially inactive
 CURRENT.IA_PARENT_GROUND = ground;
 CURRENT.IA_CHILD_SNOW = snow;
+CURRENT.IA_CHILD_SNOW.IA_PARENT = CURRENT;
 CURRENT.IA_CHILD_SNOW = initialize_zero_snow(CURRENT.IA_CHILD_SNOW, CURRENT.IA_PARENT_GROUND);
 
 ground.IA_CHILD = CURRENT; %reassign to ground
