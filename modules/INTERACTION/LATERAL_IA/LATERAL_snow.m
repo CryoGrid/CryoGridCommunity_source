@@ -1,105 +1,58 @@
-classdef LATERAL_snow
-    
-    properties
-        PARA
-        TEMP
-        STATUS
-        INTERACTION_TIME
-    end
-    
+classdef LATERAL_snow < LATERAL_water
+
     methods
         
-        function xls_out = write_excel(out)
-            xls_out = {'LATERAL','index',NaN,NaN;'LATERAL_snow',1,NaN,NaN;NaN,NaN,NaN,NaN;'interaction_timestep',1,'[hr]','interval for interaction between parallel realizations';'relative_elevation',1,'[m]',NaN;'area',100,'[m^2]',NaN;'delta',0.100000000000000,'[m]','min difference in surface altitudes for snow exchange';'LATERAL_END',NaN,NaN,NaN};
+        function xls_out = write_excel(~)
+            xls_out = {'LATERAL','index',NaN,NaN;'LATERAL_snow',1,NaN,NaN;NaN,NaN,NaN,NaN;'interaction_timestep',1,'[hr]','interval for interaction between parallel realizations';'exposure',1,'[m]',NaN;'area',100,'[m^2]',NaN;'delta',0.100000000000000,'[m]','min difference in surface altitudes for snow exchange';'LATERAL_END',NaN,NaN,NaN};
         end
         
         function lateral = provide_variables(lateral)
-            lateral.PARA.interaction_timestep = [];
-            lateral.PARA.relative_elevation = [];
+            lateral = provide_variables@LATERAL_water(lateral);
+            lateral.PARA.exposure = [];
             lateral.PARA.area = [];
             lateral.PARA.delta = [];
         end
         
         function lateral = initalize_from_file(lateral, section)
-            variables = fieldnames(lateral.PARA);
-            for i=1:size(variables,1)
-                for j=1:size(section,1)
-                    if strcmp(variables{i,1}, section{j,1})
-                        lateral.PARA.(variables{i,1}) = section{j,2};
-                    end
-                end
-            end
+            lateral = initalize_from_file@LATERAL_water(lateral, section);
         end
         
         function [lateral, forcing] = complete_init_lateral(lateral, forcing)
-            lateral.INTERACTION_TIME = forcing.PARA.start_time + lateral.PARA.interaction_timestep/24;
-            forcing.PARA.altitude = forcing.PARA.altitude + lateral.PARA.relative_elevation;
-            
-            area = nan(1,numlabs);
-            area(labindex) = lateral.PARA.area;
-            interaction_timestep = nan(1,numlabs);
-            interaction_timestep(labindex) = lateral.PARA.interaction_timestep;
-            labBarrier
-            for j = 1:numlabs
-                if j ~= labindex
-                    labSend(lateral.PARA.area,j,100);
-                    labSend(lateral.PARA.interaction_timestep,j,101);
-                end
-            end
-            for j = 1:numlabs
-                if j ~= labindex
-                    area(j) = labReceive(j,100);
-                    interaction_timestep(j) = labReceive(j,101);
-                end
-            end
-            
-            if std(interaction_timestep) ~= 0
-                error('Interaction times not equal or undefined')
-            end
-            
-            lateral.PARA.area = area;
-            lateral.STATUS = zeros(1,numlabs);
-            
-            disp(['Elevation: ' num2str(forcing.PARA.altitude) ' Area: ' num2str(area(labindex))])
-            labBarrier
+            [lateral, forcing] = complete_init_lateral@LATERAL_water(lateral, forcing);
+            lateral.STATUS.snow = zeros(1,numlabs);
         end
         
         function [lateral, snow] = lateral_interaction(lateral,snow,t)
             if t == lateral.INTERACTION_TIME
-                % Update interaction time
-                [YY,MM,DD,HH,~,~] = datevec(lateral.INTERACTION_TIME);
-                HH = round(HH + lateral.PARA.interaction_timestep);
-                lateral.INTERACTION_TIME = datenum(YY,MM,DD,HH,0,0);
+                [lateral, snow] = lateral_interaction@LATERAL_water(lateral,snow,t);
                 
                 % Initialize interaction
-                if strcmp(class(snow),'SNOW_simple_seb_crocus')
-                    lateral.STATUS(labindex) = 1;
+                if strcmp(class(snow),'SNOW_simple_seb_crocus') || strcmp(class(snow),'SNOW_crocus_no_inheritance')
+                    lateral.STATUS.snow(labindex) = 1;
                 else
-                    lateral.STATUS(labindex) = 0;
+                    lateral.STATUS.snow(labindex) = 0;
                 end
                 
-                lateral.TEMP.surfaceAltitudes(labindex) = snow.STATVAR.upperPos;
+                lateral.TEMP.exposures(labindex) = lateral.PARA.exposure + sum(snow.STATVAR.layerThick);
                 
                 
                 for j = 1:numlabs
                     if j ~= labindex
-                        labSend(lateral.STATUS(labindex),j,102);
-                        labSend(snow.STATVAR.upperPos,j,103);
+                        labSend(lateral.STATUS.snow(labindex),j,102);
+                        labSend(lateral.TEMP.exposures(labindex),j,103);
                     end
                 end
                 for j = 1:numlabs
                     if j ~= labindex
-                        lateral.STATUS(j)                   = labReceive(j,102);
-                        lateral.TEMP.surfaceAltitudes(j)    = labReceive(j,103);
+                        lateral.STATUS.snow(j)      = labReceive(j,102);
+                        lateral.TEMP.exposures(j)   = labReceive(j,103);
                     end
                 end
                 
                 labBarrier
-                if sum(lateral.STATUS) >= 2
+                if sum(lateral.STATUS.snow) >= 2
                     % determine exchange coefficient
                     drift_index = drift_exchange_index(lateral);
-                    
-                    
                     % Remove snow if erosion occurs
                     if drift_index(labindex) < 0
                         [snow, snow_out] = get_snow_eroded2(snow,lateral,-drift_index(labindex));
@@ -127,7 +80,7 @@ classdef LATERAL_snow
                         snow_out.time_snowfall  = 0;
                     end
                     
-                    lateral.TEMP.surfaceAltitudes(labindex) = snow.STATVAR.upperPos;
+%                     lateral.TEMP.surfaceAltitudes(labindex) = snow.STATVAR.upperPos;
                     lateral.TEMP.ice(labindex)              = snow_out.ice;
                     lateral.TEMP.water(labindex)            = snow_out.water;
                     lateral.TEMP.waterIce(labindex)         = snow_out.waterIce;
@@ -165,7 +118,7 @@ classdef LATERAL_snow
                             lateral.TEMP.time_snowfall(j)   = labReceive(j,10);
                         end
                     end
-                    
+ 
                     % Add snow if deposition occurs
                     if drift_index(labindex) > 0 && sum(lateral.TEMP.ice) > 0
                         snow_drifting = get_snow_mixed(lateral);

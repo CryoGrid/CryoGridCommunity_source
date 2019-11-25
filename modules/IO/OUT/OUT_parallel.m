@@ -119,7 +119,7 @@ classdef OUT_parallel
             
             if t==out.OUTPUT_TIME
                 if exist('lateral') && labindex == 1
-                    disp([datestr(t) ' lateral status: ' num2str(lateral.STATUS)])
+                    disp([datestr(t) ' lateral status; snow: ' num2str(lateral.STATUS.snow) ' water: ' num2str(lateral.STATUS.water)])
                 elseif ~exist('lateral')
                     disp(datestr(t))
                 end
