@@ -2,7 +2,7 @@
 % designed to function as CHILD of a GROUND class that is compatible with
 % SNOW classes; compatible with interaction classes IA_SNOW_GROUND and IA_SNOW_GROUND_fcSimple_salt
 
-classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
+classdef SNOW_crocus < matlab.mixin.Copyable
     properties
         CONST %constants
         PARA %external service parameters, all other
@@ -10,6 +10,7 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
         TEMP  %derivatives in prognostic timestep and optimal timestep
         NEXT
         PREVIOUS
+        IA_PARENT
         IA_NEXT
         IA_PREVIOUS
         IA_LATERAL
@@ -20,7 +21,7 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
         %mandatory functions for each class
         
         function xls_out = write_excel(~)
-            xls_out = {'CLASS','index',NaN,NaN,NaN;'SNOW_crocus_no_inheritance',1,NaN,NaN,NaN;NaN,NaN,NaN,NaN,NaN;NaN,'value','default','unit',NaN;'density',300,350,'[kg/m3]','snow density';'albedo_max',0.850000000000000,0.850000000000000,'[-]','not active';'albedo_min',0.550000000000000,0.550000000000000,'[-]','not active';'albedo',0.800000000000000,0.800000000000000,'[-]','surface albedo';'epsilon',0.990000000000000,0.990000000000000,'[-]','surface emissivity';'z0',0.000100000000000000,0.000100000000000000,'[m]','roughness length';'field_capacity',0.0500000000000000,0.0500000000000000,'[-]','%fraction of porosity that can be filled with water before draining';'hydraulicConductivity',1,'    ','[m/sec]','    ';'dt_max',3600,3600,'[sec]','longest possible timestep';'dE_max',50000,50000,'[J/m3]','maximum change of energy per timestep';'swe_per_cell',0.0100000000000000,0.0100000000000000,'[m]','target SWE regulating grid cell size, 0.01m is ca. 3cm ';'slope',0,0,'[°]',NaN;'timescale_winddrift',24,48,'[hours]',NaN;'CLASS_END',NaN,NaN,NaN,NaN};
+            xls_out = {'CLASS','index',NaN,NaN,NaN;'SNOW_crocus',1,NaN,NaN,NaN;NaN,NaN,NaN,NaN,NaN;NaN,'value','default','unit',NaN;'density',300,350,'[kg/m3]','snow density';'albedo_max',0.850000000000000,0.850000000000000,'[-]','not active';'albedo_min',0.550000000000000,0.550000000000000,'[-]','not active';'albedo',0.800000000000000,0.800000000000000,'[-]','surface albedo';'epsilon',0.990000000000000,0.990000000000000,'[-]','surface emissivity';'z0',0.000100000000000000,0.000100000000000000,'[m]','roughness length';'field_capacity',0.0500000000000000,0.0500000000000000,'[-]','%fraction of porosity that can be filled with water before draining';'hydraulicConductivity',1,'    ','[m/sec]','    ';'dt_max',3600,3600,'[sec]','longest possible timestep';'dE_max',50000,50000,'[J/m3]','maximum change of energy per timestep';'swe_per_cell',0.0100000000000000,0.0100000000000000,'[m]','target SWE regulating grid cell size, 0.01m is ca. 3cm ';'slope',0,0,'[°]',NaN;'timescale_winddrift',24,48,'[hours]',NaN;'CLASS_END',NaN,NaN,NaN,NaN};
         end
         
         function snow = provide_variables(snow)  %initializes the subvariables as empty arrays
@@ -96,11 +97,24 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
             %             advance_prognostics
         end
         
+        function snow = get_boundary_condition_u_CHILD(snow, forcing)
+             snow = get_boundary_condition_u(snow, forcing); %same function as  for normal snow class
+
+             fraction_snow = snow.IA_PARENT.FRACTIONAL_SNOW_COVER; %sublimation must be scaled!
+             snow.TEMP.d_ice_sublim = fraction_snow .* snow.TEMP.d_ice_sublim;
+             snow.TEMP.d_E_sublim = fraction_snow .* snow.TEMP.d_E_sublim;
+        end
+
+        function snow = get_boundary_condition_u_create_CHILD(snow, forcing) 
+            snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600); %snowfall is in mm/day
+            snow = get_snow_properties(snow,forcing);
+            snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);
+        end
+        
         function snow = get_boundary_condition_l(snow, forcing)
             snow = get_heatFlux_lb(snow, forcing);
             snow.TEMP.F_lb_water = 0; % zero flux if used as bottom class
         end
-        
         
         function snow = get_derivatives_prognostic(snow)
             snow = get_derivative_energy(snow);
@@ -115,10 +129,26 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
             
         end
         
+        function snow = get_derivatives_prognostic_CHILD(snow)   
+
+            snow.TEMP.d_energy = snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim;
+            %snow.TEMP.d_waterIce = snow.TEMP.snowfall + snow.TEMP.rainfall + snow.TEMP.d_ice_sublim;
+
+            snow.TEMP.dT = 0; %assuming zero gradient
+            snow = prog_metamorphism(snow);
+            snow = prog_wind_drift(snow); 
+            %snow = compaction(snow); compaction does not work yet with only one cell, check below
+            snow.TEMP.compact_d_D = 0;
+        end
+        
         function timestep = get_timestep(snow)  %could involve check for several state variables
              timestep1 = snow.PARA.dE_max ./ (max(abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick));
             timestep2 = min((-snow.STATVAR.energy ./ snow.TEMP.d_energy) .*double(snow.TEMP.d_energy>0) + double(snow.TEMP.d_energy<=0).*1e5); %when snow is melting, do not melt more than there is in a grid cell
              timestep = min(timestep1, timestep2);
+        end
+        
+        function timestep = get_timestep_CHILD(snow)  %will be ignored if it has a negative value
+            timestep = -snow.STATVAR.energy ./ snow.TEMP.d_energy;
         end
         
         function snow = advance_prognostic(snow, timestep) %real timestep derived as minimum of several classes
@@ -152,6 +182,60 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
             
         end
         
+        function snow = advance_prognostic_create_CHILD(snow, timestep)
+            newSnow = get_new_snow(snow,timestep);
+            snow.STATVAR.d = newSnow.STATVAR.d;
+            snow.STATVAR.s = newSnow.STATVAR.s;
+            snow.STATVAR.gs = newSnow.STATVAR.gs;
+            snow.STATVAR.time_snowfall = newSnow.STATVAR.time_snowfall;
+            snow.STATVAR.energy = newSnow.STATVAR.energy;
+            snow.STATVAR.waterIce = newSnow.STATVAR.waterIce;
+            snow.STATVAR.ice =  newSnow.STATVAR.ice;
+            snow.STATVAR.layerThick = newSnow.STATVAR.layerThick;
+            snow.STATVAR.water = 0;
+            snow.STATVAR.target_density = snow.STATVAR.ice ./ snow.STATVAR.layerThick;
+        end
+        
+        function snow = advance_prognostic_CHILD(snow, timestep)
+
+            snow.STATVAR.energy = snow.STATVAR.energy + timestep .* snow.TEMP.d_energy;
+
+            if snow.STATVAR.waterIce < 0
+                test2
+            end
+
+            %snow.STATVAR.energy = snow.STATVAR.energy + timestep .*(snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim);
+            snow.STATVAR.waterIce  = snow.STATVAR.waterIce + timestep .* (snow.TEMP.d_ice_sublim + snow.TEMP.rainfall); %rainfall added directly here, snowfall added below
+            snow.STATVAR.layerThick = snow.STATVAR.layerThick + timestep .* (snow.TEMP.d_ice_sublim ./ (snow.STATVAR.ice ./ snow.STATVAR.layerThick));
+
+            snow.STATVAR.d = max(snow.STATVAR.d.*0, snow.STATVAR.d + timestep .*(snow.TEMP.metam_d_d + snow.TEMP.wind_d_d));
+            snow.STATVAR.s = max(snow.STATVAR.s.*0, min(snow.STATVAR.s.*0+1, snow.STATVAR.s + timestep .*(snow.TEMP.metam_d_s + snow.TEMP.wind_d_s)));
+            snow.STATVAR.gs = max(snow.STATVAR.gs, snow.STATVAR.gs + timestep .*(snow.TEMP.metam_d_gs + snow.TEMP.wind_d_gs));
+            snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, max(snow.STATVAR.ice, snow.STATVAR.layerThick + timestep .*(snow.TEMP.compact_d_D + snow.TEMP.wind_d_D)));
+
+           if snow.STATVAR.waterIce < 0
+                test1
+            end
+
+            %add dry snow
+            if snow.TEMP.snowfall > 0
+                newSnow = get_new_snow(snow,timestep);
+
+                snow.STATVAR.d(1) = (snow.STATVAR.d(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.d.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+                snow.STATVAR.s(1) = (snow.STATVAR.s(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.s.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+                snow.STATVAR.gs(1) = (snow.STATVAR.gs(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.gs.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+                snow.STATVAR.time_snowfall(1) = (snow.STATVAR.time_snowfall(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.time_snowfall.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+
+                %snow.STATVAR.energy(1) = snow.STATVAR.energy(1) + newSnow.STATVAR.energy;
+                snow.STATVAR.waterIce(1) = snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce;
+                snow.STATVAR.ice(1) = snow.STATVAR.ice(1) + newSnow.STATVAR.ice;
+                snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + newSnow.STATVAR.layerThick;
+            end
+            snow.STATVAR.target_density = min(1, (snow.STATVAR.ice + timestep .* snow.TEMP.d_ice_sublim) ./ snow.STATVAR.layerThick);
+
+        end
+
+        
         function snow = compute_diagnostic_first_cell(snow, forcing)
             snow = L_star(snow, forcing);
         end
@@ -168,6 +252,40 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
             
             snow.STATVAR.upperPos = snow.STATVAR.lowerPos + sum(snow.STATVAR.layerThick);
             
+        end
+        
+        function snow = compute_diagnostic_CHILD(snow, ~)
+
+            snow = conductivity(snow);
+            snow = get_T_water(snow);
+            snow.STATVAR.upperPos = snow.STATVAR.lowerPos + snow.STATVAR.layerThick;
+
+            if snow.STATVAR.waterIce <1e-15   %resets STATUS back to zero
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.STATUS = 0;
+                snow = initialize_zero_snow(snow, snow.IA_PARENT.IA_PARENT_GROUND); %set all variables to zero
+            end
+
+            if snow.STATVAR.ice >= snow.PARA.swe_per_cell/2
+
+                snow.IA_PARENT.IA_PARENT_GROUND.PREVIOUS.NEXT = snow; 
+                snow.PREVIOUS = snow.IA_PARENT.IA_PARENT_GROUND.PREVIOUS;
+                snow.NEXT = snow.IA_PARENT.IA_PARENT_GROUND;
+                snow.IA_PARENT.IA_PARENT_GROUND.PREVIOUS = snow;
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.STATUS = -1;
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.FRACTIONAL_SNOW_COVER = 0;
+
+                snow.IA_NEXT = get_IA_class(class(snow.NEXT), class(snow));
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_PREVIOUS = snow.IA_NEXT;
+                snow.IA_NEXT.PREVIOUS = snow;
+                snow.IA_NEXT.NEXT = snow.IA_PARENT.IA_PARENT_GROUND;
+
+                %snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.IA_CHILD_SNOW = [];
+                snow.NEXT.IA_CHILD.IA_CHILD_SNOW = [];  %does not work yet to cut the connection between ground CHILD and snow
+                snow.IA_PARENT = [];
+            end
+            % checks if snow CHILD needs to become full
+            %snow class and rearrange the stratigraphy
+
         end
         
         function ground = troubleshoot(ground)
@@ -476,7 +594,7 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
             %subtract water----------------
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, snow.STATVAR.ice ./ snow.STATVAR.target_density); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
             snow.STATVAR.waterIce = min(snow.STATVAR.layerThick,snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
-            snow.STATVAR.water = min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice);
+            snow.STATVAR.water = max(0,min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice));
             
             % below used to be commented out
 %             max_water = snow.PARA.field_capacity .* (snow.STATVAR.layerThick - snow.STATVAR.ice);
@@ -491,7 +609,6 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
 %             snow.STATVAR.water_reservoir = snow.STATVAR.water_reservoir + sum(excess_water);
 %             
         end
-        
         
         function snow = modify_grid(snow)
             
@@ -592,10 +709,11 @@ classdef SNOW_crocus_no_inheritance < matlab.mixin.Copyable
                 snow.IA_NEXT =[];
                 snow.IA_PREVIOUS =[];
                 
-                ground.IA_CHILD = IA_SNOW_GROUND_crocus();  %reinitialize interaction class
-                ground.IA_CHILD.STATUS = 1; %snow initially active
-                ground.IA_CHILD.IA_PARENT_GROUND = ground;  %attach snow and ground to interaction class
+                %ground.IA_CHILD = IA_SNOW_GROUND_crocus();  %reinitialize interaction class
+                ground.IA_CHILD.STATUS = 2; %snow initially active
+                %ground.IA_CHILD.IA_PARENT_GROUND = ground;  %attach snow and ground to interaction class
                 ground.IA_CHILD.IA_CHILD_SNOW = snow;
+                ground.IA_CHILD.IA_CHILD_SNOW.IA_PARENT = ground.IA_CHILD;
                 
                 snow = ground; %assign snow pointer to ground to return to regular stratigraphy
             end

@@ -62,9 +62,7 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
             ground.STATVAR.water = ground.STATVAR.waterIce; 
             ground = compute_diagnostic_oldCG(ground); %computes initial values of diagnostic variables
             ground.PARA.airT_height = forcing.PARA.airT_height;
-        end
-        
-        
+        end       
         
         function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
             ground = surfaceEnergyBalanceInfiltration(ground, forcing);

@@ -16,6 +16,10 @@ classdef IA_HEAT_WATER_1 < matlab.mixin.Copyable %zero water flux between classe
             
             stratigraphy1.TEMP.F_lb = -flux;
             stratigraphy2.TEMP.F_ub = flux;
+            
+            % Zero water fluxes, by RBZ 271119
+            stratigraphy1.TEMP.F_lb_water = 0;
+            stratigraphy2.TEMP.F_ub_water = 0;
         end
         
         function get_boundary_condition_water_m(ia_heat_water)

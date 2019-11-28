@@ -13,7 +13,7 @@ fieldCapacity = ground.STATVAR.field_capacity;
 
 i=1;
 
-while  T(i)>0 && i <= size(T,1)
+while  T(i)>0 && i < length(T) %<= size(T,1) RBZ 271119 Changed to not route water past the last cell
     max_water=K_delta(i).*fieldCapacity(i);  %maximum amount of water (in m) that a grid cell can hold
     min_water = 0;  %minimum amount of water which stays in a cell (independent of soil type, but should be if "freezing = drying")
     
