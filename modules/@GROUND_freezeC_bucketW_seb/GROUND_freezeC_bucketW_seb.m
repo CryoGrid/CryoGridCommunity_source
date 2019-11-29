@@ -91,6 +91,7 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
             ground.STATVAR.T = ground.STATVAR.T + timestep .* ground.TEMP.d_T;
             % multiply dwc_dt with timestep
             ground.TEMP.dwc = ground.TEMP.dwc_dt .* timestep;  %in m
+            ground.TEMP.dwc_dt = ground.TEMP.dwc_dt.*0; % RBZ 291119, to avoid adding waterfluxes from last snowfree timestep during snow season
         end
         
         function ground = compute_diagnostic_first_cell(ground, forcing);
@@ -144,7 +145,7 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
             E_frozen = -Lf.*ground.STATVAR.waterIce;
             
             ground.STATVAR.T = double(ground.STATVAR.energy < E_frozen) .* (ground.STATVAR.energy - E_frozen) ./ (c_i.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic) + ...
-                double(ground.STATVAR.energy >0) .* ground.STATVAR.energy ./ (c_i.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic);
+                double(ground.STATVAR.energy >0) .* ground.STATVAR.energy ./ (c_w.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic);
             ground.STATVAR.ice = double(ground.STATVAR.energy <= E_frozen) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > E_frozen & ground.STATVAR.energy < 0) .* ground.STATVAR.energy ./ (-Lf);
             ground.STATVAR.water = double(ground.STATVAR.energy >= 0) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > - Lf.*ground.STATVAR.waterIce & ground.STATVAR.energy < 0) .* (ground.STATVAR.energy + Lf.*ground.STATVAR.waterIce) ./ Lf;
             

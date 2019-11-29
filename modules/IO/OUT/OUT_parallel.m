@@ -95,6 +95,13 @@ classdef OUT_parallel
             if out.PARA.status_snow == 1
                 out.RESULT.swe      = [];
                 out.RESULT.d_snow   = [];
+                out.RESULT.saturation = [];
+                out.RESULT.lwc      = [];
+                out.RESULT.density  = [];
+            end
+            if out.PARA.status_snow == 2
+                out.RESULT.swe      = [];
+                out.RESULT.d_snow   = [];
                 out.RESULT.d        = [];
                 out.RESULT.s        = [];
                 out.RESULT.gs       = [];
@@ -150,7 +157,7 @@ classdef OUT_parallel
                 water   = [water(1); water];
                 ice     = [ice(1); ice];
                 
-                if  out.PARA.status_snow == 1
+                if  out.PARA.status_snow >= 1
                     if strcmp(out.TEMP.top_class(1:4),'SNOW')
                         out.RESULT.swe      = [out.RESULT.swe sum(TOP_CLASS.STATVAR.waterIce)];
                         out.RESULT.d_snow   = [out.RESULT.d_snow sum(TOP_CLASS.STATVAR.layerThick)];
@@ -159,19 +166,19 @@ classdef OUT_parallel
                         snowdepths  = -(snowdepths - snowdepths(end));
                         snowdepths  = (snowdepths(1:end-1) + snowdepths(2:end))./2 + TOP_CLASS.STATVAR.lowerPos;
                         snowdepths  = [TOP_CLASS.STATVAR.upperPos; snowdepths; TOP_CLASS.STATVAR.lowerPos];
-                        d           = TOP_CLASS.STATVAR.d;
-                        s           = TOP_CLASS.STATVAR.s;
-                        gs          = TOP_CLASS.STATVAR.gs;
-                        
+                        if out.PARA.status_snow == 2
+                            d  = TOP_CLASS.STATVAR.d;
+                            s  = TOP_CLASS.STATVAR.s;
+                            gs = TOP_CLASS.STATVAR.gs;
+                            d  = [d(1); d; d(end)];
+                            s  = [s(1); s; s(end)];
+                            gs = [gs(1); gs; gs(end)];
+                        end
                         porespace   = TOP_CLASS.STATVAR.layerThick - TOP_CLASS.STATVAR.ice;
                         saturation  = TOP_CLASS.STATVAR.water./porespace;
                         saturation(porespace == 0) = 0;
                         free_water  = max(0, TOP_CLASS.STATVAR.water - (TOP_CLASS.STATVAR.layerThick - TOP_CLASS.STATVAR.ice).*TOP_CLASS.PARA.field_capacity);
                         density     = (TOP_CLASS.STATVAR.ice.*917 + (TOP_CLASS.STATVAR.water-free_water).*1000)./TOP_CLASS.STATVAR.layerThick;
-
-                        d           = [d(1); d; d(end)];
-                        s           = [s(1); s; s(end)];
-                        gs          = [gs(1); gs; gs(end)];
                         saturation  = [saturation(1); saturation; saturation(end)];
                         density     = [density(1); density; density(end)];
                         
@@ -184,9 +191,11 @@ classdef OUT_parallel
                         out.RESULT.swe      = [out.RESULT.swe TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.waterIce];
                         out.RESULT.lwc      = [out.RESULT.lwc TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.water];
                         snowdepths  = [TOP_CLASS.STATVAR.upperPos + TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.layerThick; TOP_CLASS.STATVAR.upperPos];
-                        d           = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.d,2,1);
-                        s           = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.s,2,1);
-                        gs          = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.gs,2,1);
+                        if out.PARA.status_snow == 2
+                            d   = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.d,2,1);
+                            s   = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.s,2,1);
+                            gs  = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.gs,2,1);
+                        end
                         porespace   = (TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.layerThick - TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.ice);
                         saturation  = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.water./porespace,2,1);
                         saturation(porespace == 0) = 0;
@@ -196,22 +205,26 @@ classdef OUT_parallel
                         out.RESULT.swe      = [out.RESULT.swe 0];
                         out.RESULT.lwc      = [out.RESULT.lwc 0];
                         snowdepths  = [TOP_CLASS.STATVAR.upperPos+.01; TOP_CLASS.STATVAR.upperPos];
-                        d           = [NaN; NaN];
-                        s           = [NaN; NaN];
-                        gs          = [NaN; NaN];
+                        if out.PARA.status_snow == 2
+                            d   = [NaN; NaN];
+                            s   = [NaN; NaN];
+                            gs  = [NaN; NaN];
+                        end
                         density     = [NaN; NaN];
                         saturation  = [NaN; NaN];
-                        end
+                    end
                 end
                 
                 out.RESULT.T        = [out.RESULT.T interp1(depths, T, out.RESULT.grid)' ];
                 out.RESULT.water    = [out.RESULT.water interp1(depths, water, out.RESULT.grid)'];
                 out.RESULT.ice      = [out.RESULT.ice interp1(depths, ice, out.RESULT.grid)' ];
                 
-                if  out.PARA.status_snow == 1
-                    out.RESULT.d            = [out.RESULT.d interp1(snowdepths, d, out.RESULT.grid_snow)' ];
-                    out.RESULT.s            = [out.RESULT.s interp1(snowdepths, s, out.RESULT.grid_snow)' ];
-                    out.RESULT.gs           = [out.RESULT.gs interp1(snowdepths, gs, out.RESULT.grid_snow)' ];
+                if  out.PARA.status_snow >= 1
+                    if out.PARA.status_snow == 2
+                        out.RESULT.d        = [out.RESULT.d interp1(snowdepths, d, out.RESULT.grid_snow)' ];
+                        out.RESULT.s        = [out.RESULT.s interp1(snowdepths, s, out.RESULT.grid_snow)' ];
+                        out.RESULT.gs       = [out.RESULT.gs interp1(snowdepths, gs, out.RESULT.grid_snow)' ];
+                    end
                     out.RESULT.saturation   = [out.RESULT.saturation interp1(snowdepths, saturation, out.RESULT.grid_snow)' ];
                     out.RESULT.density      = [out.RESULT.density interp1(snowdepths, density, out.RESULT.grid_snow)' ];
                 end
@@ -251,13 +264,15 @@ classdef OUT_parallel
                         out.RESULT.Sin  = [];
                         out.RESULT.Sout = [];
                     end
-                    if out.PARA.status_snow == 1
+                    if out.PARA.status_snow >= 1
                         out.RESULT.d_snow   = [];
                         out.RESULT.swe      = [];
                         out.RESULT.lwc      = [];
-                        out.RESULT.d        = [];
-                        out.RESULT.s        = [];
-                        out.RESULT.gs       = [];
+                        if out.PARA.status_snow == 2
+                            out.RESULT.d        = [];
+                            out.RESULT.s        = [];
+                            out.RESULT.gs       = [];
+                        end
                         out.RESULT.saturation = [];
                         out.RESULT.density  = [];
                     end

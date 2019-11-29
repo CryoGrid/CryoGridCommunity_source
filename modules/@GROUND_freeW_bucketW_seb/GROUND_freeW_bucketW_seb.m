@@ -26,8 +26,6 @@ classdef GROUND_freeW_bucketW_seb < GROUND_freeW_bucketW
             ground = finalize_STATVAR(ground); %assign all variables, that must be calculated or assigned otherwise
         end
         
-        
-        
         function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
             ground = get_boundary_condition_u@GROUND_freeW_bucketW(ground, forcing);
             ground = surface_energy_balance(ground, forcing);
@@ -50,6 +48,7 @@ classdef GROUND_freeW_bucketW_seb < GROUND_freeW_bucketW
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + ground.TEMP.d_water_ET .* timestep; %subtract water from ET
             ground.STATVAR.energy = ground.STATVAR.energy + ground.CONST.c_w .* ground.STATVAR.T .* ground.TEMP.d_water_ET .* timestep; %adjust energy
             ground = advance_prognostic@GROUND_freeW_bucketW(ground, timestep); %advance energy and route down water
+            ground.TEMP.d_water_ET = ground.TEMP.d_water_ET.*0; %RBZ 291119, to avoid adding ET from last snowfree timestep during snow season
         end
         
         function ground = compute_diagnostic_first_cell(ground, forcing)

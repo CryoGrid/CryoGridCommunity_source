@@ -143,12 +143,13 @@ classdef GROUND_freezeC_bucketW_seb_snow < GROUND_freezeC_bucketW_seb
                 snow = ia_snow_ground.IA_CHILD_SNOW;
                 
                 snow = advance_prognostic_create_CHILD(snow, timestep);
+                ground =  advance_prognostic@GROUND_freezeC_bucketW_seb(ground, timestep);
                 ground.IA_CHILD.STATUS = 2; %snow exists as normal CHILD from that point on  
             end
         end
     
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
             ground = L_star(ground, forcing);
         end
         
@@ -206,7 +207,7 @@ classdef GROUND_freezeC_bucketW_seb_snow < GROUND_freezeC_bucketW_seb
             E_frozen = -Lf.*ground.STATVAR.waterIce;
             
             ground.STATVAR.T = double(ground.STATVAR.energy < E_frozen) .* (ground.STATVAR.energy - E_frozen) ./ (c_i.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic) + ...
-                double(ground.STATVAR.energy >0) .* ground.STATVAR.energy ./ (c_i.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic);
+                double(ground.STATVAR.energy >0) .* ground.STATVAR.energy ./ (c_w.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic);
             ground.STATVAR.ice = double(ground.STATVAR.energy <= E_frozen) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > E_frozen & ground.STATVAR.energy < 0) .* ground.STATVAR.energy ./ (-Lf);
             ground.STATVAR.water = double(ground.STATVAR.energy >= 0) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > - Lf.*ground.STATVAR.waterIce & ground.STATVAR.energy < 0) .* (ground.STATVAR.energy + Lf.*ground.STATVAR.waterIce) ./ Lf;
             
