@@ -54,7 +54,8 @@ classdef FORCING_subsea_air_glacier
                forcing = generateForcing_fromData(forcing);
            end
            
-
+            %initialize elevation with modern-day altitude
+            forcing.TEMP.elev = forcing.PARA.altitude;
            
            %calculate time in days for the main programm
            forcing.PARA.start_time = forcing.PARA.startForcing .* 365.25;
@@ -63,32 +64,47 @@ classdef FORCING_subsea_air_glacier
        end
 
        function forcing = interpolate_forcing(t, forcing) %t comes in days!
-           t = t/365.25; %convert to t in years
-           forcing.TEMP.TForcing = interp1(forcing.DATA.timeForcing, forcing.DATA.TForcing, t);
-           %forcing.TEMP.surfaceState = interp1(forcing.DATA.timeForcing, forcing.DATA.surfaceState, t, 'nearest');
+            t = t/365.25; %convert to t in years
 
-           forcing.TEMP.saltConcForcing = interp1(forcing.DATA.timeForcing, forcing.DATA.saltConcForcing, t, 'nearest');
-
-           %> For the forcing of the salt, we use the surfaceState
-           %> (subaerial, subglacial, submarine) as a flag for the salt flux
-           %> To avoid rapid changes, we interpolate lineraly if the change
-           %> is from or to a submarine phase.
-%            stateBefore = interp1(forcing.DATA.timeForcing, forcing.DATA.surfaceState, t, 'previous');
-%            stateAfter = interp1(forcing.DATA.timeForcing, forcing.DATA.surfaceState, t, 'next');
-%            if stateBefore == 0 || stateAfter == 0 %if one of the states is submarine
-%                 forcing.TEMP.surfaceState = interp1(forcing.DATA.timeForcing, forcing.DATA.surfaceState, t);
-%            else
-%                 forcing.TEMP.surfaceState = interp1(forcing.DATA.timeForcing, forcing.DATA.surfaceState, t, 'nearest');
-%            end
-
-           %This is from the old getDerivative/testMexSubseaPF
-%            	%What is happening here? Is this relevant for the upper boundary?
-%             %Should this happen in ground.get_boundary_condition_u?
-%             deltaT = TForcing(2) - TForcing(1);
-%             factor = floor((t/day_sec - TForcing(1))/deltaT);
-%             T_u = TForcing(factor + length(TForcing)) + ...
-%                 (Tsurf(factor + 1 + length(TForcing)) - TForcing(factor + length(TForcing))) * ...
-%                 (t/day_sec - TForcing(factor))/deltaT;
+            %get current sea level
+            seaLevel = interp1(forcing.DATA.timeForcing, forcing.DATA.seaLevel, t);
+            
+            %get current altitude / upperPos
+            elevation = forcing.TEMP.elev;
+            
+            %get glacial cover
+            glacialCover = interp1(forcing.DATA.timeForcing, forcing.DATA.glacialCover, t);
+            
+            %get current forcing temperature depending on the surface state
+            %Site is under water
+            if elevation < seaLevel  % site is inundated
+                waterDepth = seaLevel - elevation;    % depth water column
+                if(waterDepth > 30) % below 30m T sea bottom equals T_freeze)
+                    TForcing = forcing.PARA.T_freeze;
+                elseif(waterDepth <= 30 && waterDepth > 2) % linear scaling between 30m t0 2m water depth
+                    TForcing = 1./14 * (forcing.PARA.T_freeze/2*waterDepth - forcing.PARA.T_freeze);
+                else  % between 2m and 0m T sea bottom equals 0�C
+                    TForcing = 0;
+                end
+                saltConcForcing = forcing.PARA.benthicSalt;
+                surfaceState = 0;
+                
+            elseif glacialCover > forcing.PARA.IS %if glacial cover is greater than treshold
+                TForcing = forcing.PARA.T_IceSheet;
+                saltConcForcing = 0;
+                surfaceState = -1;
+                
+            else %subaerial conditions
+                %get current air temperature
+                TForcing = interp1(forcing.DATA.timeForcing, forcing.DATA.airTemp, t);
+                saltConcForcing = 0;
+                surfaceState = 1;
+            end
+    
+            %update forcing struct
+           forcing.TEMP.TForcing = TForcing;
+           forcing.TEMP.saltConcForcing = saltConcForcing;
+           forcing.TEMP.surfaceState = surfaceState;
        end
 
     end

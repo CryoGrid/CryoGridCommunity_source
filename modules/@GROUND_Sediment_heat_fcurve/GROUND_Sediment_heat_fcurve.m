@@ -44,7 +44,21 @@ classdef GROUND_Sediment_heat_fcurve < GROUND_base_class
             % assigns ground heat flow from the forcing to the ground
             ground = assign_global_variables@GROUND_base_class(ground, forcing);
             
-            ground.TEMP.T_ub = forcing.DATA.TForcing(1);
+            %initialize Forcing Temperature for initialize profile
+            if ground.STATVAR.upperPos < forcing.DATA.seaLevel(1)  % site is inundated
+                waterDepth = forcing.DATA.seaLevel(1) - ground.STATVAR.upperPos;    % depth water column
+                if(waterDepth > 30) % below 30m T sea bottom equals T_freeze)
+                    T0 = forcing.PARA.T_freeze;
+                elseif(waterDepth <= 30 && waterDepth > 2) % linear scaling between 30m t0 2m water depth
+                    T0 = 1./14 * (forcing.PARA.T_freeze/2*waterDepth - forcing.PARA.T_freeze);
+                else  % between 2m and 0m T sea bottom equals 0�C
+                    T0 = 0;
+                end
+            else
+                T0 = forcing.DATA.airTemp(1);
+            end
+            
+            ground.TEMP.T_ub = T0; 
         end
         
         function ground = initialize_STATVAR_from_file(ground, grid, forcing, depths)
@@ -106,6 +120,9 @@ classdef GROUND_Sediment_heat_fcurve < GROUND_base_class
         end
 
         function ground = compute_diagnostic_first_cell(ground, forcing)
+            
+            %give back current altitude here!
+            
             %put stuff that happens only if this cell is the first cell
             %here
             %marine sedimentation could be happening here

@@ -41,13 +41,12 @@ classdef OUT_subseaPF
             out.SAVE_TIME = (forcing.PARA.endForcing)*365.24;
             
             %save forcing data
-            out.FORCING.TForcing = forcing.DATA.TForcing;
-            try
-                out.FORCING.saltConcForcing = forcing.DATA.saltConcForcing;
-            catch
-                out.Forcing.saltConcForcing = [];
-            end
+            out.FORCING.airTemp = forcing.DATA.airTemp;
+            out.FORCING.seaLevel = forcing.DATA.seaLevel;
+            out.FORCING.glacialCover = forcing.DATA.glacialCover;
             out.FORCING.timeForcing = forcing.DATA.timeForcing;
+            out.FORCING.TForcing = [];
+            out.FORCING.saltConcForcing = [];
             
             %initialise Runtime and timesteps
             out.RUNINFO.starttime = tic;
@@ -84,7 +83,11 @@ classdef OUT_subseaPF
             %out.RUNINFO.dt_max = max(out.RUNINFO.dt_max, run_info.current_timestep);
             
             if t==out.OUTPUT_TIME || out.BREAK == 1
+                %save forcing
+                out.FORCING.TForcing = [out.FORCING.TForcing, forcing.TEMP.TForcing];
+                out.FORCING.saltConcForcing = [out.FORCING.saltConcForcing, forcing.TEMP.saltConcForcing];
                             
+                %save sediment temperature
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 CURRENT =TOP_CLASS;
                 if isprop(CURRENT, 'IA_CHILD') && ~isempty(CURRENT.IA_CHILD)
