@@ -79,7 +79,7 @@ classdef SNOW_seb_simple < SNOW_base_class
             snow.STATVAR.Qh = Q_h(snow, forcing);
             snow.STATVAR.Qe = Q_eq_potET(snow, forcing);
             
-            snow.TEMP.heatFlux_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe;
+            snow.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe;
         end
         
         

@@ -33,11 +33,11 @@ for i=2:size(class_stratigraphy.class_name,1)
             CURRENT.NEXT = copy(class_list{j,1}); %make an identical copy of the class stored in class_list 
             CURRENT.NEXT.PREVIOUS = CURRENT;
             CURRENT.NEXT = initialize_STATVAR_from_file(CURRENT.NEXT, grid, forcing, class_stratigraphy.depth(i,:));
-            
             CURRENT = CURRENT.NEXT;
         end
     end
 end
+
 BOTTOM_CLASS = CURRENT;
 BOTTOM=Bottom();
 BOTTOM = init_bottom(BOTTOM, BOTTOM_CLASS);

@@ -3,7 +3,7 @@
 %> heat is transfered between two classes via a heatflux proportional to
 %> the temperature difference at the border
 %> salt flux is set to zero
-classdef IA_HEAT_NOSALT < IA_HEAT 
+classdef IA_HEAT_NoSALT < IA_HEAT 
     %transition from salty to non-salty class, zero flux boundary
     %condition imposed at both boundaries, this should be changd depnding on context of use
 

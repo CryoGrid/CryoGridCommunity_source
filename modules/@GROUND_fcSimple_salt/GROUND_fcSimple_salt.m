@@ -36,8 +36,8 @@ classdef GROUND_fcSimple_salt < GROUND_base_class
             %assign upper boundary for salt in subclass
         end
         
-        function ground = get_boundary_condition_l(ground) 
-            ground = get_boundary_condition_l@GROUND_base_class(ground);
+        function ground = get_boundary_condition_l(ground, forcing) 
+            ground = get_boundary_condition_l@GROUND_base_class(ground, forcing);
             %assign lower boundary for salt in subclass
         end
         

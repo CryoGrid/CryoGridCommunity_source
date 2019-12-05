@@ -35,9 +35,10 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
             snow.STATVAR.time_snowfall = [];
             snow.STATVAR.ice_fraction = [];
             snow.STATVAR.target_density = [];
+            snow.STATVAR.energy = [];
         end
         
-        function snow = get_boundary_condition_u(snow, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
+        function snow = get_boundary_condition_u(snow, forcing) 
             snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600); %snowfall is in mm/day
             snow.TEMP.rainfall = forcing.TEMP.rainfall ./1000 ./(24.*3600);
             snow.TEMP.wind = forcing.TEMP.wind;
@@ -64,10 +65,29 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
             snow.TEMP.rain_energy = snow.TEMP.rainfall .* max(0, forcing.TEMP.Tair) .* snow.CONST.c_w;
             snow.TEMP.d_ice_sublim = -snow.STATVAR.Qe ./ snow.CONST.L_s;
             snow.TEMP.d_E_sublim =  snow.TEMP.d_ice_sublim .* (snow.CONST.c_w .*snow.STATVAR.T(1) - snow.CONST.L_f);
+            %snow.TEMP.d_E_sublim = snow.STATVAR.Qe;
             snow.TEMP.T_rainWater = forcing.TEMP.Tair; % same as below
-            snow.TEMP.F_ub_water = snow.TEMP.rainfall; % Needed when
-%             using the bucketW water infiltration scheme, change
-%             advance_prognostics
+            snow.TEMP.F_ub_water = snow.TEMP.rainfall; % Needed when using the bucketW water infiltration scheme, change advance_prognostics
+            
+%             fraction_snow = snow.IA_PARENT.FRACTIONAL_SNOW_COVER;
+%             snow.TEMP.d_ice_sublim = fraction_snow .* snow.TEMP.d_ice_sublim;
+%             snow.TEMP.d_E_sublim = fraction_snow .* snow.TEMP.d_E_sublim;
+
+        end
+        
+        function snow = get_boundary_condition_u_CHILD(snow, forcing)
+             snow = get_boundary_condition_u(snow, forcing); %same function as  for normal snow class
+             
+             fraction_snow = snow.IA_PARENT.FRACTIONAL_SNOW_COVER; %sublimation must be scaled!
+             snow.TEMP.d_ice_sublim = fraction_snow .* snow.TEMP.d_ice_sublim;
+             snow.TEMP.d_E_sublim = fraction_snow .* snow.TEMP.d_E_sublim;
+        end
+        
+        function snow = get_boundary_condition_u_create_CHILD(snow, forcing) 
+            snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600); %snowfall is in mm/day
+            snow = get_snow_properties(snow,forcing);
+            snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);
+            
         end
         
         function snow = get_boundary_condition_l(snow, forcing)
@@ -89,10 +109,30 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
             
         end
         
+        function snow = get_derivatives_prognostic_CHILD(snow)   
+           
+            snow.TEMP.d_energy = snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim;
+            %snow.TEMP.d_waterIce = snow.TEMP.snowfall + snow.TEMP.rainfall + snow.TEMP.d_ice_sublim;
+  
+            snow.TEMP.dT = 0; %assuming zero gradient
+            snow = prog_metamorphism(snow);
+            snow = prog_wind_drift(snow); 
+            %snow = compaction(snow); compaction does not work yet with only one cell, check below
+            snow.TEMP.compact_d_D = 0;
+        end
+        
+        
         function timestep = get_timestep(snow)  %could involve check for several state variables
             timestep = get_timestep@SNOW_simple_seb(snow);
         end
         
+        
+        function timestep = get_timestep_CHILD(snow)  %will be ignored if it has a negative value
+            timestep = -snow.STATVAR.energy ./ snow.TEMP.d_energy;
+            
+        end
+         
+         
         function snow = advance_prognostic(snow, timestep) %real timestep derived as minimum of several classes
             % All prognistic variables are advanced BEFORE the new snow is
             % added, i.e. rain/sublimation occur at the "old" surface
@@ -124,22 +164,113 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
             
         end
         
+        function snow = advance_prognostic_create_CHILD(snow, timestep)
+            newSnow = get_new_snow(snow,timestep);
+            snow.STATVAR.d = newSnow.STATVAR.d;
+            snow.STATVAR.s = newSnow.STATVAR.s;
+            snow.STATVAR.gs = newSnow.STATVAR.gs;
+            snow.STATVAR.time_snowfall = newSnow.STATVAR.time_snowfall;
+            snow.STATVAR.energy = newSnow.STATVAR.energy;
+            snow.STATVAR.waterIce = newSnow.STATVAR.waterIce;
+            snow.STATVAR.ice =  newSnow.STATVAR.ice;
+            snow.STATVAR.layerThick = newSnow.STATVAR.layerThick;
+            snow.STATVAR.water = 0;
+            snow.STATVAR.target_density = snow.STATVAR.ice ./ snow.STATVAR.layerThick;
+            
+     
+            
+        end
+        
+        function snow = advance_prognostic_CHILD(snow, timestep)
+            
+            snow.STATVAR.energy = snow.STATVAR.energy + timestep .* snow.TEMP.d_energy;
+            
+            if snow.STATVAR.waterIce < 0
+                test2
+            end
+            
+            %snow.STATVAR.energy = snow.STATVAR.energy + timestep .*(snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim);
+            snow.STATVAR.waterIce  = snow.STATVAR.waterIce + timestep .* (snow.TEMP.d_ice_sublim + snow.TEMP.rainfall); %rainfall added directly here, snowfall added below
+            snow.STATVAR.layerThick = snow.STATVAR.layerThick + timestep .* (snow.TEMP.d_ice_sublim ./ (snow.STATVAR.ice ./ snow.STATVAR.layerThick));
+            
+            snow.STATVAR.d = max(snow.STATVAR.d.*0, snow.STATVAR.d + timestep .*(snow.TEMP.metam_d_d + snow.TEMP.wind_d_d));
+            snow.STATVAR.s = max(snow.STATVAR.s.*0, min(snow.STATVAR.s.*0+1, snow.STATVAR.s + timestep .*(snow.TEMP.metam_d_s + snow.TEMP.wind_d_s)));
+            snow.STATVAR.gs = max(snow.STATVAR.gs, snow.STATVAR.gs + timestep .*(snow.TEMP.metam_d_gs + snow.TEMP.wind_d_gs));
+            snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, max(snow.STATVAR.ice, snow.STATVAR.layerThick + timestep .*(snow.TEMP.compact_d_D + snow.TEMP.wind_d_D)));
+            
+           if snow.STATVAR.waterIce < 0
+                test1
+            end
+            
+            %add dry snow
+            if snow.TEMP.snowfall > 0
+                newSnow = get_new_snow(snow,timestep);
+                
+                snow.STATVAR.d(1) = (snow.STATVAR.d(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.d.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+                snow.STATVAR.s(1) = (snow.STATVAR.s(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.s.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+                snow.STATVAR.gs(1) = (snow.STATVAR.gs(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.gs.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+                snow.STATVAR.time_snowfall(1) = (snow.STATVAR.time_snowfall(1).*snow.STATVAR.waterIce(1) + newSnow.STATVAR.time_snowfall.*newSnow.STATVAR.waterIce)./(snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce);
+                
+                %snow.STATVAR.energy(1) = snow.STATVAR.energy(1) + newSnow.STATVAR.energy;
+                snow.STATVAR.waterIce(1) = snow.STATVAR.waterIce(1) + newSnow.STATVAR.waterIce;
+                snow.STATVAR.ice(1) = snow.STATVAR.ice(1) + newSnow.STATVAR.ice;
+                snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + newSnow.STATVAR.layerThick;
+            end
+            snow.STATVAR.target_density = min(1, (snow.STATVAR.ice + timestep .* snow.TEMP.d_ice_sublim) ./ snow.STATVAR.layerThick);
+
+            
+        end
+        
+        
         function snow = compute_diagnostic_first_cell(snow, forcing)
             snow = compute_diagnostic_first_cell@SNOW_simple_seb(snow, forcing);
         end
         
         function snow = compute_diagnostic(snow, forcing)
-%             snow = compute_diagnostic@SNOW_simple_seb(snow, forcing);
+%           snow = compute_diagnostic@SNOW_simple_seb(snow, forcing);
             snow = compute_diagnostic@SNOW_base_class(snow, forcing); % changed 171019
-            snow = check_trigger(snow);
-            
-            if sum(snow.STATVAR.layerThick==0)~=0 || sum(snow.STATVAR.waterIce<=0)~=0
-                dff
-            end
-            
+            snow = check_trigger(snow); %checks if snow goes back to CHILD
+
             snow.STATVAR.upperPos = snow.STATVAR.lowerPos + sum(snow.STATVAR.layerThick);
             
         end
+        
+        function snow = compute_diagnostic_CHILD(snow, forcing)
+            
+            snow = conductivity(snow);
+            snow = get_T_water(snow);
+            snow.STATVAR.upperPos = snow.STATVAR.lowerPos + snow.STATVAR.layerThick;
+
+            if snow.STATVAR.waterIce <1e-15   %resets STATUS back to zero
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.STATUS = 0;
+                snow = initialize_zero_snow(snow, snow.IA_PARENT.IA_PARENT_GROUND); %set all variables to zero
+            end
+            
+            
+            if snow.STATVAR.ice >= snow.PARA.swe_per_cell./2
+                
+                snow.IA_PARENT.IA_PARENT_GROUND.PREVIOUS.NEXT = snow; 
+                snow.PREVIOUS = snow.IA_PARENT.IA_PARENT_GROUND.PREVIOUS;
+                snow.NEXT = snow.IA_PARENT.IA_PARENT_GROUND;
+                snow.IA_PARENT.IA_PARENT_GROUND.PREVIOUS = snow;
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.STATUS = -1;
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.FRACTIONAL_SNOW_COVER = 0;
+
+                
+                snow.IA_NEXT = get_IA_class(class(snow.NEXT), class(snow));
+                snow.IA_PARENT.IA_PARENT_GROUND.IA_PREVIOUS = snow.IA_NEXT;
+                snow.IA_NEXT.PREVIOUS = snow;
+                snow.IA_NEXT.NEXT = snow.IA_PARENT.IA_PARENT_GROUND;
+                
+                %snow.IA_PARENT.IA_PARENT_GROUND.IA_CHILD.IA_CHILD_SNOW = [];
+                snow.NEXT.IA_CHILD.IA_CHILD_SNOW = [];  %does not work yet to cut the connection between ground CHILD and snow
+                snow.IA_PARENT = [];
+            end
+            % checks if snow CHILD needs to become full
+            %snow class and rearrange the stratigraphy
+
+        end
+        
         
         function ground = troubleshoot(ground)
             ground = checkNaN(ground);
@@ -147,6 +278,14 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
 
         
         % -----------------   non-mandatory  ------------------
+        
+        function snow = conductivity(snow)   
+            snow = conductivity@SNOW_base_class(snow);
+        end
+            
+        function snow = get_T_water(snow)
+            snow = get_T_water@SNOW_base_class(snow);
+        end
         
         function snow = get_snow_properties(snow,forcing)
             
@@ -224,7 +363,7 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
         
         function snow = get_T_gradient_snow(snow)
             
-            delta=[snow.STATVAR.layerThick; snow.NEXT.STATVAR.layerThick(1,1)];
+            delta=[snow.STATVAR.layerThick; snow.NEXT.STATVAR.layerThick(1,1)];  
             T = [snow.STATVAR.T; snow.NEXT.STATVAR.T(1,1)];
             dT = (T(1:end-2) - T(3:end))./(0.5.*delta(1:end-2) +  delta(2:end-1) + 0.5.*delta(3:end));
             dT =abs([ (T(1) - T(2))./(0.5.*delta(1) + 0.5.*delta(2)) ; dT]);
@@ -432,10 +571,11 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
                 snow.IA_NEXT =[];
                 snow.IA_PREVIOUS =[];
                 
-                ground.IA_CHILD = IA_SNOW_GROUND_crocus();  %reinitialize interaction class
-                ground.IA_CHILD.STATUS = 1; %snow initially active
-                ground.IA_CHILD.IA_PARENT_GROUND = ground;  %attach snow and ground to interaction class
+                %ground.IA_CHILD = IA_SNOW_GROUND_crocus();  %reinitialize interaction class
+                ground.IA_CHILD.STATUS = 2; %snow initially active
+                %ground.IA_CHILD.IA_PARENT_GROUND = ground;  %attach snow and ground to interaction class
                 ground.IA_CHILD.IA_CHILD_SNOW = snow;
+                ground.IA_CHILD.IA_CHILD_SNOW.IA_PARENT = ground.IA_CHILD;
                 
                 snow = ground; %assign snow pointer to ground to return to regular stratigraphy
             end

@@ -22,6 +22,7 @@ classdef GROUND_freeW_bucketW < GROUND_base_class
         function ground = initialize_STATVAR_from_file(ground, grid, forcing, depths)
             ground = initialize_STATVAR_from_file@GROUND_base_class(ground, grid, forcing, depths);
             ground = finalize_STATVAR(ground); %assign all variables, that must be calculated or assigned otherwise
+            
         end
         
 

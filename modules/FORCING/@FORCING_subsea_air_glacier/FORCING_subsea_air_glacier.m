@@ -92,7 +92,7 @@ classdef FORCING_subsea_air_glacier
             elseif glacialCover > forcing.PARA.IS %if glacial cover is greater than treshold
                 TForcing = forcing.PARA.T_IceSheet;
                 saltConcForcing = 0;
-                surfaceState = -1;
+                surfaceState = 2;
                 
             else %subaerial conditions
                 %get current air temperature
