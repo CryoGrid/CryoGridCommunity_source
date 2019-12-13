@@ -56,6 +56,9 @@ classdef OUT_subseaPF
             
             out.PARA.lastDisp = out.OUTPUT_TIME -100;
             out.BREAK = 0;
+            
+            figure(1)
+            clf
         end
         
         function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number)
@@ -71,16 +74,48 @@ classdef OUT_subseaPF
             end
             
             %display current state every now and then
-            dispInterval = 50*365.25;
-            if mod(t,dispInterval) == 0 || abs(out.PARA.lastDisp - t) > dispInterval
+            dispInterval = 100*365.25;
+            if abs(out.PARA.lastDisp - t) > dispInterval
                 out.PARA.lastDisp = t;
                 fprintf('Time is %.0f years bfi \n', t/365.25)
+                            
+                if 0%~isempty(out.STRATIGRAPHY) % && stratigraphy{1,1}.TEMP.saltFlux_ub ~= 0 %something
+                    stratigraphy = out.STRATIGRAPHY{1,end};
+
+                    figure(1)
+                    subplot(3,1,1)
+                    yyaxis left
+                    plot(t/365.25, stratigraphy{1,1}.TEMP.T_ub, 'o')
+                    hold on
+                    if isfield(stratigraphy{1,1}.TEMP, 'saltConc_ub')
+                        yyaxis right
+                        plot(t/365.25, stratigraphy{1,1}.TEMP.saltConc_ub, 'x')
+                    end
+                    drawnow
+
+                    subplot(3,1,[2:3])
+                    CURRENT = TOP_CLASS;
+                    while ~isequal(CURRENT, BOTTOM)
+                        if isprop(CURRENT, 'IA_CHILD') && ~isempty(CURRENT.IA_CHILD) && CURRENT.IA_CHILD.STATUS ==1
+                            plot(CURRENT.IA_CHILD.IA_CHILD.STATVAR.T, CURRENT.IA_CHILD.IA_CHILD.STATVAR.upperPos - cumsum(CURRENT.IA_CHILD.IA_CHILD.STATVAR.layerThick) - 0.5*CURRENT.IA_CHILD.IA_CHILD.STATVAR.layerThick)
+                        end
+                    
+                        plot(CURRENT.STATVAR.T, CURRENT.STATVAR.upperPos - cumsum(CURRENT.STATVAR.layerThick) - 0.5*CURRENT.STATVAR.layerThick)
+                        hold on
+    %                     fprintf('Upper Position: %3.1f \nTemperature: %2.1f\n', CURRENT.STATVAR.upperPos, CURRENT.STATVAR.T(1))
+    %                     fprintf('Lower Position: %3.1f \nTemperature: %2.1f\n', CURRENT.STATVAR.lowerPos, CURRENT.STATVAR.T(end))
+                        CURRENT = CURRENT.NEXT;
+                    end
+                    ylim(stratigraphy{1,1}.STATVAR.upperPos + [-2, 0])
+                    drawnow
+                end
             end
             
             %update runinfo every step
             out.RUNINFO.timesteps = out.RUNINFO.timesteps + 1;
             %out.RUNINFO.dt_min = min(out.RUNINFO.dt_min, run_info.current_timestep) ;
             %out.RUNINFO.dt_max = max(out.RUNINFO.dt_max, run_info.current_timestep);
+            
             
             if t==out.OUTPUT_TIME || out.BREAK == 1
                 %save forcing
@@ -91,7 +126,7 @@ classdef OUT_subseaPF
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 CURRENT =TOP_CLASS;
                 if isprop(CURRENT, 'IA_CHILD') && ~isempty(CURRENT.IA_CHILD)
-                    out.MISC=[out.MISC [CURRENT.IA_CHILD.IA_CHILD_SNOW.STATVAR.T(1,1); CURRENT.IA_CHILD.IA_CHILD_SNOW.STATVAR.layerThick(1,1)]]; 
+                    out.MISC=[out.MISC [CURRENT.IA_CHILD.IA_CHILD.STATVAR.T(1,1); CURRENT.IA_CHILD.IA_CHILD.STATVAR.layerThick(1,1)]]; 
                 else
                     out.MISC=[out.MISC [NaN; NaN]];
                 end
@@ -99,7 +134,7 @@ classdef OUT_subseaPF
                                 
                 while ~isequal(CURRENT, BOTTOM)
                     if isprop(CURRENT, 'IA_CHILD') && ~isempty(CURRENT.IA_CHILD) && CURRENT.IA_CHILD.STATUS ==1
-                        res=copy(CURRENT.IA_CHILD.IA_CHILD_SNOW);
+                        res=copy(CURRENT.IA_CHILD.IA_CHILD);
                         res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  %cut all dependencies
                         result=[result; {res}];
                     end
@@ -113,32 +148,7 @@ classdef OUT_subseaPF
                 end
                 out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = result;
                 
-                
-                if 0%stratigraphy{1,1}.TEMP.saltFlux_ub ~= 0 %something
-                    stratigraphy = out.STRATIGRAPHY{1,end};
-                    
-                    figure(1)
-                    subplot(3,1,1)
-                    plot(t, stratigraphy{1,1}.TEMP.T_ub, 'o')
-                    hold on
-                    if isfield(stratigraphy{1,1}.TEMP, 'saltConc_ub')
-                        plot(t, stratigraphy{1,1}.TEMP.saltConc_ub, 'x')
-                    end
-                    drawnow
-
-                    CURRENT = TOP_CLASS;
-                    while ~isequal(CURRENT, BOTTOM)
-                        plot(CURRENT.STATVAR.T, CURRENT.STATVAR.upperPos - cumsum(CURRENT.STATVAR.layerThick))
-                        hold on
-                        fprintf('Upper Position: %3.1f \nTemperature: %2.1f\n', CURRENT.STATVAR.upperPos, CURRENT.STATVAR.T(1))
-                        fprintf('Lower Position: %3.1f \nTemperature: %2.1f\n', CURRENT.STATVAR.lowerPos, CURRENT.STATVAR.T(end))
-                        CURRENT = CURRENT.NEXT;
-                    end
-                    drawnow
-                    pause(0.5)
-
-                end
-                      
+                        
                 %make sure to hit savetime at the end
                 out.OUTPUT_TIME = min(out.OUTPUT_TIME + out.PARA.output_timestep, out.SAVE_TIME);            
                 

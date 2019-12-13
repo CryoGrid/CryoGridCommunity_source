@@ -77,13 +77,13 @@ classdef GROUND_Sediment_heat_fcurve_saltDiff < GROUND_Sediment_heat_fcurve
 
             %make timestep smaller for abrupt changes of salt influx
             %if ground.TEMP.saltFlux_ub ~= 0 %i.e. if we are in a submarine phase
-                timestep_min_salt = ground.PARA.dsaltConc_max / max(ground.TEMP.divsaltConc);
+                timestep_min_salt = abs(ground.PARA.dsaltConc_max / max(ground.TEMP.divsaltConc));
                 timestep = min([courant_number_temperature, courant_number_salt, timestep_min_salt])/(3600*24); %convert estimate from seconds to days;
             %else
             %   timestep = min(courant_number_temperature, courant_number_salt)/(3600*24); %convert estimate from seconds to days;
             %end
 
-           timestep = max(timestep, 1);%1/(24*60)); %no timesteps below 1/(24*60) day = 1 minute!
+           %timestep = max(timestep, 0.01);%1/(24*60)); %no timesteps below 1/(24*60) day = 1 minute!
      
         end
 

@@ -6,8 +6,6 @@
 %> soilType, Salinity, fraction of Mineral and Organic Content, Porosity
 classdef GROUND_Sediment_heat_fcurve < GROUND_base_class
     % MISSING
-    % - initialization in dependence on lat/lon/zsb, forcing, flag for initial
-    %   conditions, depth in the stratigraphy
     % - triggered sedimentation/erosion
     
 %     properties %from the superclass
@@ -43,7 +41,13 @@ classdef GROUND_Sediment_heat_fcurve < GROUND_base_class
         function ground = assign_global_variables(ground, forcing)
             % assigns ground heat flow from the forcing to the ground
             ground = assign_global_variables@GROUND_base_class(ground, forcing);
-            
+        end
+        
+        function ground = initialize_STATVAR_from_file(ground, grid, forcing, depths)
+            %initialize layerThick, upperPos, lowerPos, etc in the superclass
+            ground = initialize_STATVAR_from_file@GROUND_base_class(ground, grid, forcing, depths);
+            ground.STATVAR.porosity = ground.STATVAR.water;
+
             %initialize Forcing Temperature for initialize profile
             if ground.STATVAR.upperPos < forcing.DATA.seaLevel(1)  % site is inundated
                 waterDepth = forcing.DATA.seaLevel(1) - ground.STATVAR.upperPos;    % depth water column
@@ -54,18 +58,14 @@ classdef GROUND_Sediment_heat_fcurve < GROUND_base_class
                 else  % between 2m and 0m T sea bottom equals 0�C
                     T0 = 0;
                 end
-            else
+            elseif forcing.DATA.glacialCover(1) > forcing.PARA.IS %if glacial cover is greater than treshold
+                T0 = forcing.PARA.T_IceSheet;
+            else                
                 T0 = forcing.DATA.airTemp(1);
             end
             
             ground.TEMP.T_ub = T0; 
-        end
-        
-        function ground = initialize_STATVAR_from_file(ground, grid, forcing, depths)
-            %initialize layerThick, upperPos, lowerPos, etc in the superclass
-            ground = initialize_STATVAR_from_file@GROUND_base_class(ground, grid, forcing, depths);
-            ground.STATVAR.porosity = ground.STATVAR.water;
-
+            
             ground = finalize_STATVAR(ground); %assign all variables, that must be calculated or assigned otherwise, including energy, water and ice contents, thermal conductivity
         end
 
