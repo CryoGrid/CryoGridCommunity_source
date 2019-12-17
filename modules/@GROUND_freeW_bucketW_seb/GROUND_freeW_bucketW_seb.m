@@ -34,7 +34,6 @@ classdef GROUND_freeW_bucketW_seb < GROUND_freeW_bucketW
         end
         
         function ground = get_boundary_condition_l(ground, forcing)
-
             ground = get_boundary_condition_l@GROUND_freeW_bucketW(ground, forcing);
         end
         
@@ -48,12 +47,7 @@ classdef GROUND_freeW_bucketW_seb < GROUND_freeW_bucketW
         end
         
         function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
-
-            ground = calculateET(ground); %%%% added by Simone, originally in SEB
-            
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + ground.TEMP.d_water_ET .* timestep; %subtract water from ET
-            
-         
             ground.STATVAR.energy = ground.STATVAR.energy + ground.CONST.c_w .* ground.STATVAR.T .* ground.TEMP.d_water_ET .* timestep; %adjust energy
             ground = advance_prognostic@GROUND_freeW_bucketW(ground, timestep); %advance energy and route down water
         end
@@ -99,7 +93,7 @@ classdef GROUND_freeW_bucketW_seb < GROUND_freeW_bucketW
                 
                 fraction_ET = fraction_ET./max(1e-12, sum(fraction_ET, 1));
                 
-                ground.TEMP.d_water_ET = -ground.STATVAR.Qe ./ ground.CONST.L_v .* fraction_ET; % in m water per sec
+                ground.TEMP.d_water_ET = -ground.STATVAR.Qe ./ ground.CONST.L_v .* fraction_ET;    %in m water per sec
                 
             else  %condensation
                 ground.STATVAR.Qe = ground.STATVAR.Qe_pot;
@@ -111,7 +105,7 @@ classdef GROUND_freeW_bucketW_seb < GROUND_freeW_bucketW
         
         function fraction = getET_fraction(ground)
             saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick - ground.STATVAR.mineral - ground.STATVAR.organic);
-            fraction = double(ground.STATVAR.T>0).*(double(saturation >= ground.STATVAR.field_capacity) + double(saturation < ground.STATVAR.field_capacity).*0.25.*(1-cos(pi().*saturation./ground.STATVAR.field_capacity)).^2);
+            fraction=double(ground.STATVAR.T>0).*(double(saturation >= ground.STATVAR.field_capacity) + double(saturation < ground.STATVAR.field_capacity).*0.25.*(1-cos(pi().*saturation./ground.STATVAR.field_capacity)).^2);
         end
     
     end

@@ -33,7 +33,8 @@ classdef IA_HEAT_WATER_SNOW_GROUND < matlab.mixin.Copyable %zero water flux betw
             ia_heat_water.NEXT.TEMP.d_water_in(1,1) = min(ia_heat_water.NEXT.TEMP.d_water_in(1,1), ground.STATVAR.layerThick(1,1) - ground.STATVAR.mineral(1,1) - ground.STATVAR.organic(1,1) - ground.STATVAR.waterIce(1,1));
             ia_heat_water.PREVIOUS.TEMP.d_water_out(end,1) = ia_heat_water.NEXT.TEMP.d_water_in(1,1);
             
-            ia_heat_water.NEXT.TEMP.d_water_in(1,1) = ia_heat_water.NEXT.TEMP.d_water_in(1,1) ./timestep;        
+            ia_heat_water.NEXT.TEMP.d_water_in(1,1) = ia_heat_water.NEXT.TEMP.d_water_in(1,1) ./timestep;
+
         end
     end
 end

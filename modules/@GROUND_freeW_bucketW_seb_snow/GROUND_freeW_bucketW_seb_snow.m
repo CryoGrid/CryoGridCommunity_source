@@ -30,26 +30,24 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
         function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
             ground = get_boundary_condition_u@GROUND_freeW_bucketW_seb(ground, forcing);       
             forcing.TEMP.rainfall = 0;
-%             if ~isempty(ground.IA_CHILD)
-%                 ground.IA_CHILD = get_boundary_condition_u(ground.IA_CHILD, forcing); %call boundary condition for child
-%             end
+            if ~isempty(ground.IA_CHILD)
+                ground.IA_CHILD = get_boundary_condition_u(ground.IA_CHILD, forcing); %call boundary condition for child
+            end
                   
         end
         
         function ground = get_boundary_condition_l(ground, forcing)
             ground = get_boundary_condition_l@GROUND_freeW_bucketW(ground, forcing);
-            ground.STATVAR.Qh = Q_h(ground, forcing); %%%% added by Simone, originally in SEB
-            ground.STATVAR.Qe_pot = Q_eq_potET(ground, forcing); %%%% added by Simone, originally in SEB
         end
         
         
         function ground = get_derivatives_prognostic(ground)
-%             if ~isempty(ground.IA_CHILD)
-%                 ground.IA_CHILD = get_derivative_energy(ground.IA_CHILD); % boundary condition for child, omacts ground.TEMP.F_ub
-%                 
-%             else
+            if ~isempty(ground.IA_CHILD)
+                ground.IA_CHILD = get_derivative_energy(ground.IA_CHILD); % boundary condition for child, omacts ground.TEMP.F_ub
+                
+            else
                 ground = get_derivatives_prognostic@GROUND_freeW_bucketW(ground);
-%             end
+            end
             
             ground = get_derivative_water(ground); 
             %add the water flux bc
@@ -63,9 +61,9 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
         function ground = advance_prognostic(ground, timestep) 
             ground = advance_prognostic@GROUND_freeW_bucketW_seb(ground, timestep); %advance energy and route down water
             
-%             if ~isempty(ground.IA_CHILD)
-%                 ground.IA_CHILD = advance_prognostic(ground.IA_CHILD, timestep); %call function for child CHECK!!
-%             end
+            if ~isempty(ground.IA_CHILD)
+                ground.IA_CHILD = advance_prognostic(ground.IA_CHILD, timestep); %call function for child CHECK!!
+            end
         end
         
         function ground = compute_diagnostic_first_cell(ground, forcing)
@@ -74,14 +72,14 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
         
         function ground = compute_diagnostic(ground, forcing)
             ground = get_T_water(ground);
-%             if ~isempty(ground.IA_CHILD)
-%                 ground.IA_CHILD = compute_diagnostic(ground.IA_CHILD); %call function for child
-%                 ground.IA_CHILD = check_trigger(ground.IA_CHILD);
-%             end
+            if ~isempty(ground.IA_CHILD)
+                ground.IA_CHILD = compute_diagnostic(ground.IA_CHILD); %call function for child
+                ground.IA_CHILD = check_trigger(ground.IA_CHILD);
+            end
             ground = conductivity(ground);
-%             if ~isempty(ground.IA_CHILD)
-%                 ground.IA_CHILD = mix_conductivity(ground.IA_CHILD); %call function for child
-%             end
+            if ~isempty(ground.IA_CHILD)
+                ground.IA_CHILD = mix_conductivity(ground.IA_CHILD); %call function for child
+            end
             
             %ground = compute_diagnostic@GROUND_freeW_bucketW(ground, forcing);
         end
