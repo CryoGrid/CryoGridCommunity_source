@@ -15,5 +15,5 @@ function class_list = read_classes_from_file(status_info)
             index = section{2,2};
             class_list = [class_list; {class index}];
     end
- 
+
 end

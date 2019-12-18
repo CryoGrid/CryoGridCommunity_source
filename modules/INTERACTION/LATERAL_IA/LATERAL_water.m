@@ -16,6 +16,7 @@ classdef LATERAL_water
         function lateral = provide_variables(lateral)
             lateral.PARA.interaction_timestep = [];
             lateral.PARA.relative_elevation = [];
+            lateral.PARA.hydraulic_conductivity = [];
             lateral.PARA.area = [];
             lateral.PARA.distance = [];
             lateral.PARA.contact_length = [];
@@ -34,22 +35,18 @@ classdef LATERAL_water
         
         function [lateral, forcing] = complete_init_lateral(lateral, forcing)
             lateral.INTERACTION_TIME = forcing.PARA.start_time + lateral.PARA.interaction_timestep/24;
-            forcing.PARA.altitude = forcing.PARA.altitude + lateral.PARA.relative_elevation;
+            forcing.PARA.altitude = forcing.PARA.altitude + lateral.PARA.relative_elevation(labindex);
             
-            area = nan(1,numlabs);
-            area(labindex) = lateral.PARA.area;
             interaction_timestep = nan(1,numlabs);
             interaction_timestep(labindex) = lateral.PARA.interaction_timestep;
             labBarrier
             for j = 1:numlabs
                 if j ~= labindex
-                    labSend(lateral.PARA.area,j,100);
                     labSend(lateral.PARA.interaction_timestep,j,101);
                 end
             end
             for j = 1:numlabs
                 if j ~= labindex
-                    area(j) = labReceive(j,100);
                     interaction_timestep(j) = labReceive(j,101);
                 end
             end
@@ -58,10 +55,11 @@ classdef LATERAL_water
                 error('Interaction times not equal or undefined')
             end
             
-            lateral.PARA.area = area;
             lateral.STATUS.water = zeros(1,numlabs);
+            lateral.STATUS.snow = zeros(1,numlabs);
+            lateral.TEMP.lastWaterChange = nan(1,3);
             
-            disp(['Elevation: ' num2str(forcing.PARA.altitude)  ' Area: ' num2str(area(labindex))])
+            disp(['Elevation: ' num2str(forcing.PARA.altitude)  ' Area: ' num2str(lateral.PARA.area(labindex))])
             labBarrier
         end
         
@@ -72,104 +70,97 @@ classdef LATERAL_water
                 HH = round(HH + lateral.PARA.interaction_timestep);
                 lateral.INTERACTION_TIME = datenum(YY,MM,DD,HH,0,0);
                 
-%                 for j = 1:numlabs
-%                     if j ~= labindex
-%                         labSend(class(top_class),j,102);
-%                     end
-%                 end
-%                 for j = 1:numlabs
-%                     if j ~= labindex
-%                         class_j = labReceive(j,102);
-%                         if strcmp(class_j,class(top_class))
-%                             lateral.STATUS.water(j) = 1;
-%                             lateral.STATUS.water(labindex) = 1;
-%                         end
-%                     end
-%                 end
-                % For testing:
-                if  strcmp(class(top_class),'SNOW_simple_seb_crocus') % only for testing
-                    lateral.STATUS.water(labindex) = 1;
-                else
-                    lateral.STATUS.water(labindex) = 0;
-                end
-                for j = 1:numlabs
-                    if j ~= labindex
-                        labSend(lateral.STATUS.water(labindex),j,102);
-                    end
-                end
-                for j = 1:numlabs
-                    if j ~= labindex
-                        lateral.STATUS.water(j) = labReceive(j,102);
-                    end
-                end
+                
+                lateral = precondition_lateral_exchange(lateral,top_class);
+                
+                %                 if  strcmp(class(top_class),'SNOW_crocus') % only for testing
+                %                     lateral.STATUS.water(labindex) = 1;
+                %                 else
+                %                     lateral.STATUS.water(labindex) = 0;
+                %                 end
+                %
+                %                 for j = 1:numlabs
+                %                     if j ~= labindex
+                %                         labSend(lateral.STATUS.water(labindex),j,102);
+                %                     end
+                %                 end
+                %                 for j = 1:numlabs
+                %                     if j ~= labindex
+                %                         lateral.STATUS.water(j) = labReceive(j,102);
+                %                     end
+                %                 end
                 % End testing
                 
                 labBarrier
                 if sum(lateral.STATUS.water) >= 2
+                    CLASS = class(top_class);
                     pot_water_fluxes = zeros(numlabs);
-
+                    
                     lateral.TEMP.frost_table  = zeros(1,numlabs);
                     lateral.TEMP.water_table  = zeros(1,numlabs);
                     lateral.TEMP.mobile_water = zeros(1,numlabs);
-                    
-                    % Adapt mobile water for GROUND later
-                    mobile_water = top_class.STATVAR.water - (top_class.STATVAR.layerThick - top_class.STATVAR.ice).*top_class.PARA.field_capacity;
-                    i = find(mobile_water > .001,1,'first'); % min threshld of mobile water for lateral fluxes
-                    j = find(mobile_water > .001,1,'last'); % last cell with mobile water
-                    mobile_water(mobile_water <= .001) = 0;
-                    if sum(mobile_water) > 0
-                        exchange.water_table = top_class.STATVAR.lowerPos + sum(top_class.STATVAR.layerThick(i+1:end)) + mobile_water(i)/(top_class.STATVAR.layerThick(i) - top_class.STATVAR.ice(i))*top_class.STATVAR.layerThick(i);
-                    else
-                        exchange.water_table = top_class.STATVAR.lowerPos;
+%                     
+                    if strcmp(CLASS(1:4),'SNOW')
+                        [exchange, mobile_water] = get_water_exchange_SNOW(top_class);
+                    elseif strcmp(CLASS(1:6),'GROUND')
+                        [exchange, mobile_water] = get_water_exchange_GROUND(top_class);
                     end
-                    exchange.frost_table = top_class.STATVAR.lowerPos + sum(top_class.STATVAR.layerThick(j+1:end));
-                    exchange.mobile_water = sum(mobile_water);
                     
                     lateral.TEMP.frost_table(labindex)  = exchange.frost_table;
                     lateral.TEMP.water_table(labindex)  = exchange.water_table;
                     lateral.TEMP.mobile_water(labindex) = exchange.mobile_water;
                     
+                    lateral.PARA.hydraulic_conductivity(labindex) = top_class.PARA.hydraulicConductivity;
                     
                     for j = 1:numlabs
-                        if j ~= labindex
-                            labSend(exchange,j,103);
+                        if j ~= labindex && lateral.STATUS.water(j) == 1
+                            labSend(exchange,j,104);
+                            labSend(top_class.PARA.hydraulicConductivity,j,105);
                         end
                     end
                     for j = 1:numlabs
-                        if j ~= labindex
-                            exchange_j = labReceive(j,103);
+                        if j ~= labindex && lateral.STATUS.water(j) == 1
+                            exchange_j = labReceive(j,104);
                             lateral.TEMP.frost_table(j)  = exchange_j.frost_table;
                             lateral.TEMP.water_table(j)  = exchange_j.water_table;
                             lateral.TEMP.mobile_water(j) = exchange_j.mobile_water;
+                            lateral.PARA.hydraulic_conductivity(j) = labReceive(j,105);
                             
                             pot_water_fluxes = lateral_Darcy_flux(lateral,pot_water_fluxes,j);
                         end
                     end
-                    pot_water_fluxes = lateral_Darcy_flux(lateral,pot_water_fluxes,2);
+%                     TESTING
+%                     pot_water_fluxes = zeros(2,2);
+%                     pot_water_fluxes = lateral_Darcy_flux(lateral,pot_water_fluxes,2);
+%                     % END TESTING
                     water_fluxes_index = available_lateral_water(lateral,pot_water_fluxes);
                     water_fluxes_ensamble = zeros(numlabs,numlabs,numlabs);
                     water_fluxes_ensamble(:,:,labindex) = water_fluxes_index;
                     
                     for j = 1:numlabs
-                        if j ~= labindex
+                        if j ~= labindex && lateral.STATUS.water(j) == 1
                             labSend(water_fluxes_index,j,106);
                         end
                     end
                     for j = 1:numlabs
-                        if j ~= labindex
+                        if j ~= labindex && lateral.STATUS.water(j) == 1
                             water_fluxes_j = labReceive(j,106);
                             water_fluxes_ensamble(:,:,j) = water_fluxes_j;
                         end
                     end
-%                     
+                    %
                     water_fluxes = nansum(water_fluxes_ensamble,3);
                     waterflux = nansum(water_fluxes(:,labindex)); % + boundary weater (implement later)
-                    % only for testing
+                    [lateral, waterflux] = lateral_water_oscillations(lateral, waterflux);
                     
                     if waterflux < 0    % loosing water
                         top_class = drain_water(top_class,mobile_water,waterflux);
                     elseif waterflux > 0 % gaining water
-                        top_class = add_water(top_class,waterflux);
+                        if strcmp(CLASS(1:4),'SNOW')
+                            top_class = add_water_SNOW(top_class,waterflux);
+                        elseif strcmp(CLASS(1:6),'GROUND')
+                            top_class = add_water_GROUND(top_class,waterflux);
+                        end
                     end
                     
                 end

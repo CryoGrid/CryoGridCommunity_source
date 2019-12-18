@@ -47,7 +47,7 @@ classdef OUT_parallel
         function out = complete_init_out(out, forcing)
             out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.output_timestep;
             
-            if out.PARA.status_snow == 1
+            if out.PARA.status_snow >= 1
                 out.RESULT.grid_snow = out.PARA.height:-out.PARA.snow_spacing:0;
                 out.RESULT.grid_snow = double(out.RESULT.grid_snow + forcing.PARA.altitude);
             end
@@ -126,9 +126,9 @@ classdef OUT_parallel
             
             if t==out.OUTPUT_TIME
                 if exist('lateral') && labindex == 1
-                    disp([datestr(t) ' lateral status; snow: ' num2str(lateral.STATUS.snow) ' water: ' num2str(lateral.STATUS.water)])
+                    disp([datestr(t,'dd-mmm-yyyy HH:MM:SS') ' lateral status; snow: ' num2str(lateral.STATUS.snow) ' water: ' num2str(lateral.STATUS.water)])
                 elseif ~exist('lateral')
-                    disp(datestr(t))
+                    disp(datestr(t,'dd-mmm-yyyy HH:MM:SS'))
                 end
                 out.TEMP.top_class = class(TOP_CLASS);
                 out.TIMESTAMP=[out.TIMESTAMP t];

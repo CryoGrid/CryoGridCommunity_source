@@ -19,33 +19,32 @@ classdef LATERAL_snow < LATERAL_water
         
         function [lateral, forcing] = complete_init_lateral(lateral, forcing)
             [lateral, forcing] = complete_init_lateral@LATERAL_water(lateral, forcing);
-            lateral.STATUS.snow = zeros(1,numlabs);
         end
         
         function [lateral, snow] = lateral_interaction(lateral,snow,t)
             if t == lateral.INTERACTION_TIME
                 [lateral, snow] = lateral_interaction@LATERAL_water(lateral,snow,t);
-                
+                labBarrier
                 % Initialize interaction
-                if strcmp(class(snow),'SNOW_simple_seb_crocus') || strcmp(class(snow),'SNOW_crocus_no_inheritance')
+                if strcmp(class(snow),'SNOW_simple_seb_crocus') || strcmp(class(snow),'SNOW_crocus')
                     lateral.STATUS.snow(labindex) = 1;
                 else
                     lateral.STATUS.snow(labindex) = 0;
                 end
                 
-                lateral.TEMP.exposures(labindex) = lateral.PARA.exposure + sum(snow.STATVAR.layerThick);
+                lateral.TEMP.exposures(labindex) = lateral.PARA.exposure(labindex) + sum(snow.STATVAR.layerThick);
                 
                 
                 for j = 1:numlabs
                     if j ~= labindex
-                        labSend(lateral.STATUS.snow(labindex),j,102);
-                        labSend(lateral.TEMP.exposures(labindex),j,103);
+                        labSend(lateral.STATUS.snow(labindex),j,1);
+                        labSend(lateral.TEMP.exposures(labindex),j,2);
                     end
                 end
                 for j = 1:numlabs
                     if j ~= labindex
-                        lateral.STATUS.snow(j)      = labReceive(j,102);
-                        lateral.TEMP.exposures(j)   = labReceive(j,103);
+                        lateral.STATUS.snow(j)      = labReceive(j,1);
+                        lateral.TEMP.exposures(j)   = labReceive(j,2);
                     end
                 end
                 
@@ -94,28 +93,37 @@ classdef LATERAL_snow < LATERAL_water
                     % Exchange snow properties
                     for j = 1:numlabs
                         if j ~= labindex
-                            labSend(snow_out.ice,j,2);
-                            labSend(snow_out.water,j,3);
-                            labSend(snow_out.waterIce,j,4);
-                            labSend(snow_out.layerThick,j,5);
-                            labSend(snow_out.energy,j,6);
-                            labSend(snow_out.d,j,7);
-                            labSend(snow_out.s,j,8);
-                            labSend(snow_out.gs,j,9);
-                            labSend(snow_out.time_snowfall,j,10);
+                            labSend(snow_out,j,3);
+%                             labSend(snow_out.water,j,4);
+%                             labSend(snow_out.waterIce,j,5);
+%                             labSend(snow_out.layerThick,j,6);
+%                             labSend(snow_out.energy,j,7);
+%                             labSend(snow_out.d,j,8);
+%                             labSend(snow_out.s,j,9);
+%                             labSend(snow_out.gs,j,10);
+%                             labSend(snow_out.time_snowfall,j,11);
                         end
                     end
                     for j = 1:numlabs
                         if j ~= labindex
-                            lateral.TEMP.ice(j)             = labReceive(j,2);
-                            lateral.TEMP.water(j)           = labReceive(j,3);
-                            lateral.TEMP.waterIce(j)        = labReceive(j,4);
-                            lateral.TEMP.layerThick(j)      = labReceive(j,5);
-                            lateral.TEMP.energy(j)          = labReceive(j,6);
-                            lateral.TEMP.d(j)               = labReceive(j,7);
-                            lateral.TEMP.s(j)               = labReceive(j,8);
-                            lateral.TEMP.gs(j)              = labReceive(j,9);
-                            lateral.TEMP.time_snowfall(j)   = labReceive(j,10);
+                            snow_out_j = labReceive(j,3);
+                            lateral.TEMP.ice(j)             = snow_out_j.ice;
+                            lateral.TEMP.water(j)           = snow_out_j.water;
+                            lateral.TEMP.waterIce(j)        = snow_out_j.waterIce;
+                            lateral.TEMP.layerThick(j)      = snow_out_j.layerThick;
+                            lateral.TEMP.energy(j)          = snow_out_j.energy;
+                            lateral.TEMP.d(j)               = snow_out_j.d;
+                            lateral.TEMP.s(j)               = snow_out_j.s;
+                            lateral.TEMP.gs(j)              = snow_out_j.gs;
+                            lateral.TEMP.time_snowfall(j)   = snow_out_j.time_snowfall;
+%                             lateral.TEMP.water(j)           = labReceive(j,4);
+%                             lateral.TEMP.waterIce(j)        = labReceive(j,5);
+%                             lateral.TEMP.layerThick(j)      = labReceive(j,6);
+%                             lateral.TEMP.energy(j)          = labReceive(j,6);
+%                             lateral.TEMP.d(j)               = labReceive(j,7);
+%                             lateral.TEMP.s(j)               = labReceive(j,8);
+%                             lateral.TEMP.gs(j)              = labReceive(j,9);
+%                             lateral.TEMP.time_snowfall(j)   = labReceive(j,10);
                         end
                     end
  

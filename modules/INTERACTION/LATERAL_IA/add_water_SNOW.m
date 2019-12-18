@@ -1,4 +1,4 @@
-function top_class = add_water(top_class,waterflux) % Not compatible for GROUND yet!
+function top_class = add_water_SNOW(top_class,waterflux) % Not compatible for GROUND yet!
 water_in = 0;
 
 porespace = top_class.STATVAR.layerThick - (top_class.STATVAR.ice + top_class.STATVAR.water);

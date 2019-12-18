@@ -18,6 +18,7 @@ function ground = provide_PARA(ground)
     ground.PARA.evaporationDepth = [];
     ground.PARA.rootDepth = [];
     ground.PARA.ratioET = [];
+    ground.PARA.hydraulicConductivity = [];
     
     
     

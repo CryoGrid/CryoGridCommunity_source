@@ -86,6 +86,8 @@ classdef SNOW_base_class < matlab.mixin.Copyable
             snow = get_T_water(snow);
             snow = modify_grid(snow);
             snow = conductivity(snow);
+            snow.STATVAR.upperPos = snow.STATVAR.lowerPos + sum(snow.STATVAR.layerThick);
+
         end
         
         

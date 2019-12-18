@@ -15,6 +15,10 @@ classdef IA_HEAT < matlab.mixin.Copyable
             
             stratigraphy1.TEMP.F_lb = -flux;
             stratigraphy2.TEMP.F_ub = flux;
+            
+            % RBZ 291119, to avoid ET during winter
+            stratigraphy2.TEMP.F_ub_water   = 0;
+            stratigraphy2.TEMP.dwc_dt       = zeros(size(stratigraphy2.STATVAR.T));
         end
     end
 end
