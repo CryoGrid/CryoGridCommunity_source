@@ -8,7 +8,7 @@ function drift_index = drift_exchange_index(lateral)
     delta = lateral.PARA.delta;
     drift_index = zeros(1,numlabs);
     
-    for i = 1:length(area)
+    for i = 1:numlabs
         above = find(exposures > exposures(i) + delta);
         below = find(exposures < exposures(i) - delta);
         if isempty(above) && isempty(below)

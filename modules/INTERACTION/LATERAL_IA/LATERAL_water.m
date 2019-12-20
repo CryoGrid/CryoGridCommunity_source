@@ -20,6 +20,7 @@ classdef LATERAL_water
             lateral.PARA.area = [];
             lateral.PARA.distance = [];
             lateral.PARA.contact_length = [];
+            lateral.PARA.ghost = [];
         end
         
         function lateral = initalize_from_file(lateral, section)
@@ -55,7 +56,7 @@ classdef LATERAL_water
                 error('Interaction times not equal or undefined')
             end
             
-            lateral.STATUS.water = zeros(1,numlabs);
+            lateral.STATUS.water = zeros(1,numlabs + lateral.PARA.ghost);
             lateral.STATUS.snow = zeros(1,numlabs);
             lateral.TEMP.lastWaterChange = nan(1,3);
             
@@ -94,11 +95,13 @@ classdef LATERAL_water
                 labBarrier
                 if sum(lateral.STATUS.water) >= 2
                     CLASS = class(top_class);
-                    pot_water_fluxes = zeros(numlabs);
+                    realizations = numlabs + lateral.PARA.ghost;
                     
-                    lateral.TEMP.frost_table  = zeros(1,numlabs);
-                    lateral.TEMP.water_table  = zeros(1,numlabs);
-                    lateral.TEMP.mobile_water = zeros(1,numlabs);
+                    pot_water_fluxes = zeros(realizations);
+                    
+                    lateral.TEMP.frost_table  = zeros(1,realizations);
+                    lateral.TEMP.water_table  = zeros(1,realizations);
+                    lateral.TEMP.mobile_water = zeros(1,realizations);
 %                     
                     if strcmp(CLASS(1:4),'SNOW')
                         [exchange, mobile_water] = get_water_exchange_SNOW(top_class);
@@ -129,12 +132,16 @@ classdef LATERAL_water
                             pot_water_fluxes = lateral_Darcy_flux(lateral,pot_water_fluxes,j);
                         end
                     end
-%                     TESTING
-%                     pot_water_fluxes = zeros(2,2);
-%                     pot_water_fluxes = lateral_Darcy_flux(lateral,pot_water_fluxes,2);
-%                     % END TESTING
+                    % Boundary water flux
+                    if lateral.PARA.ghost == 1
+                        lateral.TEMP.frost_table(end) = 299;
+                        lateral.TEMP.water_table(end) = 299;
+                        lateral.TEMP.mobile_water(end) = 0;
+                        pot_water_fluxes = lateral_Darcy_flux(lateral,pot_water_fluxes,numlabs+1);
+                    end
+
                     water_fluxes_index = available_lateral_water(lateral,pot_water_fluxes);
-                    water_fluxes_ensamble = zeros(numlabs,numlabs,numlabs);
+                    water_fluxes_ensamble = zeros(realizations,realizations,realizations);
                     water_fluxes_ensamble(:,:,labindex) = water_fluxes_index;
                     
                     for j = 1:numlabs

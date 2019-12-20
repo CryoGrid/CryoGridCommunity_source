@@ -7,6 +7,10 @@ else
 end
 lateral.STATUS.water(labindex) = precond;
 
+if lateral.PARA.ghost == 1
+    lateral.STATUS.water(end) = 1;
+end
+
 for j = 1:numlabs
     if j ~= labindex
         labSend(class(top_class),j,102);
