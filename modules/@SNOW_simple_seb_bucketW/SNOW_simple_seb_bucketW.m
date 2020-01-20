@@ -104,11 +104,11 @@ classdef SNOW_simple_seb_bucketW < SNOW_simple_seb
             snow.TEMP.d_water_in = snow.TEMP.d_water_out .*0;
             snow.TEMP.d_water_in(2:end,1) = snow.TEMP.d_water_out(1:end-1,1);
             snow.TEMP.d_water_in(1,1) = snow.TEMP.F_ub_water;
-            if ~isempty(snow.IA_NEXT)
-                get_boundary_condition_water_m(snow.IA_NEXT);
-            else
+%             if ~isempty(snow.IA_NEXT)
+%                 get_boundary_condition_water_m(snow.IA_NEXT);
+%             else
                 snow.TEMP.d_water_out(end,1) = snow.TEMP.F_lb_water; %CHANGE LATER
-            end
+%             end
         end
         
         function snow = advance_prognostic_water(snow, timestep)

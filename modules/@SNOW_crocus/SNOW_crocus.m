@@ -372,10 +372,8 @@ classdef SNOW_crocus < matlab.mixin.Copyable
             beta2=max(100, 0.01098.*rho./(d_opt.^0.5));
             
             damping_factor=[beta1 beta2 beta2.*Inf];
-            
-            total_albedo = sum(spectral_albedo.*spectral_ranges);
-            
-            snow.TEMP.albedo = min(max(snow.PARA.albedo_min,total_albedo),snow.PARA.albedo_max);
+                        
+            snow.TEMP.albedo = sum(spectral_albedo.*spectral_ranges);
             snow.TEMP.spectral_ranges = spectral_ranges;
             snow.TEMP.spectral_albedo = spectral_albedo;
             snow.TEMP.damping_factor = damping_factor;

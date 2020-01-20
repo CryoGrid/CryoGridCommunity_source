@@ -130,7 +130,7 @@ classdef LATERAL_snow < LATERAL_water
                     % Add snow if deposition occurs
                     if drift_index(labindex) > 0 && sum(lateral.TEMP.ice) > 0
                         snow_drifting = get_snow_mixed(lateral);
-                        snow_in = get_snow_deposited(drift_index,snow_drifting);
+                        snow_in = get_snow_deposited(drift_index,snow_drifting,lateral);
                         snow = add_drifting_snow(snow,snow_in);
                     end
                 end

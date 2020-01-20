@@ -11,7 +11,7 @@ function snow_mixed = get_snow_mixed(lateral)
     snow_mixed.time_snowfall = 0;
     
     j = 1;
-    while j <= numlabs && lateral.TEMP.ice(j) > 0
+    while j <= numlabs && sum(lateral.TEMP.ice(j:end)) > 0
         snow_mixed.d          = (snow_mixed.d.*snow_mixed.ice + lateral.TEMP.d(j).*lateral.TEMP.ice(j))./(snow_mixed.ice+lateral.TEMP.ice(j));
         snow_mixed.s          = (snow_mixed.s.*snow_mixed.ice + lateral.TEMP.s(j).*lateral.TEMP.ice(j))./(snow_mixed.ice+lateral.TEMP.ice(j));
         snow_mixed.gs         = (snow_mixed.gs.*snow_mixed.ice + lateral.TEMP.gs(j).*lateral.TEMP.ice(j))./(snow_mixed.ice+lateral.TEMP.ice(j));

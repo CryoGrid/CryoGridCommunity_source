@@ -1,4 +1,7 @@
 function [snow, snow_out] = get_snow_eroded2(snow,lateral,fraction)
+%%%
+% snow_out is multiplied by the area 
+%%%
     interaction_timestep = lateral.PARA.interaction_timestep.*3600;
     available_snow = snow.TEMP.Si;
     snow_out.layerThick = 0;
@@ -19,11 +22,11 @@ function [snow, snow_out] = get_snow_eroded2(snow,lateral,fraction)
         I = find(snow.TEMP.one_over_tau > 0);
         fractions = min(available_snow(I), snow.TEMP.one_over_tau(I).*interaction_timestep.*fraction.*3);
         weights = snow.STATVAR.ice(I) .* fractions;
-        snow_out.layerThick = sum(snow.STATVAR.layerThick(I).* fractions);
-        snow_out.ice = sum(snow.STATVAR.ice(I) .* fractions);
-        snow_out.water = sum(snow.STATVAR.water(I).*fractions);
-        snow_out.waterIce = sum(snow.STATVAR.waterIce(I).*fractions);
-        snow_out.energy = sum(snow.STATVAR.energy(I).*fractions);
+        snow_out.layerThick = sum(snow.STATVAR.layerThick(I).* fractions).*lateral.PARA.area(labindex);
+        snow_out.ice = sum(snow.STATVAR.ice(I) .* fractions).*lateral.PARA.area(labindex);
+        snow_out.water = sum(snow.STATVAR.water(I).*fractions).*lateral.PARA.area(labindex);
+        snow_out.waterIce = sum(snow.STATVAR.waterIce(I).*fractions).*lateral.PARA.area(labindex);
+        snow_out.energy = sum(snow.STATVAR.energy(I).*fractions).*lateral.PARA.area(labindex);
         snow_out.d = sum(snow.STATVAR.d(I) .* weights)./sum(weights);
         snow_out.s = sum(snow.STATVAR.s(I) .* weights)./sum(weights);
         snow_out.gs = sum(snow.STATVAR.gs(I) .* weights)./sum(weights);

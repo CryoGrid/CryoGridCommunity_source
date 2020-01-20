@@ -24,6 +24,7 @@ classdef OUT_parallel
             out.PARA.height             = [];
             out.PARA.depth              = [];
             out.PARA.ground_spacing     = [];
+            out.PARA.gst_depth          = [];
             out.PARA.snow_spacing       = [];
             out.PARA.status_seb         = [];
             out.PARA.status_snow        = [];
@@ -74,6 +75,9 @@ classdef OUT_parallel
             out.RESULT.T            = [];
             out.RESULT.water        = [];
             out.RESULT.ice          = [];
+            out.RESULT.FDD          = 0;
+            out.RESULT.TDD          = 0;
+            
             
             if out.PARA.status_seb == 1
                 out.TEMP.top_class  = [];
@@ -108,6 +112,7 @@ classdef OUT_parallel
                 out.RESULT.saturation = [];
                 out.RESULT.lwc      = [];
                 out.RESULT.density  = [];
+                out.RESULT.albedo       = [];
             end
             
         end
@@ -173,6 +178,7 @@ classdef OUT_parallel
                             d  = [d(1); d; d(end)];
                             s  = [s(1); s; s(end)];
                             gs = [gs(1); gs; gs(end)];
+                            albedo = TOP_CLASS.TEMP.albedo;
                         end
                         porespace   = TOP_CLASS.STATVAR.layerThick - TOP_CLASS.STATVAR.ice;
                         saturation  = TOP_CLASS.STATVAR.water./porespace;
@@ -195,6 +201,7 @@ classdef OUT_parallel
                             d   = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.d,2,1);
                             s   = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.s,2,1);
                             gs  = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.gs,2,1);
+                            albedo = TOP_CLASS.TEMP.albedo;
                         end
                         porespace   = (TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.layerThick - TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.ice);
                         saturation  = repmat(TOP_CLASS.IA_CHILD.IA_CHILD_SNOW.STATVAR.water./porespace,2,1);
@@ -209,6 +216,7 @@ classdef OUT_parallel
                             d   = [NaN; NaN];
                             s   = [NaN; NaN];
                             gs  = [NaN; NaN];
+                            albedo = TOP_CLASS.PARA.albedo;
                         end
                         density     = [NaN; NaN];
                         saturation  = [NaN; NaN];
@@ -219,11 +227,20 @@ classdef OUT_parallel
                 out.RESULT.water    = [out.RESULT.water interp1(depths, water, out.RESULT.grid)'];
                 out.RESULT.ice      = [out.RESULT.ice interp1(depths, ice, out.RESULT.grid)' ];
                 
+                % TDD/FDD calculation
+                GST                 = interp1(depths, T, out.META.altitude - out.PARA.gst_depth);
+                if GST > 0
+                    out.RESULT.TDD      = out.RESULT.TDD + GST * out.PARA.output_timestep;
+                elseif GST < 0 
+                    out.RESULT.FDD      = out.RESULT.FDD + GST * out.PARA.output_timestep;
+                end
+                
                 if  out.PARA.status_snow >= 1
                     if out.PARA.status_snow == 2
                         out.RESULT.d        = [out.RESULT.d interp1(snowdepths, d, out.RESULT.grid_snow)' ];
                         out.RESULT.s        = [out.RESULT.s interp1(snowdepths, s, out.RESULT.grid_snow)' ];
                         out.RESULT.gs       = [out.RESULT.gs interp1(snowdepths, gs, out.RESULT.grid_snow)' ];
+                        out.RESULT.albedo   = [out.RESULT.albedo albedo];
                     end
                     out.RESULT.saturation   = [out.RESULT.saturation interp1(snowdepths, saturation, out.RESULT.grid_snow)' ];
                     out.RESULT.density      = [out.RESULT.density interp1(snowdepths, density, out.RESULT.grid_snow)' ];
@@ -256,6 +273,9 @@ classdef OUT_parallel
                     out.RESULT.T        = [];
                     out.RESULT.water    = [];
                     out.RESULT.ice      = [];
+                    out.RESULT.FDD      = 0;
+                    out.RESULT.TDD      = 0;
+                    
                     if out.PARA.status_seb == 1
                         out.RESULT.Qh   = [];
                         out.RESULT.Qe   = [];
@@ -272,6 +292,7 @@ classdef OUT_parallel
                             out.RESULT.d        = [];
                             out.RESULT.s        = [];
                             out.RESULT.gs       = [];
+                            out.RESULT.albedo   = [];
                         end
                         out.RESULT.saturation = [];
                         out.RESULT.density  = [];

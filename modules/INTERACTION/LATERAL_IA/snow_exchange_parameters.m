@@ -1,5 +1,5 @@
 function factor = snow_exchange_parameters(lateral)
-    status = lateral.STATUS;
+    status = lateral.STATUS.snow;
     alt = lateral.TEMP.surfaceAltitudes;
     delta = lateral.PARA.delta;
     area = lateral.PARA.area;
