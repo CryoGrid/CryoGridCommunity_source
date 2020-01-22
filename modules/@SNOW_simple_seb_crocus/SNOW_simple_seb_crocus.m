@@ -9,7 +9,7 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
         %mandatory functions for each class
         
         function xls_out = write_excel(~)
-            xls_out = {{'CLASS','index',NaN,NaN,NaN;'SNOW_simple_seb_crocus',1,NaN,NaN,NaN;NaN,NaN,NaN,NaN,NaN;NaN,'value','default','unit',NaN;'density',300,350,'[kg/m3]','snow density';'albedo_max',0.850000000000000,0.850000000000000,'[-]','not active';'albedo_min',0.550000000000000,0.550000000000000,'[-]','not active';'albedo',0.800000000000000,0.800000000000000,'[-]','surface albedo';'epsilon',0.990000000000000,0.990000000000000,'[-]','surface emissivity';'z0',0.000100000000000000,0.000100000000000000,'[m]','roughness length';'field_capacity',0.0500000000000000,0.0500000000000000,'[-]','%fraction of porosity that can be filled with water before draining';'hydraulicConductivity',1,'    ','[m/sec]','    ';'dt_max',3600,3600,'[sec]','longest possible timestep';'dE_max',50000,50000,'[J/m3]','maximum change of energy per timestep';'swe_per_cell',0.0100000000000000,0.0100000000000000,'[m]','target SWE regulating grid cell size, 0.01m is ca. 3cm ';'slope',0,0,'[°]',NaN;'timescale_winddrift',24,48,'[hours]',NaN;'CLASS_END',NaN,NaN,NaN,NaN}};
+            xls_out = {{'CLASS','index',NaN,NaN,NaN;'SNOW_simple_seb_crocus',1,NaN,NaN,NaN;NaN,NaN,NaN,NaN,NaN;NaN,'value','default','unit',NaN;'density',300,350,'[kg/m3]','snow density';'albedo_max',0.850000000000000,0.850000000000000,'[-]','not active';'albedo_min',0.550000000000000,0.550000000000000,'[-]','not active';'albedo',0.800000000000000,0.800000000000000,'[-]','surface albedo';'epsilon',0.990000000000000,0.990000000000000,'[-]','surface emissivity';'z0',0.000100000000000000,0.000100000000000000,'[m]','roughness length';'field_capacity',0.0500000000000000,0.0500000000000000,'[-]','%fraction of porosity that can be filled with water before draining';'hydraulicConductivity',1,'    ','[m/sec]','    ';'dt_max',3600,3600,'[sec]','longest possible timestep';'dE_max',50000,50000,'[J/m3]','maximum change of energy per timestep';'swe_per_cell',0.0100000000000000,0.0100000000000000,'[m]','target SWE regulating grid cell size, 0.01m is ca. 3cm ';'slope',0,0,'[Â°]',NaN;'timescale_winddrift',24,48,'[hours]',NaN;'CLASS_END',NaN,NaN,NaN,NaN}};
         end
         
         function snow = provide_variables(snow)  %initializes the subvariables as empty arrays
@@ -111,7 +111,7 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
         
         function snow = get_derivatives_prognostic_CHILD(snow)   
            
-            snow.TEMP.d_energy = snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim;
+            snow.TEMP.d_energy = snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim + snow.TEMP.d_energy_seb;
             %snow.TEMP.d_waterIce = snow.TEMP.snowfall + snow.TEMP.rainfall + snow.TEMP.d_ice_sublim;
   
             snow.TEMP.dT = 0; %assuming zero gradient
