@@ -131,8 +131,7 @@ classdef SNOW_crocus < matlab.mixin.Copyable
         
         function snow = get_derivatives_prognostic_CHILD(snow)
             
-            snow.TEMP.d_energy = snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim;
-            %snow.TEMP.d_waterIce = snow.TEMP.snowfall + snow.TEMP.rainfall + snow.TEMP.d_ice_sublim;
+            snow.TEMP.d_energy = snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim + snow.TEMP.d_energy_seb;             %snow.TEMP.d_waterIce = snow.TEMP.snowfall + snow.TEMP.rainfall + snow.TEMP.d_ice_sublim;
             
             snow.TEMP.dT = 0; %assuming zero gradient
             snow = prog_metamorphism(snow);
