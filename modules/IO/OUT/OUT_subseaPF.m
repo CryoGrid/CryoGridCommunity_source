@@ -66,6 +66,7 @@ classdef OUT_subseaPF
          
             if isnan(mean(TOP_CLASS.STATVAR.T))
                 fprintf('Time is %.0f - temperature is NAN - terminating! \n', t/365.25)
+                keyboard;
                 out.BREAK = 1;
             end
             if isfield(TOP_CLASS.STATVAR, 'saltConc') && isnan(mean(TOP_CLASS.STATVAR.saltConc))
@@ -100,7 +101,7 @@ classdef OUT_subseaPF
                             plot(CURRENT.IA_CHILD.IA_CHILD.STATVAR.T, CURRENT.IA_CHILD.IA_CHILD.STATVAR.upperPos - cumsum(CURRENT.IA_CHILD.IA_CHILD.STATVAR.layerThick) - 0.5*CURRENT.IA_CHILD.IA_CHILD.STATVAR.layerThick)
                         end
                     
-                        plot(CURRENT.STATVAR.T, CURRENT.STATVAR.upperPos - cumsum(CURRENT.STATVAR.layerThick) - 0.5*CURRENT.STATVAR.layerThick)
+                        plot(CURRENT.STATVAR.T, CURRENT.STATVAR.upperPos - cumsum(CURRENT.STATVAR.layerThick) + 0.5*CURRENT.STATVAR.layerThick)
                         hold on
     %                     fprintf('Upper Position: %3.1f \nTemperature: %2.1f\n', CURRENT.STATVAR.upperPos, CURRENT.STATVAR.T(1))
     %                     fprintf('Lower Position: %3.1f \nTemperature: %2.1f\n', CURRENT.STATVAR.lowerPos, CURRENT.STATVAR.T(end))

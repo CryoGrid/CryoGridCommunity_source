@@ -71,8 +71,8 @@ classdef IA_SEDIMENTATION
                 %% what needs to happen here?
                 % only update of thermal properties?
                 % compaction?
-                minLayerThick = 0.1;
-                maxLayerThick = 0.25;
+                minLayerThick = 0.3;
+                maxLayerThick = 0.5;
                 
                 child = ia_sedimentation.IA_CHILD;
                 newLayerThick = child.TEMP.sedimentation;
@@ -161,6 +161,8 @@ classdef IA_SEDIMENTATION
            if ia_sedimentation.STATUS == 1 
                
                if Height > 2  || ia_sedimentation.IA_CHILD.STATVAR.soilType(1) ~= ia_sedimentation.IA_CHILD.TEMP.surfaceState
+                   keyboard;
+                   
                    %make child the new top module
                    ia_sedimentation.IA_CHILD.PREVIOUS = ia_sedimentation.IA_PARENT.PREVIOUS;
                    ia_sedimentation.IA_CHILD.PREVIOUS.NEXT = ia_sedimentation.IA_CHILD;
