@@ -11,6 +11,7 @@ classdef LATERAL_snow < LATERAL_water
             lateral.PARA.exposure = [];
             lateral.PARA.area = [];
             lateral.PARA.delta = [];
+            lateral.PARA.N_drift = [];
         end
         
         function lateral = initalize_from_file(lateral, section)
