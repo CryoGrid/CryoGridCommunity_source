@@ -176,6 +176,8 @@ classdef SNOW_crocus < matlab.mixin.Copyable
             snow.STATVAR.target_density(1) = min(1, (snow.STATVAR.ice(1) + timestep .* snow.TEMP.d_ice_sublim) ./ snow.STATVAR.layerThick(1));
             
             if sum(snow.STATVAR.layerThick<=0)~=0 || sum(snow.STATVAR.waterIce<=0)~=0
+%                 disp(snow.STATVAR.layerThick)
+%                 disp(snow.STATVAR.waterIce)
                 dff
             end
             

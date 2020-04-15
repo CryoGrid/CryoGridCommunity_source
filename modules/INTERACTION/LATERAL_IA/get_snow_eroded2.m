@@ -4,7 +4,6 @@ function [snow, snow_out] = get_snow_eroded2(snow,lateral,fraction)
 %%%
     interaction_timestep = lateral.PARA.interaction_timestep.*3600;
     N_drift             = lateral.PARA.N_drift;
-    available_snow      = snow.TEMP.Si;
     snow_out.layerThick = 0;
     snow_out.ice        = 0;
     snow_out.water      = 0;
@@ -21,7 +20,8 @@ function [snow, snow_out] = get_snow_eroded2(snow,lateral,fraction)
     
     if sum(double(snow.TEMP.one_over_tau > 0)) > 0
         I = find(snow.TEMP.one_over_tau > 0);
-        fractions = min(available_snow(I), snow.TEMP.one_over_tau(I).*interaction_timestep.*fraction.*N_drift);
+        fractions = snow.TEMP.one_over_tau(I).*interaction_timestep.*fraction.*N_drift;
+        fractions(fractions>1) = 1;
         weights = snow.STATVAR.ice(I) .* fractions;
         snow_out.layerThick = sum(snow.STATVAR.layerThick(I).* fractions).*lateral.PARA.area(labindex);
         snow_out.ice = sum(snow.STATVAR.ice(I) .* fractions).*lateral.PARA.area(labindex);
