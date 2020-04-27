@@ -65,6 +65,7 @@ classdef LATERAL_water
         end
         
         function [lateral, top_class] = lateral_interaction(lateral,top_class,t)
+             top_class.TEMP.lateral_water = 0;
             if t == lateral.INTERACTION_TIME
                 % Update interaction time
                 [YY,MM,DD,HH,~,~] = datevec(lateral.INTERACTION_TIME);
@@ -157,9 +158,10 @@ classdef LATERAL_water
                     end
                     %
                     water_fluxes = nansum(water_fluxes_ensamble,3);
-                    waterflux = nansum(water_fluxes(:,labindex)); % + boundary weater (implement later)
+                    waterflux = nansum(water_fluxes(:,labindex)); 
                     [lateral, waterflux] = lateral_water_oscillations(lateral, waterflux);
                     
+                    top_class.TEMP.lateral_water = waterflux;
                     if waterflux < 0    % loosing water
                         top_class = drain_water(top_class,mobile_water,waterflux);
                     elseif waterflux > 0 % gaining water

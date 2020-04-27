@@ -94,7 +94,7 @@ classdef GROUND_freezeC_bucketW_seb < matlab.mixin.Copyable
 %             ground.TEMP.dwc_dt = ground.TEMP.dwc_dt.*0; % RBZ 291119, to avoid adding waterfluxes from last snowfree timestep during snow season
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
             ground = L_star(ground, forcing);
         end
         

@@ -195,6 +195,7 @@ classdef SNOW_crocus < matlab.mixin.Copyable
             snow.STATVAR.layerThick = newSnow.STATVAR.layerThick;
             snow.STATVAR.water = 0;
             snow.STATVAR.target_density = snow.STATVAR.ice ./ snow.STATVAR.layerThick;
+            snow.TEMP.lateral_water = 0; % Required for OUT_hydro
         end
         
         function snow = advance_prognostic_CHILD(snow, timestep)

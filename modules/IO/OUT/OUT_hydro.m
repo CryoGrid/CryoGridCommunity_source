@@ -84,10 +84,12 @@ classdef OUT_hydro
                 out.TEMP.time       = 0;
                 out.TEMP.ET_acc     = 0;
                 out.TEMP.precp_acc  = 0;
+                out.TEMP.lateral_water = 0;
                 
                 out.RESULT.runoff   = [];
                 out.RESULT.precip   = [];
                 out.RESULT.ET       = [];
+                out.RESULT.lateral  = [];
                 out.RESULT.storage  = [];
             end
             if out.PARA.status_snow == 1
@@ -114,7 +116,7 @@ classdef OUT_hydro
         function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path, lateral)
             
             if out.PARA.status_hydro == 1
-                
+                % Storage initial state
                 if isempty(out.TEMP.top_class)
                     CURRENT = TOP_CLASS;
                     out.RESULT.storage = 0;
@@ -126,15 +128,19 @@ classdef OUT_hydro
                 
                 out.TEMP.top_class = class(TOP_CLASS);
                 
+                % EvapoTranspiration
                 if strcmp(out.TEMP.top_class(1:6),'GROUND')
                     L = 1e3.*(2500.8 - 2.36.*TOP_CLASS.STATVAR.T(1)) .*1000;
                     out.TEMP.ET_acc     = out.TEMP.ET_acc + -TOP_CLASS.STATVAR.Qe ./ L*timestep;
                     
                 elseif strcmp(out.TEMP.top_class(1:4),'SNOW')
-                    out.TEMP.ET_acc     = out.TEMP.ET_acc + -TOP_CLASS.STATVAR.Qe ./ TOP_CLASS.CONST.L_s;
+                    out.TEMP.ET_acc     = out.TEMP.ET_acc + -TOP_CLASS.STATVAR.Qe ./ TOP_CLASS.CONST.L_s*timestep;
                 end
                 
                 out.TEMP.precp_acc  = out.TEMP.precp_acc + (forcing.TEMP.rainfall + forcing.TEMP.snowfall)./1000 ./ (24.*3600)*timestep;
+                if numlabs > 1 % lateral fluxes can occur
+                    out.TEMP.lateral_water = out.TEMP.lateral_water + TOP_CLASS.TEMP.lateral_water;
+                end
                 out.TEMP.time = out.TEMP.time + timestep;
                 
             end
@@ -270,16 +276,18 @@ classdef OUT_hydro
                         storage = storage + sum(CURRENT.STATVAR.waterIce);
                     	CURRENT = CURRENT.NEXT;
                     end
-                
+                    
                     out.RESULT.precip   = [out.RESULT.precip out.TEMP.precp_acc./out.TEMP.time];
                     out.RESULT.ET       = [out.RESULT.ET out.TEMP.ET_acc./out.TEMP.time];
                     out.RESULT.storage  = [out.RESULT.storage storage];
-                    out.RESULT.runoff   = [out.RESULT.runoff out.RESULT.precip(end)+out.RESULT.ET(end)...
-                        + (out.RESULT.storage(end-1)-out.RESULT.storage(end))./out.TEMP.time];
+                    out.RESULT.lateral  = [out.RESULT.lateral out.TEMP.lateral_water./out.TEMP.time]; 
+                    out.RESULT.runoff   = [out.RESULT.runoff out.RESULT.precip(end)+ out.RESULT.ET(end)...
+                        + out.RESULT.lateral(end) + (out.RESULT.storage(end-1)-out.RESULT.storage(end))./out.TEMP.time];
 
-                    out.TEMP.precp_acc  = 0;
-                    out.TEMP.ET_acc     = 0;
-                    out.TEMP.time       = 0;
+                    out.TEMP.precp_acc      = 0;
+                    out.TEMP.ET_acc         = 0;
+                    out.TEMP.lateral_water  = 0;
+                    out.TEMP.time           = 0;
                 end
                 
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
@@ -299,6 +307,7 @@ classdef OUT_hydro
                         out.RESULT.precip   = [];
                         out.RESULT.ET       = [];
                         out.RESULT.runoff   = [];
+                        out.RESULT.lateral  = [];
                         out.RESULT.storage  = out.RESULT.storage(end);
 
                     end

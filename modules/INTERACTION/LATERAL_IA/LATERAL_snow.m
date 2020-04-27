@@ -23,6 +23,7 @@ classdef LATERAL_snow < LATERAL_water
         end
         
         function [lateral, snow] = lateral_interaction(lateral,snow,t)
+            snow.TEMP.lateral_water = 0;
             if t == lateral.INTERACTION_TIME
                 [lateral, snow] = lateral_interaction@LATERAL_water(lateral,snow,t);
                 labBarrier
