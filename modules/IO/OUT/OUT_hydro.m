@@ -138,6 +138,7 @@ classdef OUT_hydro
                 end
                 
                 out.TEMP.precp_acc  = out.TEMP.precp_acc + (forcing.TEMP.rainfall + forcing.TEMP.snowfall)./1000 ./ (24.*3600)*timestep;
+                
                 if numlabs > 1 % lateral fluxes can occur
                     out.TEMP.lateral_water = out.TEMP.lateral_water + TOP_CLASS.TEMP.lateral_water;
                 end
@@ -147,7 +148,7 @@ classdef OUT_hydro
             
             if t==out.OUTPUT_TIME
                 if exist('lateral') && labindex == 1
-                    disp([datestr(t,'dd-mmm-yyyy HH:MM:SS') ' lateral status; snow: ' num2str(lateral.STATUS.snow) ' water: ' num2str(lateral.STATUS.water)])
+                    disp([datestr(t,'dd-mmm-yyyy HH:MM:SS') ' lateral status; snow: ' num2str(lateral.STATUS.snow) ' water: ' num2str(lateral.STATUS.water) ' waterflux: ' num2str(out.TEMP.lateral_water)])
                 elseif ~exist('lateral')
                     disp(datestr(t,'dd-mmm-yyyy HH:MM:SS'))
                 end
