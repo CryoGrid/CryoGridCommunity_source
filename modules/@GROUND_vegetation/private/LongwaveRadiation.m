@@ -197,7 +197,7 @@ for f = 1:num_exposedvegp
     % Absorbed longwave radiation for ground (soil)
     
     vegetation.flux.irsoi(p) = irdn(p,1) - irup(p,1); %(p,0)%(p,0)
-    
+    vegetation.flux.irdn = irdn(p,1);
     % Leaf layer fluxes
     
     vegetation.flux.irveg(p) = 0.;

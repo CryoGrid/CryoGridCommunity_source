@@ -255,6 +255,8 @@ for ib = 1:vegetation.params.numrad
         swbeam = tbj(p,1) * vegetation.atmos.swskyb(p,ib);  %tbj(p,0)
         swabsb = swbeam * (1. - vegetation.flux.albsoib(c,ib));
         swabsd = swdn(p,1,ib) * (1. - vegetation.flux.albsoid(c,ib));  %swdn(p,0,ib)
+        
+        vegetation.flux.swdn(p,ib) = swdn(p,1,ib);
         vegetation.flux.swsoi(p,ib) = swabsb + swabsd;
         
         % Leaf layer fluxes

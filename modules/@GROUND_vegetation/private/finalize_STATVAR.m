@@ -1,11 +1,13 @@
 function ground = finalize_STATVAR(ground, forcing)
 
 % ground.STATVAR.current_t = 0.0;
-ground.STATVAR.execution_t = 0;
+ground.STATVAR.execution_t = forcing.PARA.start_time + 0.5;
 
 ground.STATVAR.Lstar = -100;
 ground.STATVAR.Qh = 0;
 ground.STATVAR.Qe = 0;
+
+
 
 % Set up the canopy structure
 % [vegetation] = SetUpCanopy();

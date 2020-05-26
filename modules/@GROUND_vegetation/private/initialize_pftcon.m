@@ -81,7 +81,7 @@ ground.STATVAR.vegetation.pftcon.g0opt  = 0.01;  % Ball-Berry minimum leaf condu
 %-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 %SoilResistance
 % Bonan book p. 221 (resistivity) and p. 35
-ground.STATVAR.vegetation.pftcon.root_radius = 0.00029;          % Fine root radius (m)
-ground.STATVAR.vegetation.pftcon.root_density = 0.31;           % Fine root density (g biomass / m3 root)     % http://www.cesm.ucar.edu/events/wg-meetings/2015/presentations/bgcwg+lmwg/drewniak.pdf
+ground.STATVAR.vegetation.pftcon.root_radius = 0.29e-03;          % Fine root radius (m)
+ground.STATVAR.vegetation.pftcon.root_density = 0.31e06;           % Fine root density (g biomass / m3 root)     % http://www.cesm.ucar.edu/events/wg-meetings/2015/presentations/bgcwg+lmwg/drewniak.pdf
 ground.STATVAR.vegetation.pftcon.root_resist = 25; %200000;         % Hydraulic resistivity of root tissue (MPa.s.g/mmol H2O) rootresist(MPa s g mol-1(biomass based)) 30-150 Optimal value % https://yncenter.sites.yale.edu/sites/default/files/wei_nan_may_2018.pdf
 end

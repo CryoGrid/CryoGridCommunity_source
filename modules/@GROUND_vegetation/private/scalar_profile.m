@@ -145,12 +145,14 @@ isha = vegetation.params.sha; % Array index for shaded leaf
 qsat0 = esat / vegetation.mlcanopyinst.pref(p);                               % Pa -> mol/mol
 dqsat0 = desat / vegetation.mlcanopyinst.pref(p);                             % Pa -> mol/mol
 
-gsw = 1. / vegetation.mlcanopyinst.soilresis(c)  ;                       %! Soil conductance for water vapor: s/m -> m/s
-gsw = gsw * vegetation.mlcanopyinst.rhomol(p)    ;                          %! m/s -> mol H2O/m2/s
+gsw = 1. / vegetation.mlcanopyinst.soilresis(c);                       %! Soil conductance for water vapor: s/m -> m/s
+gsw = gsw * vegetation.mlcanopyinst.rhomol(p);                          %! m/s -> mol H2O/m2/s
 gs0 = vegetation.mlcanopyinst.ga_prof(p,1) * gsw / (vegetation.mlcanopyinst.ga_prof(p,1) + gsw) ; %p,0  %! Total conductance
 
-c02 = vegetation.soilvar.thk ./ vegetation.soilvar.z; %snl(c))) ; %! Soil heat flux term (W/m2/K)
-c01 = -c02 * vegetation.soilvar.t_soisno; %(c,1+1);     %! Soil heat flux term (W/m2)
+% c02 = vegetation.soilvar.thk(c) ./ (vegetation.soilvar.z(c)-vegetation.soilvar.zi(c)); %snl(c))) ; %! Soil heat flux term (W/m2/K
+c02 = vegetation.soilvar.thk_topsurfacecell(c) ./ (vegetation.soilvar.dz_topsurfacecell); %snl(c))) ; %! Soil heat flux term (W/m2/K)
+% c01 = -c02 * vegetation.soilvar.t_soisno(c); %(c,1+1);     %! Soil heat flux term (W/m2)
+c01 = -c02 * vegetation.soilvar.t_top_surfacecell; %(c,1+1);     %! Soil heat flux term (W/m2)
 
 % Coefficients for ground temperature
 
@@ -439,7 +441,6 @@ end
 % ! Water vapor at ground (mol/mol)
 
     vegetation.mlcanopyinst.eair(p,1) = vegetation.mlcanopyinst.rhg(p) * (qsat0 + dqsat0 * (t0 - vegetation.mlcanopyinst.tair_old(p,1))); %p,0
-    %vegetation.mlcanopyinst.eair(p,1) = max(vegetation.mlcanopyinst.eair(p,1),0.); %0.02); %0.0);
     
 % ! Calculate fluxes
 
@@ -582,23 +583,23 @@ end
 %     energyflux_inst, waterflux_inst, mlcanopy_inst)
 err = vegetation.mlcanopyinst.shsoi(p)-vegetation.mlcanopyinst.sh0;
 if (abs(err) > 0.001)
-    disp(' ERROR: ScalarProfile: Soil sensible heat flux error');
-        disp(err);
+%     disp(' ERROR: ScalarProfile: Soil sensible heat flux error');
+%         disp(err);
 end
 err = lambda*vegetation.mlcanopyinst.etsoi(p)-lambda*vegetation.mlcanopyinst.et0;
 if (abs(err) > 0.001)
-    disp(' ERROR: ScalarProfile: Soil latent heat flux error');
-    disp(err);
+%     disp(' ERROR: ScalarProfile: Soil latent heat flux error');
+%     disp(err);
 end
 err = vegetation.mlcanopyinst.gsoi(p)-vegetation.mlcanopyinst.g0;
 if (abs(err) > 0.001)
-    disp(' ERROR: ScalarProfile: Soil heat flux error');
-    disp(err);
+%     disp(' ERROR: ScalarProfile: Soil heat flux error');
+%     disp(err);
 end
 err = vegetation.mlcanopyinst.tg(p)-t0;
 if (abs(err) > 1.e-04) %6)
-    disp(' ERROR: ScalarProfile: Soil temperature error');
-    disp(err);
+%     disp(' ERROR: ScalarProfile: Soil temperature error');
+%     disp(err);
 end
 
 end

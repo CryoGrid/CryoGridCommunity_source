@@ -52,7 +52,7 @@ for f = 1:num_exposedvegp
     
     % Fraction of precipitation that is intercepted
     % fpi = 0.25_r8 * (1._r8 - exp(-0.5_r8*(lai(p) + sai(p))))   % CLM4.5
-    interception_fraction = 1;
+    interception_fraction = 0.5;
     fpi = interception_fraction .* tanh(vegetation.canopy.lai(p) + vegetation.mlcanopyinst.sai(p));        % CLM5
     
     % Direct throughfall
@@ -116,7 +116,7 @@ for f = 1:num_exposedvegp
     end
     
     % Total throughfall onto ground
-    vegetation.mlcanopyinst.qflx_prec_grnd_rain = qflx_through_rain + qflx_candrip .* fracrain;
+    vegetation.mlcanopyinst.qflx_prec_grnd_rain = qflx_through_rain + qflx_candrip .* fracrain; % mm h2o/s
     vegetation.mlcanopyinst.qflx_prec_grnd_snow = qflx_through_snow + qflx_candrip .* fracsnow;
     
     % Output

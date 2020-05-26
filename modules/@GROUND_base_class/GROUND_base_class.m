@@ -2,7 +2,6 @@
 %boundary condition is not specified; %superclass that cannot be run alone
 
 classdef GROUND_base_class < matlab.mixin.Copyable
-    
     properties
         CONST %constants
         PARA %external service parameters, all other
@@ -79,7 +78,7 @@ classdef GROUND_base_class < matlab.mixin.Copyable
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
+        function ground = compute_diagnostic_first_cell(ground, forcing);
             %empty here
         end
         
@@ -87,7 +86,9 @@ classdef GROUND_base_class < matlab.mixin.Copyable
             ground = get_T_water(ground);
             ground = conductivity(ground);
         end
-           
+        
+        
+        
         %non-mandatory functions -> required here so that they are usable
         %in subclasses
         
@@ -119,7 +120,7 @@ classdef GROUND_base_class < matlab.mixin.Copyable
             E_frozen = -Lf.*ground.STATVAR.waterIce;
             
             ground.STATVAR.T = double(ground.STATVAR.energy < E_frozen) .* (ground.STATVAR.energy - E_frozen) ./ (c_i.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic) + ...
-                double(ground.STATVAR.energy >0) .* ground.STATVAR.energy ./ (c_i.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic);
+                double(ground.STATVAR.energy >0) .* ground.STATVAR.energy ./ (c_w.*ground.STATVAR.waterIce + c_m.*ground.STATVAR.mineral + c_o.*ground.STATVAR.organic);
             ground.STATVAR.ice = double(ground.STATVAR.energy <= E_frozen) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > E_frozen & ground.STATVAR.energy < 0) .* ground.STATVAR.energy ./ (-Lf);
             ground.STATVAR.water = double(ground.STATVAR.energy >= 0) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > - Lf.*ground.STATVAR.waterIce & ground.STATVAR.energy < 0) .* (ground.STATVAR.energy + Lf.*ground.STATVAR.waterIce) ./ Lf;
             

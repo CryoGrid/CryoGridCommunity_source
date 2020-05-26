@@ -21,6 +21,8 @@ ground.STATVAR.vegetation.mlcanopyinst.f = 1;                                  %
 
 ground.STATVAR.vegetation.mlcanopyinst.soilresis = 3361.509423807650; % soilvar.resis(p) = 3361.509423807650;       % Soil evaporative resistance (s/m) --> before 600, why??
 ground.STATVAR.vegetation.mlcanopyinst.root_biomass = 500.0;            % (Bonan et al. (2014) Geosci. Model Dev., 7, 2193–2222)                 %Fine root biomass (g biomass / m2)                                ground.STATVAR.vegetation input variables
+ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain = 0;
+ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_snow = 0;
 
 % ground.STATVAR.vegetation.mlcanopyinst.ic = ones(1); %true(1, ncan);                         %Canopy layer index
 % ground.STATVAR.vegetation.mlcanopyinst.il = ones(1); %ones(1, ncan);                         %Sunlit or shaded leaf index
@@ -36,13 +38,13 @@ ground.STATVAR.vegetation.mlcanopyinst.root_biomass = 500.0;            % (Bonan
 
 % Atmospheric input variables
 % ground.STATVAR.vegetation.mlcanopyinst.zref = zeros(1);                                 %Reference height (m)                                               Atmospheric input variables
-ground.STATVAR.vegetation.mlcanopyinst.zref_old = 10; %15;                                  %Reference height for previous timestep (m)                              Atmospheric input variables
+ground.STATVAR.vegetation.mlcanopyinst.zref_old = ground.PARA.zref_old; %15;                                  %Reference height for previous timestep (m)                              Atmospheric input variables
 
 %% SI: Vorher auskommentiert
 ground.STATVAR.vegetation.mlcanopyinst.tref = forcing.TEMP.Tair+273.15;                % should be in Kelvin?                       %Air temperature at reference height (K)                            Atmospheric input variables
 ground.STATVAR.vegetation.mlcanopyinst.uref = forcing.TEMP.wind;                          %Wind speed at reference height (m/s)                               Atmospheric input variables
 ground.STATVAR.vegetation.mlcanopyinst.rhref = 53.871; %ML: this variable is never used!                              %https://github.com/gbonan/bonanmodeling/blob/a10cf764013be58c2def1dbe7c7e52a3213e061e/sp_16_01/sp_16_01.m     %Relative humidity at reference height (                            Atmospheric input variables
-ground.STATVAR.vegetation.mlcanopyinst.pref = forcing.TEMP.p*10;                             %Air pressure at reference height (Pa)                              Atmospheric input variables
+ground.STATVAR.vegetation.mlcanopyinst.pref = forcing.TEMP.p;                             %Air pressure at reference height (Pa)                              Atmospheric input variables
 
 
 ground.STATVAR.vegetation.mlcanopyinst.co2ref = 380;                                   %Atmospheric CO2 at reference height (umol/mol)                     Atmospheric input variables
@@ -50,8 +52,8 @@ ground.STATVAR.vegetation.mlcanopyinst.o2ref = 209;                             
 
 % [ground.STATVAR.vegetation] = initialize_atmos(ground.STATVAR.vegetation);
 ground.STATVAR.vegetation.mlcanopyinst.irsky = forcing.DATA.Lin(1);                          %Atmospheric longwave radiation (W/m2)                              Atmospheric input variables
-ground.STATVAR.vegetation.mlcanopyinst.qflx_rain = forcing.DATA.rainfall(1);                 %Rainfall (mm H2O/s = kg H2O/m2/s)                                  Atmospheric input variables
-ground.STATVAR.vegetation.mlcanopyinst.qflx_snow = forcing.DATA.snowfall(1);                 %Snowfall (mm H2O/s = kg H2O/m2/s)                                  Atmospheric input variables
+ground.STATVAR.vegetation.mlcanopyinst.qflx_rain = forcing.DATA.rainfall(1) ./ (24*3600);                 %Rainfall (mm H2O/s = kg H2O/m2/s)                                  Atmospheric input variables
+ground.STATVAR.vegetation.mlcanopyinst.qflx_snow = forcing.DATA.snowfall(1) ./ (24*3600);                 %Snowfall (mm H2O/s = kg H2O/m2/s)                                  Atmospheric input variables
 ground.STATVAR.vegetation.mlcanopyinst.tacclim = mean(forcing.DATA.Tair(1))+273.15;                 %Average air temperature for acclimation (K)                 Atmospheric input variables
 
 %% SI: Vorher auskommentiert
@@ -204,8 +206,11 @@ ground.STATVAR.vegetation.mlcanopyinst.gsoi = zeros(1);                         
 
 ground.STATVAR.vegetation.mlcanopyinst.etsoi = zeros(1);                                    %Water vapor flux, ground (mol H2O/m2/s)                                Soil energy balance
 ground.STATVAR.vegetation.mlcanopyinst.tg = ground.STATVAR.vegetation.mlcanopyinst.tair(1);               %Soil surface temperature (K)                                           Soil energy balance
+ground.STATVAR.vegetation.mlcanopyinst.tg_snow = ground.STATVAR.vegetation.mlcanopyinst.tair(1);  % Soil moisture variables
+ground.STATVAR.vegetation.mlcanopyinst.snow = 0;
 
-% Soil moisture variables
+
+
 % ground.STATVAR.vegetation.mlcanopyinst.btran = 0.8; %10; %1; %0.1; %0.6;     %soil water transpiration factor (0 to 1) %Ball-Berry soil wetness factor (-)                                     Soil moisture variables    %http://www.cesm.ucar.edu/models/cesm1.0/cesm/cesmBbrowser/html_code/clm/CanopyFluxesMod.F90.html#SHR_CONST_MOD_23
 ground.STATVAR.vegetation.mlcanopyinst.psis = zeros(1);                                     %Weighted soil water potential (MPa)                                    Soil moisture variables
 ground.STATVAR.vegetation.mlcanopyinst.rsoil = zeros(1);                                    %Soil hydraulic resistance (MPa.s.m2/mmol H2O)                          Soil moisture variables

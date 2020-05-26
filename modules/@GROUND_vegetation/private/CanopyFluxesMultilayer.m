@@ -355,7 +355,7 @@ for niter = 1:num_sub_steps % this line will not be used when coupled with Cryo 
        
         % Soil fluxes
 
-        [vegetation] = SoilFluxesMultilayer (vegetation,p);
+        [vegetation] = SoilFluxesMultilayer(vegetation,p);
         
         %           call  (p, soilstate_inst, temperature_inst, energyflux_inst, waterflux_inst, mlcanopy_inst)
         

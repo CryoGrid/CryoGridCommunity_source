@@ -145,7 +145,7 @@ if (vegetation.canopy.dpai(p,ic) > 0)
     elseif vegetation.soilvar.h2osoi_vol <= 0.1 %wilting point
         vegetation.mlcanopyinst.btran(p) = 0;
     else
-        vegetation.mlcanopyinst.btran(p) = (vegetation.soilvar.h2osoi_vol-0.1)/(0.35-0.1);
+        vegetation.mlcanopyinst.btran(p) = (vegetation.soilvar.h2osoi_vol(1)-0.1)/(0.35-0.1);
     end
         
     vegetation.mlcanopyinst.btran(p) = max(vegetation.mlcanopyinst.btran(p),1.e-02); %kleiner 1e-02 geht nicht

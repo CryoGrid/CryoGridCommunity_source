@@ -36,8 +36,8 @@ for f = 1:vegetation.canopy.num_exposedvegp
     vegetation.mlcanopyinst.qref(p) = forcing.TEMP.q; %ground.STATVAR.vegetation.mlcanopyinst.qref; %forc_q(c);
     vegetation.mlcanopyinst.pref(p) = forcing.TEMP.p; % 101325.0; %  ground.STATVAR.vegetation.mlcanopyinst.pref; %forc_pbot(c);
     vegetation.mlcanopyinst.irsky(p) = forcing.TEMP.Lin; %ground.STATVAR.vegetation.mlcanopyinst.irsky; %forc_lwrad(c);
-    vegetation.mlcanopyinst.qflx_rain(p) = forcing.TEMP.rainfall; %ground.STATVAR.vegetation.mlcanopyinst.qflx_rain; %forc_rain(c);
-    vegetation.mlcanopyinst.qflx_snow (p) = forcing.TEMP.snowfall; %ground.STATVAR.vegetation.mlcanopyinst.qflx_snow; %forc_snow(c);
+    vegetation.mlcanopyinst.qflx_rain(p) = forcing.TEMP.rainfall ./ (24*3600); %ground.STATVAR.vegetation.mlcanopyinst.qflx_rain; %forc_rain(c);
+    vegetation.mlcanopyinst.qflx_snow(p) = forcing.TEMP.snowfall ./ (24*3600); %ground.STATVAR.vegetation.mlcanopyinst.qflx_snow; %forc_snow(c);
     
     % CO2 and O2: note unit conversion
     

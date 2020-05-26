@@ -47,7 +47,7 @@ for f = 1:vegetation.canopy.num_exposedvegp
     root_cross_sec_area = pi .* vegetation.pftcon.root_radius(p)^2;
     
     vegetation.mlcanopyinst.rsoil(p) = 0.;
-    for j = 1:vegetation.mlcanopyinst.nlevgrnd
+    for j = 1:vegetation.soilvar.nsoi
         
         % Hydraulic conductivity and matric potential for each layer
         
@@ -100,6 +100,8 @@ for f = 1:vegetation.canopy.num_exposedvegp
         if (vegetation.soilvar.h2osoi_ice(c,j) > 0.)
             evap(j) = 0 ;
         end
+        
+        vegetation.soilvar.transp_per_layer(j) = evap(j)/1000; % Simone: mmol -> mol
     end
     
     % Belowground resistance: resistance = 1 / conductance
@@ -112,7 +114,7 @@ for f = 1:vegetation.canopy.num_exposedvegp
     vegetation.mlcanopyinst.psis(p) = 0;
     vegetation.mlcanopyinst.soil_et_loss(p,:) = 0;
     
-    for j = 1:vegetation.mlcanopyinst.nlevgrnd
+    for j = 1:vegetation.soilvar.nsoi
         vegetation.mlcanopyinst.psis(p) = vegetation.mlcanopyinst.psis(p) + smp_mpa(j) .* evap(j);
         if (totevap > 0.)
             vegetation.mlcanopyinst.soil_et_loss(p,j) = evap(j) ./ totevap;

@@ -2,13 +2,12 @@
 % no interaction with snow is possible here
 
 classdef GROUND_vegetation < matlab.mixin.Copyable
-    
-    %%% < GROUND_base_class
-    
+
     properties
         CONST %constants
         PARA %external service parameters, all other
         STATVAR  %energy, water content, etc.
+        ForcingV %forcing variables for ground and snow upper boundary cond
         TEMP  %derivatives in prognostic timestep and optimal timestep
         PREVIOUS
         NEXT
@@ -25,6 +24,7 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
             ground = provide_PARA(ground); %add additional variables
             ground = provide_CONST(ground);
             ground = provide_STATVAR(ground);
+            ground = provide_ForcingV(ground);
         end
         
         function variable = initialize_from_file(ground, variable, section)
@@ -66,33 +66,34 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
         end
         
         function [ground] = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
-            if forcing.TEMP.t >= ground.STATVAR.execution_t
-                datestr(forcing.TEMP.t)
-                
-                vegetation = ground.STATVAR.vegetation;
-                
-                [vegetation] = set_up_forcing(vegetation, forcing);
-                
-                [vegetation] = canopy_fluxes_multilayer(vegetation);
-                
-%                 [vegetation] = figures(vegetation);
-                
-                ground.STATVAR.vegetation = vegetation;
-                ground.STATVAR.execution_t = ground.STATVAR.execution_t + 1/24;
-            end
             
-            %             ground.TEMP.F_ub = ground.STATVAR.vegetation.mlcanopyinst.gsoi;
-            %             ground.STATVAR.T(end) = ground.STATVAR.vegetation.mlcanopyinst.tveg(:,2,1)-273.15;
-            %             ground.STATVAR.thermCond(end) = 0.025; % Thermal conductivity of air
-            %             ground.STATVAR.layerThick(end) = ground.STATVAR.vegetation.mlcanopyinst.tveg(:,2);
-            %             ground.STATVAR.Lout = ground.STATVAR.vegetation.mlcanopyinst.ircan;
-            %             ground.STATVAR.Qh = ground.STATVAR.vegetation.mlcanopyinst.shveg;
-            %             ground.STATVAR.Qe = ground.STATVAR.vegetation.mlcanopyinst.lhveg;
+            ground = surface_energy_forest(ground, forcing);
+            
+            % write these variables out to plot the vegetation on top of ground and snow
+            ground.STATVAR.T = (ground.STATVAR.vegetation.mlcanopyinst.tair-273.15)';
+            ground.STATVAR.Qe = ground.STATVAR.vegetation.mlcanopyinst.lhsoi; 
+            ground.STATVAR.Qh = ground.STATVAR.vegetation.mlcanopyinst.shsoi; 
+            ground.STATVAR.layerThick = (ground.STATVAR.vegetation.mlcanopyinst.zw./ground.STATVAR.vegetation.mlcanopyinst.ztop)';
+            ground.STATVAR.waterIce = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]';
+            ground.STATVAR.water = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]';
+            ground.STATVAR.ice = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]';
+            
+            % Write forcing struct as the input for ground class under vegetation
+            ground.ForcingV.TEMP.Tair = ground.STATVAR.vegetation.mlcanopyinst.tveg(1,2)-273.15;
+            ground.ForcingV.TEMP.wind = ground.STATVAR.vegetation.mlcanopyinst.wind(1,2);
+            ground.ForcingV.TEMP.wind_top = ground.STATVAR.vegetation.mlcanopyinst.wind(1,12); % wind at top of canopy (used for initial snow density calculation)
+            ground.ForcingV.TEMP.Sin = ground.STATVAR.vegetation.flux.swdn(1,1) + ground.STATVAR.vegetation.flux.swdn(1,2); %ground.STATVAR.vegetation.flux.swsoi(1,1) + ground.STATVAR.vegetation.flux.swsoi(1,2); % vegetation.mlcanopyinst.sw_prof(1,2,1); %Canopy layer absorbed radiation
+            ground.ForcingV.TEMP.Lin = ground.STATVAR.vegetation.flux.irdn; %ground.STATVAR.vegetation.flux.irsoi(1); %vegetation.flux.ir_source(2,1); %Longwave radiation emitted by bottom leaf layer (W/m2)
+            ground.ForcingV.TEMP.p = forcing.TEMP.p; % air pressure at reference height (Pa)
+            ground.ForcingV.TEMP.snowfall = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_snow .* (24 .*3600); % .* (24*3600); qflx_prec_grnd_snow (mm h2o/s) -> .* (24 .*3600) -> mm h2o/day
+            ground.ForcingV.TEMP.rainfall = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain .* (24 .*3600); % .* (24*3600);
+            ground.ForcingV.TEMP.q = forcing.TEMP.q; %specific humidity at refernce height (kg/kg)
+            ground.ForcingV.TEMP.t = forcing.TEMP.t; % time_snowfall
         end
         
-        %         function ground = get_boundary_condition_l(ground, forcing)
+        function ground = get_boundary_condition_l(ground, forcing)
         %             %ground = get_boundary_condition_l@GROUND_base_class(ground, forcing);
-        %end
+        end
         
         
         function ground = get_derivatives_prognostic(ground)
@@ -105,41 +106,40 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
         end
         
         function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
-            
-            
-            %ground = advance_prognostic@GROUND_base_class(ground, timestep);
-            %             ground.STATVAR.current_t = forcing.TEMP.t + timestep;
+
         end
-        
-        %         function ground = compute_diagnostic_first_cell(ground, forcing)
-        %             %ground = L_star(ground, forcing);
-        %         end
-        
-        %         function ground = compute_diagnostic(ground, forcing)
-        %             %ground = compute_diagnostic@GROUND_base_class(ground, forcing);
-        %         end
-        
+
+        function ground = compute_diagnostic_first_cell(ground, forcing)
+            %ground = L_star(ground, forcing);
+        end
+                
+        function ground = compute_diagnostic(ground, forcing)
+
+        end
         
         %non-mandatory fucntions
         
         function ground = conductivity(ground)
             ground = conductivity_mixing_squares(ground);
         end
-        % % %         function ground = surface_energy_balance(ground, forcing)
-        % % %             % Set up required forcing structure
-        % % %             [ground] = SetUpForcing(ground, forcing);
-        % % %             % Run the Bonan Model
-        % % %             [ground] = CanopyFluxesMultilayer(ground); % , counter
-        % % %             % Si:  ground.TEMP.F_ub = ground.STATVAR.vegetation.[GroundHeatFlux (da wo er jetzt halt grad drinn ist in meinem Bonan Vegi Modell)]
-        % % %             ground.TEMP.F_ub = ground.STATVAR.vegetation.mlcanopyinst.gsoi; %ground.STATVAR.vegetation.mlcanopyinst.gsoi;
-        % % % %             % Si:  ground.TEMP.F_ub = ground.STATVAR.vegetation.[GroundHeatFlux (da wo er jetzt halt grad drinn ist in meinem Bonan Vegi Modell)]
-        % % % %             % ground.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
-        % % %         end
         
-        
-        
+        function ground = surface_energy_forest(ground, forcing)
+            if forcing.TEMP.t >= ground.STATVAR.execution_t || forcing.TEMP.t == forcing.PARA.start_time
+                datestr(forcing.TEMP.t)
+                
+                vegetation = ground.STATVAR.vegetation;
+                
+                [vegetation] = set_up_forcing(vegetation, forcing);
+
+                [vegetation] = canopy_fluxes_multilayer(vegetation);
+                
+                ground.STATVAR.vegetation = vegetation;
+                
+                ground.STATVAR.execution_t = ground.STATVAR.execution_t + 1/24;
+       
+            end
+        end
     end
-    
     
     
     

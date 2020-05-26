@@ -135,10 +135,7 @@ for niter = 1:num_sub_steps % this line will not be used when coupled with Cryo 
             vegetation.mlcanopyinst.tleaf_old(p,ic,isha) = vegetation.mlcanopyinst.tleaf(p,ic,isha);
         end
         
-        for ic = vegetation.canopy.nbot(p):vegetation.canopy.ntop
-            vegetation.mlcanopyinst.lwp(p,ic) = -2.0;
-            vegetation.mlcanopyinst.h2ocan(p,ic) = 0.;
-        end
+
         
         for ic = 1:vegetation.mlcanopyinst.ncan(p) %Fortran 0:vegetation.mlcanopyinst.ncan(p)
             vegetation.mlcanopyinst.tair_old(p,ic) = vegetation.mlcanopyinst.tair(p,ic);
@@ -308,7 +305,7 @@ for f = 1:vegetation.canopy.num_exposedvegp
             vegetation.mlcanopyinst.tveg(p,ic,isha) = vegetation.mlcanopyinst.tveg(p,ic,isun);
         end
     end
-    for ic = vegetation.canopy.nbot (p):vegetation.canopy.ntop(p)
+    for ic = vegetation.canopy.nbot(p):vegetation.canopy.ntop(p)
         vegetation.mlcanopyinst.tleaf(p,ic,isun) = vegetation.mlcanopyinst.tleaf(p,ic,isun) * vegetation.flux.fracsun(p,ic) + vegetation.mlcanopyinst.tleaf(p,ic,isha) * vegetation.flux.fracsha(p,ic);
         vegetation.mlcanopyinst.tleaf(p,ic,isha) = vegetation.mlcanopyinst.tleaf(p,ic,isun);
     end

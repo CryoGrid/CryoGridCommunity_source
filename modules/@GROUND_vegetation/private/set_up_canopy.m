@@ -3,14 +3,14 @@ function ground = set_up_canopy(ground)
 for p = 1:1 %vegetation.params.npts number of grid points = 1
     
     % Plant area index of canopy (m2/m2)
-    ground.STATVAR.vegetation.canopy.pai(p) = 5.051612734794617;
+    ground.STATVAR.vegetation.canopy.pai(p) = ground.PARA.pai; %4.051612734794617; %5.051612734794617;
     
     % Atmospheric forcing reference height (m)
-    ground.STATVAR.vegetation.mlcanopyinst.zref(p) = 10.; %15;
-    ground.STATVAR.vegetation.mlcanopyinst.sai = 0.051612734794617;                                        %Stem area index of canopy (m2/m2)                                 ground.STATVAR.vegetation input variables
+    ground.STATVAR.vegetation.mlcanopyinst.zref(p) = ground.PARA.zref; %10.; %15;
+    ground.STATVAR.vegetation.mlcanopyinst.sai = ground.PARA.sai;                                        %Stem area index of canopy (m2/m2)                                 ground.STATVAR.vegetation input variables
     
     % Canopy height (m)
-    ground.STATVAR.vegetation.mlcanopyinst.ztop(p) = 8.; %20
+    ground.STATVAR.vegetation.mlcanopyinst.ztop(p) = ground.PARA.ztop; %8.; %20
     
     %canopy_type = 'dense';   % High leaf area index
     %canopy_type = 'dense';  % Low leaf area index
@@ -18,7 +18,7 @@ for p = 1:1 %vegetation.params.npts number of grid points = 1
     %%%%%%%%%%%%
     
     % Set canopy LAI, layer LAI increment, and number of layers
-    ground.STATVAR.vegetation.canopy.lai(p) = 5; %8.; %5.0;                                           % Leaf area index of canopy (m2/m2)
+    ground.STATVAR.vegetation.canopy.lai(p) = ground.PARA.pai-ground.PARA.sai; %4; %5; %8.; %5.0;                                           % Leaf area index of canopy (m2/m2)
     lai_inc = 0.5;
     ground.STATVAR.vegetation.mlcanopyinst.nveg(p) = round(ground.STATVAR.vegetation.canopy.lai(p) / lai_inc);          % Number of leaf layers in canopy
 
@@ -171,7 +171,7 @@ for p = 1:1 %vegetation.params.npts number of grid points = 1
         ground.STATVAR.vegetation.canopy.dpai(p,ic) = 0;
     end
     
-    ground.STATVAR.vegetation.canopy.lai = 5.0;
+    ground.STATVAR.vegetation.canopy.lai = ground.PARA.pai-0.051612734794617; %4.0;
     ground.STATVAR.vegetation.mlcanopyinst.sai = ground.STATVAR.vegetation.canopy.pai - ground.STATVAR.vegetation.canopy.lai;
     ground.STATVAR.vegetation.canopy.dlai = ground.STATVAR.vegetation.canopy.dpai * ground.STATVAR.vegetation.canopy.lai/ground.STATVAR.vegetation.canopy.pai;
     
@@ -202,8 +202,13 @@ for f = 1:ground.STATVAR.vegetation.canopy.num_exposedvegp
     end
     
     
-ground.STATVAR.vegetation.flux.albsoib = [0.2,0.2]; % Direct beam albedo of ground (soil)
-ground.STATVAR.vegetation.flux.albsoid = [0.2,0.2]; % Diffuse albedo of ground (soil)
+ground.STATVAR.vegetation.flux.albsoib = [0.15,0.15]; % Direct beam albedo of ground (soil)
+ground.STATVAR.vegetation.flux.albsoid = [0.15,0.15]; % Diffuse albedo of ground (soil)
+
+    for ic = ground.STATVAR.vegetation.canopy.nbot(p): ground.STATVAR.vegetation.canopy.ntop(p)
+            ground.STATVAR.vegetation.mlcanopyinst.lwp(p,ic) = -0.1;
+            ground.STATVAR.vegetation.mlcanopyinst.h2ocan(p,ic) = 0.;
+    end
     
 end
 
