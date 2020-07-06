@@ -1,4 +1,4 @@
-# CryoVeg
+# CryoGrid Vegetation
 Created 20191001, CryoGrid branch
 This is the modular version of CryoGrid which is based on an object-oriented programming paradigm, coupled to a multilayer canopy model (Bonan 2018)
 
