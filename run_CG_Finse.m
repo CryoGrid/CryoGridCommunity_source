@@ -6,18 +6,18 @@ clear all
 modules_path = 'modules';
 addpath(genpath(modules_path));
 
-run_number = 'Finse_4432';      
+run_number = 'Finse_4432_TILE';      
 result_path = './results/';
 config_path = fullfile(result_path, run_number);
 forcing_path = fullfile ('./forcing/');
 
 parameter_file = [run_number '.xlsx'];
 const_file = 'CONSTANTS_excel.xlsx';              
-forcing_file = dir([forcing_path '*.mat']);  %BE CAREFUL, this is a significant problem - the forcing file name is NOT read from the Excel file as it should!!! 
+forcing_files_list = dir([forcing_path '*.mat']);  %BE CAREFUL, this is a significant problem - the forcing file name is NOT read from the Excel file as it should!!! 
 %With this code, always the first mat-file in the forcig folder seems to be used, which leads
 %the program to crash if another file is specified in the Excel-file 
 %MUST BE CHANGED! As a work-around, specify the correct number in the line below 
-forcing_file = forcing_file(1,1).name;
+%forcing_file = forcing_file(1,1).name;
 
 % =====================================================================
 % Use modular interface to build model run
@@ -29,17 +29,34 @@ forcing_file = forcing_file(1,1).name;
 
 pprovider = PARAMETER_PROVIDER_EXCEL(config_path, parameter_file);
 cprovider = CONSTANT_PROVIDER_EXCEL(config_path, const_file);
-fprovider = FORCING_PROVIDER(forcing_path, forcing_file);
+
+% CHANGE JOASC: 
+% The forcing file name and inputs for the tile builder are now extracted 
+% from the configuration file using dedicated functions from the parameter 
+% provider (it implies that pprovider should be instantiated first). 
+% The name of the forcing file is compared to the list of files located in 
+% the folder forcing (this part can be removed if necessary).
+
+tile_info = pprovider.get_tile_information('TILE_IDENTIFICATION');
+forcing_file = pprovider.get_forcing_file_name('FORCING');
+
+if any(contains({forcing_files_list.name}, forcing_file))
+    fprovider = FORCING_PROVIDER(forcing_path, forcing_file);
+else
+    error('The name of the forcing file specified in the configuration file does not match any of the files contained in "forcing"')
+end
+
+%fprovider = FORCING_PROVIDER(forcing_path, forcing_file);
 
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
 tile = TILE_BUILDER(pprovider, cprovider, fprovider, ...
-                           'forcing_id', 1, ...
-                           'grid_id', 1, ...
-                           'out_id', 1, ...
-                           'strat_linear_id', 1, ...
-                           'strat_layers_id', 1, ...
-                           'strat_classes_id', 1);
+                           'forcing_id', tile_info.forcing_id, ...
+                           'grid_id', tile_info.grid_id, ...
+                           'out_id', tile_info.out_id, ...
+                           'strat_linear_id', tile_info.strat_linear_id, ...
+                           'strat_layers_id', tile_info.strat_layers_id, ...
+                           'strat_classes_id', tile_info.strat_classes_id);
 
 forcing = tile.forcing;
 out = tile.out;

@@ -24,8 +24,59 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             self.source_type = 'xlsx';
             self.filepath = mypath;
         end
+		
+        function forcing_file = get_forcing_file_name(self, section) % CHANGE JOASC: New function to specifically extract forcing file name
+		% GET_FORCING_FILE_NAME  Get forcing file name from specified section of 
+			% the configuration file.
+            %
+            %   ARGUMENTS:
+            %   section: a string specifying the forcing section to list 
+            %                (e.g. 'FORCING')
+            %
+            %   RETURNS: 
+            %   forcing_file: string with forcing file name extracted from the 
+			%   				configuration file
+			
+            pos_list = self.get_range_section(section);
 
+            for i=1:size(pos_list,1)
+                % get cells defining the current class
+                section_data = self.config_data(pos_list(i,1):pos_list(i,2),:);
+                if ~isempty(find(strcmp(section_data(:,1:2),'filename')))
+					row_index = find(strcmp(section_data(:,1:2),'filename'));
+                    if ~isnan(section_data{row_index,2})
+						forcing_file = section_data{row_index,2};
+					else
+						error('The name of the forcing file is not specified in the configuration file')
+					end 
+				end
+			end
+		end
 
+		function [tile_info] = get_tile_information(self, section) % CHANGE JOASC: New function to specifically extract tile builder inputs and information
+		% GET_TILE_INFORMATION Get tile information and inputs for the tile 
+			% builder from specified section of the configuration file.
+            %
+            %   ARGUMENTS:
+            %   section: a string specifying the tile identification section  
+            %                (e.g. 'TILE_IDENTIFICATION')
+            %
+            %   RETURNS: 
+            %   tile_info: a structure defining the tile type, location, class 
+			%		combination, etc.
+			
+			tile_info = struct();
+            pos_list = self.get_range_section(section);
+            section_data = self.config_data(pos_list(1,1):pos_list(1,2),:);
+			
+            for i=2:size(section_data,1)-1
+                tile_info.(section_data{i,1}) = section_data{i,2};
+		    end	
+			
+			tile_info.coordinates = str2num(tile_info.coordinates);
+			
+		end
+		
         function class_list = get_class_list(self, section)
             % GET_CLASS_LIST  Gets a table of available classes in the
             %   specified section.
@@ -126,7 +177,6 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             index = class_list.class_index(id);
         end
               
-       
         function structure = populate_struct(self, structure, section, name, index)
             % POPULATE_STRUCT  Populates the fields of the provided structure with
             %   values from the parameter source (here xlsx file)
@@ -165,8 +215,8 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             
                     pos_list = get_range_TOP_BOTTOM(section_data);
                 
-                    variable_names = {};
-                    variable_values = [];
+                    %variable_names = {};
+                    %variable_values = [];
                     table_data = table();
                     x = 1;
                     field = cell2mat(section_data(pos_list(1,1)-3,x));
@@ -188,12 +238,18 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
                             assigned_fields = [assigned_fields fn(j)];
                             fn_substruct = fieldnames(structure.(fn{j}));
                             assigned_subfields = [];
-                            for k = 1:size(fn_substruct,1)
-                                if any(strcmp(table_data.Properties.VariableNames, fn_substruct{k}))
-                                    structure.(fn{j}).(fn_substruct{k}) = table_data.(fn_substruct{k});
-                                    assigned_subfields = [assigned_subfields fn_substruct(k)];
-                                end
-                            end
+							if ~isempty(fn_substruct)
+                                for k = 1:size(fn_substruct,1)
+									if any(strcmp(table_data.Properties.VariableNames, fn_substruct{k}))
+										structure.(fn{j}).(fn_substruct{k}) = table_data.(fn_substruct{k});
+										assigned_subfields = [assigned_subfields fn_substruct(k)];
+									end
+								end
+							else
+							    for k = 1:length(table_data.Properties.VariableNames)
+										structure.(fn{j}).(table_data.Properties.VariableNames{k}) = table_data.(table_data.Properties.VariableNames{k});
+								end	
+							end
                         end
                     end
                 elseif any(strcmp(fn, section_data{i,1}))
@@ -220,7 +276,7 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
                     end
                 end
             end
-        end
+        end		
         
     end
 end
