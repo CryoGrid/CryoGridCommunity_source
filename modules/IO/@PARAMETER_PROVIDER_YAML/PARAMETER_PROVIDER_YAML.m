@@ -25,7 +25,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
             self.filepath = mypath;
         end
 
-		function forcing_file = get_forcing_file_name(self, section) % CHANGE JOASC: New function to specifically extract forcing file name
+		function forcing_file = get_forcing_file_name(self, section) 
 		% GET_FORCING_FILE_NAME  Get forcing file name from specified section of 
 			% the configuration file.
             %
@@ -46,6 +46,23 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
 					error('The name of the forcing file is not specified in the configuration file')
                 end
             end
+		end
+
+		function [tile_info] = get_tile_information(self, section) 
+		% GET_TILE_INFORMATION Get tile information and inputs for the tile 
+			% builder from specified section of the configuration file 
+			% (only implemented for a unique identification section).
+            %
+            %   ARGUMENTS:
+            %   section: a string specifying the tile identification section  
+            %                (e.g. 'TILE_IDENTIFICATION')
+            %
+            %   RETURNS: 
+            %   tile_info: a structure defining the tile type, location, class 
+			%		combination, etc.
+			
+			tile_info = self.config_data.(section);
+			
 		end
 		
         function id = get_class_id_by_name_and_index(self, section, name, index)

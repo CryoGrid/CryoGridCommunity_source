@@ -25,7 +25,7 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             self.filepath = mypath;
         end
 		
-        function forcing_file = get_forcing_file_name(self, section) % CHANGE JOASC: New function to specifically extract forcing file name
+        function forcing_file = get_forcing_file_name(self, section) 
 		% GET_FORCING_FILE_NAME  Get forcing file name from specified section of 
 			% the configuration file.
             %
@@ -53,7 +53,7 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
 			end
 		end
 
-		function [tile_info] = get_tile_information(self, section) % CHANGE JOASC: New function to specifically extract tile builder inputs and information
+		function [tile_info] = get_tile_information(self, section) 
 		% GET_TILE_INFORMATION Get tile information and inputs for the tile 
 			% builder from specified section of the configuration file.
             %
