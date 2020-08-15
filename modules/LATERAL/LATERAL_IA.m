@@ -12,6 +12,7 @@ classdef LATERAL_IA < matlab.mixin.Copyable
         CONST
         STATVAR % the state variables of the realization itself
         STATVAR2ALL %the state variables of the realization itself that should be sent to all other workers, not only the connected dones
+        STATVAR_PRIVATE
         ENSEMBLE %the state varaibles of the other ensemble members (cell aray)
     end
     
@@ -21,14 +22,28 @@ classdef LATERAL_IA < matlab.mixin.Copyable
         end
         
         function lateral = get3d_PARA(lateral) %initializes 3D parameters, move this to Excel, etc. file later
-            lateral.PARA.run_number = [1; 2];
-            lateral.PARA.connected = [0 1; 1 0];
-            lateral.PARA.contact_length = [0 1; 1  0];
-            lateral.PARA.distance = [0 10; 10 0];
-            lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
-                                        {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_SEEPAGE_FACE'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}};
-%             lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'}; ...
-%                 {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_RESERVOIR'}};
+%             lateral.PARA.run_number = [1; 2; 3];
+%             lateral.PARA.connected = [0 1 0; 1 0 1; 0 1 0];
+%             
+%             lateral.PARA.contact_length = [0 24.1240351380764 0; 24.1240351380764 0 41.7840545427251;0 41.7840545427251 0]; %[0 1; 1  0];
+%             lateral.PARA.distance = [0 3.549647869859770 0;3.549647869859770 0 2.366431913239846;0 2.366431913239846 0]; %[0 10; 10 0];
+%             lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
+%                                         {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_SEEPAGE_FACE'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}};
+% 
+%             lateral.PARA.run_number = [1; 2];
+%             lateral.PARA.connected = [0 1; 1 0];
+%             lateral.PARA.contact_length = [0 1; 1  0];
+%             lateral.PARA.distance = [0 2; 2 0];
+%             lateral.PARA.class_list ={{'LAT3D_WATER'}; {'LAT3D_WATER'}};            
+                lateral.PARA.run_number = [2; 1; 1; 3];
+                lateral.PARA.connected = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; %[0 1 1; 1 0 1; 1 1 0];
+                lateral.PARA.contact_length = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; % [0 1 1; 1 0 1; 1 1 0];
+                lateral.PARA.distance = [0 2 0 0; 2 0 2 0; 0 2 0 2; 0 0 2 0]; %[0 2 5; 2 0 2; 5 2 0];
+                lateral.PARA.class_list ={{'LAT3D_WATER'; 'LAT3D_WATER_RESERVOIR2'}; {'LAT3D_WATER'};  {'LAT3D_WATER'}; {'LAT3D_WATER'; 'LAT3D_WATER_SEEPAGE_FACE2'}};
+            %lateral.PARA.class_list ={{'LAT3D_WATER'}; {'LAT3D_WATER'};  {'LAT3D_WATER'}; {'LAT3D_WATER'}};
+%             lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
+%                                         {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'; 'LAT3D_WATER_SEEPAGE_FACE'}};             
+            lateral.PARA.central_worker = 2; %index of worker performing global computations (needed for LATERAL_3D_water) - should be set so that it has connections to as many as possible other workers
         end
         
         function lateral = get_index(lateral)
@@ -48,6 +63,11 @@ classdef LATERAL_IA < matlab.mixin.Copyable
                 
         end
 
+        function output_number = get_output_number(lateral, run_number)
+            if lateral.PARA.num_realizations > 1
+                output_number = [run_number '_' num2str(lateral.STATVAR.index,1)]; 
+            end 
+        end
         
         %use for single realization
         function lateral = initialize_lateral_1D(lateral, lateral_class_list, TOP, BOTTOM, t)
@@ -82,6 +102,7 @@ classdef LATERAL_IA < matlab.mixin.Copyable
             lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
             lateral.CONST.day_sec = 24 .* 3600;
             lateral.CONST.c_w = 4.2e6;
+            lateral.CONST.c_i = 1.9e6;
             lateral.IA_TIME = t;
             lateral.TOP = TOP;
             lateral.BOTTOM = BOTTOM;
@@ -148,6 +169,7 @@ classdef LATERAL_IA < matlab.mixin.Copyable
                     if lateral.PARA.num_realizations > 1
                         data_package_out = pack(lateral, 'STATVAR');
                         if ~isempty(lateral.STATVAR2ALL)
+                            lateral.STATVAR2ALL.index=lateral.STATVAR.index;
                             data_package_out_all = pack(lateral, 'STATVAR2ALL');
                         else
                             data_package_out_all = [];
@@ -199,13 +221,10 @@ classdef LATERAL_IA < matlab.mixin.Copyable
                    lateral.IA_CLASSES{i} = set_ACTIVE(lateral.IA_CLASSES{i}, i, t);
                end
                
-               %if t < datenum(2015,1,1) || forcing.TEMP.wind <13
                lateral.ENSEMBLE ={};
                lateral.STATVAR2ALL = [];
                lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-%                else
-%                    egebfetg
-%                end
+
             end
         end
         
@@ -215,6 +234,7 @@ classdef LATERAL_IA < matlab.mixin.Copyable
             variables = fieldnames(lateral.(VAR));
             data_package = [];
             for i=1:size(variables,1)
+                %variables{i,1}
                 data_package=[data_package; size(variables{i,1},2); double(variables{i,1})']; % # of characters followed by characters as doubles
                 data_package=[data_package; size(lateral.(VAR).(variables{i,1}),1); lateral.(VAR).(variables{i,1})]; % # of entries followed by values
             end
@@ -233,41 +253,79 @@ classdef LATERAL_IA < matlab.mixin.Copyable
         
         function lateral = get_overlap_cells(lateral, variable, variable_out) %no need to loop through stratigraphy, al the information should be in lateral
             for i=1:size(lateral.ENSEMBLE,1)
-                
-                cell_1 = -lateral.STATVAR.(variable);
-                cell_2 = -lateral.ENSEMBLE{i,1}.(variable);
-                
-                lateral.ENSEMBLE{i,1}.(variable_out) = [];%zeros(size(cell_1,1)-1,size(cell_2,1)-1);
-                
-                if size(cell_1,1) > 1 && size(cell_2,1) > 1
-                    for i1=1:size(cell_1,1)-1
-                        i2=1;
-                        a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
-                        
-                        while a <= 0 && i2 < size(cell_2,1)-1
-                            %overlap2(i1,i2) = a;
-                            i2 = i2+1;
+                if lateral.PARA.connected(lateral.STATVAR.index, lateral.ENSEMBLE{i,1}.index)
+                    cell_1 = -lateral.STATVAR.(variable);
+                    cell_2 = -lateral.ENSEMBLE{i,1}.(variable);
+                    
+                    lateral.ENSEMBLE{i,1}.(variable_out) = [];%zeros(size(cell_1,1)-1,size(cell_2,1)-1);
+                    
+                    if size(cell_1,1) > 1 && size(cell_2,1) > 1
+                        for i1=1:size(cell_1,1)-1
+                            i2=1;
                             a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
-                        end
-                        if a>0
-                            lateral.ENSEMBLE{i,1}.(variable_out) = [lateral.ENSEMBLE{i,1}.(variable_out);  [i1  i2 a]];
-                        end
-                        
-                        i2_start = i2;
-                        while a > 0 && i2 < size(cell_2,1)-1
                             
-                            i2 = i2+1;
-                            a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                            while a <= 0 && i2 < size(cell_2,1)-1
+                                %overlap2(i1,i2) = a;
+                                i2 = i2+1;
+                                a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                            end
                             if a>0
                                 lateral.ENSEMBLE{i,1}.(variable_out) = [lateral.ENSEMBLE{i,1}.(variable_out);  [i1  i2 a]];
                             end
+                            
+                            i2_start = i2;
+                            while a > 0 && i2 < size(cell_2,1)-1
+                                
+                                i2 = i2+1;
+                                a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                                if a>0
+                                    lateral.ENSEMBLE{i,1}.(variable_out) = [lateral.ENSEMBLE{i,1}.(variable_out);  [i1  i2 a]];
+                                end
+                            end
+                            i2 = i2_start;
                         end
-                        i2 = i2_start;
                     end
                 end
             end
         end
-
+        
+        function overlap = get_overlap_aquifers(lateral, cell_1, cell_2) %same function as get_overlap_cells, but with flexible input
+            cell_1 = -cell_1;
+            cell_2 = -cell_2;
+            
+            overlap = [];
+            
+            if size(cell_1,1) > 1 && size(cell_2,1) > 1
+                for i1=1:size(cell_1,1)-1
+                    i2=1;
+                    a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                    b = (- max(cell_1(i1,1), cell_2(i2,1)) - min(cell_1(i1+1,1), cell_2(i2+1,1))) ./ 2;
+                    
+                    while a <= 0 && i2 < size(cell_2,1)-1
+                        %overlap2(i1,i2) = a;
+                        i2 = i2+1;
+                        a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                        b = (- max(cell_1(i1,1), cell_2(i2,1)) - min(cell_1(i1+1,1), cell_2(i2+1,1)))./2;
+                    end
+                    if a>0
+                        overlap = [overlap;  [i1  i2 a b]];
+                    end
+                    
+                    i2_start = i2;
+                    while a > 0 && i2 < size(cell_2,1)-1
+                        
+                        i2 = i2+1;
+                        a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                        b = (- max(cell_1(i1,1), cell_2(i2,1)) - min(cell_1(i1+1,1), cell_2(i2+1,1))) ./ 2;
+                        if a>0
+                            overlap = [overlap;  [i1  i2 a b]];
+                        end
+                    end
+                    i2 = i2_start;
+                end
+            end
+        end
+        
     end
 end
 

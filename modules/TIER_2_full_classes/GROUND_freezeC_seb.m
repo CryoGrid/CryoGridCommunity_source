@@ -83,12 +83,23 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & HEAT_FLUXES
             ground.CONST.rho_i = [];
             
             %Mualem Van Genuchten model
+            ground.CONST.alpha_water = [];
             ground.CONST.alpha_sand = [];
             ground.CONST.alpha_silt = [];
+            ground.CONST.alpha_clay = [];
+            ground.CONST.alpha_peat = [];
+            
+            ground.CONST.n_water = [];
             ground.CONST.n_sand = [];
             ground.CONST.n_silt = [];
+            ground.CONST.n_clay = [];
+            ground.CONST.n_peat = [];
+            
+            ground.CONST.residual_wc_water = [];
             ground.CONST.residual_wc_sand = [];
             ground.CONST.residual_wc_silt = [];
+            ground.CONST.residual_wc_clay = [];
+            ground.CONST.residual_wc_peat = [];
 
         end
         
@@ -101,10 +112,10 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & HEAT_FLUXES
             ground.PARA.airT_height = forcing.PARA.airT_height;
             ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
             
-            %add more in case clay becomes relevant
-            ground.CONST.vanGen_alpha = [ground.CONST.alpha_sand ground.CONST.alpha_silt];
-            ground.CONST.vanGen_n = [ground.CONST.n_sand ground.CONST.n_silt];
-            ground.CONST.vanGen_residual_wc = [ground.CONST.residual_wc_sand ground.CONST.residual_wc_silt];
+            ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
+            ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
+            ground.CONST.vanGen_residual_wc = [ ground.CONST.residual_wc_sand ground.CONST.residual_wc_silt ground.CONST.residual_wc_clay ground.CONST.residual_wc_peat ground.CONST.residual_wc_water];
+            
             
             ground = get_E_freezeC(ground);
             ground = conductivity(ground);

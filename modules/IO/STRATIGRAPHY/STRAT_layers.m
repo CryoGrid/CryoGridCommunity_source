@@ -56,16 +56,7 @@ classdef STRAT_layers
             %different classes
 			% INITIALIZE_PARA  Initializes PARA structure.
 			
-			self.PARA.layers.depth = [];
-			self.PARA.layers.waterIce = [];
-			self.PARA.layers.mineral = [];
-			self.PARA.layers.organic = [];
-			self.PARA.layers.Xice = [];
-			self.PARA.layers.field_capacity = [];
-			self.PARA.layers.soil_type = [];
-			self.PARA.layers.saltConc = [];
-			self.PARA.layers.deltaT = [];
-            self.PARA.layers.grain_size = [];
+			self.PARA.layers = struct();
 		end
 		
 		function self = populate_variables(self, pprovider)

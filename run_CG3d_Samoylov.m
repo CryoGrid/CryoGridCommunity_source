@@ -17,7 +17,7 @@ forcing_file = dir([forcing_path '*.mat']);  %BE CAREFUL, this is a significant 
 %With this code, always the first mat-file in the forcig folder seems to be used, which leads
 %the program to crash if another file is specified in the Excel-file
 %MUST BE CHANGED! As a work-around, specify the correct number in the line below
-forcing_file = forcing_file(4,1).name;
+forcing_file = forcing_file(6,1).name;
 
 lateral = LATERAL_IA();
 lateral = assign_number_of_realizations(lateral, 2);

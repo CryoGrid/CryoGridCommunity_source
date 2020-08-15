@@ -36,12 +36,23 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             ground.CONST.rho_i = [];
             
             %Mualem Van Genuchten model
+            ground.CONST.alpha_water = [];
             ground.CONST.alpha_sand = [];
             ground.CONST.alpha_silt = [];
+            ground.CONST.alpha_clay = [];
+            ground.CONST.alpha_peat = [];
+            
+            ground.CONST.n_water = [];
             ground.CONST.n_sand = [];
             ground.CONST.n_silt = [];
+            ground.CONST.n_clay = [];
+            ground.CONST.n_peat = [];
+            
+            ground.CONST.residual_wc_water = [];
             ground.CONST.residual_wc_sand = [];
             ground.CONST.residual_wc_silt = [];
+            ground.CONST.residual_wc_clay = [];
+            ground.CONST.residual_wc_peat = [];
 
         end
         
@@ -93,6 +104,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             ground.STATVAR.ice = [];
             ground.STATVAR.air = [];  % [m]
             ground.STATVAR.thermCond = [];
+            ground.STATVAR.hydraulicConductivity = [];
             
             ground.STATVAR.Lstar = [];
             ground.STATVAR.Qh = [];
@@ -111,13 +123,13 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             ground.PARA.airT_height = forcing.PARA.airT_height;
             ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
             
-            %add more in case clay becomes relevant
-            ground.CONST.vanGen_alpha = [ground.CONST.alpha_sand ground.CONST.alpha_silt];
-            ground.CONST.vanGen_n = [ground.CONST.n_sand ground.CONST.n_silt];
-            ground.CONST.vanGen_residual_wc = [ground.CONST.residual_wc_sand ground.CONST.residual_wc_silt];
+            ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
+            ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
+            ground.CONST.vanGen_residual_wc = [ ground.CONST.residual_wc_sand ground.CONST.residual_wc_silt ground.CONST.residual_wc_clay ground.CONST.residual_wc_peat ground.CONST.residual_wc_water];
             
             ground = get_E_freezeC(ground);
             ground = conductivity(ground);
+            ground = calculate_hydraulicConductivity(ground);
             
             ground = create_LUT_freezeC(ground);
 
@@ -181,6 +193,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             
             ground = get_T_water_freezeC(ground);
             ground = conductivity(ground);
+            ground = calculate_hydraulicConductivity(ground);
             
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water = ground.STATVAR.energy.*0;
@@ -238,9 +251,18 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             ground = lateral3D_push_water_unconfined_aquifer_simple(ground, lateral);
         end
         
+        function ground = lateral3D_pull_water_general_aquifer(ground, lateral)
+            ground = lateral3D_pull_water_general_aquifer_simple(ground, lateral);
+        end
+        
+        function ground = lateral3D_push_water_general_aquifer(ground, lateral)
+            ground = lateral3D_push_water_general_aquifer_simple(ground, lateral);
+        end
+        
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(ground, lateral)
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_simple(ground, lateral);
         end
+        
         
         function ground = lateral3D_pull_heat(ground, lateral)
             ground = lateral3D_pull_heat_simple(ground, lateral);

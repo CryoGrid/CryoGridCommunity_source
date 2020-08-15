@@ -52,6 +52,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.STATVAR.ice = [];
             snow.STATVAR.air = [];  % [m]
             snow.STATVAR.thermCond = [];
+            snow.STATVAR.hydraulicConductivity = [];
             snow.STATVAR.albedo = [];
             
             snow.STATVAR.d = [];
@@ -306,6 +307,8 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             end
             
             snow = conductivity(snow);
+            snow = calculate_hydraulicConductivity_SNOW(snow);
+            
             snow.STATVAR.upperPos = snow.NEXT.STATVAR.upperPos + sum(snow.STATVAR.layerThick);
             
             snow = calculate_albedo_crocus(snow, forcing); %albedo calculation is a diagnostic operation
@@ -321,6 +324,8 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow = subtract_water_CHILD(snow);
 
             snow = conductivity(snow);
+            snow = calculate_hydraulicConductivity_SNOW(snow);
+            
             snow.STATVAR.upperPos = snow.PARENT.STATVAR.upperPos + (snow.STATVAR.layerThick .* snow.STATVAR.area ./ snow.PARENT.STATVAR.area(1,1));
             
             snow = calculate_albedo_crocus(snow, forcing);

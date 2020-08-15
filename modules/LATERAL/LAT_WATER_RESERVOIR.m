@@ -9,10 +9,10 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
         end
         
         function lateral = provide_PARA(lateral)
-            lateral.PARA.reservoir_elevation = 20.1;
-            lateral.PARA.reservoir_temperature = 10; %only active for Xice classes - if empty, water added at the temperature of the respective grid cell
+            lateral.PARA.reservoir_elevation = 20;
+            lateral.PARA.reservoir_temperature = 0.5; %only active for Xice classes - if empty, water added at the temperature of the respective grid cell
             lateral.PARA.hardBottom_cutoff = 0.03; %hard bottom if saturated and water content below
-            lateral.PARA.distance_reservoir = 2; 
+            lateral.PARA.distance_reservoir = 3; 
             lateral.PARA.reservoir_contact_length = 1;
         end
         
@@ -36,6 +36,18 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
                 CURRENT = compute_diagnostic(CURRENT, forcing);
                 CURRENT = CURRENT.NEXT;
             end
+            
+        end
+        
+        function lateral = set_ACTIVE(lateral, i, t)
+            lateral.PARENT.ACTIVE(i,1) = 1;
+        end
+        
+        function lateral = get_derivatives(lateral)
+            
+        end
+        
+        function lateral = pull(lateral)
             
         end
     end

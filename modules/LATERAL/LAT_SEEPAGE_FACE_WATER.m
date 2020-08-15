@@ -5,15 +5,15 @@ classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
     methods
         
         function lateral = provide_CONST(lateral)
-            lateral.CONST.day_sec = 24 .* 3600;
+            lateral.CONST.day_sec = [];
         end
         
         function lateral = provide_PARA(lateral)
             lateral.PARA.upperElevation = Inf;
             lateral.PARA.lowerElevation = 20;
             lateral.PARA.hardBottom_cutoff = 0.03; %hard bottom if saturated and water content below
-            lateral.PARA.distance_seepageFace = 10; 
-            lateral.PARA.seepage_contact_length = 1;
+            lateral.PARA.distance_seepageFace = 1; 
+            lateral.PARA.seepage_contact_length = 4;
         end
         
         function lateral = provide_STATVAR(lateral)
@@ -36,6 +36,19 @@ classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
                 CURRENT = compute_diagnostic(CURRENT, forcing);
                 CURRENT = CURRENT.NEXT;
             end
+            
+        end
+        
+        
+        function lateral = set_ACTIVE(lateral, i, t)
+            lateral.PARENT.ACTIVE(i,1) = 1;
+        end
+        
+        function lateral = get_derivatives(lateral)
+            
+        end
+        
+        function lateral = pull(lateral)
             
         end
     end

@@ -142,11 +142,11 @@ classdef REGRID < BASE
             regridded_yesNo = 0;
             
             %reduce
-            if sum(double(snow.STATVAR.ice < 0.5.*snow.PARA.swe_per_cell)) > 0
+            if sum(double(snow.STATVAR.ice < 0.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area)) > 0
                 regridded_yesNo = 1;
                 i=1;
                 while i<size(snow.STATVAR.layerThick,1)
-                    if snow.STATVAR.ice(i,1) < 0.5.* snow.PARA.swe_per_cell
+                    if snow.STATVAR.ice(i,1) < 0.5.* snow.PARA.swe_per_cell.*snow.STATVAR.area(i,1)
                         snow = merge_cells_intensive(snow, i, i+1, intensive_variables, intensive_scaling_variable);
                         snow = merge_cells_extensive(snow, i, i+1, extensive_variables);
                         %rest is done by diagostic step, get_T_water
@@ -154,17 +154,17 @@ classdef REGRID < BASE
                     i=i+1;
                 end
                 %last cell, i = size(snow.STATVAR.layerThick,1)
-                if i > 1 && snow.STATVAR.ice(end,1) < 0.5 .* snow.PARA.swe_per_cell
+                if i > 1 && snow.STATVAR.ice(end,1) < 0.5 .* snow.PARA.swe_per_cell.*snow.STATVAR.area(end,1)
                     snow = merge_cells_intensive(snow, i-1, i, intensive_variables, intensive_scaling_variable);
                     snow = merge_cells_extensive(snow, i-1, i, extensive_variables);
                     %rest is done by diagostic step, get_T_water
                 end
             end
             
-            if snow.STATVAR.ice(1) > 1.5.*snow.PARA.swe_per_cell  %expand, check only first cell
+            if snow.STATVAR.ice(1) > 1.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area(1)  %expand, check only first cell
                
                 regridded_yesNo = 1;
-                split_fraction = snow.STATVAR.ice(1) ./ snow.PARA.swe_per_cell; %e.g. 1.6
+                split_fraction = snow.STATVAR.ice(1) ./ (snow.PARA.swe_per_cell.*snow.STATVAR.area(1)); %e.g. 1.6
                 split_fraction = (split_fraction-1)./split_fraction;
                 snow = split_cell_intensive(snow, 1, intensive_variables);
                 snow = split_cell_extensive(snow, 1, split_fraction, extensive_variables);

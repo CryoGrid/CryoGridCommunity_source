@@ -5,7 +5,7 @@
 
 %define the grid to which variables are interpolated
 target_cell_size = 0.02;
-new_grid = [385:target_cell_size:400.5]' - 400 + 20;
+new_grid = [395:target_cell_size:402]' - 400 + 20;
 %new_grid = [15:target_cell_size:21]';
 threshold = target_cell_size/10;  
 
@@ -14,10 +14,10 @@ result.T = [];
 result.waterIce =[];
 result.water = [];
 result.ice = [];
-% result.Xice = [];
-% result.Xwater = [];
-% result.XwaterIce = [];
-% result.waterPotential = [];
+ result.Xice = [];
+ result.Xwater = [];
+ result.XwaterIce = [];
+ result.waterPotential = [];
 %result.saltConc = [];
 %result.salt_c_brine=[];
 result.class_number = [];
@@ -27,6 +27,7 @@ variableList = fieldnames(result);
 numberOfVariables = size(variableList,1);
 
 out=self;
+%out=out3;
 
 for i=1:size(out.STRATIGRAPHY,2)
     

@@ -33,6 +33,7 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             
             ground.CONST.rho_w = [];
             ground.CONST.rho_i = [];
+            ground.CONST.n_water = [];
         end
         
         function ground = provide_PARA(ground)
@@ -73,6 +74,8 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.STATVAR.ice = [];
             ground.STATVAR.air = [];  % [m]
             ground.STATVAR.thermCond = [];
+            ground.STATVAR.hydraulicConductivity = [];
+            %ground.STATVAR.n = ground.CONST.n_water;
             
             ground.STATVAR.Lstar = [];
             ground.STATVAR.Qh = [];
@@ -92,6 +95,7 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
+            ground = calculate_hydraulicConductivity(ground);
 
             ground.STATVAR.Lstar = -100;
             ground.STATVAR.Qh = 0;
@@ -156,6 +160,7 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             
             ground = get_T_water_freeW(ground);
             ground = conductivity(ground);
+            ground = calculate_hydraulicConductivity(ground);
             
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water = ground.STATVAR.energy.*0;
