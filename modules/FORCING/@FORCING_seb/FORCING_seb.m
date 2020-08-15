@@ -151,7 +151,7 @@ classdef FORCING_seb
                  self.PARA.latitude  = self.DATA.lat;
             end
 
-            if std(self.DATA.timeForcing(2:end,1)-self.DATA.timeForcing(1:end-1,1))~=0
+            if std(self.DATA.timeForcing(2:end,1)-self.DATA.timeForcing(1:end-1,1))>=1e-10
                 error('timestamp of forcing data is not in regular intervals -> check, fix and restart')
                 %self.STATUS=0;
                 %return

@@ -55,6 +55,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow.STATVAR.ice = [];
             snow.STATVAR.air = [];  % [m]
             snow.STATVAR.thermCond = [];
+            snow.STATVAR.hydraulicConductivity = [];
             snow.STATVAR.albedo = [];
             
             snow.STATVAR.Lstar = [];
@@ -234,6 +235,8 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             end
             
             snow = conductivity(snow);
+            snow = calculate_hydraulicConductivity_SNOW(snow);
+            
             snow.STATVAR.upperPos = snow.NEXT.STATVAR.upperPos + sum(snow.STATVAR.layerThick);
             
             snow.TEMP.d_energy = snow.STATVAR.energy.*0;
@@ -247,6 +250,8 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow = subtract_water_CHILD(snow);
 
             snow = conductivity(snow);
+            snow = calculate_hydraulicConductivity_SNOW(snow);
+            
             snow.STATVAR.upperPos = snow.PARENT.STATVAR.upperPos + (snow.STATVAR.layerThick .* snow.STATVAR.area ./ snow.PARENT.STATVAR.area(1,1));
             
             snow.TEMP.d_energy = snow.STATVAR.energy.*0;

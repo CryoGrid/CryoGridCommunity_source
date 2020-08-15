@@ -25,6 +25,46 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
             self.filepath = mypath;
         end
 
+		function forcing_file = get_forcing_file_name(self, section) 
+		% GET_FORCING_FILE_NAME  Get forcing file name from specified section of 
+			% the configuration file.
+            %
+            %   ARGUMENTS:
+            %   section: a string specifying the forcing section to list 
+            %                (e.g. 'FORCING')
+            %
+            %   RETURNS: 
+            %   forcing_file: string with forcing file name extracted from the 
+			%   				configuration file
+			
+			forcing_file = [];
+			
+            for i = 1:length(self.config_data.(section)) %FOR loop preserved to handle more than one forcing file at a later stage
+                if ~isempty(self.config_data.(section){1,i}.filename)
+					forcing_file = self.config_data.(section){1,i}.filename;
+                else
+					error('The name of the forcing file is not specified in the configuration file')
+                end
+            end
+		end
+
+		function [tile_info] = get_tile_information(self, section) 
+		% GET_TILE_INFORMATION Get tile information and inputs for the tile 
+			% builder from specified section of the configuration file 
+			% (only implemented for a unique identification section).
+            %
+            %   ARGUMENTS:
+            %   section: a string specifying the tile identification section  
+            %                (e.g. 'TILE_IDENTIFICATION')
+            %
+            %   RETURNS: 
+            %   tile_info: a structure defining the tile type, location, class 
+			%		combination, etc.
+			
+			tile_info = self.config_data.(section);
+			
+		end
+		
         function id = get_class_id_by_name_and_index(self, section, name, index)
             % GET_CLASS_ID_BY_NAME_AND_INDEX  Get the class id of a class
             %   given by its class name and class index.
@@ -77,7 +117,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
             name = self.config_data.(section){1,id}.type;
             index = self.config_data.(section){1,id}.index;
         end
-       
+
         function structure = populate_struct(self, structure, section, name, index)
             % POPULATE_STRUCT  Populates the fields of the provided structure with
             %   values from the parameter source (here xlsx file)
@@ -107,12 +147,21 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
                         fn_substruct = fieldnames(structure.(fn{i}));
                         assigned_subfields = [];
                         assigned_fields = [assigned_fields fn(i)];
-                        for j = 1:size(fn_substruct,1)
-                            if any(strcmp(fn_substruct{j},fieldnames(self.config_data.(section){1,id}.(fn{i}))))
-                                structure.(fn{i}).(fn_substruct{j}) = self.config_data.(section){1,id}.(fn{i}).(fn_substruct{j})';
-                                assigned_subfields = [assigned_subfields fn_substruct(j)];                       
+						if ~isempty(fn_substruct)
+							for j = 1:size(fn_substruct,1)
+								if any(strcmp(fn_substruct{j},fieldnames(self.config_data.(section){1,id}.(fn{i}))))
+									structure.(fn{i}).(fn_substruct{j}) = self.config_data.(section){1,id}.(fn{i}).(fn_substruct{j})';
+									assigned_subfields = [assigned_subfields fn_substruct(j)];                       
+								end
+							end
+						else
+							structure.(fn{i}) = self.config_data.(section){1,id}.(fn{i});
+                            fn_substruct = fieldnames(structure.(fn{i}));
+                            for j=1:size(fn_substruct,1)
+                                structure.(fn{i}).(fn_substruct{j}) = [structure.(fn{i}).(fn_substruct{j})]';
+                                assigned_subfields = [assigned_subfields fn_substruct(j)];
                             end
-                        end
+						end
                     else
                         structure.(fn{i}) = self.config_data.(section){1,id}.(fn{i});
                         assigned_fields = [assigned_fields fn(i)];

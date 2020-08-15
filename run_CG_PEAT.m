@@ -17,7 +17,9 @@ forcing_file = dir([forcing_path '*.mat']);  %BE CAREFUL, this is a significant 
 %With this code, always the first mat-file in the forcig folder seems to be used, which leads
 %the program to crash if another file is specified in the Excel-file 
 %MUST BE CHANGED! As a work-around, specify the correct number in the line below 
-forcing_file = forcing_file(3,1).name;
+%forcing_file = forcing_file(5,1).name; %Samoylov
+forcing_file = forcing_file(4,1).name; %Suossjavri
+%forcing_file = forcing_file(3,1).name; %Herschell
 
 % =====================================================================
 % Use modular interface to build model run
@@ -55,7 +57,13 @@ t = forcing.PARA.start_time;
 %t is in days, timestep should also be in days
 
 lateral = LATERAL_IA();
-lateral = initialize_lateral_1D(lateral, {'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
+%lateral = initialize_lateral_1D(lateral, {'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
+%
+%lateral = initialize_lateral_1D(lateral, {'LAT_WATER_RESERVOIR'; 'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
+lateral = initialize_lateral_1D(lateral, {'LAT3D_WATER'}, TOP, BOTTOM, t);
+
+
+wdfwefwe
 
 while t < forcing.PARA.end_time
     
@@ -64,7 +72,7 @@ while t < forcing.PARA.end_time
     
     %proprietary function for each class, i.e. the "real upper boundary"
     %only evaluated for the first cell/block
-    
+
     TOP.NEXT = get_boundary_condition_u(TOP.NEXT, forcing);
     CURRENT = TOP.NEXT;
     
@@ -127,7 +135,8 @@ while t < forcing.PARA.end_time
         CURRENT = CURRENT.NEXT;
     end
     
-    lateral = lateral_IA(lateral, t);
+    
+    lateral = lateral_IA(lateral, forcing, t);
     
     TOP_CLASS = TOP.NEXT; %TOP_CLASS and BOTOOM_CLASS for convenient access
     BOTTOM_CLASS = BOTTOM.PREVIOUS;

@@ -61,18 +61,29 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
                         lateral.STATVAR.snow_drift_yes_no = lateral.STATVAR.snow_drift_yes_no + (lateral.PARENT.ENSEMBLE{j,1}.snow_drift == 2);
                     end
                 end
+                
                 %lateral.STATVAR.snow_drift_yes_no
                 if lateral.STATVAR.snow_drift_yes_no
                     
                     area_above = (altitude + 0.05 < altitude')*area;
                     area_below =(altitude - 0.05 > altitude')*area;
-                    exposure = (area_above - area_below) ./ (area_above + area_below);
-                    exposure(isnan(exposure)) = 0;
-                    lateral.STATVAR.exposure = exposure(1,1); %own exposure
+                    exposure2 = (area_above - area_below) ./ (area_above + area_below);
+                    exposure2(isnan(exposure2)) = 0;
+                    lateral.STATVAR.exposure = exposure2(1,1); %own exposure
+                    exposure = exposure2(1,1);
+                    k=0;
+                    for j=1:size(lateral.PARENT.ENSEMBLE,1)
+                        if lateral.PARENT.ENSEMBLE{j,1}.snow_drift >0
+                            exposure = [exposure; exposure2(j+k+1,1)];
+                        else
+                            exposure = [exposure; 0];
+                            k=k-1;
+                        end
+                    end
+                    
                     
                     if lateral.STATVAR.exposure > 0 %own realization gains snow
                         area_acc = area(1,1) .* lateral.STATVAR.exposure;
-                        volume = 0;
                         lateral.STATVAR.ds.waterIce = 0;
                         lateral.STATVAR.ds.ice = 0;
                         lateral.STATVAR.ds.energy = 0;
@@ -82,22 +93,25 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
                         lateral.STATVAR.ds.s = 0;
                         lateral.STATVAR.ds.gs = 0;
                         lateral.STATVAR.ds.time_snowfall = 0;
+                        volume=0;
                         for j=1:size(lateral.PARENT.ENSEMBLE,1)
-                            if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 1 && exposure(j+1,1) < 0 %all the loosing cells -> calculate total drifting snow pool
-                                volume = volume - exposure(j+1,1).*lateral.PARENT.ENSEMBLE{j,1}.ds_volume;
-                                lateral.STATVAR.ds.waterIce = lateral.STATVAR.ds.waterIce - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce;
-                                lateral.STATVAR.ds.ice = lateral.STATVAR.ds.ice - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_ice;
-                                lateral.STATVAR.ds.energy = lateral.STATVAR.ds.energy - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_energy;
-                                %intensive variables - use waterIce as scaling variable,
-                                %identical to ice when snow is driftable
-                                lateral.STATVAR.ds.d = lateral.STATVAR.ds.d  - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_d;
-                                lateral.STATVAR.ds.s = lateral.STATVAR.ds.s - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .*  lateral.PARENT.ENSEMBLE{j,1}.ds_s;
-                                lateral.STATVAR.ds.gs = lateral.STATVAR.ds.gs - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_gs;
-                                lateral.STATVAR.ds.time_snowfall = lateral.STATVAR.ds.time_snowfall - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_time_snowfall;
-                                
-                            elseif lateral.PARENT.ENSEMBLE{j,1}.snow_drift >0 && exposure(j+1,1) > 0  %all the gaining cells ->
-                                area_acc = area_acc + area(j+1,1) .* exposure(j+1,1);
-                            end
+                            
+                                if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 1 && exposure(j+1,1) < 0 %all the loosing cells -> calculate total drifting snow pool
+                                    volume = volume - exposure(j+1,1).*lateral.PARENT.ENSEMBLE{j,1}.ds_volume;
+                                    lateral.STATVAR.ds.waterIce = lateral.STATVAR.ds.waterIce - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce;
+                                    lateral.STATVAR.ds.ice = lateral.STATVAR.ds.ice - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_ice;
+                                    lateral.STATVAR.ds.energy = lateral.STATVAR.ds.energy - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_energy;
+                                    %intensive variables - use waterIce as scaling variable,
+                                    %identical to ice when snow is driftable
+                                    lateral.STATVAR.ds.d = lateral.STATVAR.ds.d  - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_d;
+                                    lateral.STATVAR.ds.s = lateral.STATVAR.ds.s - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .*  lateral.PARENT.ENSEMBLE{j,1}.ds_s;
+                                    lateral.STATVAR.ds.gs = lateral.STATVAR.ds.gs - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_gs;
+                                    lateral.STATVAR.ds.time_snowfall = lateral.STATVAR.ds.time_snowfall - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_time_snowfall;
+                                    
+                                elseif lateral.PARENT.ENSEMBLE{j,1}.snow_drift >0 && exposure(j+1,1) > 0  %all the gaining cells ->
+                                    area_acc = area_acc + area(j+1,1) .* exposure(j+1,1);
+                                end
+                            
                         end
                         lateral.STATVAR.ds.d = lateral.STATVAR.ds.d ./ lateral.STATVAR.ds.waterIce;
                         lateral.STATVAR.ds.d(isnan(lateral.STATVAR.ds.d)) = 0;

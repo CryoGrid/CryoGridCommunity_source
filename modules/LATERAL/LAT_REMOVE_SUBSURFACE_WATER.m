@@ -33,6 +33,14 @@ classdef LAT_REMOVE_SUBSURFACE_WATER < BASE_LATERAL
             end
             
         end
+        
+        function lateral = set_ACTIVE(lateral, i, t)
+            lateral.PARENT.ACTIVE(i,1) = 1;
+        end
+        
+        function lateral = pull(lateral)
+            
+        end
     end
     
 end

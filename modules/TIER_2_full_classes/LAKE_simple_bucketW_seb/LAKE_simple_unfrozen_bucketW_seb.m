@@ -148,7 +148,7 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
             %ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* (ground.TEMP.F_ub_water + ground.TEMP.F_lb_water);
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* (ground.TEMP.d_energy + ground.TEMP.d_water_energy);
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water;
-            ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_water;
+            ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_water ./ ground.STATVAR.area;
         end
         
         function ground = compute_diagnostic_first_cell(ground, forcing)

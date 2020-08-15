@@ -279,11 +279,11 @@ classdef FREEZE_CURVE < BASE
             area = ground.STATVAR.area;
             soil_type = ground.STATVAR.soil_type;
             
-            n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2);
+            n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2) + double(soil_type == 3) .* ground.CONST.vanGen_n(3) + double(soil_type == 4) .* ground.CONST.vanGen_n(4) + double(soil_type == 5) .* ground.CONST.vanGen_n(5);
             ground.STATVAR.n = n;
-            alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2);
+            alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2) + double(soil_type == 3) .* ground.CONST.vanGen_alpha(3) + double(soil_type == 4) .* ground.CONST.vanGen_alpha(4) + + double(soil_type == 5) .* ground.CONST.vanGen_alpha(5);
             ground.STATVAR.alpha = alpha;
-            thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2);
+            thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2) + double(soil_type == 3) .* ground.CONST.vanGen_residual_wc(3) + double(soil_type == 4) .* ground.CONST.vanGen_residual_wc(4) +  double(soil_type == 5) .* ground.CONST.vanGen_residual_wc(5);
             ground.STATVAR.thetaRes = thetaRes;
             
             porosity = 1-mineral-organic;
@@ -331,13 +331,28 @@ classdef FREEZE_CURVE < BASE
             area = ground.STATVAR.area;
             soil_type = ground.STATVAR.soil_type;
             
-            Xice = ground.STATVAR.Xice .* double(T < 0); % Xice initially only possible when frozen, provided in multiples of the "matrix", 1 means 50 vol% Xice, 50 % normal soil
+            Xice = ground.STATVAR.Xice .* double(T <= 0); % Xice initially only possible when frozen, provided in multiples of the "matrix", 1 means 50 vol% Xice, 50 % normal soil
             
-            n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2);
+%             n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2);
+%             ground.STATVAR.n = n;
+%             alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2);
+%             ground.STATVAR.alpha = alpha;
+%             thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2);
+%             ground.STATVAR.thetaRes = thetaRes;
+%             
+%             n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2) + double(soil_type == 3) .* ground.CONST.vanGen_n(3);
+%             ground.STATVAR.n = n;
+%             alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2) + double(soil_type == 3) .* ground.CONST.vanGen_alpha(3);
+%             ground.STATVAR.alpha = alpha;
+%             thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2) + double(soil_type == 3) .* ground.CONST.vanGen_residual_wc(3);
+%             ground.STATVAR.thetaRes = thetaRes;
+            
+            
+            n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2) + double(soil_type == 3) .* ground.CONST.vanGen_n(3) + double(soil_type == 4) .* ground.CONST.vanGen_n(4) + double(soil_type == 5) .* ground.CONST.vanGen_n(5);
             ground.STATVAR.n = n;
-            alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2);
+            alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2) + double(soil_type == 3) .* ground.CONST.vanGen_alpha(3) + double(soil_type == 4) .* ground.CONST.vanGen_alpha(4) + + double(soil_type == 5) .* ground.CONST.vanGen_alpha(5);
             ground.STATVAR.alpha = alpha;
-            thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2);
+            thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2) + double(soil_type == 3) .* ground.CONST.vanGen_residual_wc(3) + double(soil_type == 4) .* ground.CONST.vanGen_residual_wc(4) +  double(soil_type == 5) .* ground.CONST.vanGen_residual_wc(5);
             ground.STATVAR.thetaRes = thetaRes;
             
             porosity = 1-mineral-organic;
@@ -359,8 +374,8 @@ classdef FREEZE_CURVE < BASE
             ground.STATVAR.organic = organic .* layerThick ./ (1 + Xice) .* area; % [m3]
             ground.STATVAR.energy = (energy + Xice .* (ground.STATVAR.T .* ground.CONST.c_i - ground.CONST.L_f)) ./ (1 + Xice) .* layerThick .* area;  % [J]
             ground.STATVAR.XwaterIce = Xice ./ (1 + Xice) .* layerThick .* area;
-            ground.STATVAR.Xice = ground.STATVAR.XwaterIce;
-            ground.STATVAR.Xwater = ground.STATVAR.XwaterIce .* 0;
+            ground.STATVAR.Xice = ground.STATVAR.XwaterIce .*double(T<=0);
+            ground.STATVAR.Xwater = ground.STATVAR.XwaterIce .* double(T>0);
 
             ground.STATVAR.air = (1-mineral-organic-waterIce) .* layerThick ./ (1 + Xice) .* area;  % [m3]
             
