@@ -16,7 +16,6 @@ OUT:
 # NEW OUTPUT
 - { type:               OUT_all,
     index:              1,
-    
     output_timestep:    0.25,               # [days]
     save_date:          01.09.,             # provide in format dd.mm.
     save_interval:      1,                  # [y] if left empty, the entire output will be written out at the end
@@ -141,16 +140,13 @@ STRAT_classes:
     index:    1,
     
     classes: {
-        depth:          [0,
-                         8,
-                        10],
+        depth:          [ 0,
+                         10],
                          
-        class_name:     [GROUND_freeW_bucketW_convection_seb_snow,
-                         GROUND_freeW_bucketW_seb,
+        class_name:     [GROUND_freeW_bucketW_seb,
                          GROUND_freeW_seb],
                          
         class_index:    [1,
-                         1,
                          1]},
                          
                         

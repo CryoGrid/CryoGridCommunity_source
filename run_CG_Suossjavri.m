@@ -7,8 +7,6 @@ modules_path = 'modules';
 addpath(genpath(modules_path));
 
 run_number = 'peat_suossjavri';      
-%run_number = 'Finse_4432';      
-
 
 result_path = './results/';
 config_path = fullfile(result_path, run_number);
@@ -17,7 +15,6 @@ forcing_path = fullfile ('./forcing/');
 parameter_file = [run_number '.xlsx'];
 const_file = 'CONSTANTS_excel.xlsx';              
 forcing_files_list = dir([forcing_path '*.mat']); 
-
 
 % =====================================================================
 % Use modular interface to build model run
@@ -44,7 +41,6 @@ if any(contains({forcing_files_list.name}, forcing_file))
 else
     error('The name of the forcing file specified in the configuration file does not match any of the available files')
 end
-
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
 tile = TILE_BUILDER(pprovider, cprovider, fprovider);

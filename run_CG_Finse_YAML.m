@@ -14,7 +14,6 @@ forcing_path = fullfile ('./forcing/');
 parameter_file = [run_number '.yml'];
 const_file = 'CONSTANTS_YAML.yml';              
 forcing_files_list = dir([forcing_path '*.mat']); 
-%forcing_file = forcing_file(1,1).name;
 
 % =====================================================================
 % Use modular interface to build model run
@@ -42,15 +41,8 @@ else
     error('The name of the forcing file specified in the configuration file does not match any of the available files')
 end
 
-
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
-tile = TILE_BUILDER(pprovider, cprovider, fprovider, ...
-                           'forcing_id', pprovider.get_tile_information('TILE_IDENTIFICATION').forcing_id, ...
-                           'grid_id', pprovider.get_tile_information('TILE_IDENTIFICATION').grid_id, ...
-                           'out_id', pprovider.get_tile_information('TILE_IDENTIFICATION').out_id, ...
-                           'strat_linear_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_linear_id, ...
-                           'strat_layers_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_layers_id, ...
-                           'strat_classes_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_classes_id);
+tile = TILE_BUILDER(pprovider, cprovider, fprovider);
 
 forcing = tile.forcing;
 out = tile.out;

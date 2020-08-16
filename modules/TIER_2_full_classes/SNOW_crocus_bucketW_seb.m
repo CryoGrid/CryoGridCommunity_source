@@ -16,7 +16,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         function snow = provide_PARA(snow)
 
             snow.PARA.epsilon = [];
-            %snow.PARA.airT_height = []; % measurement height [m] Assigned from forcing data in "finialize"
+            % snow.PARA.airT_height = []; % measurement height [m] Assigned from forcing data in "finialize"
             snow.PARA.z0 = []; %roughness length [m]
             
             snow.PARA.SW_spectral_range1 = [];

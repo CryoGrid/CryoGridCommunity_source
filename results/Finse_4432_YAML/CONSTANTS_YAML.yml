@@ -27,9 +27,15 @@
      tau:                   1.5           #[-]	        tau = 1.5; %tortuosity %1.5 standard
      alpha_sand:            4               
      alpha_silt:            0.65
+     n_water:               2.5
      n_sand:                2
      n_silt:                1.7
+     n_clay:                1.25
+     n_peat:                1.29
+     residual_wc_water:     0
      residual_wc_sand:      0
      residual_wc_silt:      0
+     residual_wc_clay:      0
+     residual_wc_peat:      0
      Darcy_friction_factor: 0.1           #             rough-pipe regime
      tortuosity_air:        2.5           #             used in Carman Kozeny model
