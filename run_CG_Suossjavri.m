@@ -47,19 +47,10 @@ end
 
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
-tile = TILE_BUILDER(pprovider, cprovider, fprovider, ...
-                           'forcing_id', pprovider.get_tile_information('TILE_IDENTIFICATION').forcing_id, ...
-                           'grid_id', pprovider.get_tile_information('TILE_IDENTIFICATION').grid_id, ...
-                           'out_id', pprovider.get_tile_information('TILE_IDENTIFICATION').out_id, ...
-                           'strat_linear_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_linear_id, ...
-                           'strat_layers_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_layers_id, ...
-                           'strat_classes_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_classes_id);
-
-
+tile = TILE_BUILDER(pprovider, cprovider, fprovider);
 
 forcing = tile.forcing;
 out = tile.out;
-
 TOP_CLASS = tile.TOP_CLASS;
 BOTTOM_CLASS = tile.BOTTOM_CLASS;
 TOP = tile.TOP;
