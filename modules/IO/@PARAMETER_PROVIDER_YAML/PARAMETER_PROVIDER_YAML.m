@@ -23,6 +23,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
             self.config_data = ReadYaml([mypath '/' config_file]);
             self.source_type = 'yml';
             self.filepath = mypath;
+            self.tile_info = self.get_tile_information('TILE_IDENTIFICATION');
         end
 
 		function forcing_file = get_forcing_file_name(self, section) 
@@ -62,6 +63,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
 			%		combination, etc.
 			
 			tile_info = self.config_data.(section);
+            tile_info.coordinates = cell2mat(tile_info.coordinates);
 			
 		end
 		

@@ -11,6 +11,7 @@ TILE_IDENTIFICATION:
     strat_linear_id:   1                   # {default: 1},     # index representative of the order in which the strat_linear class is listed in the configuration file (NOT the class index !)
     strat_layers_id:   1                   # {default: 1},     # index representative of the order in which the strat_layers class is listed in the configuration file (NOT the class index !)
     strat_classes_id:  1                   # {default: 1},     # index representative of the order in which the strat_classes class is listed in the configuration file (NOT the class index !)
+    lateral_interactions:   ['LAT_WATER_RESERVOIR']
 
 OUT:
 # NEW OUTPUT

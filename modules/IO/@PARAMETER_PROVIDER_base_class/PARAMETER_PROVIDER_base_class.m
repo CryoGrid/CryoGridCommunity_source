@@ -8,6 +8,7 @@ classdef PARAMETER_PROVIDER_base_class
         source_type % identifier for what type of source is used
         filepath    % path to source file(s)
         config_data % input from config source
+        tile_info   % tile information
     end
     
     

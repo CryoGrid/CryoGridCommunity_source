@@ -84,12 +84,12 @@ classdef TILE_BUILDER
             self.fprovider = fprovider;
             
             % Obtain class definition ids from PARAMETER_PROVIDER
-            self.forcing_id       = pprovider.get_tile_information('TILE_IDENTIFICATION').forcing_id;
-            self.grid_id          = pprovider.get_tile_information('TILE_IDENTIFICATION').grid_id;
-            self.out_id           = pprovider.get_tile_information('TILE_IDENTIFICATION').out_id;
-            self.strat_linear_id  = pprovider.get_tile_information('TILE_IDENTIFICATION').strat_linear_id;
-            self.strat_layers_id  = pprovider.get_tile_information('TILE_IDENTIFICATION').strat_layers_id;
-            self.strat_classes_id = pprovider.get_tile_information('TILE_IDENTIFICATION').strat_classes_id;
+            self.forcing_id       = pprovider.tile_info.forcing_id;
+            self.grid_id          = pprovider.tile_info.grid_id;
+            self.out_id           = pprovider.tile_info.out_id;
+            self.strat_linear_id  = pprovider.tile_info.strat_linear_id;
+            self.strat_layers_id  = pprovider.tile_info.strat_layers_id;
+            self.strat_classes_id = pprovider.tile_info.strat_classes_id;
             
             % Support name-value pair arguments when constructing object
             % if the argument name is in the properties of the class
