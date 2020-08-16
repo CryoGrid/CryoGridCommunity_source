@@ -13,14 +13,14 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIA
             
             ground.PARA.albedo = [];
             ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
+            % ground.PARA.airT_height = []; % measurement height [m] Assigned from forcing data in "finialize"
             ground.PARA.z0 = []; %roughness length [m]
             
             ground.PARA.area =[]; %initial area of the realization [m2]
             
             ground.PARA.rs = [];
             
-            ground.PARA.heatFlux_lb = [];
+            % ground.PARA.heatFlux_lb = []; % Assigned from forcing data in "finialize"
             
             ground.PARA.dt_max = [] ; %[sec]
             ground.PARA.dE_max = []; %[J/m3]
