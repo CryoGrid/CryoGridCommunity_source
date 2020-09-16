@@ -14,16 +14,16 @@ classdef FORCING_PROVIDER
     
     methods
         
-        function self = FORCING_PROVIDER(mypath, forcing_file)
+        function self = FORCING_PROVIDER(pprovider, forcingpath)
             % CONSTRUCTOR for FORCING_PROVIDER
             %   Reads in forcing data from the specified file.
             %
             %   ARGUMENTS:
-            %   mypath:        path to forcing dataset file
-            %   forcing_file:  filename of forcing_file
+            %   pprovider:     instance of PARAMETER_PROVIDER class
+            %   forcingpath:   path to forcing dataset file
             
-            self.file_path = mypath;
-            self.forcing_file = forcing_file;
+            self.file_path = forcingpath;
+            self.forcing_file = pprovider.get_forcing_file_name('FORCING');
             self = self.load_forcing_from_mat();
         end
 
@@ -32,7 +32,14 @@ classdef FORCING_PROVIDER
             % LOAD_FORCING_FROM_MAT  Loads the data from source and
             %   and asigns it to DATA property.
 
-            tmp = load(fullfile(self.file_path, self.forcing_file), 'FORCING');
+            full_file_path = fullfile(self.file_path, self.forcing_file);
+            if isfile(full_file_path)
+                 tmp = load(full_file_path, 'FORCING');
+            else
+                 error(['The name of the forcing file (', self.forcing_file, ...
+                        ') does not exist in directory ', self.file_path])
+            end
+            
             self.DATA = tmp.FORCING.data;
         end
         
