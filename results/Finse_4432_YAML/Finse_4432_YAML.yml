@@ -144,7 +144,7 @@ STRAT_classes:
         depth:          [ 0,
                          10],
                          
-        class_name:     [GROUND_freeW_bucketW_seb,
+        class_name:     [GROUND_freezeC_bucketW_seb_snow,
                          GROUND_freeW_seb],
                          
         class_index:    [1,

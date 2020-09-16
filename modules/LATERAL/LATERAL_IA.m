@@ -70,12 +70,15 @@ classdef LATERAL_IA < matlab.mixin.Copyable
         end
         
         %use for single realization
-        function lateral = initialize_lateral_1D(lateral, lateral_class_list, TOP, BOTTOM, t)
+        function lateral = initialize_lateral_1D(lateral, tile)    %lateral_class_list, TOP, BOTTOM, t)
             lateral.IA_TIME_INCREMENT = 0.25;
             lateral.CONST.day_sec = 24 .* 3600;
+            
+            t = tile.forcing.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
             lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-            lateral.TOP = TOP;
-            lateral.BOTTOM = BOTTOM;
+            lateral.TOP = tile.TOP;
+            lateral.BOTTOM = tile.BOTTOM;
+            lateral_class_list = tile.pprovider.tile_info.lateral_interactions;
             
             %user-defined in the main file
             for i=1:size(lateral_class_list,1)
