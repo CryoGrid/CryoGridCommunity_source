@@ -16,7 +16,8 @@ classdef CONSTANT_PROVIDER_YAML < CONSTANT_PROVIDER_base_class
             %   const_file:   filename of const_file
 
             self.const_file = const_file;
-            self.const_data = ReadYaml([mypath '/' const_file]);
+            const_data = ReadYaml([mypath '/' const_file]);
+            self.const_data = const_data.CONST;
             self.source_type = 'yml';
             self.filepath = mypath;
         end
@@ -44,8 +45,8 @@ classdef CONSTANT_PROVIDER_YAML < CONSTANT_PROVIDER_base_class
             
             % Loop over all rows, and extract variables
             for i = 1:size(fn,1)
-                if any(strcmp(fn{i}, fieldnames(self.const_data.(fn_const_file{1}))))                 
-                    structure.(fn{i}) = self.const_data.(fn_const_file{1}).(fn{i});
+                if any(strcmp(fn{i}, fn_const_file))                 
+                    structure.(fn{i}) = self.const_data.(fn{i});
                     % Add field name to assigned_fields
                     assigned_fields = [assigned_fields fn(i)];
                 end
