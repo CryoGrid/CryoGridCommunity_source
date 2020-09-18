@@ -135,7 +135,12 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
                 end
                 class_list.from_row(i) = pos_list(i,1);
                 class_list.to_row(i) = pos_list(i,2);
-            end                
+            end
+            
+            if size(class_list, 1) == 0
+                error(['The section "' section '" was not found in the configuration file!']);
+            end
+            
         end
         
         
@@ -209,6 +214,12 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             %
             %   RETURNS: 
             %   structure:  the input structure with fields populated.
+            
+            if ~isstruct(structure)
+                % Do nothing if we are not passed a proper structure.
+                % Happens e.g. when PARA has no fields (empty)
+                return
+            end
             
             % Get list of fieldnames in the requested structure
             fn = fieldnames(structure);
