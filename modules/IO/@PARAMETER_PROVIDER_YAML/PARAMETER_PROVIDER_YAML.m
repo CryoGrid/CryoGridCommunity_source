@@ -137,6 +137,12 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
             %   RETURNS: 
             %   structure:  the input structure with fields populated.
             
+            if ~isstruct(structure)
+                % Do nothing if we are not passed a proper structure.
+                % Happens e.g. when PARA has no fields (empty)
+                return
+            end
+            
             % Get list of fieldnames in the requested structure
             fn = fieldnames(structure);
             id = self.get_class_id_by_name_and_index(section, name, index);
@@ -179,7 +185,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
                     end
             end
             
-            if exist ('fn_substruct')
+            if exist('fn_substruct')
                 for k = 1:size(fn_substruct,1)
                     if ~any(strcmp(assigned_subfields, fn_substruct{k}))
                     %   if not populated, give a warning message that
