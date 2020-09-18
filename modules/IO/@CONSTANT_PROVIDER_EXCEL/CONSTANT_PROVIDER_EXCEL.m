@@ -37,6 +37,12 @@ classdef CONSTANT_PROVIDER_EXCEL < CONSTANT_PROVIDER_base_class
             %   RETURNS: 
             %   structure:  the input structure with fields populated.
             
+            if ~isstruct(structure)
+                % Do nothing if we are not passed a proper structure.
+                % Happens e.g. when CONST has no fields (empty)
+                return
+            end
+            
             % Get list of fieldnames in the requested structure
             fn = fieldnames(structure);
             
