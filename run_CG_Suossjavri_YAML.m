@@ -6,13 +6,14 @@ clear all
 modules_path = 'modules';
 addpath(genpath(modules_path));
 
-run_number = 'Finse_4432';      
+run_number = 'peat_suossjavri_YAML';      
+
 result_path = './results/';
 config_path = fullfile(result_path, run_number);
 forcing_path = fullfile ('./forcing/');
 
-parameter_file = [run_number '.xlsx'];
-const_file = 'CONSTANTS_excel.xlsx';              
+parameter_file = [run_number '.yml'];
+const_file = 'CONSTANTS_YAML.yml';              
 
 % =====================================================================
 % Use modular interface to build model run
@@ -21,8 +22,8 @@ const_file = 'CONSTANTS_excel.xlsx';
 % Depending on parameter_file_type, instantiates
 % PARAMETER_PROVIDER, CONSTANT_PROVIDER and FORCING_PROVIDER classes
 
-pprovider = PARAMETER_PROVIDER_EXCEL(config_path, parameter_file);
-cprovider = CONSTANT_PROVIDER_EXCEL(config_path, const_file);
+pprovider = PARAMETER_PROVIDER_YAML(config_path, parameter_file);
+cprovider = CONSTANT_PROVIDER_YAML(config_path, const_file);
 fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
@@ -45,8 +46,6 @@ t = forcing.PARA.start_time;
 
 % ------ time integration ------------------
 
-%t is in days, timestep should also be in days
-
 while t < forcing.PARA.end_time
     
     forcing = interpolate_forcing(t, forcing);
@@ -54,10 +53,11 @@ while t < forcing.PARA.end_time
     
     %proprietary function for each class, i.e. the "real upper boundary"
     %only evaluated for the first cell/block
-    
+
     TOP.NEXT = get_boundary_condition_u(TOP.NEXT, forcing);
     CURRENT = TOP.NEXT;
-   
+    
+    %CURRENT = troubleshoot(CURRENT);
     %function independent of classes, each class must comply with this function!!!
     %evaluated for every interface between two cells/blocks
     while ~isequal(CURRENT.NEXT, BOTTOM)
@@ -80,19 +80,19 @@ while t < forcing.PARA.end_time
     CURRENT = TOP.NEXT;
     timestep=3600;
     while ~isequal(CURRENT, BOTTOM)
+        
         timestep = min(timestep, get_timestep(CURRENT));
         CURRENT = CURRENT.NEXT;
     end
     next_break_time = min(lateral.IA_TIME, out.OUTPUT_TIME);
     timestep = min(timestep, (next_break_time - t).*day_sec);
-    %make sure to hit the output times!
     
     %calculate prognostic variables
     CURRENT = TOP.NEXT;
     while ~isequal(CURRENT, BOTTOM)
         CURRENT = advance_prognostic(CURRENT, timestep);
         
-    CURRENT = CURRENT.NEXT;
+        CURRENT = CURRENT.NEXT;
     end
     
     
@@ -116,8 +116,8 @@ while t < forcing.PARA.end_time
         CURRENT = CURRENT.NEXT;
     end
     
-    lateral = interact(lateral, forcing, t);
     
+    lateral = interact(lateral, forcing, t);
     
     TOP_CLASS = TOP.NEXT; %TOP_CLASS and BOTOOM_CLASS for convenient access
     BOTTOM_CLASS = BOTTOM.PREVIOUS;

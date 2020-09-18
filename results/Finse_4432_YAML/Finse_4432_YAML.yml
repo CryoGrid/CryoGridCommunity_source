@@ -13,6 +13,7 @@ TILE_IDENTIFICATION:
     strat_classes_id:  1                   # {default: 1},     # index representative of the order in which the strat_classes class is listed in the configuration file (NOT the class index !)
     lateral_interactions:   ['LAT_WATER_RESERVOIR']
 
+
 OUT:
 # NEW OUTPUT
 - { type:               OUT_all,
@@ -26,15 +27,6 @@ OUT:
   
 # END OF OUTPUT DEFINITIONS
 
-
-
-# NEW LATERAL
-
-# add more lateral definitions if needed
-  
-# END OF LATERAL DEFINITIONS
-  
- 
 
 FORCING:
 # NEW FORCING
@@ -180,7 +172,7 @@ STRAT_linear:
 # END OF STRATIGRAPHY_INITIAL DEFINITIONS
 
 
-CLASS:
+GROUND_CLASS:
 # NEW CLASS
 - { type:                   GROUND_freeW_seb,
     index:                  1,
@@ -301,5 +293,35 @@ CLASS:
     evaporationDepth:       0.1,            #{default: ,      unit: },
     rootDepth:              0.1,            #{default: ,      unit: },
     ratioET:                0.5,            #{default: ,      unit: },
+  } # end of class
+# END OF CLASSES DEFINITION
+
+
+IA_CLASS:
+# NEW CLASS
+- { type:                   LAT_WATER_RESERVOIR,
+    index:                  1,
+    
+    reservoir_elevation:        20,         #{default: 20,   unit: '[-]'},
+    reservoir_temperature:      0.5,        #{default: 0.5,  unit: '[-]'},   # only active for Xice classes - if empty, water added at the temperature of the respective grid cell
+    hardBottom_cutoff:          0.03,       #{default: 0.03, unit: '[-]'},   # hard bottom if saturated and water content below
+    distance_reservoir:         3,          #{default: 3,    unit: '[-]'},   
+    reservoir_contact_length:   1,          #{default: 1,    unit: '[-]'},
+  } # end of class
+# END OF CLASSES DEFINITION
+
+
+LATERAL_CLASS:
+# NEW CLASS
+- { type:                   LATERAL_IA_1D,
+    index:                  1,
+    
+    ia_time_increment:   0.25,
+  } # end of class
+  
+- { type:                   LATERAL_IA_3D,
+    index:                  1,
+    
+    ia_time_increment:   0.05,
   } # end of class
 # END OF CLASSES DEFINITION

@@ -27,19 +27,9 @@ fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
 tile = TILE_BUILDER(pprovider, cprovider, fprovider);
+lateral = LATERAL_IA_1D(tile);
 
-lateral = LATERAL_IA();
-lateral = initialize_lateral_1D(lateral, tile);
-
-% THIN: Preferred LATERAL signature would be:
-%
-% lateral = LATERAL_IA_1D(tile);
-% lateral = LATERAL_IA_2D(tiles);
-% lateral = LATERAL_IA_3D(tiles);
-%
-% Thus having one IA class for each type of model, instantiate the one
-% you need, instead of first instantiating, then telling it what type
-% it is.
+% ------ preparations ----------------------
 
 forcing = tile.forcing;
 out = tile.out;
@@ -49,10 +39,11 @@ BOTTOM_CLASS = tile.BOTTOM_CLASS;
 TOP = tile.TOP;
 BOTTOM = tile.BOTTOM;
 
-% ------ time integration ------------------
 day_sec = 24.*3600;
 t = forcing.PARA.start_time;
 %t is in days, timestep should also be in days
+
+% ------ time integration ------------------
 
 while t < forcing.PARA.end_time
     
@@ -123,7 +114,7 @@ while t < forcing.PARA.end_time
         CURRENT = CURRENT.NEXT;
     end
     
-    lateral = lateral_IA(lateral, forcing, t);
+    lateral = interact(lateral, forcing, t);
     
     
     TOP_CLASS = TOP.NEXT; %TOP_CLASS and BOTOOM_CLASS for convenient access
