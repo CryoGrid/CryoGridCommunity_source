@@ -1,6 +1,8 @@
 # CryoGrid Vegetation
 Created 20191001, CryoGrid branch
-This is the modular version of CryoGrid which is based on an object-oriented programming paradigm, coupled to a multilayer canopy model (Bonan 2018)
+This is the modular version of CryoGrid which is based on an object-oriented programming paradigm, coupled to a multilayer canopy model developed by Bonan et al., 2018
+
+Bonan, G. B., Patton, E. G., Harman, I. N., Oleson, K. W., Finnigan, J. J., Lu, Y., and Burakowski, E. A.: Modeling canopy-induced turbulencein the Earth system: A unified parameterization of turbulent exchange within plant canopies and the roughness sublayer (CLM-ml v0),Geoscientific Model Development, 11, 1467–1496, https://doi.org/10.5194/gmd-11-1467-2018, 2018
 
 20191001 Simone Stünzi
 
