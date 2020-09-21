@@ -1,7 +1,7 @@
-classdef LATERAL_IA < matlab.mixin.Copyable
+classdef LATERAL_3D < matlab.mixin.Copyable
  
-    
     properties
+        class_index = 1
         IA_TIME_INCREMENT
         IA_TIME
         ACTIVE
@@ -17,6 +17,103 @@ classdef LATERAL_IA < matlab.mixin.Copyable
     end
     
     methods
+        %Use for several realizations with spmd
+        function lateral = LATERAL_3D(tile)
+            lateral = lateral.provide_PARA();
+            lateral = lateral.provide_CONST();
+            lateral = lateral.provide_STATVAR();
+            lateral = lateral.populate_CONST(tile.cprovider);
+            lateral = lateral.populate_PARA(tile.pprovider);
+            
+            lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
+            
+            t = tile.forcing.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
+
+            % NB which is correct? originally 3D inititialization had both
+            % of the following lines, effectively setting IA_TIME=t
+            % The 1D case only has the first line, IA_TIME = t + IA_TIME_INCREMENT;
+            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
+            lateral.IA_TIME = t;
+            
+            lateral.TOP = TOP;
+            lateral.BOTTOM = BOTTOM;            
+            
+            % This must be updated when we decide how to input parameters
+            % for the 3D case...
+            lateral_class_list = tile.pprovider.tile_info.lateral_interactions;      % copied from 1D case
+            %lateral_class_list =
+            %lateral.PARA.class_list{lateral.STATVAR.index,1};  % original 3D code
+            
+            %user-defined in the main file
+            for i=1:size(lateral_class_list,2)
+                class_handle = str2func(lateral_class_list{1,i});
+                lateral.IA_CLASSES{i,1} = class_handle();
+                %lateral.IA_CLASSES{i,1} = class_handle(1, tile.pprovider, tile.cprovider); % This is the corresponding code for 1D case, update when input format decided.
+            end
+            
+            for i=1:size(lateral.IA_CLASSES,1)
+                % provide_XXXX should be handled in class initialization.
+                % remove these lines when classes have been updated.
+                lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
+                lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
+                lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
+                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
+                lateral.IA_CLASSES{i}.PARENT = lateral;
+            end
+
+            for i=1:size(lateral.IA_CLASSES,1)
+                lateral.IA_CLASSES{i} = set_ia_time(lateral.IA_CLASSES{i}, t);
+                lateral.IA_CLASSES{i} = set_ACTIVE(lateral.IA_CLASSES{i}, i, t - lateral.IA_TIME_INCREMENT);
+            end
+
+            lateral.ENSEMBLE={};
+            lateral.ACTIVE = zeros(size(lateral_class_list,1),1);
+            
+        end
+
+        
+        function lateral = provide_PARA(lateral)
+            lateral.PARA.ia_time_increment = [];
+        end
+        
+        
+        function lateral = provide_CONST(lateral)
+            lateral.CONST.day_sec = [];
+            lateral.CONST.c_w = [];
+            lateral.CONST.c_i = [];        
+        end
+        
+        
+        function lateral = provide_STATVAR(lateral)
+            lateral.STATVAR.depths = [];
+            lateral.STATVAR.water_status = [];
+            lateral.STATVAR.hydraulicConductivity = [];
+            lateral.STATVAR.water_table_elevation = [];
+            lateral.STATVAR.water_available = [];
+            lateral.STATVAR.T_water = [];
+        end
+        
+        
+        function self = populate_PARA(self, pprovider)
+            % POPULATE_PARa  Updates the PARA structure with values from cprovider.
+            %
+            %   ARGUMENTS:
+            %   pprovider:  instance of PARAMETER_PROVIDER class
+            
+            self.PARA = pprovider.populate_struct(self.PARA, 'LATERAL_CLASS', class(self), self.class_index);
+        end            
+        
+        
+        function self = populate_CONST(self, cprovider)
+            % POPULATE_CONST  Updates the CONST structure with values from cprovider.
+            %
+            %   ARGUMENTS:
+            %   cprovider:  instance of CONSTANT_PROVIDER class
+            
+            self.CONST = cprovider.populate_struct(self.CONST);
+        end       
+            
+        
         function lateral = assign_number_of_realizations(lateral, num_realizations)
              lateral.PARA.num_realizations = num_realizations;           
         end
@@ -69,82 +166,9 @@ classdef LATERAL_IA < matlab.mixin.Copyable
             end 
         end
         
-        %use for single realization
-        function lateral = initialize_lateral_1D(lateral, tile)    %lateral_class_list, TOP, BOTTOM, t)
-            lateral.IA_TIME_INCREMENT = 0.25;
-            lateral.CONST.day_sec = 24 .* 3600;
-            
-            t = tile.forcing.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
-            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-            lateral.TOP = tile.TOP;
-            lateral.BOTTOM = tile.BOTTOM;
-            lateral_class_list = tile.pprovider.tile_info.lateral_interactions;
-            
-            %user-defined in the main file
-            for i=1:size(lateral_class_list,1)
-                class_handle = str2func(lateral_class_list{i,1});
-                lateral.IA_CLASSES{i,1} = class_handle();
-            end
-            
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i}.PARENT = lateral;
-            end
-            lateral.ENSEMBLE={};
-            lateral.STATVAR.index = 0; %set index to zero for 1D runs
-            lateral.PARA.num_realizations = 1;
-        end
-        
-        %Use for several realizations with spmd
-        function lateral = initialize_lateral_3D(lateral, TOP, BOTTOM, t)
-            lateral_class_list = lateral.PARA.class_list{lateral.STATVAR.index,1};
-            lateral.IA_TIME_INCREMENT = 0.05;
-            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-            lateral.CONST.day_sec = 24 .* 3600;
-            lateral.CONST.c_w = 4.2e6;
-            lateral.CONST.c_i = 1.9e6;
-            lateral.IA_TIME = t;
-            lateral.TOP = TOP;
-            lateral.BOTTOM = BOTTOM;
-            
-            %do this somewhere else
-            lateral.STATVAR.depths = [];
-            lateral.STATVAR.water_status = [];
-            lateral.STATVAR.hydraulicConductivity = [];
-            lateral.STATVAR.water_table_elevation = [];
-            lateral.STATVAR.water_available = [];
-            lateral.STATVAR.T_water = [];
-
-            lateral.ENSEMBLE={};
-            lateral.ACTIVE = zeros(size(lateral_class_list,1),1);
-            
-            %user-defined in the main file
-            for i=1:size(lateral_class_list,1)
-                class_handle = str2func(lateral_class_list{i,1});
-                lateral.IA_CLASSES{i,1} = class_handle();
-            end
-            
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i}.PARENT = lateral;
-            end
-
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = set_ia_time(lateral.IA_CLASSES{i}, t);
-                lateral.IA_CLASSES{i} = set_ACTIVE(lateral.IA_CLASSES{i}, i, t - lateral.IA_TIME_INCREMENT);
-            end
-
-        end
-        
-        
+      
         %main lateral function
-        function lateral = lateral_IA(lateral, forcing, t)
+        function lateral = interact(lateral, forcing, t)
             if t>=lateral.IA_TIME
                 if sum(lateral.ACTIVE) > 0
                     %disp(t-floor(t))
@@ -195,7 +219,6 @@ classdef LATERAL_IA < matlab.mixin.Copyable
                         end
                     end
                     labBarrier;
-                        
                     
                     
                     %calculate all derivatives/fluxes

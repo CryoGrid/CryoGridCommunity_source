@@ -28,7 +28,7 @@ fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
 tile = TILE_BUILDER(pprovider, cprovider, fprovider);
-lateral = LATERAL_IA_1D(tile);
+lateral = LATERAL_1D(tile);
 
 % ------ preparations ----------------------
 

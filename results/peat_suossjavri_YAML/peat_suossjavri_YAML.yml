@@ -242,7 +242,7 @@ GROUND_CLASS:
   } # end of class
 # END OF CLASSES DEFINITION
 
-IA_CLASS:
+LATERAL_IA_CLASS:
 # NEW CLASS
 - { type:                   LAT_WATER_RESERVOIR,
     index:                  1,
@@ -266,14 +266,14 @@ IA_CLASS:
 
 LATERAL_CLASS:
 # NEW CLASS
-- { type:                   LATERAL_IA_1D,
+- { type:                   LATERAL_1D,
     index:                  1,
     
     ia_time_increment:   0.25,
   } # end of class
   
 # NEW CLASS  
-- { type:                   LATERAL_IA_3D,
+- { type:                   LATERAL_3D,
     index:                  1,
     
     ia_time_increment:   0.05,

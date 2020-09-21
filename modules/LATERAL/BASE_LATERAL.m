@@ -62,7 +62,7 @@ classdef BASE_LATERAL < matlab.mixin.Copyable
             %   ARGUMENTS:
             %   pprovider:  instance of PARAMETER_PROVIDER class
             
-            self.PARA = pprovider.populate_struct(self.PARA, 'IA_CLASS', class(self), self.class_index);
+            self.PARA = pprovider.populate_struct(self.PARA, 'LATERAL_IA_CLASS', class(self), self.class_index);
         end
         
         function self = populate_CONST(self, cprovider)
