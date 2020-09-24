@@ -23,6 +23,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
             self.config_data = ReadYaml([mypath '/' config_file]);
             self.source_type = 'yml';
             self.filepath = mypath;
+            self.tile_info = self.get_tile_information('TILE_IDENTIFICATION');
         end
 
 		function forcing_file = get_forcing_file_name(self, section) 
@@ -62,6 +63,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
 			%		combination, etc.
 			
 			tile_info = self.config_data.(section);
+            tile_info.coordinates = cell2mat(tile_info.coordinates);
 			
 		end
 		
@@ -135,6 +137,12 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
             %   RETURNS: 
             %   structure:  the input structure with fields populated.
             
+            if ~isstruct(structure)
+                % Do nothing if we are not passed a proper structure.
+                % Happens e.g. when PARA has no fields (empty)
+                return
+            end
+            
             % Get list of fieldnames in the requested structure
             fn = fieldnames(structure);
             id = self.get_class_id_by_name_and_index(section, name, index);
@@ -177,7 +185,7 @@ classdef PARAMETER_PROVIDER_YAML < PARAMETER_PROVIDER_base_class
                     end
             end
             
-            if exist ('fn_substruct')
+            if exist('fn_substruct')
                 for k = 1:size(fn_substruct,1)
                     if ~any(strcmp(assigned_subfields, fn_substruct{k}))
                     %   if not populated, give a warning message that

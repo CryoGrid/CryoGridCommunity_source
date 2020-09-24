@@ -6,13 +6,13 @@ clear all
 modules_path = 'modules';
 addpath(genpath(modules_path));
 
-run_number = 'Finse_4432';      
+run_number = 'Finse_4432_YAML';      
 result_path = './results/';
 config_path = fullfile(result_path, run_number);
 forcing_path = fullfile ('./forcing/');
 
-parameter_file = [run_number '.xlsx'];
-const_file = 'CONSTANTS_excel.xlsx';              
+parameter_file = [run_number '.yml'];
+const_file = 'CONSTANTS_YAML.yml';              
 
 % =====================================================================
 % Use modular interface to build model run
@@ -21,8 +21,8 @@ const_file = 'CONSTANTS_excel.xlsx';
 % Depending on parameter_file_type, instantiates
 % PARAMETER_PROVIDER, CONSTANT_PROVIDER and FORCING_PROVIDER classes
 
-pprovider = PARAMETER_PROVIDER_EXCEL(config_path, parameter_file);
-cprovider = CONSTANT_PROVIDER_EXCEL(config_path, const_file);
+pprovider = PARAMETER_PROVIDER_YAML(config_path, parameter_file);
+cprovider = CONSTANT_PROVIDER_YAML(config_path, const_file);
 fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
@@ -44,8 +44,6 @@ t = forcing.PARA.start_time;
 %t is in days, timestep should also be in days
 
 % ------ time integration ------------------
-
-%t is in days, timestep should also be in days
 
 while t < forcing.PARA.end_time
     

@@ -6,12 +6,12 @@ classdef TILE_BUILDER
         cprovider
         fprovider
         
-        forcing_id = 1
-        grid_id = 1
-        out_id = 1
-        strat_linear_id =1
-        strat_layers_id = 1
-        strat_classes_id = 1
+        forcing_id = nan
+        grid_id = nan
+        out_id = nan
+        strat_linear_id = nan
+        strat_layers_id = nan
+        strat_classes_id = nan
         %stratigraphy_id = [1 2 3]
         
         % CryoGrid class instances
@@ -44,6 +44,11 @@ classdef TILE_BUILDER
             %   pprovider:  instance of PARAMETER_PROVIDER class
             %   cprovider:  instance of CONSTANT_PROVIDER class
             %   fprovider:  instance of FORCING_PROVIDER class
+            %
+            %   IDs of forcing, grid, strat_layers definitions etc are
+            %   obtained from the PARAMETER_PROVIDER. However, they can
+            %   also be specified as optional arguments, and will override
+            %   the values from the PARAMETER_PROVIDER if passed.
             %
             %   OPTIONAL ARGUMENTS:
             %   forcing_id:       id of the forcing definition to use
@@ -78,11 +83,17 @@ classdef TILE_BUILDER
             self.cprovider = cprovider;
             self.fprovider = fprovider;
             
+            % Obtain class definition ids from PARAMETER_PROVIDER
+            self.forcing_id       = pprovider.tile_info.forcing_id;
+            self.grid_id          = pprovider.tile_info.grid_id;
+            self.out_id           = pprovider.tile_info.out_id;
+            self.strat_linear_id  = pprovider.tile_info.strat_linear_id;
+            self.strat_layers_id  = pprovider.tile_info.strat_layers_id;
+            self.strat_classes_id = pprovider.tile_info.strat_classes_id;
+            
             % Support name-value pair arguments when constructing object
             % if the argument name is in the properties of the class
             % set the appropriate property to the argument value
-            
-            % Necessary to adapt the loop to the number of input arguments
             for i=1:2:nargin-3
                 if any(strcmp(properties(self), varargin{i}))
                     self.(varargin{i}) = varargin{i+1};
@@ -105,7 +116,6 @@ classdef TILE_BUILDER
             if ~isempty(self.strat_classes.sleeping_classes)
                 self = self.add_sleeping_classes(); %added Sebastian, appends all classes defined in STRAT_CLASSES to TOP
             end
-            %          self = self.add_CHILD_snow();
             
             % continue here to implement the other classes that needs to be
             % build/instantiated...

@@ -1,7 +1,7 @@
-classdef LATERAL_IA < matlab.mixin.Copyable
+classdef LATERAL_1D < matlab.mixin.Copyable
  
-    
     properties
+        class_index = 1
         IA_TIME_INCREMENT
         IA_TIME
         ACTIVE
@@ -17,35 +17,76 @@ classdef LATERAL_IA < matlab.mixin.Copyable
     end
     
     methods
+        function lateral = LATERAL_1D(tile)    %lateral_class_list, TOP, BOTTOM, t)
+            lateral = lateral.provide_PARA();
+            lateral = lateral.provide_CONST();
+            lateral = lateral.provide_STATVAR();
+            lateral = lateral.populate_CONST(tile.cprovider);
+            lateral = lateral.populate_PARA(tile.pprovider);
+            
+            lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
+            
+            t = tile.forcing.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
+            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
+            lateral.TOP = tile.TOP;
+            lateral.BOTTOM = tile.BOTTOM;
+            lateral_class_list = tile.pprovider.tile_info.lateral_interactions;
+            
+            %user-defined in the main file
+            for i=1:size(lateral_class_list,2)
+                class_handle = str2func(lateral_class_list{1,i});
+                lateral.IA_CLASSES{i,1} = class_handle(1, tile.pprovider, tile.cprovider);
+            end
+            
+            for i=1:size(lateral.IA_CLASSES,1)
+                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
+                lateral.IA_CLASSES{i}.PARENT = lateral;
+            end
+            lateral.ENSEMBLE={};
+            lateral.STATVAR.index = 0; %set index to zero for 1D runs
+            lateral.PARA.num_realizations = 1;
+        end
+        
+        
+        function lateral = provide_PARA(lateral)
+            lateral.PARA.ia_time_increment = [];
+        end
+        
+        
+        function lateral = provide_CONST(lateral)
+            lateral.CONST.day_sec = [];
+        end
+        
+        
+        function lateral = provide_STATVAR(lateral)
+
+        end
+        
+        
+        function self = populate_PARA(self, pprovider)
+            % POPULATE_PARa  Updates the PARA structure with values from cprovider.
+            %
+            %   ARGUMENTS:
+            %   pprovider:  instance of PARAMETER_PROVIDER class
+            
+            self.PARA = pprovider.populate_struct(self.PARA, 'LATERAL_CLASS', class(self), self.class_index);
+        end     
+        
+        
+        function self = populate_CONST(self, cprovider)
+            % POPULATE_CONST  Updates the CONST structure with values from cprovider.
+            %
+            %   ARGUMENTS:
+            %   cprovider:  instance of CONSTANT_PROVIDER class
+            
+            self.CONST = cprovider.populate_struct(self.CONST);
+        end
+        
+                
         function lateral = assign_number_of_realizations(lateral, num_realizations)
              lateral.PARA.num_realizations = num_realizations;           
         end
         
-        function lateral = get3d_PARA(lateral) %initializes 3D parameters, move this to Excel, etc. file later
-            lateral.PARA.run_number = [1; 2; 3];
-            lateral.PARA.connected = [0 1 0; 1 0 1; 0 1 0];
-            
-            lateral.PARA.contact_length = [0 24.1240351380764 0; 24.1240351380764 0 41.7840545427251;0 41.7840545427251 0]; %[0 1; 1  0];
-            lateral.PARA.distance = [0 3.549647869859770 0;3.549647869859770 0 2.366431913239846;0 2.366431913239846 0]; %[0 10; 10 0];
-            lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
-                                        {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_SEEPAGE_FACE'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}};
-% 
-%             lateral.PARA.run_number = [1; 2];
-%             lateral.PARA.connected = [0 1; 1 0];
-%             lateral.PARA.contact_length = [0 1; 1  0];
-%             lateral.PARA.distance = [0 2; 2 0];
-%             lateral.PARA.class_list ={{'LAT3D_WATER'}; {'LAT3D_WATER'}};      
-
-%                 lateral.PARA.run_number = [2; 1; 1; 3];
-%                 lateral.PARA.connected = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; %[0 1 1; 1 0 1; 1 1 0];
-%                 lateral.PARA.contact_length = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; % [0 1 1; 1 0 1; 1 1 0];
-%                 lateral.PARA.distance = [0 2 0 0; 2 0 2 0; 0 2 0 2; 0 0 2 0]; %[0 2 5; 2 0 2; 5 2 0];
-%                 lateral.PARA.class_list ={{'LAT3D_WATER'; 'LAT3D_WATER_RESERVOIR2'}; {'LAT3D_WATER'};  {'LAT3D_WATER'}; {'LAT3D_WATER'; 'LAT3D_WATER_SEEPAGE_FACE2'}};
-            %lateral.PARA.class_list ={{'LAT3D_WATER'}; {'LAT3D_WATER'};  {'LAT3D_WATER'}; {'LAT3D_WATER'}};
-%             lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
-%                                         {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'; 'LAT3D_WATER_SEEPAGE_FACE'}};             
-            lateral.PARA.central_worker = 2; %index of worker performing global computations (needed for LATERAL_3D_water) - should be set so that it has connections to as many as possible other workers
-        end
         
         function lateral = get_index(lateral)
             if lateral.PARA.num_realizations > 1
@@ -70,79 +111,8 @@ classdef LATERAL_IA < matlab.mixin.Copyable
             end 
         end
         
-        %use for single realization
-        function lateral = initialize_lateral_1D(lateral, lateral_class_list, TOP, BOTTOM, t)
-            lateral.IA_TIME_INCREMENT = 0.25;
-            lateral.CONST.day_sec = 24 .* 3600;
-            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-            lateral.TOP = TOP;
-            lateral.BOTTOM = BOTTOM;
-            
-            %user-defined in the main file
-            for i=1:size(lateral_class_list,1)
-                class_handle = str2func(lateral_class_list{i,1});
-                lateral.IA_CLASSES{i,1} = class_handle();
-            end
-            
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i}.PARENT = lateral;
-            end
-            lateral.ENSEMBLE={};
-            lateral.STATVAR.index = 0; %set index to zero for 1D runs
-            lateral.PARA.num_realizations = 1;
-        end
-        
-        %Use for several realizations with spmd
-        function lateral = initialize_lateral_3D(lateral, TOP, BOTTOM, t)
-            lateral_class_list = lateral.PARA.class_list{lateral.STATVAR.index,1};
-            lateral.IA_TIME_INCREMENT = 0.05;
-            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-            lateral.CONST.day_sec = 24 .* 3600;
-            lateral.CONST.c_w = 4.2e6;
-            lateral.CONST.c_i = 1.9e6;
-            lateral.IA_TIME = t;
-            lateral.TOP = TOP;
-            lateral.BOTTOM = BOTTOM;
-            
-            %do this somewhere else
-            lateral.STATVAR.depths = [];
-            lateral.STATVAR.water_status = [];
-            lateral.STATVAR.hydraulicConductivity = [];
-            lateral.STATVAR.water_table_elevation = [];
-            lateral.STATVAR.water_available = [];
-            lateral.STATVAR.T_water = [];
-
-            lateral.ENSEMBLE={};
-            lateral.ACTIVE = zeros(size(lateral_class_list,1),1);
-            
-            %user-defined in the main file
-            for i=1:size(lateral_class_list,1)
-                class_handle = str2func(lateral_class_list{i,1});
-                lateral.IA_CLASSES{i,1} = class_handle();
-            end
-            
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i}.PARENT = lateral;
-            end
-
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = set_ia_time(lateral.IA_CLASSES{i}, t);
-                lateral.IA_CLASSES{i} = set_ACTIVE(lateral.IA_CLASSES{i}, i, t - lateral.IA_TIME_INCREMENT);
-            end
-
-        end
-        
-        
         %main lateral function
-        function lateral = lateral_IA(lateral, forcing, t)
+        function lateral = interact(lateral, forcing, t)
             if t>=lateral.IA_TIME
                 if sum(lateral.ACTIVE) > 0
                     %disp(t-floor(t))
@@ -193,7 +163,6 @@ classdef LATERAL_IA < matlab.mixin.Copyable
                         end
                     end
                     labBarrier;
-                        
                     
                     
                     %calculate all derivatives/fluxes

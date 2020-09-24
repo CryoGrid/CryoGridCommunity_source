@@ -23,6 +23,7 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             self.config_data = read_excel2cell([mypath '/' config_file]);
             self.source_type = 'xlsx';
             self.filepath = mypath;
+            self.tile_info = self.get_tile_information('TILE_IDENTIFICATION');
         end
 		
         function forcing_file = get_forcing_file_name(self, section) 
@@ -70,7 +71,22 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             section_data = self.config_data(pos_list(1,1):pos_list(1,2),:);
 			
             for i=2:size(section_data,1)-1
-                tile_info.(section_data{i,1}) = section_data{i,2};
+                if strcmp(section_data{i,2}, 'LIST') 
+                    list_end = 0;
+                    for j=3:size(section_data,2)
+                        if strcmp(section_data{i,j}, 'END') 
+                            list_end = j-1;
+                            break;
+                        end
+                    end
+                    if list_end > 0
+                        tile_info.(section_data{i,1}) = section_data(i,3:list_end);       
+                    else
+                        warning(['End of list not identified for field ' section_data{i,1} ' in TILE_IDENTIFICATION section']);
+                    end
+                else
+                    tile_info.(section_data{i,1}) = section_data{i,2};
+                end
 		    end	
 			
 			tile_info.coordinates = str2num(tile_info.coordinates);
@@ -119,7 +135,12 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
                 end
                 class_list.from_row(i) = pos_list(i,1);
                 class_list.to_row(i) = pos_list(i,2);
-            end                
+            end
+            
+            if size(class_list, 1) == 0
+                error(['The section "' section '" was not found in the configuration file!']);
+            end
+            
         end
         
         
@@ -193,6 +214,12 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             %
             %   RETURNS: 
             %   structure:  the input structure with fields populated.
+            
+            if ~isstruct(structure)
+                % Do nothing if we are not passed a proper structure.
+                % Happens e.g. when PARA has no fields (empty)
+                return
+            end
             
             % Get list of fieldnames in the requested structure
             fn = fieldnames(structure);

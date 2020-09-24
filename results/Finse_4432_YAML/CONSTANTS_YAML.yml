@@ -1,0 +1,44 @@
+ CONST: 
+ # if possible, constant should be provided in SI units
+     day_sec:               86400         #[sec]	        number of seconds in a day  
+     year_sec:              31536000      #[sec]	        number of seconds in a year
+     rho_w:                 1000          #[kg/m3]	    density water
+     rho_i:                 920           #[kg/m3]	    density ice
+     L_f:                   334000000     #[J/m3]	        volumetric latent heat of fusion, freezing
+     L_s:                   2830000       #[J/kg]	        latent heat of sublimation			
+     c_w:                   4200000       #[J/m3K]	    volumetric heat capacity water
+     c_i:                   1900000       #[J/m3K]	    volumetric heat capacity ice
+     c_o:                   2500000       #[J/m3K]	    volumetric heat capacity organics
+     c_m:                   2000000       #[J/m3K]	    volumetric heat capacity mineral    		    	
+     k_a:                   0.025         #[W/mK]	        thermal conductivity air, Hillel (1982)
+     k_w:                   0.570         #[W/mK]	        thermal conductivity water, Hillel (1982)
+     k_i:                   2.200         #[W/mK]	        thermal conductivity ice, Hillel (1982)
+     k_o:                   0.250         #[W/mK]	        thermal conductivity organics, Hillel (1982)
+     k_m:                   3.000         #[W/mK]	        thermal conductivity mineral - default value, should be changed if necessary			
+     sigma:                 0.0000000567  #[W/m2K4]	    Stefan-Boltzmann constant
+     R:                     8.314459      #[J/K mol]      universal gas constant	
+     R_spec:                287.058       #[J/K kg] 
+     cp:                    1005          #[J/kg K]       specific heat capacity at constant pressure of air
+     kappa:                 0.4           #[-]            von Karman constant     
+     Tmfw:                  273.15        #[K]	        freezing temperature of free water
+     g:                     9.81          #[m/sec2]	    gravitational acceleration Earth surface			
+     viscosity_air:         0.0000173     #[kg/(m sec)]   
+     benthicSalt:           989.63        #[mol/m3]	    moles of ions, Millero et al. (2008)
+     tau:                   1.5           #[-]	        tau = 1.5; %tortuosity %1.5 standard
+     alpha_water:           400
+     alpha_sand:            4               
+     alpha_silt:            0.65
+     alpha_clay:            1.49
+     alpha_peat:            2.31          # from Hydraulic properties of fen peat soils in Poland, Gnatowski 2010
+     n_water:               2.5
+     n_sand:                2
+     n_silt:                1.7
+     n_clay:                1.25
+     n_peat:                1.29
+     residual_wc_water:     0
+     residual_wc_sand:      0
+     residual_wc_silt:      0
+     residual_wc_clay:      0
+     residual_wc_peat:      0
+     Darcy_friction_factor: 0.1           #             rough-pipe regime
+     tortuosity_air:        2.5           #             used in Carman Kozeny model

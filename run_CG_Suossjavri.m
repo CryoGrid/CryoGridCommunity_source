@@ -7,9 +7,6 @@ modules_path = 'modules';
 addpath(genpath(modules_path));
 
 run_number = 'peat_suossjavri';      
-%run_number = 'Finse_4432';  
-run_number = 'Herschell';
-
 
 result_path = './results/';
 config_path = fullfile(result_path, run_number);
@@ -17,46 +14,23 @@ forcing_path = fullfile ('./forcing/');
 
 parameter_file = [run_number '.xlsx'];
 const_file = 'CONSTANTS_excel.xlsx';              
-forcing_files_list = dir([forcing_path '*.mat']); 
-
 
 % =====================================================================
 % Use modular interface to build model run
 % =====================================================================
 
 % Depending on parameter_file_type, instantiates
-% PARAMETER_PROVIDER, CONSTANT_PROVIDER and FORCING_PROVIDER
-% classes
+% PARAMETER_PROVIDER, CONSTANT_PROVIDER and FORCING_PROVIDER classes
 
 pprovider = PARAMETER_PROVIDER_EXCEL(config_path, parameter_file);
 cprovider = CONSTANT_PROVIDER_EXCEL(config_path, const_file);
-
-% CHANGE JOASC: 
-% The forcing file name and inputs for the tile builder are now extracted 
-% from the configuration file using dedicated functions from the parameter 
-% provider (it implies that pprovider should be instantiated first). 
-% The name of the forcing file is compared to the list of files located in 
-% the folder forcing (this part can be removed if necessary).
-
-forcing_file = pprovider.get_forcing_file_name('FORCING');
-
-if any(contains({forcing_files_list.name}, forcing_file))
-    fprovider = FORCING_PROVIDER(forcing_path, forcing_file);
-else
-    error('The name of the forcing file specified in the configuration file does not match any of the available files')
-end
-
+fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the actual model tile (forcing, grid, out and stratigraphy classes)
-tile = TILE_BUILDER(pprovider, cprovider, fprovider, ...
-                           'forcing_id', pprovider.get_tile_information('TILE_IDENTIFICATION').forcing_id, ...
-                           'grid_id', pprovider.get_tile_information('TILE_IDENTIFICATION').grid_id, ...
-                           'out_id', pprovider.get_tile_information('TILE_IDENTIFICATION').out_id, ...
-                           'strat_linear_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_linear_id, ...
-                           'strat_layers_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_layers_id, ...
-                           'strat_classes_id', pprovider.get_tile_information('TILE_IDENTIFICATION').strat_classes_id);
+tile = TILE_BUILDER(pprovider, cprovider, fprovider);
+lateral = LATERAL_1D(tile);
 
-
+% ------ preparations ----------------------
 
 forcing = tile.forcing;
 out = tile.out;
@@ -66,19 +40,9 @@ BOTTOM_CLASS = tile.BOTTOM_CLASS;
 TOP = tile.TOP;
 BOTTOM = tile.BOTTOM;
 
-
-% ------ time integration ------------------
 day_sec = 24.*3600;
 t = forcing.PARA.start_time;
 %t is in days, timestep should also be in days
-
-lateral = LATERAL_IA();
-%lateral = initialize_lateral_1D(lateral, {'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
-%
-lateral = initialize_lateral_1D(lateral, { 'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
-%lateral = initialize_lateral_1D(lateral, {'LAT3D_WATER'}, TOP, BOTTOM, t);
-TOP.LATERAL = lateral;
-
 
 
 while t < forcing.PARA.end_time
@@ -152,7 +116,7 @@ while t < forcing.PARA.end_time
     end
     
     
-    lateral = lateral_IA(lateral, forcing, t);
+    lateral = interact(lateral, forcing, t);
     
     TOP_CLASS = TOP.NEXT; %TOP_CLASS and BOTOOM_CLASS for convenient access
     BOTTOM_CLASS = BOTTOM.PREVIOUS;

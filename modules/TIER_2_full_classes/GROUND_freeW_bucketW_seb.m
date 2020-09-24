@@ -40,7 +40,7 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             
             ground.PARA.albedo = [];
             ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
+            % snow.PARA.airT_height = []; % measurement height [m] Assigned from forcing data in "finialize"
             ground.PARA.z0 = []; %roughness length [m]
             
             ground.PARA.area =[]; %initial area of the realization [m2]
@@ -50,9 +50,9 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.PARA.ratioET = [];
             
             ground.PARA.hydraulicConductivity = []; %change to a prametrization later?
-            ground.PARA.externalWaterFlux = [] ; %external water flux added
+            % ground.PARA.externalWaterFlux = [] ; % NB: not obtained from para file, where is this assigned?
             
-            ground.PARA.heatFlux_lb = [];
+            % ground.PARA.heatFlux_lb = []; % Assigned from forcing data in "finialize"
             
             ground.PARA.dt_max = [] ; %[sec]
             ground.PARA.dE_max = []; %[J/m3]

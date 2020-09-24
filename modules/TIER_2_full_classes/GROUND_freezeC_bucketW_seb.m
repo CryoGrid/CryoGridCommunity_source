@@ -19,10 +19,10 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             ground.CONST.c_o = [];
             ground.CONST.c_m = [];
             
-            ground.CONST.k_a = [];       %air [Hillel(1982)]
-            ground.CONST.k_w = [];        %water [Hillel(1982)]
-            ground.CONST.k_i = [];         %ice [Hillel(1982)]
-            ground.CONST.k_o = [];        %organic [Hillel(1982)]
+            ground.CONST.k_a = []; %air [Hillel(1982)]
+            ground.CONST.k_w = []; %water [Hillel(1982)]
+            ground.CONST.k_i = []; %ice [Hillel(1982)]
+            ground.CONST.k_o = []; %organic [Hillel(1982)]
             ground.CONST.k_m = [];
             
             ground.CONST.sigma = []; %Stefan-Boltzmann constant
@@ -60,19 +60,19 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             
             ground.PARA.albedo = [];
             ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
-            ground.PARA.z0 = []; %roughness length [m]
+            % ground.PARA.airT_height = []; % measurement height [m] Assigned from forcing data in "finialize"
+            ground.PARA.z0 = []; % roughness length [m]
             
-            ground.PARA.area =[]; %initial area of the realization [m2]
+            ground.PARA.area =[]; % initial area of the realization [m2]
             
             ground.PARA.rootDepth = [];
             ground.PARA.evaporationDepth = [];
             ground.PARA.ratioET = [];
             
             ground.PARA.hydraulicConductivity = []; %change to a prametrization later?
-            ground.PARA.externalWaterFlux = [] ; %external water flux added
+            % ground.PARA.externalWaterFlux = [] ; % NB: not obtained from para file, where is this assigned?
             
-            ground.PARA.heatFlux_lb = [];
+            % ground.PARA.heatFlux_lb = []; % Assigned from forcing data in "finialize"
             
             ground.PARA.dt_max = [] ; %[sec]
             ground.PARA.dE_max = []; %[J/m3]
