@@ -300,9 +300,9 @@ classdef SNOW < BASE
                 snow.IA_PREVIOUS =[];
                
                 %change to constant layerThick, variable area
-                %volume = snow.STATVAR.layerThick .* snow.STATVAR.area;
-                %snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ snow.STATVAR.target_density; %[m] constant layerThick
-                %snow.STATVAR.area = volume ./ snow.STATVAR.layerThick;
+                volume = snow.STATVAR.layerThick .* snow.STATVAR.area;
+                snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ snow.STATVAR.target_density; %[m] constant layerThick
+                snow.STATVAR.area = volume ./ snow.STATVAR.layerThick;
                 
                 snow = ground; %assign snow pointer to ground to return to regular stratigraphy
                 %CHECK : snow = ground.PREVIOUS;?? Otherwise CURRENT.NEXT

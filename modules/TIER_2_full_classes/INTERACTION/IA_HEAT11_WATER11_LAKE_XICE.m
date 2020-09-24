@@ -67,7 +67,13 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
             ground = ia_heat_water.NEXT;
             
             ground.STATVAR.XwaterIce(1) = ground.STATVAR.XwaterIce(1) + sum(lake.STATVAR.waterIce,1);
-            ground.STATVAR.Xwater(1) = ground.STATVAR.Xwater(1) + sum(lake.STATVAR.waterIce,1);
+            
+            %changed Sep 2020
+            E_frozen = -sum(lake.STATVAR.waterIce,1).* ground.CONST.L_f;
+            unfrozen_fraction = max(0, min(1, (sum(lake.STATVAR.energy,1)-E_frozen)./-E_frozen));
+            ground.STATVAR.Xwater(1) = ground.STATVAR.Xwater(1) + sum(lake.STATVAR.waterIce,1) .* unfrozen_fraction; %sum(lake.STATVAR.waterIce,1);
+            
+            
             ground.STATVAR.energy(1) = ground.STATVAR.energy(1) + sum(lake.STATVAR.energy,1);
             ground.STATVAR.layerThick(1) = ground.STATVAR.layerThick(1) +  sum(lake.STATVAR.waterIce ./ lake.STATVAR.area ,1);
             if sum(strcmp('CHILD', fieldnames(lake))) %pass snow child down from lake to ground
@@ -84,7 +90,7 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
             ground.PREVIOUS = lake.PREVIOUS;
             ground.PREVIOUS.NEXT = ground;
             if ~strcmp(class(ground.PREVIOUS), 'Top')
-                ground.IA_PREVIOUS = get_IA_class(class(ground), class(ground.PREVIOUS));
+                ground.IA_PREVIOUS = get_IA_class(class(ground.PREVIOUS), class(ground));
                 ground.PREVIOUS.IA_NEXT = ground.IA_PREVIOUS;
                 ground.IA_PREVIOUS.PREVIOUS = ground.PREVIOUS;
                 ground.IA_PREVIOUS.NEXT = ground;

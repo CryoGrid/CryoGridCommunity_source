@@ -14,9 +14,20 @@ classdef IA_HEAT11_WATER11_SNOW_XICE < IA_WATER & IA_HEAT
         end
         
         function remove_excessWater_CHILD(ia_heat_water) %move excessWater from SNOW to Xwater from PARENT, 0 energy transfer since meltwater must be zero
-            ia_heat_water.NEXT.STATVAR.XwaterIce(1) = ia_heat_water.NEXT.STATVAR.XwaterIce(1) + ia_heat_water.PREVIOUS.STATVAR.excessWater;
-            ia_heat_water.NEXT.STATVAR.Xwater(1) = ia_heat_water.NEXT.STATVAR.Xwater(1) + ia_heat_water.PREVIOUS.STATVAR.excessWater;
-            ia_heat_water.NEXT.STATVAR.layerThick(1) = ia_heat_water.NEXT.STATVAR.layerThick(1) + ia_heat_water.PREVIOUS.STATVAR.excessWater ./ ia_heat_water.NEXT.STATVAR.area(1);
+%             ia_heat_water.NEXT.STATVAR.XwaterIce(1) = ia_heat_water.NEXT.STATVAR.XwaterIce(1) + ia_heat_water.PREVIOUS.STATVAR.excessWater;
+%             ia_heat_water.NEXT.STATVAR.Xwater(1) = ia_heat_water.NEXT.STATVAR.Xwater(1) + ia_heat_water.PREVIOUS.STATVAR.excessWater;
+%             ia_heat_water.NEXT.STATVAR.layerThick(1) = ia_heat_water.NEXT.STATVAR.layerThick(1) + ia_heat_water.PREVIOUS.STATVAR.excessWater ./ ia_heat_water.NEXT.STATVAR.area(1);
+%             ia_heat_water.PREVIOUS.STATVAR.excessWater = 0;
+            
+            space_left = max(0,ia_heat_water.NEXT.STATVAR.layerThick(1) .* ia_heat_water.NEXT.STATVAR.area(1) - ia_heat_water.NEXT.STATVAR.mineral(1) ...
+                - ia_heat_water.NEXT.STATVAR.organic(1) - ia_heat_water.NEXT.STATVAR.waterIce(1) - ia_heat_water.NEXT.STATVAR.XwaterIce(1)); 
+            water_in = min(space_left, ia_heat_water.PREVIOUS.STATVAR.excessWater);
+            Xwater_in = max(0, ia_heat_water.PREVIOUS.STATVAR.excessWater - water_in);
+            
+            ia_heat_water.NEXT.STATVAR.waterIce(1) = ia_heat_water.NEXT.STATVAR.waterIce(1) + water_in;
+            ia_heat_water.NEXT.STATVAR.XwaterIce(1) = ia_heat_water.NEXT.STATVAR.XwaterIce(1) + Xwater_in;
+            ia_heat_water.NEXT.STATVAR.Xwater(1) = ia_heat_water.NEXT.STATVAR.Xwater(1) + Xwater_in;
+            ia_heat_water.NEXT.STATVAR.layerThick(1) = ia_heat_water.NEXT.STATVAR.layerThick(1) + Xwater_in ./ ia_heat_water.NEXT.STATVAR.area(1);
             ia_heat_water.PREVIOUS.STATVAR.excessWater = 0;
         end
         

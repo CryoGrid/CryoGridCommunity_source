@@ -7,7 +7,8 @@ modules_path = 'modules';
 addpath(genpath(modules_path));
 
 run_number = 'peat_suossjavri';      
-%run_number = 'Finse_4432';      
+%run_number = 'Finse_4432';  
+run_number = 'Herschell';
 
 
 result_path = './results/';
@@ -65,6 +66,7 @@ BOTTOM_CLASS = tile.BOTTOM_CLASS;
 TOP = tile.TOP;
 BOTTOM = tile.BOTTOM;
 
+
 % ------ time integration ------------------
 day_sec = 24.*3600;
 t = forcing.PARA.start_time;
@@ -73,9 +75,9 @@ t = forcing.PARA.start_time;
 lateral = LATERAL_IA();
 %lateral = initialize_lateral_1D(lateral, {'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
 %
-lateral = initialize_lateral_1D(lateral, {'LAT_WATER_RESERVOIR'; 'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
+lateral = initialize_lateral_1D(lateral, { 'LAT_REMOVE_SURFACE_WATER'}, TOP, BOTTOM, t);
 %lateral = initialize_lateral_1D(lateral, {'LAT3D_WATER'}, TOP, BOTTOM, t);
-
+TOP.LATERAL = lateral;
 
 
 

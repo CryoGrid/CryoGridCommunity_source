@@ -3,6 +3,7 @@ classdef Top  < matlab.mixin.Copyable
     properties
         NEXT
         STORE
+        LATERAL
     end
     
     methods

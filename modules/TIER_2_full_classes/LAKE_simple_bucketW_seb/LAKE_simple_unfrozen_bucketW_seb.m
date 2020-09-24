@@ -199,7 +199,7 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
                 end
             end
             
-            if ~trigger_yes_no & ground.STATVAR.waterIce < ground.PARA.threshold_water
+            if ~trigger_yes_no & (ground.STATVAR.waterIce./ground.STATVAR.area) < ground.PARA.threshold_water
                 trigger_yes_no = 1;
                 trigger_remove_LAKE(ground.IA_NEXT, forcing);
             end

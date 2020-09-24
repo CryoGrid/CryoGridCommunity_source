@@ -22,24 +22,25 @@ classdef LATERAL_IA < matlab.mixin.Copyable
         end
         
         function lateral = get3d_PARA(lateral) %initializes 3D parameters, move this to Excel, etc. file later
-%             lateral.PARA.run_number = [1; 2; 3];
-%             lateral.PARA.connected = [0 1 0; 1 0 1; 0 1 0];
-%             
-%             lateral.PARA.contact_length = [0 24.1240351380764 0; 24.1240351380764 0 41.7840545427251;0 41.7840545427251 0]; %[0 1; 1  0];
-%             lateral.PARA.distance = [0 3.549647869859770 0;3.549647869859770 0 2.366431913239846;0 2.366431913239846 0]; %[0 10; 10 0];
-%             lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
-%                                         {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_SEEPAGE_FACE'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}};
+            lateral.PARA.run_number = [1; 2; 3];
+            lateral.PARA.connected = [0 1 0; 1 0 1; 0 1 0];
+            
+            lateral.PARA.contact_length = [0 24.1240351380764 0; 24.1240351380764 0 41.7840545427251;0 41.7840545427251 0]; %[0 1; 1  0];
+            lateral.PARA.distance = [0 3.549647869859770 0;3.549647869859770 0 2.366431913239846;0 2.366431913239846 0]; %[0 10; 10 0];
+            lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
+                                        {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_SEEPAGE_FACE'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}};
 % 
 %             lateral.PARA.run_number = [1; 2];
 %             lateral.PARA.connected = [0 1; 1 0];
 %             lateral.PARA.contact_length = [0 1; 1  0];
 %             lateral.PARA.distance = [0 2; 2 0];
-%             lateral.PARA.class_list ={{'LAT3D_WATER'}; {'LAT3D_WATER'}};            
-                lateral.PARA.run_number = [2; 1; 1; 3];
-                lateral.PARA.connected = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; %[0 1 1; 1 0 1; 1 1 0];
-                lateral.PARA.contact_length = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; % [0 1 1; 1 0 1; 1 1 0];
-                lateral.PARA.distance = [0 2 0 0; 2 0 2 0; 0 2 0 2; 0 0 2 0]; %[0 2 5; 2 0 2; 5 2 0];
-                lateral.PARA.class_list ={{'LAT3D_WATER'; 'LAT3D_WATER_RESERVOIR2'}; {'LAT3D_WATER'};  {'LAT3D_WATER'}; {'LAT3D_WATER'; 'LAT3D_WATER_SEEPAGE_FACE2'}};
+%             lateral.PARA.class_list ={{'LAT3D_WATER'}; {'LAT3D_WATER'}};      
+
+%                 lateral.PARA.run_number = [2; 1; 1; 3];
+%                 lateral.PARA.connected = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; %[0 1 1; 1 0 1; 1 1 0];
+%                 lateral.PARA.contact_length = [0 1 0 0; 1 0 1 0; 0 1 0 1; 0 0 1 0]; % [0 1 1; 1 0 1; 1 1 0];
+%                 lateral.PARA.distance = [0 2 0 0; 2 0 2 0; 0 2 0 2; 0 0 2 0]; %[0 2 5; 2 0 2; 5 2 0];
+%                 lateral.PARA.class_list ={{'LAT3D_WATER'; 'LAT3D_WATER_RESERVOIR2'}; {'LAT3D_WATER'};  {'LAT3D_WATER'}; {'LAT3D_WATER'; 'LAT3D_WATER_SEEPAGE_FACE2'}};
             %lateral.PARA.class_list ={{'LAT3D_WATER'}; {'LAT3D_WATER'};  {'LAT3D_WATER'}; {'LAT3D_WATER'}};
 %             lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
 %                                         {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'; 'LAT3D_WATER_SEEPAGE_FACE'}};             

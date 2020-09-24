@@ -583,6 +583,20 @@ classdef WATER_FLUXES < BASE
 %              timestep = min(timestep, timestep2);
         end
         
+        function timestep = get_timestep_water_Xice(ground)
+            %outflow + inflow
+
+             timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ...
+                 (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) .* ...
+                 (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) ./ -ground.TEMP.d_water + ...
+                 double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce - ground.STATVAR.XwaterIce) ...
+                 ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
+             timestep(timestep<=0) = ground.PARA.dt_max;
+             timestep=nanmin(timestep);
+           
+             
+        end
+        
         function timestep = get_timestep_water_RichardsEq(ground)
              %no negative values and no overtopping
              timestep = ( double(ground.TEMP.d_water <0)  .* ground.STATVAR.water./2 ./ -ground.TEMP.d_water + ...

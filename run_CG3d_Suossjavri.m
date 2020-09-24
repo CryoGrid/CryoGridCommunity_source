@@ -6,7 +6,8 @@ clear all
 modules_path = 'modules';
 addpath(genpath(modules_path));
 
-run_number = 'peat_suossjavri';
+%run_number = 'peat_suossjavri';
+run_number= 'Herschell';
 result_path = './results/';
 config_path = fullfile(result_path, run_number);
 forcing_path = fullfile ('./forcing/');
@@ -17,7 +18,7 @@ forcing_files_list = dir([forcing_path '*.mat']);
 
 
 lateral = LATERAL_IA();
-lateral = assign_number_of_realizations(lateral, 4);
+lateral = assign_number_of_realizations(lateral, 3);
 lateral = get3d_PARA(lateral);
 
 if lateral.PARA.num_realizations > 1
@@ -99,7 +100,7 @@ spmd
     lateral.IA_TIME = t;
     %lateral = lateral_IA(lateral, forcing, t);
     
-    
+    TOP.LATERAL = lateral;
     
     
     
@@ -123,7 +124,7 @@ spmd
         %proprietary function for each class, i.e. the "real lower boundary"
         %only evaluated for the last cell/block
         CURRENT = get_boundary_condition_l(CURRENT,  forcing);  %At this point, CURRENT is equal to BOTTOM_CLASS
-        %--------------------------
+        
         
         %calculate spatial derivatives for every cell in the stratigraphy
         CURRENT = TOP.NEXT;
@@ -149,7 +150,8 @@ spmd
             CURRENT = advance_prognostic(CURRENT, timestep);
             CURRENT = CURRENT.NEXT;
         end
-                
+        
+
         %calculate diagnostic variables
         %some effects only happen in the first cell
         TOP.NEXT = compute_diagnostic_first_cell(TOP.NEXT, forcing);
@@ -163,12 +165,15 @@ spmd
             CURRENT = CURRENT.PREVIOUS;
         end
         
+        
         %check for triggers that reorganize the stratigraphy
         CURRENT = TOP.NEXT;
         while ~isequal(CURRENT, BOTTOM)
             CURRENT = check_trigger(CURRENT, forcing);
             CURRENT = CURRENT.NEXT;
         end
+        
+        
 
         TOP_CLASS = TOP.NEXT; %TOP_CLASS and BOTTOM_CLASS for convenient access
         BOTTOM_CLASS = BOTTOM.PREVIOUS;
@@ -179,6 +184,7 @@ spmd
         
         lateral = lateral_IA(lateral, forcing, t);
         
+
         %store the output according to the defined OUT clas
         out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, output_number, timestep, result_path);
         

@@ -6,6 +6,7 @@ classdef OUT_all
     properties
 		out_index
         STRATIGRAPHY
+        LATERAL
         TIMESTAMP
         MISC
         TEMP

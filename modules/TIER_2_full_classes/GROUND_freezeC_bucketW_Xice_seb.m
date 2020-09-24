@@ -178,19 +178,25 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
         
         function timestep = get_timestep(ground)  %could involve check for several state variables
            timestep = get_timestep_heat_coduction(ground);
-           timestep = min(timestep, get_timestep_water(ground)); 
+           timestep = min(timestep, get_timestep_water_Xice(ground)); 
            %timestep = min(timestep, get_timestep_Xwater(ground));
            %add check for water fluxes timestep
         end
         
         function ground = advance_prognostic(ground, timestep) 
+
+            
+            ground.STATVAR.test = ground.STATVAR.layerThick(1) .* ground.STATVAR.area(1) - (ground.STATVAR.XwaterIce(1) + ground.STATVAR.waterIce(1) + ground.STATVAR.mineral(1) + ground.STATVAR.organic(1));
+            
             %energy
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
-            ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_water_energy + ground.TEMP.d_Xwater_energy; %add energy from water advection
+            ground.STATVAR.energy = ground.STATVAR.energy + timestep .* (ground.TEMP.d_water_energy + ground.TEMP.d_Xwater_energy); %add energy from water advection
             %water
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water; %subtract water from ET
             ground.STATVAR.XwaterIce = ground.STATVAR.XwaterIce + timestep .* ground.TEMP.d_Xwater;
             ground.STATVAR.XwaterIce(ground.STATVAR.XwaterIce<0) = 0; %remove rounding errors
+            ground.STATVAR.Xwater = ground.STATVAR.Xwater + timestep .* ground.TEMP.d_Xwater;
+            ground.STATVAR.Xwater(ground.STATVAR.Xwater<0) = 0; %remove rounding errors
             
             %correction_minus = double(ground.STATVAR.XwaterIce<0) .* -ground.STATVAR.XwaterIce; %positive
             %ground.STATVAR.XwaterIce = ground.STATVAR.XwaterIce + correction_minus;
@@ -198,9 +204,11 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_Xwater ./ ground.STATVAR.area;
             %ground.STATVAR.layerThick = ground.STATVAR.layerThick + correction_minus./ ground.STATVAR.area;
             
-            %if sum(ground.STATVAR.layerThick .* ground.STATVAR.area < ground.STATVAR.XwaterIce + ground.STATVAR.mineral + ground.STATVAR.waterIce) > 0
-            %    gfegf
-            %end
+%             if ground.STATVAR.layerThick(1) .* ground.STATVAR.area(1) + 1e-3 < ground.STATVAR.XwaterIce(1) + ground.STATVAR.waterIce(1) + ground.STATVAR.mineral(1) + ground.STATVAR.organic(1)
+%                 'Hallo22'
+%                 pause(10)
+%                 gfegf
+%             end
             
         end
         
@@ -209,7 +217,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
         end
        
         function ground = compute_diagnostic(ground, forcing)
-            
+  
+              
             %equilibrate water between matrix and Xwater within cells
             air = ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce - ground.STATVAR.waterIce - ground.STATVAR.mineral - ground.STATVAR.organic; 
             move_cells = (ground.STATVAR.Xwater > 0) & (air > 0);

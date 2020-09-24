@@ -209,7 +209,9 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         
         function ground = check_trigger(ground, forcing)
             trigger_yes_no = 0;
-            if sum(double(ground.STATVAR.energy<0),1)==0  %all cells unfrozen, switch to LAKE_unfrozen class
+            if sum(double(ground.STATVAR.energy<0),1)==0  && strcmp(class(ground.PREVIOUS), 'Top')  %all cells unfrozen and no more snow cover on top, switch to LAKE_unfrozen class
+                %Change second condition, so that snow is combined with
+                %lake
                 trigger_yes_no = 1;
                 ia_create_next_season_lake = get_IA_class(class(ground), ground.PARA.next_season_lake_class); %delivers IA-class that creates and initializes the next season LAKE class
                 lake_next_season = create_annihilate(ia_create_next_season_lake, ground);
@@ -241,7 +243,7 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
                 end
             end
             
-            if ~trigger_yes_no & sum(ground.STATVAR.waterIce,1) < ground.PARA.threshold_water 
+            if ~trigger_yes_no & sum(ground.STATVAR.waterIce./ground.STATVAR.area ,1) < ground.PARA.threshold_water 
                 trigger_yes_no = 1;
                 trigger_remove_LAKE(ground.IA_NEXT, forcing);
             end

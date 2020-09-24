@@ -165,7 +165,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow < GROUND_freezeC_bucketW_Xice_seb
       
             if ground.CHILD ~= 0
                 %delete CHILD
-                if ground.CHILD.STATVAR.area ./ ground.STATVAR.area(1,1) < 1e-6 %cutoff to get rid of remaining snow
+                if ground.CHILD.STATVAR.area ./ ground.STATVAR.area(1,1) < 1e-6 % || ground.CHILD.STATVAR.area < 0 %cutoff to get rid of remaining snow
                    ground.CHILD = 0;
                    ground.IA_CHILD = 0;
                 %make SNOW CHILD full class   
