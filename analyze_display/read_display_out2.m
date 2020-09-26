@@ -26,8 +26,6 @@ result.class_number = [];
 variableList = fieldnames(result);
 numberOfVariables = size(variableList,1);
 
-out=self;
-%out=out3;
 
 for i=1:size(out.STRATIGRAPHY,2)
     

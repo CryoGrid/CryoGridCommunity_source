@@ -1,9 +1,11 @@
 
-classdef LAT_WATER_RESERVOIR < BASE_LATERAL
+classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
+
     
     methods
-        function self = LAT_WATER_RESERVOIR(index, pprovider, cprovider)  
-            self@BASE_LATERAL(index, pprovider, cprovider);
+        
+        function lateral = LAT_SEEPAGE_FACE_WATER(index, pprovider, cprovider)
+            lateral@BASE_LATERAL(index, pprovider, cprovider);
         end
         
         
@@ -12,11 +14,11 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
         end
         
         function lateral = provide_PARA(lateral)
-            lateral.PARA.reservoir_elevation = [];
-            lateral.PARA.reservoir_temperature = []; %only active for Xice classes - if empty, water added at the temperature of the respective grid cell
-            lateral.PARA.hardBottom_cutoff = []; %hard bottom if saturated and water content below
-            lateral.PARA.distance_reservoir = []; 
-            lateral.PARA.reservoir_contact_length = [];
+            lateral.PARA.upperElevation = []; %Inf;
+            lateral.PARA.lowerElevation = []; %20;
+            lateral.PARA.hardBottom_cutoff = []; %0.03; %hard bottom if saturated and water content below
+            lateral.PARA.distance_seepageFace = []; %1; 
+            lateral.PARA.seepage_contact_length = []; %4;
         end
         
         function lateral = provide_STATVAR(lateral)
@@ -31,14 +33,17 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
         end
         
         function lateral = push(lateral, forcing)
+            
             CURRENT = lateral.PARENT.TOP.NEXT;
-            lateral.TEMP.open_system = 1; %start with open system
+            lateral.TEMP.head = 0;
             while ~(strcmp(class(CURRENT), 'Bottom'))
-                CURRENT = lateral_push_water_reservoir(CURRENT, lateral);
+                CURRENT = lateral_push_remove_water_seepage(CURRENT, lateral);
                 CURRENT = compute_diagnostic(CURRENT, forcing);
                 CURRENT = CURRENT.NEXT;
             end
+            
         end
+        
         
         function lateral = set_ACTIVE(lateral, i, t)
             lateral.PARENT.ACTIVE(i,1) = 1;
