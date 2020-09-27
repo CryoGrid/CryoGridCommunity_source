@@ -10,7 +10,7 @@ clear all
 %=========================================================================
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'peat_suossjavri'; %paramter file name and result directory 
+run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 
 
@@ -56,7 +56,6 @@ day_sec = 24.*3600;
 %initialize running time variable t [days]
 t = forcing.PARA.start_time;
 
-
 %=========================================================================
 %TIME INTEGRATION
 %=========================================================================
@@ -101,7 +100,7 @@ while t < forcing.PARA.end_time
         CURRENT = advance_prognostic(CURRENT, timestep);
         CURRENT = CURRENT.NEXT;
     end
-        
+           
     %diagnostic step - compute diagnostic variables
     TOP.NEXT = compute_diagnostic_first_cell(TOP.NEXT, forcing); %calculate Lstar, only uppermost class
     CURRENT = BOTTOM.PREVIOUS;

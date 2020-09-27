@@ -14,12 +14,12 @@ result.T = [];
 result.waterIce =[];
 result.water = [];
 result.ice = [];
- result.Xice = [];
- result.Xwater = [];
- result.XwaterIce = [];
- result.waterPotential = [];
-%result.saltConc = [];
-%result.salt_c_brine=[];
+%  result.Xice = [];
+%  result.Xwater = [];
+%  result.XwaterIce = [];
+%  result.waterPotential = [];
+result.saltConc = [];
+result.salt_c_brine=[];
 result.class_number = [];
 %must all have the same dimensions in all fields
 
