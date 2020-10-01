@@ -110,7 +110,7 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & HEAT_FLUXES
         function ground = finalize_init(ground, forcing) %assign all variables, that must be calculated or assigned otherwise for initialization
             ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
             ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
+            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
             
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];

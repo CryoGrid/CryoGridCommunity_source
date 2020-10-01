@@ -69,6 +69,7 @@ classdef FORCING_seb
             self.PARA.domain_depth = [];
             self.PARA.heatFlux_lb = [];
             self.PARA.airT_height = [];
+            self.PARA.area = [];
         end
         
         

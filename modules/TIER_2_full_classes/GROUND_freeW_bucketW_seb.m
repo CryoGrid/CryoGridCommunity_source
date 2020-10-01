@@ -92,7 +92,7 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         function ground = finalize_init(ground, forcing) %assign all variables, that must be calculated or assigned otherwise for initialization
             ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
             ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
+            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
             ground = calculate_hydraulicConductivity(ground);

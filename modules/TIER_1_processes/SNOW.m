@@ -53,8 +53,10 @@ classdef SNOW < BASE
         
         function snow = subtract_water(snow)  %unclear if and where needed 
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, snow.STATVAR.ice ./ snow.STATVAR.target_density ./snow.STATVAR.area); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
+            difference = max(0, snow.STATVAR.waterIce - snow.STATVAR.layerThick .*  snow.STATVAR.area);
             snow.STATVAR.waterIce = min(snow.STATVAR.layerThick .*  snow.STATVAR.area, snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
             snow.STATVAR.water = max(0, min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice));
+            snow.STATVAR.excessWater = snow.STATVAR.excessWater + sum(difference);
         end
         
        function snow = subtract_water2(snow)  %unclear if and where needed 

@@ -21,7 +21,6 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.PARA.albedo = []; %surface albedo [-]
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; %roughness length [m]
-            ground.PARA.area =[]; %area of the class [m2]
             ground.PARA.rs = []; %surface resistance against evapotranspiration [-] 
             ground.PARA.tortuosity=[]; % tortuosity of salt diffusion [-]
             ground.PARA.dt_max = [] ; %maximum possible timestep [sec]
@@ -33,7 +32,7 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.STATVAR.upperPos = []; % upper surface elevation [m]
             ground.STATVAR.lowerPos = []; % lower surface elevation [m]
             ground.STATVAR.layerThick = []; % thickness of grid cells [m]
-            ground.STATVAR.waterIce = []; % % total volume of water plus ice in a grid cell [m3]
+            ground.STATVAR.waterIce = [];  % total volume of water plus ice in a grid cell [m3]
             ground.STATVAR.mineral = []; % total volume of minerals [m3]
             ground.STATVAR.organic = []; % total volume of organics [m3]
             ground.STATVAR.energy = [];  % total internal energy[J]
@@ -81,7 +80,7 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             
             ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
             ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
+            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_water_salt_FreezeDepress_Xice(ground); %calculate energy, water and ice contents and brine salt concentration
             ground = conductivity(ground); %calculate thermal conductivity

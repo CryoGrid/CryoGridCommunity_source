@@ -321,6 +321,7 @@ classdef WATER_FLUXES < BASE
         end
         
         %Richards equation
+        %missing: calculate hydraulic conductivity separately for normal case and Richards equation case, both for Xice and no Xice 
         
         function ground = calculate_hydraulicConductivity(ground)  %CHANGE THIS!!
             saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);

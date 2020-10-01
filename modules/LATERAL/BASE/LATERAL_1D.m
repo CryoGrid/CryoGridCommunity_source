@@ -17,7 +17,7 @@ classdef LATERAL_1D < matlab.mixin.Copyable
     end
     
     methods
-        function lateral = LATERAL_1D(tile)    %lateral_class_list, TOP, BOTTOM, t)
+        function lateral = LATERAL_1D(tile)    %lateral_class_list, TOP, BOTTOM, t
             lateral = lateral.provide_PARA();
             lateral = lateral.provide_CONST();
             lateral = lateral.provide_STATVAR();

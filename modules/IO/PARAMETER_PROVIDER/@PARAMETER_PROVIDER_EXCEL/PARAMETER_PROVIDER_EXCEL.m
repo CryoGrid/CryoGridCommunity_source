@@ -114,10 +114,15 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
             %pos_list = self.get_range(section);
             
             % define the table to populate
+%             class_list = table('size', [size(pos_list,1),4], ...
+%                               'VariableTypes', {'string', 'uint32', 'uint8', 'uint8'}, ...
+%                               'VariableNames',
+%                               {'class_name','class_index','from_row','to_row'});
+%                               %chnged from uiont8 to uint32, S.Westermann, Oct 2020
             class_list = table('size', [size(pos_list,1),4], ...
-                              'VariableTypes', {'string', 'uint32', 'uint8', 'uint8'}, ...
+                              'VariableTypes', {'string', 'uint32', 'uint32', 'uint32'}, ...
                               'VariableNames', {'class_name','class_index','from_row','to_row'});
-              
+                          
             % loop over all class definitions 
             % (Adapted to cases where section_data does not include the 
             % header 'index' in column 2. Happen when section keywords like 

@@ -101,7 +101,7 @@ classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLU
             ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
             ground.PARA.airT_height = forcing.PARA.airT_height;
             ground.PARA.pressure = mean(forcing.DATA.p);
-            ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
+            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
             ground = pipes_Darcy_Weisbach(ground);
