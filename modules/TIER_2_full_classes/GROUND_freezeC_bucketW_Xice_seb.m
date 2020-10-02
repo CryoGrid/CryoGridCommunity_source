@@ -5,8 +5,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
     
     methods
         
-        function self = GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing)  
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
+        function ground = GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing)  
+            ground@INITIALIZE(index, pprovider, cprovider, forcing);
         end
         
         function ground = provide_CONST(ground)
@@ -140,7 +140,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             
             ground = get_E_freezeC_Xice(ground);
             ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity_Xice(ground);
+            ground = calculate_hydraulicConductivity_Xice(ground); 
             
             ground = create_LUT_freezeC(ground);
 

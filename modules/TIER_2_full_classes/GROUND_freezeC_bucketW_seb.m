@@ -5,8 +5,8 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
     
     methods
         
-        function self = GROUND_freezeC_bucketW_seb(index, pprovider, cprovider, forcing)  
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
+        function ground = GROUND_freezeC_bucketW_seb(index, pprovider, cprovider, forcing)  
+            ground@INITIALIZE(index, pprovider, cprovider, forcing);
         end
         
         function ground = provide_CONST(ground)

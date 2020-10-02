@@ -290,6 +290,12 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         function snow = lateral_push_remove_water_seepage(snow, lateral)
             snow = lateral_push_remove_water_seepage_snow(snow, lateral);
         end
+        
+        %----LAT_WATER_RESERVOIR------------
+        function snow = lateral_push_water_reservoir(snow, lateral)
+            snow = lateral_push_water_reservoir_snow(snow, lateral);
+        end
+        
         %-----------------------------
         
         %----inherited Tier 1 functions ------------

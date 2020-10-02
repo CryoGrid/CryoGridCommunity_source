@@ -142,7 +142,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             
             ground = get_E_freezeC_Xice(ground);
             ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity_Xice(ground);
+            ground = calculate_hydraulicConductivity_RichardsEq_Xice(ground);
             
             ground = create_LUT_freezeC(ground);
 
@@ -225,7 +225,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             ground = get_T_water_freezeC_Xice(ground);
             
             ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity_Xice(ground);
+            ground = calculate_hydraulicConductivity_RichardsEq_Xice(ground);
             
             ground = set_TEMP_2zero(ground);
         end

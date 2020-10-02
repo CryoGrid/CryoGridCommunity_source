@@ -313,27 +313,9 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_out = d_water_out;
         end
         
+     
         
-        function ground = calculate_hydraulicConductivity_SNOW(ground) %CHANGE THIS
-
-            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* ground.STATVAR.water./ground.STATVAR.layerThick./ground.STATVAR.area; 
-                      
-        end
-        
-        %Richards equation
-        %missing: calculate hydraulic conductivity separately for normal case and Richards equation case, both for Xice and no Xice 
-        
-        function ground = calculate_hydraulicConductivity(ground)  %CHANGE THIS!!
-            saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
-            saturation = max(0,min(1,saturation));
-            ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
-            ice_saturation = max(0,min(1,ice_saturation));
-            %hydraulic conductivity - add 
-            %n = ground.STATVAR.n;
-            %ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
-             ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation .* 10.^(-7.*ice_saturation);
-        end
-         
+        %Richards equation         
         function ground = get_derivative_water_RichardsEq(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable
 
             waterIce_saturation = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
@@ -420,15 +402,6 @@ classdef WATER_FLUXES < BASE
         end
         
         %Richards equation excess ice
-        function ground = calculate_hydraulicConductivity_Xice(ground) %hydraulic conductivity of the matrix part of the cell
-            saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
-            saturation = max(0,min(1,saturation));
-            ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
-            ice_saturation = max(0,min(1,ice_saturation)); %count both ice and excess ice
-            %hydraulic conductivity - add 
-            n = ground.STATVAR.n;
-            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico            
-        end
         
         function ground = get_derivative_water_RichardsEq_Xice(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable
 
@@ -659,8 +632,50 @@ classdef WATER_FLUXES < BASE
             
         end
         
+        %Hydraulic conductivity
         
+        %bucketW
+        function ground = calculate_hydraulicConductivity(ground)  
+            saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            saturation = max(0,min(1,saturation));
+            ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            ice_saturation = max(0,min(1,ice_saturation));
+            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation .* 10.^(-7.*ice_saturation); %final term from dall amico     
+        end
+        
+        %bucketW
+        function ground = calculate_hydraulicConductivity_Xice(ground) %hydraulic conductivity of the matrix part of the cell
+            saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
+            saturation = max(0,min(1,saturation));
+            ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
+            ice_saturation = max(0,min(1,ice_saturation)); %count both ice and excess ice
+            n = ground.STATVAR.n;
+            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation .* 10.^(-7.*ice_saturation); %final term from dall amico   
+        end
 
+        %Richards equation
+        function ground = calculate_hydraulicConductivity_RichardsEq(ground) 
+            saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            saturation = max(0,min(1,saturation));
+            ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            ice_saturation = max(0,min(1,ice_saturation));
+            n = ground.STATVAR.n;
+            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
+        end
+        
+        function ground = calculate_hydraulicConductivity_RichardsEq_Xice(ground) %hydraulic conductivity of the matrix part of the cell
+            saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
+            saturation = max(0,min(1,saturation));
+            ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
+            ice_saturation = max(0,min(1,ice_saturation)); %count both ice and excess ice
+            n = ground.STATVAR.n;
+            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico            
+        end
+        
+        
+        function ground = calculate_hydraulicConductivity_SNOW(ground)
+            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* ground.STATVAR.water./ground.STATVAR.layerThick./ground.STATVAR.area;   
+        end
         
     end
 end

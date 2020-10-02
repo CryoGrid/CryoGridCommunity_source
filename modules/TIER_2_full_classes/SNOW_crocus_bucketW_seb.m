@@ -301,7 +301,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow = get_T_water_freeW(snow);
             snow = subtract_water2(snow);
             
-            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
+            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
             if regridded_yesNo
                 snow = get_T_water_freeW(snow);
             end
@@ -370,6 +370,10 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         
         function snow = lateral_push_remove_water_seepage(snow, lateral)
             snow = lateral_push_remove_water_seepage_snow(snow, lateral);
+        end
+        
+        function snow = lateral_push_water_reservoir(snow, lateral)
+            snow = lateral_push_water_reservoir_snow(snow, lateral);
         end
         
         function snow = lateral3D_pull_water_unconfined_aquifer(snow, lateral)

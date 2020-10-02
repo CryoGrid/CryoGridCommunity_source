@@ -131,7 +131,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE &
             
             ground = get_E_freezeC(ground);
             ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity(ground);
+            ground = calculate_hydraulicConductivity_RichardsEq(ground);
             
             ground = create_LUT_freezeC(ground);
 
@@ -197,7 +197,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE &
             
             ground = get_T_water_freezeC(ground);
             ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity(ground);
+            ground = calculate_hydraulicConductivity_RichardsEq(ground);
             
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water = ground.STATVAR.energy.*0;
@@ -208,8 +208,8 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE &
         end
         
         function ground = check_trigger(ground, forcing)
-            %do nothing, but could create LAKE if there is too much surface
-            %water
+            %do nothing at this stage - add create LAKE if there is too
+            %much surface water, similar to Xice 
         end
         
         
