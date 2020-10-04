@@ -1,12 +1,12 @@
 %========================================================================
-% CryoGrid TIER1 librabry class SALT
-% S. Westermann, T. Ingemann-Nielsen, J. Scheer, October 2020
+% CryoGrid TIER1 library class, functions related to salt fluxes 
+% NOTE: also contains functions related to the  freeze curve representation "fcSimple"
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
 %========================================================================
 
 classdef SALT < BASE
     
     methods
-        
         %------boundary conditions-----
         
         function ground = get_boundary_condition_u_ZERO_SALT(ground)

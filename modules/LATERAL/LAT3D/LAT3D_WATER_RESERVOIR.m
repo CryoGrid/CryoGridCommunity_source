@@ -66,7 +66,6 @@ classdef LAT3D_WATER_RESERVOIR < BASE_LATERAL
             if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next - 1e-9
                 lateral.PARENT.ACTIVE(i,1) = 1;
                 lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
-                %disp(lateral.PARA.ia_time_next-floor(lateral.PARA.ia_time_next));
             end
         end
         

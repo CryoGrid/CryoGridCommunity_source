@@ -1,6 +1,6 @@
 %========================================================================
 % CryoGrid GROUND class SNOW_simple_bucketW_seb
-% largely corresponds to snow scheme in old CryoGrid 3, but without short-wave radiation penetration
+% largely corresponds to snow scheme in the old CryoGrid 3, but without short-wave radiation penetration
 % constant initial density, sublimation, water flow, refreezing, variable albedo
 % S. Westermann, October 2020
 %========================================================================
@@ -25,11 +25,11 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             
             snow.PARA.max_albedo = []; %maximum surface albedo (fresh snow) [-]
             snow.PARA.min_albedo = []; %minimum surface albedo (old snow) [-]
-            snow.PARA.tau_1 = []; % time constants for albedo reduction
+            snow.PARA.tau_1 = []; % time constants for transient albedo
             snow.PARA.tau_a = [];
             snow.PARA.tau_f = [];
             
-            snow.PARA.epsilon = []; %roughness length [m]
+            snow.PARA.epsilon = []; %surface emissivity [-]
             snow.PARA.z0 = []; %roughness length [m]
             
             snow.PARA.density = []; %(initial) snow density [kg/m3]
@@ -195,19 +195,6 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow = calculate_albedo_simple(snow, timestep);
         end
         
-%         function snow = advance_prognostic_create_CHILD(snow, timestep) %discontinued
-%             snow.STATVAR.energy = timestep .* snow.TEMP.snow_energy;
-%             snow.STATVAR.waterIce = timestep .* snow.TEMP.snowfall;
-%             snow.STATVAR.ice = snow.STATVAR.waterIce; %dry initially
-%             snow.STATVAR.water = 0;
-%             snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.TEMP.snowfall ./ (snow.PARA.density ./1000) ./  snow.STATVAR.layerThick ; %[m2]
-% 
-%             %snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ (snow.PARA.density ./1000); %[m] constant layerThick
-%             %snow.STATVAR.area = timestep .* snow.TEMP.snowfall ./ (0.5.*snow.PARA.swe_per_cell) ; %[m2]
-%             
-%             snow.STATVAR.target_density = snow.PARA.density ./1000;
-%         end
-        
         function snow = advance_prognostic_CHILD(snow, timestep)
 
             snow.STATVAR.energy = snow.STATVAR.energy + timestep .* (snow.TEMP.d_energy + snow.TEMP.snow_energy + snow.TEMP.d_water_energy + snow.TEMP.sublimation_energy);
@@ -284,8 +271,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         function ground = lateral_push_remove_surfaceWater(ground, lateral)
             ground = lateral_push_remove_surfaceWater_simple(ground, lateral);
         end
-        
-        
+                
         %----LAT_SEEPAGE_FACE----------
         function snow = lateral_push_remove_water_seepage(snow, lateral)
             snow = lateral_push_remove_water_seepage_snow(snow, lateral);

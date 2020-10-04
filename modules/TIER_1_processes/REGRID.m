@@ -1,8 +1,13 @@
+%========================================================================
+% CryoGrid TIER1 library class for functions related to regridding operations
+% S. Westermann, October 2020
+%========================================================================
+
 classdef REGRID < BASE
     
     
     methods
-        function ground = regrid_split_merge(ground, extensive_variables) %does not work stable!!
+        function ground = regrid_split_merge(ground, extensive_variables) %ATTENTION: does not work stable!!
             %possibly better use regrid_split for short timesteps and once
             %in a while do regrid_full
             top_pos = ground.STATVAR.top_depth_rel2groundSurface;
@@ -48,7 +53,6 @@ classdef REGRID < BASE
                 end
                 i=i+1;
             end
-            
             %the case that only one cell is left that must be annihilated must
             %be handled before, i.e. the class must be destroyed, whatever
             if ~strcmp(class(ground.NEXT), 'Bottom')  %set top_pos of next class to new depth
@@ -56,7 +60,7 @@ classdef REGRID < BASE
             end
         end
         
-        
+        %split only
         function ground = regrid_split(ground, variable_list) %simple split function, merges cells if minimum thickness is reached
             top_pos = ground.STATVAR.top_depth_rel2groundSurface;
             min_thickness = ground.PARA.target_layerThick(1,1);
@@ -70,13 +74,13 @@ classdef REGRID < BASE
             end
             
             %the case that only one cell is left that must be annihilated must
-            %be handled before, i.e. the class must be destroyed, whatever
-            if ~strcmp(class(ground.NEXT), 'Bottom')  %set top_pos of next class to new depth
+            %be handled before, e.g. the class must be removed
+            if ~strcmp(class(ground.NEXT), 'Bottom')  %set top position of next class to new depth
                 ground.NEXT.STATVAR.top_depth_rel2groundSurface = ground.STATVAR.top_depth_rel2groundSurface + sum(ground.STATVAR.layerThick,1);
             end
         end
         
-        
+        %complete regrid
         function ground = regrid_full(ground, variable_list) %regrids to the orginal grid  provided in initialization
             top_pos = ground.STATVAR.top_depth_rel2groundSurface;
             target_grid = ground.PARA.target_grid;
@@ -135,7 +139,7 @@ classdef REGRID < BASE
             
         end
         
-        
+        %regridding routine for snow
         function [snow, regridded_yesNo] = regrid_snow(snow, extensive_variables, intensive_variables, intensive_scaling_variable)
             
             %replaces:  snow = modify_grid(snow)
@@ -172,8 +176,9 @@ classdef REGRID < BASE
             end  
         end
         
-        %service functions
-
+        
+        %--------service functions---------------
+        %service function to split cells for extensive variables
         function ground = split_cell_extensive(ground, pos, split_fraction, variable_list)
             
             for i=1:size(variable_list, 1)
@@ -182,6 +187,7 @@ classdef REGRID < BASE
             end
         end
         
+        %service function to split cells for intnsive variables
         function ground = split_cell_intensive(ground, pos, variable_list)
             
             for i=1:size(variable_list, 1)
@@ -190,7 +196,7 @@ classdef REGRID < BASE
             end
         end
         
-        
+        %service function to merge cells for extensive variables
         function ground = merge_cells_extensive(ground, pos1, pos2, variable_list)  %pos2 is deleted and merged with pos1; restriction: pos1 must be smaller than pos2
             
             for i=1:size(variable_list, 1)
@@ -201,6 +207,7 @@ classdef REGRID < BASE
             end
         end
         
+        %service function to merge cells for intensive variables
         function ground = merge_cells_intensive(ground, pos1, pos2, variable_list, scaling_variable)  %pos2 is deleted and merged with pos1; restriction: pos1 must be smaller than pos2
             %weighted average, using scaling_variable as weighing function -> example: 
             %snow.STATVAR.d(i+1) = (snow.STATVAR.d(i+1).*snow.STATVAR.ice(i+1) + snow.STATVAR.d(i).*snow.STATVAR.ice(i))./(snow.STATVAR.ice(i+1) + snow.STATVAR.ice(i));
@@ -213,13 +220,15 @@ classdef REGRID < BASE
             end
         end
         
+        %same as above, but merging cells from two different objects
         function ground = merge_cells_extensive2(ground, pos, ground2, pos2, variable_list)  %cell at pos2 of ground2 is merged with pos of ground
             
             for i=1:size(variable_list, 1)
                 ground.STATVAR.(variable_list{i,1})(pos,1) = ground.STATVAR.(variable_list{i,1})(pos,1) + ground2.STATVAR.(variable_list{i,1})(pos2,1);
             end
         end
-        
+
+        %same as above, but merging cells from two different objects        
         function ground = merge_cells_intensive2(ground, pos, ground2, pos2, variable_list, scaling_variable)  %cell at pos2 of ground2 is merged with pos of ground
             for i=1:size(variable_list, 1)
                 ground.STATVAR.(variable_list{i,1})(pos,1) = (ground.STATVAR.(variable_list{i,1})(pos,1) .* ground.STATVAR.(scaling_variable)(pos,1) + ...

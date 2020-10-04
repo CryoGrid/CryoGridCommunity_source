@@ -1,13 +1,16 @@
+%========================================================================
+% CryoGrid TIER1 library class for functions related heat conduction
+% NOTE: this class also contains code related to the free water freeze curve, 
+% as well as functions computing thermal conductivity  
+% S. Westermann, October 2020
+%========================================================================
+
 classdef HEAT_CONDUCTION < BASE
-    
-    properties
-        
-    end
     
     methods
         
         %-----derivatives----------
-        
+        %conductive heat flux between grid cells
         function ground = get_derivative_energy(ground)
             fluxes = (ground.STATVAR.T(1:end-1) - ground.STATVAR.T(2:end)) .* ground.STATVAR.thermCond(1:end-1) .* ground.STATVAR.thermCond(2:end) ./...
                 (ground.STATVAR.thermCond(1:end-1).* ground.STATVAR.layerThick(2:end)./2 +  ground.STATVAR.thermCond(2:end).* ground.STATVAR.layerThick(1:end-1)./2 );
@@ -24,11 +27,13 @@ classdef HEAT_CONDUCTION < BASE
         end
         
         %-----------timesteps----------
-        function timestep = get_timestep_heat_coduction(ground)  %could involve check for several state variables
+        %limit maximum energy change between timesteps
+        function timestep = get_timestep_heat_coduction(ground)  
             timestep = ground.PARA.dE_max ./ (max(abs(ground.TEMP.d_energy) ./ ground.STATVAR.layerThick./ ground.STATVAR.area));
         end
         
         %----diagnostic functions---------
+        %free water freeze curve
         function ground = get_T_water_freeW(ground)
             
             Lf = ground.CONST.L_f;
@@ -45,6 +50,8 @@ classdef HEAT_CONDUCTION < BASE
             ground.STATVAR.water = double(ground.STATVAR.energy >= 0) .*ground.STATVAR.waterIce + double(ground.STATVAR.energy > - Lf.*ground.STATVAR.waterIce & ground.STATVAR.energy < 0) .* (ground.STATVAR.energy + Lf.*ground.STATVAR.waterIce) ./ Lf;
         end
         
+        %calculate energy from temperature and water contents, free water
+        %freeze curve
         function ground = get_E_freeW(ground) %required for initialization
 
             T = ground.STATVAR.T;
@@ -69,7 +76,7 @@ classdef HEAT_CONDUCTION < BASE
             
         end
         
-        %---conductivities--------------
+        %---thermal conductivities--------------
         function ground = conductivity_mixing_squares(ground)
             
             water = ground.STATVAR.water./ground.STATVAR.layerThick ./ ground.STATVAR.area;
@@ -77,7 +84,6 @@ classdef HEAT_CONDUCTION < BASE
             mineral = ground.STATVAR.mineral./ground.STATVAR.layerThick./ ground.STATVAR.area;
             organic = ground.STATVAR.organic./ground.STATVAR.layerThick./ ground.STATVAR.area;
             air = 1 - mineral - organic - water - ice;
-            %air = ground.STATVAR.air./ground.STATVAR.layerThick./ ground.STATVAR.area;
             
             ground.STATVAR.thermCond = (water.* ground.CONST.k_w.^0.5 + ice.* ground.CONST.k_i.^0.5 ...
                 + mineral.* ground.CONST.k_m.^0.5 + organic.* ground.CONST.k_o.^0.5 + air.* ground.CONST.k_a.^0.5).^2;
@@ -89,7 +95,6 @@ classdef HEAT_CONDUCTION < BASE
             mineral = ground.STATVAR.mineral./ground.STATVAR.layerThick./ ground.STATVAR.area;
             organic = ground.STATVAR.organic./ground.STATVAR.layerThick./ ground.STATVAR.area;
             air = 1 - mineral - organic - water - ice;
-            %air = ground.STATVAR.air./ground.STATVAR.layerThick./ ground.STATVAR.area;
             
             ground.STATVAR.thermCond = (water.* ground.CONST.k_w.^0.5 + ice.* ground.CONST.k_i.^0.5 ...
                 + mineral.* ground.CONST.k_m.^0.5 + organic.* ground.CONST.k_o.^0.5 + air.* ground.CONST.k_a.^0.5).^2;

@@ -1,3 +1,11 @@
+%========================================================================
+% CryoGrid TIER1 library class for functions for lateral fluxes of snow
+% only active for CROCUS snow classes at this time
+% contains push and pull functions use for LAT3D_SNOW 
+% S. Westermann, October 2020
+%========================================================================
+
+
 classdef SNOW_FLUXES_LATERAL < BASE
     
     methods
@@ -5,9 +13,6 @@ classdef SNOW_FLUXES_LATERAL < BASE
         
         function snow = lateral3D_pull_snow_crocus(snow, lateral)
             snow = prog_wind_drift(snow); %populate one_over_tau
-%            if snow.TEMP.wind > 10
-%                snow = prog_wind_drift(snow.TEMP);
-%            end
             
             fraction_mobile = snow.TEMP.one_over_tau .* lateral.PARA.N_drift .* lateral.CONST.day_sec .* lateral.PARA.ia_time_increment;
             
@@ -38,8 +43,6 @@ classdef SNOW_FLUXES_LATERAL < BASE
         end
         
         function snow = lateral3D_push_snow_crocus(snow, lateral)
-            
-            
             if lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure < 0  && lateral.PARENT.STATVAR2ALL.snow_drift == 2 %loose snow
                 remaining_fraction = 1 - min(0.5, snow.TEMP.one_over_tau .* lateral.PARA.N_drift .* lateral.CONST.day_sec .* lateral.PARA.ia_time_increment);
 
@@ -51,25 +54,14 @@ classdef SNOW_FLUXES_LATERAL < BASE
 
             elseif lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure > 0 %gain snow
                 new_snow.STATVAR = lateral.STATVAR.ds;
-
-
-%                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'}, 'waterIce');
-%                 snow = merge_cells_extensive2(snow, 1, new_snow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'});
                 
                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'; 'target_density';}, 'ice');
                 snow = merge_cells_extensive2(snow, 1, new_snow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'; 'water'});
-
-                    
-%                 {'waterIce'; 'energy'; 'layerThick'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
-%                 
-%                 snow.STATVAR.target_density(1) = snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1) ./ snow.STATVAR.area(1);
-            
             end
         end
         
         function snow = lateral3D_push_snow_crocus2(snow, lateral)
             
-            
             if lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure < 0  && lateral.PARENT.STATVAR2ALL.snow_drift == 2 %loose snow
                 remaining_fraction = 1 - min(0.5, snow.TEMP.one_over_tau .* lateral.PARA.N_drift .* lateral.CONST.day_sec .* lateral.PARA.ia_time_increment);
                 
@@ -81,23 +73,15 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 
             elseif lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure > 0 %gain snow
                 new_snow.STATVAR = lateral.STATVAR.ds;
-                
                 snow.STATVAR.layerThick(1) =  snow.STATVAR.layerThickSnowFirstCell;
-                
                 
                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'}, 'ice');
                 snow = merge_cells_extensive2(snow, 1, new_snow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'});
                 
-                
                 snow.STATVAR.layerThickSnowFirstCell = snow.STATVAR.layerThick(1);
-                
-
                 snow.STATVAR.target_density(1) = snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1) ./ snow.STATVAR.area(1);
-                
                 snow.STATVAR.target_density(1) = min(1, snow.STATVAR.target_density(1));  % avoids rounding errors, if >1, this might trigger a follow-up problem
-                
                 snow.STATVAR.layerThick(1) = max(snow.STATVAR.layerThick(1), snow.STATVAR.waterIce(1) ./ snow.STATVAR.area(1,1));
-
             end
         end
 

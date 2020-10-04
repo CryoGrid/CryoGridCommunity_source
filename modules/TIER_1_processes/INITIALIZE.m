@@ -1,3 +1,9 @@
+%========================================================================
+% CryoGrid TIER1 library class for functions related to GROUND and LATERAL_IA class initialization
+% interfaces with PROVIDER classes
+% T. Ingeman-Nilsen, J. Scheer, S. Westermann, October 2020
+%========================================================================
+
 classdef INITIALIZE < BASE
     
     

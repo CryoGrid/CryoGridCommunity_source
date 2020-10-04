@@ -1,3 +1,9 @@
+%========================================================================
+% CryoGrid TIER1 library class for functions related to snow cover
+% representation
+% S. Westermann, R. Zweigel, October 2020
+%========================================================================
+
 classdef SNOW < BASE
     
     methods
@@ -17,20 +23,22 @@ classdef SNOW < BASE
         end
         
         
-        function snow = get_boundary_condition_SNOW_u(snow, forcing) %snow and rain from entire area
+        function snow = get_boundary_condition_SNOW_u(snow, forcing) %snow and rain from entire grid cell area
             snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600) .* snow.STATVAR.area(1,1); %snowfall is in mm/day -> [m3/sec]
             snow.TEMP.rainfall = forcing.TEMP.rainfall ./1000 ./(24.*3600) .* snow.STATVAR.area(1,1);
             snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);  %[J/sec]
             snow.TEMP.rain_energy = snow.TEMP.rainfall .* max(0, forcing.TEMP.Tair) .* snow.CONST.c_w;
         end
         
-        function snow = get_boundary_condition_allSNOW_rain_u(snow, forcing) %snow from entire area (PARENT+CHILD), rain only from snow-covered part
+        %used in CHILD phase
+        function snow = get_boundary_condition_allSNOW_rain_u(snow, forcing) %snow from entire area (PARENT+CHILD), rain only from snow-covered part (CHILD)
             snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600) .* (snow.PARENT.STATVAR.area(1,1) + snow.STATVAR.area); %snowfall is in mm/day -> [m3/sec]
             snow.TEMP.rainfall = forcing.TEMP.rainfall ./1000 ./(24.*3600) .* snow.STATVAR.area;
             snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);  %[J/sec]
             snow.TEMP.rain_energy = snow.TEMP.rainfall .* max(0, forcing.TEMP.Tair) .* snow.CONST.c_w;
         end
         
+        %when creating CHILD
         function snow = get_boundary_condition_allSNOW_u(snow, forcing) %only snow from entire area, i.e. from PARENT
             snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600) .* snow.PARENT.STATVAR.area(1,1); %snowfall is in mm/day -> [m3/sec]
             snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);  %[J/sec]
@@ -51,7 +59,9 @@ classdef SNOW < BASE
              timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
         
-        function snow = subtract_water(snow)  %unclear if and where needed 
+        %remove or reroute meltwater in excess of snow matrix - check if
+        %subtract_water2 is redundant
+        function snow = subtract_water(snow) 
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, snow.STATVAR.ice ./ snow.STATVAR.target_density ./snow.STATVAR.area); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
             difference = max(0, snow.STATVAR.waterIce - snow.STATVAR.layerThick .*  snow.STATVAR.area);
             snow.STATVAR.waterIce = min(snow.STATVAR.layerThick .*  snow.STATVAR.area, snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
@@ -59,17 +69,16 @@ classdef SNOW < BASE
             snow.STATVAR.excessWater = snow.STATVAR.excessWater + sum(difference);
         end
         
-       function snow = subtract_water2(snow)  %unclear if and where needed 
+       function snow = subtract_water2(snow) 
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, snow.STATVAR.ice ./ snow.STATVAR.target_density ./snow.STATVAR.area); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
             difference = max(0, snow.STATVAR.waterIce - snow.STATVAR.layerThick .*  snow.STATVAR.area);
-            %snow.STATVAR.waterIce = min(snow.STATVAR.layerThick .*  snow.STATVAR.area, snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
             snow.STATVAR.waterIce = snow.STATVAR.waterIce - difference;
-            %snow.STATVAR.water = max(0, min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice));
             snow.STATVAR.water = max(0, snow.STATVAR.waterIce - snow.STATVAR.ice);
             snow.STATVAR.excessWater = snow.STATVAR.excessWater + sum(difference);
-        end
+       end
         
-        function snow = subtract_water_CHILD(snow)  %unclear if and where needed 
+        
+        function snow = subtract_water_CHILD(snow) 
             snow.STATVAR.area = min(snow.STATVAR.area, snow.STATVAR.ice ./ snow.STATVAR.target_density ./snow.STATVAR.layerThick); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
             snow.STATVAR.waterIce = min(snow.STATVAR.layerThick .* snow.STATVAR.area, snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
             snow.STATVAR.water = max(0, min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice));
@@ -78,13 +87,12 @@ classdef SNOW < BASE
         function snow = subtract_water_CHILD2(snow)  %unclear if and where needed 
             snow.STATVAR.area = min(snow.STATVAR.area, snow.STATVAR.ice ./ snow.STATVAR.target_density ./snow.STATVAR.layerThick); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
             difference = max(0, snow.STATVAR.waterIce - snow.STATVAR.layerThick .*  snow.STATVAR.area);
-            %snow.STATVAR.waterIce = min(snow.STATVAR.layerThick .* snow.STATVAR.area, snow.STATVAR.waterIce); % Remove water that is in excess of cell volume (drains water out of the system)
             snow.STATVAR.waterIce = snow.STATVAR.waterIce - difference;
             snow.STATVAR.water = max(0, min(snow.STATVAR.water, snow.STATVAR.waterIce - snow.STATVAR.ice));
             snow.STATVAR.excessWater = snow.STATVAR.excessWater + sum(difference);
         end
         
-        %-----------------------------
+
         %albedo parametrizations
         function snow = calculate_albedo_simple(snow, timestep)  %albedo formulation used in the "old" CryoGrid 3
             if snow.STATVAR.T(1) == 0    % melting conditions
@@ -127,12 +135,12 @@ classdef SNOW < BASE
             
             total_albedo = sum(spectral_albedo.*snow.PARA.spectral_ranges);
             
-            %snow.TEMP.albedo = min(max(snow.PARA.albedo_min,total_albedo),snow.PARA.albedo_max);
             snow.STATVAR.albedo = total_albedo;
             snow.TEMP.spectral_albedo = spectral_albedo;
             snow.TEMP.SW_extinction = SW_extinction;
         end
         
+        %properties on new snow CROCUS, Vionnet et al., 2012
         function snow = get_snow_properties_crocus(snow,forcing)
             if snow.TEMP.snowfall >0
                 T_air=min(forcing.TEMP.Tair, 0);
@@ -145,17 +153,15 @@ classdef SNOW < BASE
                 min_snowDensity=50; %kg/m3
                 
                 snow.TEMP.newSnow.STATVAR.density = max(min_snowDensity, a_rho+b_rho.*(T_air-T_fus)+ c_rho.*windspeed.^0.5);  %initial snow density
-                snow.TEMP.newSnow.STATVAR.d=min(max(1.29-0.17.*windspeed,0.2),1);
-                snow.TEMP.newSnow.STATVAR.s=min(max(0.08.*windspeed + 0.38,0.5),0.9);
-                snow.TEMP.newSnow.STATVAR.gs=0.1e-3+(1-snow.TEMP.newSnow.STATVAR.d).*(0.3e-3-0.1e-3.*snow.TEMP.newSnow.STATVAR.s);
+                snow.TEMP.newSnow.STATVAR.d = min(max(1.29-0.17.*windspeed,0.2),1);
+                snow.TEMP.newSnow.STATVAR.s = min(max(0.08.*windspeed + 0.38,0.5),0.9);
+                snow.TEMP.newSnow.STATVAR.gs = 0.1e-3+(1-snow.TEMP.newSnow.STATVAR.d).*(0.3e-3-0.1e-3.*snow.TEMP.newSnow.STATVAR.s);
                 snow.TEMP.newSnow.STATVAR.time_snowfall = forcing.TEMP.t;
             end
         end
         
-        %------------
-        %crocus snow microphycics
-        
-        function snow = get_T_gradient_snow(snow) %OK 
+        %crocus snow microphycics, , Vionnet et al., 2012
+        function snow = get_T_gradient_snow(snow)
             
             delta=[snow.STATVAR.layerThick; snow.NEXT.STATVAR.layerThick(1,1)];
             T = [snow.STATVAR.T; snow.NEXT.STATVAR.T(1,1)];
@@ -164,7 +170,7 @@ classdef SNOW < BASE
             snow.TEMP.dT = dT;
         end
         
-        function snow = get_T_gradient_snow_single_cell(snow) %when snow is only a sigle cell
+        function snow = get_T_gradient_snow_single_cell(snow) %when SNOW is a sigle cell
             
             delta=[snow.STATVAR.layerThick; snow.NEXT.STATVAR.layerThick(1,1)];
             T = [snow.STATVAR.T; snow.NEXT.STATVAR.T(1,1)];
@@ -172,7 +178,7 @@ classdef SNOW < BASE
             snow.TEMP.dT = dT;
         end
         
-        function snow = prog_metamorphism(snow) %OK
+        function snow = prog_metamorphism(snow)
             T = snow.STATVAR.T;
             D = snow.STATVAR.layerThick;
             D_water = snow.STATVAR.water ./ snow.STATVAR.area;
@@ -211,7 +217,7 @@ classdef SNOW < BASE
             snow.TEMP.metam_d_gs = d_gs_wet + d_gs_dry; % No need to divide by daysec!
         end
         
-        function snow = prog_wind_drift(snow) %OK
+        function snow = prog_wind_drift(snow)
             timescale = snow.PARA.timescale_winddrift;
             rho = max(50, snow.STATVAR.waterIce ./ (snow.STATVAR.layerThick .* snow.STATVAR.area) .*1000);
             d = snow.STATVAR.d;
@@ -242,7 +248,8 @@ classdef SNOW < BASE
             snow.TEMP.one_over_tau = one_over_tau;
         end
         
-        function snow = compaction(snow) %OK
+        %snow compaction, , Vionnet et al., 2012
+        function snow = compaction(snow) 
             rho = max(50, snow.STATVAR.waterIce ./ (snow.STATVAR.layerThick .* snow.STATVAR.area) .*1000);
             gs = snow.STATVAR.gs;
             D = snow.STATVAR.layerThick;
@@ -264,6 +271,7 @@ classdef SNOW < BASE
             snow.TEMP.compact_d_D = - sigma./eta.*D;
         end
         
+        %advance prognostic variable for new sno falling during a timestep
         function  snow = advance_prognostic_new_snow_crocus(snow, timestep)
             snow.TEMP.newSnow.STATVAR.waterIce = timestep .* snow.TEMP.snowfall;
             snow.TEMP.newSnow.STATVAR.ice = timestep .* snow.TEMP.snowfall;
@@ -278,11 +286,10 @@ classdef SNOW < BASE
             snow.TEMP.newSnow.STATVAR.energy = timestep .* snow.TEMP.snow_energy;
         end
         
-        %-------------
         %triggers
-        
+        %make SNOW a CHILD again
         function snow = make_SNOW_CHILD(snow)
-            if size(snow.STATVAR.layerThick,1) == 1 && snow.STATVAR.ice(1,1) ./ snow.STATVAR.area(1,1) < 0.5 .* snow.PARA.swe_per_cell
+            if size(snow.STATVAR.layerThick,1) == 1 && snow.STATVAR.ice(1,1) ./ snow.STATVAR.area(1,1) < 0.5 .* snow.PARA.swe_per_cell 
 
                 ground = snow.NEXT;
                 
@@ -294,7 +301,7 @@ classdef SNOW < BASE
                 ground.IA_CHILD.NEXT = ground;
                 ground.IA_CHILD.PREVIOUS = snow;
                 
-                ground.IA_PREVIOUS=[]; %change to get_ia_class, could be a class on top
+                ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
                 
                 %snow.NEXT =[];  %cut all dependencies, except for snow.NEXT which keeps being pointed to snow.PARENT, so that SW radiation can be transmitted
                 snow.PREVIOUS =[];
@@ -307,8 +314,6 @@ classdef SNOW < BASE
                 snow.STATVAR.area = volume ./ snow.STATVAR.layerThick;
                 
                 snow = ground; %assign snow pointer to ground to return to regular stratigraphy
-                %CHECK : snow = ground.PREVIOUS;?? Otherwise CURRENT.NEXT
-                %might not go to ground?
             end
         end
 

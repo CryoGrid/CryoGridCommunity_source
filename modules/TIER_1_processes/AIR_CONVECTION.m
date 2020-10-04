@@ -1,3 +1,11 @@
+%========================================================================
+% CryoGrid TIER1 library class for functions related to air convection
+% CAUTION: this is highly experimental and should not be used!!
+% The theory will likely not withstand a peer-review process!
+% S. Westermann, October 2020
+%========================================================================
+
+
 classdef AIR_CONVECTION < BASE
     
     methods
@@ -20,7 +28,6 @@ classdef AIR_CONVECTION < BASE
             energy_convection_up = air_flux.* ground.CONST.cp .* (rho_air(1,1) + rho_air(2,1))./2 .* ground.STATVAR.T(1,1) .* ground.STATVAR.area(1,1);
             
             ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) - energy_convection_up + energy_convection_down;
-           
         end
         
         %-----derivatives----------
@@ -43,8 +50,6 @@ classdef AIR_CONVECTION < BASE
             
             ground.TEMP.d_energy(1:end-1,1) = ground.TEMP.d_energy(1:end-1,1) + energy_convection_up - energy_convection_down;
             ground.TEMP.d_energy(2:end,1) = ground.TEMP.d_energy(2:end,1) - energy_convection_up + energy_convection_down;
-            
-           
         end
         
                 
@@ -100,7 +105,6 @@ classdef AIR_CONVECTION < BASE
             ground.STATVAR.number_of_pipes(isnan(ground.STATVAR.number_of_pipes)) = 0; %if diameter is zero
         end
         
-        
         function ground = permeability_air_Carman_Kozeny(ground)
             porosity = 1 - (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             ground.STATVAR.permeability_air =  ground.STATVAR.grain_size.^2 ./ 180 .* porosity .^3 ./ (1 - porosity).^2;
@@ -108,9 +112,7 @@ classdef AIR_CONVECTION < BASE
             
         end
         
-        
         function ground = permeability_air_Rumpf_Gupte(ground)
-            
             porosity = 1 - (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             ground.STATVAR.permeability_air = grain_size.^2 ./ 5.6 .* porosity .^5.5 ./ 1.05; %Rumpf-Gupte model [m2]
         end

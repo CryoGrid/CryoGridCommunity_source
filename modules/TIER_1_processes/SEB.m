@@ -1,11 +1,15 @@
+%========================================================================
+% CryoGrid TIER1 library class, functions related to surface energy balance 
+% NOTE: also contains functions for penetration of short-wave radiation
+% S. Westermann, October 2020
+%========================================================================
+
+
 classdef SEB < BASE
-    
-    properties
-        
-    end
     
     methods
         
+        %Obukhov length
         function seb = L_star(seb, forcing)
 
             uz = forcing.TEMP.wind;
@@ -37,6 +41,7 @@ classdef SEB < BASE
             
         end
         
+        %atmospheric stability functions
         function res = psi_H(seb, zeta1, zeta2) % atmospheric stability function heat/water 
             
             if zeta1<=0
@@ -57,7 +62,8 @@ classdef SEB < BASE
             end
         end
         
-        function Q_e = Q_eq(seb, forcing) %latent heat flux that can be adjusted using the empirical factor "resistance to evapotranspiration" rs
+        %latent heat flux that can be adjusted using the empirical factor "resistance to evapotranspiration" rs
+        function Q_e = Q_eq(seb, forcing) 
             
             uz = forcing.TEMP.wind;
             p = forcing.TEMP.p;
@@ -87,7 +93,8 @@ classdef SEB < BASE
             end
         end
         
-        function Q_e = Q_eq_potET(seb, forcing) %latent heat flux corresponding to potential evapotranspiration
+        %latent heat flux for potential evapotranspiration
+        function Q_e = Q_eq_potET(seb, forcing) 
             
             uz = forcing.TEMP.wind;
             p = forcing.TEMP.p;
@@ -101,7 +108,6 @@ classdef SEB < BASE
             TForcing = seb.STATVAR.T(1);
             Lstar = seb.STATVAR.Lstar;
             
-            %q = specific humidity [kg/kg]
             Tz=Tz+273.15;
             TForcing=TForcing+273.15;
             rho = rho_air(seb, p, Tz);
@@ -115,12 +121,13 @@ classdef SEB < BASE
             end
         end
         
-        function Q_h = Q_h(seb, forcing) %sensible heat flux
+        %sensible heat flux
+        function Q_h = Q_h(seb, forcing)
           
-            cp = seb.CONST.cp; %1005;
-            kappa = seb.CONST.kappa; %0.4;
-            g = seb.CONST.g; %9.81;
-            sigma = seb.CONST.sigma; %5.67e-8;
+            cp = seb.CONST.cp; 
+            kappa = seb.CONST.kappa; 
+            g = seb.CONST.g; 
+            sigma = seb.CONST.sigma; 
             
             uz = forcing.TEMP.wind;
             z =  seb.PARA.airT_height;
@@ -158,6 +165,7 @@ classdef SEB < BASE
             p= 0.622.*6.112.* 100.* exp(22.46.*(T-273.15)./(272.61-273.15+T));
         end
         
+        %---penetration of short-wave radiation---
         function [seb, S_up] = penetrate_SW_no_transmission(seb, S_down) % called recursively by surfaceEnergyBalance-function of TOP_CLASS, "hard" surface absorbing all SW-radiation in 1st cell
             seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (1 - seb.PARA.albedo) .* sum(S_down); % .* seb.STATVAR.area(1,1);  %in [W]
             S_up = seb.PARA.albedo .* S_down;  % in [W/m2]
@@ -204,7 +212,7 @@ classdef SEB < BASE
         end
         
         
-        function [seb, S_up] = penetrate_SW_transmission_spectral(seb, S_down)  %used with avriable albedo and SW exticntion coefficient
+        function [seb, S_up] = penetrate_SW_transmission_spectral(seb, S_down)  %used with variable albedo and SW exticntion coefficient
             %S_up and S_down are spectrally resolved when provided as
             %row array, using e.g. spectral_ranges = [0.71 0.21 0.08]; 
             %SW extinction is assumed constant throughout class 
@@ -240,12 +248,11 @@ classdef SEB < BASE
                 else
                     S_up = S_up + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!! 
                 end
-
             end         
         end
         
         
-        
+        %calculates derivatives of water (i.e. water fluxes) due to evapotranspiration
         function seb = calculateET(seb)
             L_v = latent_heat_evaporation(seb, seb.STATVAR.T(1)+273.15);
             
@@ -308,12 +315,11 @@ classdef SEB < BASE
         end
         
         
-        
+        %calculate fraction of potential evapotranspiration for each grid cell, this reduces evapotranspiration if water content is lower than field capacity 
         function fraction = getET_fraction(seb)
             %waterC = seb.STATVAR.waterIce ./ seb.STATVAR.layerThick ./ max(1e-20, seb.STATVAR.area); %area can get zero if the area of SNOW CHILD is 100%
             waterC = seb.STATVAR.waterIce ./ seb.STATVAR.layerThick ./ seb.STATVAR.area;
             waterC(isnan(waterC)) = 0;
-            %fraction=double(seb.STATVAR.T>0).*(double(saturation >= seb.STATVAR.field_capacity) + double(saturation < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*saturation./seb.STATVAR.field_capacity)).^2);
             fraction=double(seb.STATVAR.T>=0).*double(seb.STATVAR.T(1)>=0).*(double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
 
         end
@@ -326,6 +332,7 @@ classdef SEB < BASE
             fraction=double(seb.STATVAR.T>0).*double(seb.STATVAR.T(1)>0).*(double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
         end
         
+        %evaporation for water body
         function seb = calculateET_LAKE(seb)
             L_v = latent_heat_evaporation(seb, seb.STATVAR.T(1)+273.15);
             F_ub_water = -seb.STATVAR.Qe ./ (L_v.*seb.CONST.rho_w) .* seb.STATVAR.area(1,1);

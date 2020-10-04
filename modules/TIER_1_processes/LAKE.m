@@ -1,5 +1,9 @@
-classdef LAKE < BASE
+%========================================================================
+% CryoGrid TIER1 library class for functions related to water bodies 
+% S. Westermann, October 2020
+%========================================================================
 
+classdef LAKE < BASE
 
     methods
         
@@ -13,7 +17,6 @@ classdef LAKE < BASE
             ground.STATVAR.layerThick = reorganize_cells_frozen_melted(ground, ground.STATVAR.layerThick, fully_melted);
         end
         
-        
         function reorganized = reorganize_cells_frozen_melted(ground, variable, fully_melted)
             melted_cells = variable(fully_melted); 
             frozen_cells = variable(~fully_melted);
@@ -24,8 +27,8 @@ classdef LAKE < BASE
             if size(ground.STATVAR.energy,1) > 1
                 density_water = water_density(ground);
                 swap = double(ground.STATVAR.energy(1:end-1,1) >=0 & ground.STATVAR.energy(2:end,1) >= 0 & density_water(2:end,1) < density_water(1:end-1,1));
-                %water_down = water not moved physically, change if there is solutes, etc.
-                %water_up =
+                
+                %water not moved physically, change if there is solutes, etc.
                 energy_down = swap .* 0.5 .* min(ground.STATVAR.waterIce(1:end-1,1), ground.STATVAR.waterIce(2:end,1)) ./ ground.STATVAR.waterIce(1:end-1,1) .* ground.STATVAR.energy(1:end-1,1);
                 energy_up = swap .* 0.5 .* min(ground.STATVAR.waterIce(1:end-1,1), ground.STATVAR.waterIce(2:end,1)) ./ ground.STATVAR.waterIce(2:end,1) .* ground.STATVAR.energy(2:end,1);
                 
