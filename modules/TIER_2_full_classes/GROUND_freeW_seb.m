@@ -1,9 +1,16 @@
-
+%========================================================================
+% CryoGrid GROUND class GROUND_freeW_bucketW_seb
+% heat conduction, free water freeze curve, surface energy balance
+% S. Westermann, October 2020
+%========================================================================
 
 classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIALIZE
 
     
     methods
+        
+        %----mandatory functions---------------
+        %----initialization--------------------
         
         function self = GROUND_freeW_seb(index, pprovider, cprovider, forcing)  
             self@INITIALIZE(index, pprovider, cprovider, forcing);
@@ -11,79 +18,63 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIA
         
         function ground = provide_PARA(ground)
             
-            ground.PARA.albedo = [];
-            ground.PARA.epsilon = [];
-            % ground.PARA.airT_height = []; % measurement height [m] Assigned from forcing data in "finialize"
+            ground.PARA.albedo = []; %surface albedo [-]
+            ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; %roughness length [m]
             
-            %ground.PARA.area =[]; %initial area of the realization [m2]
-            
-            ground.PARA.rs = [];
-            
-            % ground.PARA.heatFlux_lb = []; % Assigned from forcing data in "finialize"
-            
-            ground.PARA.dt_max = [] ; %[sec]
-            ground.PARA.dE_max = []; %[J/m3]
+            ground.PARA.rs = []; %surface resistance against evapotranspiration [secm] 
+            ground.PARA.dt_max = []; %maximum possible timestep [sec]
+            ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
         
         function ground = provide_STATVAR(ground)
             
-            ground.STATVAR.upperPos = [];
-            ground.STATVAR.lowerPos = [];
-            ground.STATVAR.layerThick = []; % [m]
+            ground.STATVAR.upperPos = []; % upper surface elevation [m]
+            ground.STATVAR.lowerPos = []; % lower surface elevation [m]
+            ground.STATVAR.layerThick = [];  % thickness of grid cells [m]
             
-            ground.STATVAR.waterIce = []; % [m]
-            ground.STATVAR.mineral = []; % [m]
-            ground.STATVAR.organic = []; % [m]
-            ground.STATVAR.energy = [];  % [J/m2]
+            ground.STATVAR.waterIce = []; % total volume of water plus ice in a grid cell [m3]
+            ground.STATVAR.mineral = [];  % total volume of minerals [m3]
+            ground.STATVAR.organic = [];  %total volume of ice [m3]
+            ground.STATVAR.energy = [];  %total molar salt volume within a grid cell [mol]
             
-            ground.STATVAR.T = [];  % [degree C]
-            ground.STATVAR.water = [];  % [m]
-            ground.STATVAR.ice = [];
-            ground.STATVAR.air = [];  % [m]
-            ground.STATVAR.thermCond = [];
+            ground.STATVAR.T = [];   % temperature [degree C]
+            ground.STATVAR.water = [];  % total volume of water [m3]
+            ground.STATVAR.ice = [];    %total volume of ice [m3]
+            ground.STATVAR.air = [];   % total volume of air [m3] - NOT USED
+            ground.STATVAR.thermCond = []; %thermal conductivity [W/mK]
             
-            ground.STATVAR.Lstar = [];
-            ground.STATVAR.Qh = [];
-            ground.STATVAR.Qe = [];
+            ground.STATVAR.Lstar = [];  %Obukhov length [m]
+            ground.STATVAR.Qh = []; %sensible heat flux [W/m2]
+            ground.STATVAR.Qe = [];  % latent heat flux [W/m2]
         end
     
         function ground = provide_CONST(ground)
             
-            ground.CONST.L_f = [];
+            ground.CONST.L_f = [];  % volumetric latent heat of fusion, freezing
+            ground.CONST.c_w = [];  % volumetric heat capacity water
+            ground.CONST.c_i = [];  % volumetric heat capacity ice
+            ground.CONST.c_o = [];  % volumetric heat capacity organic
+            ground.CONST.c_m = [];  % volumetric heat capacity mineral
             
-            ground.CONST.c_w = [];
-            ground.CONST.c_i = [];
-            ground.CONST.c_o = [];
-            ground.CONST.c_m = [];
-            
-            ground.CONST.k_a = [];       %air [Hillel(1982)]
-            ground.CONST.k_w = [];        %water [Hillel(1982)]
-            ground.CONST.k_i = [];         %ice [Hillel(1982)]
-            ground.CONST.k_o = [];        %organic [Hillel(1982)]
-            ground.CONST.k_m = [];
+            ground.CONST.k_a = [];   % thermal conductivity air
+            ground.CONST.k_w = [];   % thermal conductivity water
+            ground.CONST.k_i = [];   % thermal conductivity ice 
+            ground.CONST.k_o = [];   % thermal conductivity organic 
+            ground.CONST.k_m = [];   % thermal conductivity mineral 
             
             ground.CONST.sigma = []; %Stefan-Boltzmann constant
-            ground.CONST.kappa = [];
-            ground.CONST.L_s = []; %latent heat of vaporization
+            ground.CONST.kappa = []; % von Karman constant
+            ground.CONST.L_s = [];  %latent heat of sublimation, latent heat of evaporation handled in a dedicated function
             
-            ground.CONST.cp = [];
-            ground.CONST.g = [];
+            ground.CONST.cp = []; % specific heat capacity at constant pressure of air
+            ground.CONST.g = []; % gravitational acceleration Earth surface
             
-            ground.CONST.rho_w = [];
-            ground.CONST.rho_i = [];
+            ground.CONST.rho_w = [];   % water density
+            ground.CONST.rho_i = [];   %ice density
         end
         
-        
-        %----mandatory functions---------------
-        %----initialization--------------------
-        function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
-            ground = provide_PARA(ground); 
-            ground = provide_CONST(ground);
-            ground = provide_STATVAR(ground);
-        end
-        
-        function ground = finalize_init(ground, forcing) %assign all variables, that must be calculated or assigned otherwise for initialization
+        function ground = finalize_init(ground, forcing)
             ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
             ground.PARA.airT_height = forcing.PARA.airT_height;
             ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
@@ -93,10 +84,10 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIA
             ground.STATVAR.Lstar = -100;
             ground.STATVAR.Qh = 0;
             ground.STATVAR.Qe = 0;
-            
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             
         end
+        
         
         %---time integration------
         
@@ -118,7 +109,7 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIA
 
         end
         
-        function timestep = get_timestep(ground)  %could involve check for several state variables
+        function timestep = get_timestep(ground) 
            timestep = get_timestep_heat_coduction(ground);
         end
         
@@ -160,8 +151,9 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIA
         end
         
         
-        %-------------
-        %lateral exchange
+        %-----LATERAL-------------------
+        
+        %-------LAT3D_HEAT-------------
         function ground = lateral3D_pull_heat(ground, lateral)
             ground = lateral3D_pull_heat_simple(ground, lateral);
         end

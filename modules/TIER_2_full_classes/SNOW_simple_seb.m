@@ -169,9 +169,9 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
        
         function snow = compute_diagnostic(snow, forcing)
             snow = get_T_water_freeW(snow);
-            snow = subtract_water(snow);
+            snow = subtract_water2(snow);
             
-            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'}, 'waterIce');
+            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'}, 'ice');
             if regridded_yesNo
                 snow = get_T_water_freeW(snow);
             end

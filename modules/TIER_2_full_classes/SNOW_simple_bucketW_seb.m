@@ -186,7 +186,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             %mass
             snow.STATVAR.waterIce = snow.STATVAR.waterIce + timestep .* snow.TEMP.d_water;
             snow.STATVAR.waterIce(1) = snow.STATVAR.waterIce(1) + timestep .* (snow.TEMP.snowfall + snow.STATVAR.sublimation);
-            snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.area(1,1) ./ (snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1));
+            snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.area(1,1) ./ (snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1) ./ snow.STATVAR.area(1));
             snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + timestep .* snow.TEMP.snowfall ./snow.STATVAR.area(1,1) ./ (snow.PARA.density ./1000);
             %store "old" density
             snow.STATVAR.target_density = snow.STATVAR.ice ./ snow.STATVAR.layerThick ./ snow.STATVAR.area;
@@ -199,7 +199,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
 
             snow.STATVAR.energy = snow.STATVAR.energy + timestep .* (snow.TEMP.d_energy + snow.TEMP.snow_energy + snow.TEMP.d_water_energy + snow.TEMP.sublimation_energy);
             snow.STATVAR.waterIce = snow.STATVAR.waterIce + timestep .* (snow.TEMP.snowfall + snow.TEMP.d_water + snow.STATVAR.sublimation);
-            snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.layerThick ./ max(50, snow.STATVAR.ice ./ snow.STATVAR.layerThick);
+            snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.layerThick ./ max(50/1000, snow.STATVAR.ice ./ snow.STATVAR.layerThick ./ snow.STATVAR.area);
             snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.TEMP.snowfall ./ (snow.PARA.density ./1000) ./  snow.STATVAR.layerThick ; %[m2]
             snow.STATVAR.target_density = min(1,(snow.STATVAR.ice + timestep .* (snow.TEMP.snowfall + snow.STATVAR.sublimation)) ./ snow.STATVAR.layerThick ./ snow.STATVAR.area);
             
@@ -212,9 +212,9 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
        
         function snow = compute_diagnostic(snow, forcing)
             snow = get_T_water_freeW(snow);
-            snow = subtract_water(snow);
+            snow = subtract_water2(snow);
             
-            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'}, 'waterIce');
+            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'}, 'ice');
             if regridded_yesNo
                 snow = get_T_water_freeW(snow);
             end

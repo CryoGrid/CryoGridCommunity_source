@@ -1,5 +1,6 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_fcSimple_salt_seb
+% heat conduction, static soil water, salt diffusion, simple freeze curve including freezing point depression due to salt
 % S. Westermann, T. Ingemann-Nielsen, J. Scheer, October 2020
 %========================================================================
 
@@ -21,9 +22,9 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.PARA.albedo = []; %surface albedo [-]
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; %roughness length [m]
-            ground.PARA.rs = []; %surface resistance against evapotranspiration [-] 
+            ground.PARA.rs = []; %surface resistance against evapotranspiration [sec/m] 
             ground.PARA.tortuosity=[]; % tortuosity of salt diffusion [-]
-            ground.PARA.dt_max = [] ; %maximum possible timestep [sec]
+            ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
         
@@ -67,7 +68,7 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             
             ground.CONST.sigma = []; % Stefan-Boltzmann constant
             ground.CONST.kappa = []; % von Karman constant
-            ground.CONST.L_s = [];   %latent heat of sublimation, evaporation handled in a dedicated function
+            ground.CONST.L_s = [];   %latent heat of sublimation, latent heat of evaporation handled in a dedicated function
             ground.CONST.cp = []; % specific heat capacity at constant pressure of air
             ground.CONST.g = []; % gravitational acceleration Earth surface
             ground.CONST.R = []; % universal gas constant

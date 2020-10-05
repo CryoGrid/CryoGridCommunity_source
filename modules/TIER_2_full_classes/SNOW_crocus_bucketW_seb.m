@@ -412,6 +412,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow = lateral3D_push_snow_crocus(snow, lateral);
         end
         
+        
         %----inherited Tier 1 functions ------------
         
         function snow = get_derivative_energy(snow)

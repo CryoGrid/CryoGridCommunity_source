@@ -60,7 +60,7 @@ classdef SNOW < BASE
         end
         
         %remove or reroute meltwater in excess of snow matrix - check if
-        %subtract_water2 is redundant
+        %subtract_water is redundant
         function snow = subtract_water(snow) 
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, snow.STATVAR.ice ./ snow.STATVAR.target_density ./snow.STATVAR.area); %adjust so that old density is maintained; do not increase layerThick (when water refreezes)
             difference = max(0, snow.STATVAR.waterIce - snow.STATVAR.layerThick .*  snow.STATVAR.area);
