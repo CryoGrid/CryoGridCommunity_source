@@ -13,7 +13,6 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
         %----mandatory functions---------------
         %----initialization--------------------
         function ground = GROUND_fcSimple_salt_seb(index, pprovider, cprovider, forcing)
-            
             ground@INITIALIZE(index, pprovider, cprovider, forcing);
         end
                 

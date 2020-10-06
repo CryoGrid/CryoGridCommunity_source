@@ -1,18 +1,38 @@
-% forcing data
-
+%========================================================================
+% CryoGrid FORCING class FORCING_seb
+% simple model forcing for GROUND classes computing the surface energy balance 
+% (keyword “seb”). The data must be stored in a Matlab “.mat” file which contains 
+% a struct FORCING with field “data”, which contain the time series of the actual 
+% forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures. 
+% Have a look at the existing forcing files in the folder “forcing” and prepare 
+% new forcing files in the same way. The mandatory forcing variables are air temperature 
+% (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2), 
+% incoming short-.wave radiation (Sin, in W/m2), absolute humidity (q, in 
+% kg water vapor / kg air), wind speed (wind, in m/sec), rainfall (rainfall, in mm/day), 
+% snowfall (snowfall, in mm/day) and timestamp (t_span, 
+% in Matlab time / increment 1 corresponds to one day). 
+% IMPORTANT POINT: the time series must be equally spaced in time, and this must be 
+% really exact. When reading the timestamps from an existing data set (e.g. an Excel file),
+% rounding errors can result in small differences in the forcing timestep, often less 
+% than a second off. In this case, it is better to manually compile a new, equally spaced 
+% timestep in Matlab.
+% S. Westermann, Thomas Ingeman-Nielsen, Johanna Scheer, October 2020
+%========================================================================
 
 classdef FORCING_seb
+    
     properties
         forcing_index
-        DATA           % all data
-        TEMP           % at each timestep
-        PARA
-        STATUS         % forcing data suitable for the modules that are to be run -> can be used 
+        DATA            % forcing data time series
+        TEMP            % forcing data interpolated to a timestep
+        PARA            % parameters
+        STATUS         
     end
     
     
     methods
         
+        %constructor
         function self = FORCING_seb(varargin)               % Temporary definition, to allow old code to run
         %function self = FORCING_seb(index, pprovider, fprovider)      % Definition to be used when old code is no longer supported
             % CONSTRUCTOR for FORCING_seb
@@ -58,18 +78,18 @@ classdef FORCING_seb
         function self = initialize_PARA(self)         
             % INITIALIZE_PARA  Initializes PARA structure, setting the variables in PARA.  
 
-            self.PARA.filename = [];
-            self.PARA.start_time = [];
-            self.PARA.end_time = [];
-            self.PARA.rain_fraction = [];
-            self.PARA.snow_fraction = [];
-            self.PARA.latitude = [];
-            self.PARA.longitude = [];
-            self.PARA.altitude = [];
-            self.PARA.domain_depth = [];
-            self.PARA.heatFlux_lb = [];
-            self.PARA.airT_height = [];
-            self.PARA.area = [];
+            self.PARA.filename = [];   %filename of Matlab file containing forcing data
+            self.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
+            self.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
+            self.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
+            self.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
+            self.PARA.latitude = [];  % latitude
+            self.PARA.longitude = []; % longitude
+            self.PARA.altitude = [];  % elevation above sea level [m]
+            self.PARA.domain_depth = []; % total depth of the model domain [m]
+            self.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
+            self.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
+            self.PARA.area = [];         % area of the grid cell [m2] 
         end
         
         
