@@ -60,19 +60,16 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             
             ground.PARA.albedo = [];
             ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
             ground.PARA.z0 = []; %roughness length [m]
-            
-            ground.PARA.area =[]; %initial area of the realization [m2]
+         
             
             ground.PARA.rootDepth = [];
             ground.PARA.evaporationDepth = [];
             ground.PARA.ratioET = [];
             
             ground.PARA.hydraulicConductivity = []; %change to a prametrization later?
-            ground.PARA.externalWaterFlux = [] ; %external water flux added
             
-            ground.PARA.heatFlux_lb = [];
+
             
             ground.PARA.dt_max = [] ; %[sec]
             ground.PARA.dE_max = []; %[J/m3]
@@ -85,11 +82,11 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             ground.PARA.min_mineral_organic = [];
 
             %trigger parameters
-            ground.PARA.threshold_Xwater = 0.05;
+            ground.PARA.threshold_Xwater = []; %0.05;
             %ground.PARA.threshold_Xwater_class = [];
-            ground.PARA.threshold_Xwater_class = 'LAKE_simple_bucketW_seb_snow';  %default trigger if empty (this ensures stable run) 
+            ground.PARA.threshold_Xwater_class = []; %'LAKE_simple_bucketW_seb_snow';  %default trigger if empty (this ensures stable run) 
             %otherwise interaction class trigger, must correspond to a sleeping class in the initialization!
-            ground.PARA.threshold_Xwater_index = 1;
+            ground.PARA.threshold_Xwater_index = []; %1;
             
         end
         

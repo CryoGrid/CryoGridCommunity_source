@@ -30,19 +30,15 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground.PARA.albedo = [];  %spectrally resolved albedo and SW_extinction are possible, must be row array
             ground.PARA.SW_extinction = [];
             ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
             ground.PARA.z0 = []; %roughness length [m]
-            ground.PARA.rs = [];
-            
-            ground.PARA.area =[]; %initial area of the realization [m2]
-            
+
             ground.PARA.heatFlux_lb = [];
             
             ground.PARA.dt_max = [] ; %[sec]
             ground.PARA.dE_max = []; %[J/m3]
             
             ground.PARA.next_season_lake_class = [];
-            ground.PARA.threshold_water = 0.05;
+            ground.PARA.threshold_water = []; %0.05;
         end
         
         function ground = provide_STATVAR(ground)
@@ -257,7 +253,8 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             
             ground.STATVAR.Sout = S_up ./ ground.STATVAR.area(1);
             ground.STATVAR.Qh = Q_h(ground, forcing);
-            ground.STATVAR.Qe = Q_eq(ground, forcing);
+            ground.STATVAR.Qe = Q_eq_potET(ground, forcing);
+            %ground.STATVAR.Qe = Q_eq(ground, forcing);
             %sublimation not yet accounted for, normally handled by the
             %snow
             

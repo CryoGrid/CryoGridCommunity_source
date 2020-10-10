@@ -12,14 +12,9 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & HEAT_FLUXES
             
             ground.PARA.albedo = [];
             ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
             ground.PARA.z0 = []; %roughness length [m]
-            
-            ground.PARA.area =[]; %initial area of the realization [m2]
-            
+
             ground.PARA.rs = [];
-            
-            ground.PARA.heatFlux_lb = [];
             
             ground.PARA.LUT_size_waterIce = [];
             ground.PARA.LUT_size_T = [];

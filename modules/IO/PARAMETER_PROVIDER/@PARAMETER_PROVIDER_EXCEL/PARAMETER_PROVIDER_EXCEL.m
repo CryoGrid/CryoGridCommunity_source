@@ -253,12 +253,15 @@ classdef PARAMETER_PROVIDER_EXCEL < PARAMETER_PROVIDER_base_class
                     x = 1;
                     field = cell2mat(section_data(pos_list(1,1)-3,x));
                     while x <= size(section_data,2) && ~isnan(field(1))
-                        field = cell2mat(section_data(pos_list(1,1)-3, x));
+                        %field = cell2mat(section_data(pos_list(1,1)-3, x)) %CHANGED Sebastian Oct 2020!
+                        
                         table_data.(section_data{pos_list(1,1)-3, x}) = section_data(pos_list(1,1):pos_list(1,2), x);
                         x = x+1;
-                        if x < size(section_data,2)
-                            field = cell2mat(section_data(pos_list(1,1)-3, x));
-                        end
+                        %field = cell2mat(section_data(pos_list(1,1)-3, x));  
+                        
+                         if x <= size(section_data,2)                       %CHANGED Sebastian Oct 2020!
+                             field = cell2mat(section_data(pos_list(1,1)-3, x));
+                         end
                     end
                     for j = 1:size(fn,1) 
                     % Loop over all fieldnames in fn

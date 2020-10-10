@@ -21,13 +21,8 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE & INITIALIZE
             
             ground.PARA.albedo = [];
             ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
+
             ground.PARA.z0 = []; %roughness length [m]
-            ground.PARA.rs = [];
-            
-            ground.PARA.area =[]; %initial area of the realization [m2]
-            
-            ground.PARA.heatFlux_lb = [];
             
             ground.PARA.dt_max = [] ; %[sec]
             ground.PARA.dE_max = []; %[J/m3]
@@ -224,7 +219,7 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE & INITIALIZE
             ground.STATVAR.Lout = (1-ground.PARA.epsilon) .* forcing.TEMP.Lin + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ 273.15).^4;
             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
             ground.STATVAR.Qh = Q_h(ground, forcing);
-            ground.STATVAR.Qe = Q_eq(ground, forcing);
+            ground.STATVAR.Qe = Q_eq_potET(ground, forcing);
             
             ground.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe) .* ground.STATVAR.area(1);
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
