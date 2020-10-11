@@ -1,6 +1,10 @@
+%========================================================================
+% CryoGrid Bottom class 
+% bottom confining class of stratigraphy
+% S. Westermann, Oct 2020
+%========================================================================
+
 classdef Bottom  < matlab.mixin.Copyable 
-    %UNTITLED3 Summary of this class goes here
-    %   Detailed explanation goes here
     
     properties
         PREVIOUS

@@ -1,3 +1,9 @@
+%========================================================================
+% CryoGrid INTERACTION (IA) class for heat conduction and water fluxes between a LAKE class
+% and a GROUND class with bucket water and excess ice
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
     
     methods
@@ -8,6 +14,8 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
             get_boundary_condition_BUCKET_LAKE_XWATER_UP_m(ia_heat_water); %Xwater upward flow
         end
         
+        %trigger function creating the LAKE class, called by the GROUND
+        %class
         function trigger_create_LAKE(ia_heat_water, ground, forcing)
                         
             CURRENT = ground.PREVIOUS;  %go to Top() and get the stored SLEEPING classes
@@ -62,6 +70,9 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
             ground.IA_PREVIOUS.NEXT = ground;
         end
         
+                
+        %trigger function removing the LAKE class, called by the LAKE 
+        %class itself
         function trigger_remove_LAKE(ia_heat_water, forcing)
             lake = ia_heat_water.PREVIOUS;
             ground = ia_heat_water.NEXT;

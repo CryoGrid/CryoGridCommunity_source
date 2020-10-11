@@ -1,3 +1,9 @@
+%========================================================================
+% CryoGrid INTERACTION (IA) class for heat conduction between two GROUND
+% classes and zero water flux boundary conditions for above class 
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_HEAT11_WATER01 < IA_WATER & IA_HEAT 
     
     methods

@@ -7,9 +7,9 @@
 
 classdef FREEZE_CURVE < BASE
     
-    %additional variable LUT for LookUpTable 
+    
     properties
-        LUT
+        LUT   %additional variable LUT for LookUpTable 
     end
         
     methods

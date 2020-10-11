@@ -7,7 +7,7 @@ classdef REGRID < BASE
     
     
     methods
-        function ground = regrid_split_merge(ground, extensive_variables) %ATTENTION: does not work stable!!
+        function ground = regrid_split_merge(ground, extensive_variables) %ATTENTION: does not work stable!! DO NOT USE!
             %possibly better use regrid_split for short timesteps and once
             %in a while do regrid_full
             top_pos = ground.STATVAR.top_depth_rel2groundSurface;
@@ -60,8 +60,9 @@ classdef REGRID < BASE
             end
         end
         
-        %split only
-        function ground = regrid_split(ground, variable_list) %simple split function, merges cells if minimum thickness is reached
+        %simple merge function, merges cells if minimum thickness is
+        %reached ATTENTION: this function should be renamed to regrid_merge
+        function ground = regrid_split(ground, variable_list) 
             top_pos = ground.STATVAR.top_depth_rel2groundSurface;
             min_thickness = ground.PARA.target_layerThick(1,1);
 
@@ -80,8 +81,8 @@ classdef REGRID < BASE
             end
         end
         
-        %complete regrid
-        function ground = regrid_full(ground, variable_list) %regrids to the orginal grid  provided in initialization
+        %complete regridding to the orginal grid  provided in initialization
+        function ground = regrid_full(ground, variable_list) 
             top_pos = ground.STATVAR.top_depth_rel2groundSurface;
             target_grid = ground.PARA.target_grid;
                         
@@ -164,8 +165,8 @@ classdef REGRID < BASE
                     %rest is done by diagostic step, get_T_water
                 end
             end
-            
-            if snow.STATVAR.ice(1) > 1.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area(1)  %expand, check only first cell
+            %expand, check only first cell
+            if snow.STATVAR.ice(1) > 1.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area(1)  
                
                 regridded_yesNo = 1;
                 split_fraction = snow.STATVAR.ice(1) ./ (snow.PARA.swe_per_cell.*snow.STATVAR.area(1)); %e.g. 1.6

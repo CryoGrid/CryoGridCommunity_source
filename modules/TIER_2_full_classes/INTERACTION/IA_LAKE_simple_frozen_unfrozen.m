@@ -1,3 +1,11 @@
+%========================================================================
+% CryoGrid INTERACTION (IA) class connecting the frozen and unfrozen
+% classes of LAKE_simple
+% NOTE: also contains experimental code for boundary conditions and triggers between two LAKE classes 
+% NOTE: used for LAKE classes with and without wtaer cycle
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_LAKE_simple_frozen_unfrozen < IA_WATER & IA_HEAT 
     
     methods
@@ -9,13 +17,12 @@ classdef IA_LAKE_simple_frozen_unfrozen < IA_WATER & IA_HEAT
         end
         
 
-        
+        %experimental code connecting two LAKES, not used at this stage
         function get_boundary_condition_m(ia_heat_water)
             get_boundary_condition_HEAT_m(ia_heat_water);
             get_boundary_condition_BUCKET_LAKE_LAKE_m(ia_heat_water);
         end
         
-
         
         function trigger_remove_LAKE(ia_heat_water, forcing)
             lake1 = ia_heat_water.PREVIOUS;

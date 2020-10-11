@@ -42,6 +42,7 @@ classdef SNOW_FLUXES_LATERAL < BASE
             end
         end
         
+        %push function for SNOW_crocus_...
         function snow = lateral3D_push_snow_crocus(snow, lateral)
             if lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure < 0  && lateral.PARENT.STATVAR2ALL.snow_drift == 2 %loose snow
                 remaining_fraction = 1 - min(0.5, snow.TEMP.one_over_tau .* lateral.PARA.N_drift .* lateral.CONST.day_sec .* lateral.PARA.ia_time_increment);
@@ -60,6 +61,7 @@ classdef SNOW_FLUXES_LATERAL < BASE
             end
         end
         
+        %push function for SNOW_crocus2_...
         function snow = lateral3D_push_snow_crocus2(snow, lateral)
             
             if lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure < 0  && lateral.PARENT.STATVAR2ALL.snow_drift == 2 %loose snow
