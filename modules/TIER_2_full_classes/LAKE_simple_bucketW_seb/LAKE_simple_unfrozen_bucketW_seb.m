@@ -1,16 +1,28 @@
-
+%========================================================================
+% CryoGrid GROUND class LAKE_simple_unfrozen_bucketW_seb
+% water body with heat conduction, bucket water scheme with free water evaporation, free water freeze curve, surface
+% energy balance, penetration of SW radiation (single band)
+% representation of unfrozen water body, works in concert with 
+% LAKE_simple_bucketW_seb for frozen water body
+% represents water body as single cell, assuming perfect mixing at all times
+% this class can only be created by a trigger in LAKE_simple_bucketW_seb
+% S. Westermann, October 2020
+%========================================================================
 
 classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_FLUXES_LATERAL &  HEAT_FLUXES_LATERAL & INITIALIZE
 
     
     methods
-        % no constructor, always created from default constructor and initialize from LAKE_simple_seb class
         
-        
-        function self = LAKE_simple_unfrozen_bucketW_seb(index, pprovider, cprovider, forcing)
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
+        %----mandatory functions---------------
+        %----initialization--------------------
+
+        % normal constructor with providers not used, always created by default constructor and initialized from LAKE_simple_bucketW_seb
+        function ground = LAKE_simple_unfrozen_bucketW_seb(index, pprovider, cprovider, forcing)
+            ground@INITIALIZE(index, pprovider, cprovider, forcing);
         end
         
+        %initializes class when switching from frozen to unfrozen conditions
         function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_frozen)
             ground.PARA = LAKE_simple_frozen.PARA;
             ground.PARA.rs = 0;
@@ -24,64 +36,65 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
         
         function ground = provide_PARA(ground)
             
-            ground.PARA.albedo = [];
-            ground.PARA.SW_extinction = [];
-            ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
+            ground.PARA.albedo = [];  %surface albedo [-]
+            ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; %roughness length [m]
+            ground.PARA.SW_extinction = []; %e-folding constant of SW extinction [1/m] 
+            %spectrally resolved albedo and SW_extinction are possible,
+            %must be row array - NOT TESTED!
             
-            ground.PARA.area =[]; %initial area of the realization [m2]
+            ground.PARA.dt_max = [];  %maximum possible timestep [sec]
+            ground.PARA.dE_max = [];  %maximum possible energy change per timestep [J/m3]
             
-            ground.PARA.heatFlux_lb = [];
-            
-            ground.PARA.dt_max = [] ; %[sec]
-            ground.PARA.dE_max = []; %[J/m3]
-            
-            ground.PARA.next_season_lake_class = [];
+            ground.PARA.next_season_lake_class = [];  %LAKE class that is called by check_trigger, in this case unfozen LAKE class
+            ground.PARA.threshold_water = []; %lake depth below which a trigger is called. LAKE is generally removed, depending on GROUND class below 
         end
         
         function ground = provide_STATVAR(ground)
             
-            ground.STATVAR.upperPos = [];
-            ground.STATVAR.lowerPos = [];
-            ground.STATVAR.layerThick = []; % [m]
-            ground.STATVAR.area = []; %[m2]
+            ground.STATVAR.upperPos = []; % upper surface elevation [m]
+            ground.STATVAR.lowerPos = []; % lower surface elevation [m]
+            ground.STATVAR.layerThick = []; % thickness of grid cells [m]
             
-            ground.STATVAR.waterIce = []; % [m]
-            ground.STATVAR.mineral = []; % [m]
-            ground.STATVAR.organic = []; % [m]
-            ground.STATVAR.energy = [];  % [J/m2]
+            ground.STATVAR.waterIce = []; % total volume of water plus ice in a grid cell [m3]
+            ground.STATVAR.mineral = []; % total volume of minerals [m3]
+            ground.STATVAR.organic = []; % total volume of organics [m3]
+            ground.STATVAR.energy = [];  % total internal energy [J]
             
-            ground.STATVAR.T = [];  % [degree C]
-            ground.STATVAR.water = [];  % [m]
-            ground.STATVAR.ice = [];
-            ground.STATVAR.air = [];  % [m]
-            ground.STATVAR.thermCond = [];
+            ground.STATVAR.T = [];  % temperature [degree C]
+            ground.STATVAR.water = [];  % total volume of water [m3]
+            ground.STATVAR.ice = []; %total volume of ice [m3]
+            ground.STATVAR.air = [];  % total volume of air [m3] - NOT USED
+            ground.STATVAR.thermCond = []; %thermal conductivity [W/mK]
             
-            ground.STATVAR.Lstar = [];
-            ground.STATVAR.Qh = [];
-            ground.STATVAR.Qe = [];
+            ground.STATVAR.Lstar = []; %Obukhov length [m]
+            ground.STATVAR.Qh = []; %sensible heat flux [W/m2]
+            ground.STATVAR.Qe = []; % latent heat flux [W/m2]
         end
     
         function ground = provide_CONST(ground)
             
-            ground.CONST.L_f = [];
+            ground.CONST.L_f = []; % volumetric latent heat of fusion, freezing
+            ground.CONST.c_w = []; % volumetric heat capacity water
+            ground.CONST.c_i = []; % volumetric heat capacity ice
+            ground.CONST.c_o = []; % volumetric heat capacity organic
+            ground.CONST.c_m = []; % volumetric heat capacity mineral
             
-            ground.CONST.c_w = [];
-            ground.CONST.c_o = [];
-
-            
-            ground.CONST.k_m = [];
+            ground.CONST.k_a = [];   % thermal conductivity air
+            ground.CONST.k_w = [];   % thermal conductivity water
+            ground.CONST.k_i = [];   % thermal conductivity ice 
+            ground.CONST.k_o = [];   % thermal conductivity organic 
+            ground.CONST.k_m = [];   % thermal conductivity mineral 
             
             ground.CONST.sigma = []; %Stefan-Boltzmann constant
-            ground.CONST.kappa = [];
-            ground.CONST.L_s = []; %latent heat of vaporization
+            ground.CONST.kappa = []; % von Karman constant
+            ground.CONST.L_s = [];  %latent heat of sublimation, latent heat of evaporation handled in a dedicated function
             
-            ground.CONST.cp = [];
-            ground.CONST.g = [];
+            ground.CONST.cp = []; %specific heat capacity at constant pressure of air
+            ground.CONST.g = []; % gravitational acceleration Earth surface
             
-            ground.CONST.rho_w = [];
-            ground.CONST.rho_i = [];
+            ground.CONST.rho_w = []; % water density
+            ground.CONST.rho_i = []; %ice density
         end
         
         
@@ -103,8 +116,7 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
         end
         
-        %----mandatory functions---------------
-        %----initialization--------------------
+        
         function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
             ground = provide_PARA(ground); 
             ground = provide_CONST(ground);
@@ -112,10 +124,9 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
         end
         
 
-        
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
+        function ground = get_boundary_condition_u(ground, forcing)
             ground = surface_energy_balance(ground, forcing);
             ground = get_boundary_condition_u_water_LAKE(ground, forcing);
         end
@@ -133,19 +144,15 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
         end
         
         function ground = get_derivatives_prognostic(ground)
-            %ground.TEMP.d_energy = ground.TEMP.F_ub + ground.TEMP.F_lb;
-
+            %do nothing, single cell only
         end
         
-        function timestep = get_timestep(ground)  %could involve check for several state variables
+        function timestep = get_timestep(ground)  
            timestep = get_timestep_heat_coduction(ground);
         end
         
         function ground = advance_prognostic(ground, timestep) 
-            %energy
-            %ground.STATVAR.energy = ground.STATVAR.energy + timestep .* (ground.TEMP.d_energy + ground.TEMP.F_ub_water_energy + ground.TEMP.F_lb_water_energy);
-            %ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* (ground.TEMP.F_ub_water + ground.TEMP.F_lb_water);
-            %ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* (ground.TEMP.F_ub_water + ground.TEMP.F_lb_water);
+
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* (ground.TEMP.d_energy + ground.TEMP.d_water_energy);
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water;
             ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_water ./ ground.STATVAR.area;
@@ -168,9 +175,6 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
                 trigger_yes_no = 1;
                 ia_create_next_season_lake = get_IA_class(class(ground), ground.PARA.next_season_lake_class); %delivers IA-class that creates and initializes the next season LAKE class
                 lake_next_season = create_annihilate(ia_create_next_season_lake, ground);
-                
-                %lake_frozen = LAKE_simple_bucketW_seb(-1,0,0,0);
-                %lake_frozen = initialize_from_LAKE_unfrozen(lake_frozen, ground);
                 
                 %get the interaction classes from above and below
                 lake_next_season.NEXT = ground.NEXT;
@@ -220,13 +224,15 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
         end
 
-        %lateral fluxes---------------------------
+        %-----LATERAL-------------------
+        %seepage face not yet implemented
         
+        %----LAT_WATER_RESERVOIR-----------        
         function ground = lateral_push_water_reservoir(ground, lateral)
            ground = lateral_push_water_reservoir_lake_unfrozen(ground, lateral);
         end
         
-                
+        %----LAT3D_WATER_UNCONFINED_AQUIFER------------     
         function ground = lateral3D_pull_water_unconfined_aquifer(ground, lateral)
             ground = lateral3D_pull_water_unconfined_aquifer_lake_unfrozen(ground, lateral);
         end
@@ -239,6 +245,9 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_lake_unfrozen(ground, lateral);
         end
         
+        %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
+        
+        %-------LAT3D_HEAT-------------
         function ground = lateral3D_pull_heat(ground, lateral)
             ground = lateral3D_pull_heat_simple(ground, lateral);
         end

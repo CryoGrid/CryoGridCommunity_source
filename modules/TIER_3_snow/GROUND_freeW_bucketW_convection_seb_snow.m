@@ -1,4 +1,10 @@
-
+%========================================================================
+% CryoGrid GROUND class GROUND_freeW_bucketW_convection_seb_snow
+% heat conduction, bucket water scheme, free water freeze curve, surface
+% energy balance, experimental formulation for air convection based on
+% Darcy-Weissbach equation
+% S. Westermann, October 2020
+%========================================================================
 
 classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convection_seb
     properties
@@ -9,7 +15,8 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
     
     methods
         
-        %mandatory functions for each class
+        %----mandatory functions---------------
+        %----initialization--------------------
         
         function self = GROUND_freeW_bucketW_convection_seb_snow(index, pprovider, cprovider, forcing)
             self@GROUND_freeW_bucketW_convection_seb(index, pprovider, cprovider, forcing);
@@ -34,7 +41,7 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
        end
 
        
-       %-------------------
+        %---time integration------
         
         function ground = get_boundary_condition_u(ground, forcing)
             
@@ -57,9 +64,6 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
                     ground.CHILD = get_boundary_condition_u_create_CHILD(ground.CHILD, forcing);  %initialize with fresh snowfall
                 end
             else %CHILD exists
-                %total_area = ground.STATVAR.area(1,1); %store the total area of the ground
-                %ground.STATVAR.area(1,1) = ground.STATVAR.area(1,1) - ground.CHILD.STATVAR.area(1,1); %replace by snow-free area
-                
                 total_area = ground.STATVAR.area; %store the total area of the ground
                 total_waterIce = ground.STATVAR.waterIce;
                 total_water = ground.STATVAR.water;
@@ -80,19 +84,6 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
                 ground.CHILD = get_boundary_condition_u_CHILD(ground.CHILD, forcing);
                 ground = get_boundary_condition_u@GROUND_freeW_bucketW_convection_seb(ground, forcing);
                 
-                %was here!
-                %call designated mandatory function for CHILD-PARENT interactions in
-                %the IA class governing IA between SNOW and GROUND
-                
-%                 ground.STATVAR.Lout = (ground.STATVAR.area(1,1) .* ground.STATVAR.Lout + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Lout) ./ total_area; %mix the surface heat fluxes from snow and ground
-%                 ground.STATVAR.Sout = (ground.STATVAR.area(1,1) .* ground.STATVAR.Sout + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Sout) ./ total_area;
-%                 ground.STATVAR.Qh = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qh + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qh) ./ total_area;
-%                 ground.STATVAR.Qe = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qe + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qe) ./ total_area;
-%                 
-%                 ground.STATVAR.area(1,1) = total_area; %reassign the true area of ground
-%                 
-%                 get_IA_CHILD_boundary_condition_u(ground.IA_CHILD); %should require the full area of the ground class
-                
                 get_IA_CHILD_boundary_condition_u(ground.IA_CHILD);
                 %call designated mandatory function for CHILD-PARENT interactions in
                 %the IA class governing IA between SNOW and GROUND
@@ -102,9 +93,8 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
                 ground.STATVAR.Qh = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qh + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qh) ./ total_area(1,1);
                 ground.STATVAR.Qe = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qe + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qe) ./ total_area(1,1);
                 
-                %----------------
-                
-                ground.STATVAR.area = total_area; %reassign the true area of ground
+                %reassign the true totals of ground
+                ground.STATVAR.area = total_area; 
                 ground.STATVAR.waterIce = total_waterIce;
                 ground.STATVAR.water = total_water;
                 ground.STATVAR.ice = total_ice;
@@ -144,7 +134,7 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
             end
         end
         
-        function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
+        function ground = advance_prognostic(ground, timestep) 
             if ground.CHILD == 0
                 ground =  advance_prognostic@GROUND_freeW_bucketW_convection_seb(ground, timestep);
             else                
@@ -182,7 +172,6 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
                     snow_volume = ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.layerThick;
                     ground.CHILD.STATVAR.area = ground.STATVAR.area(1,1);
                     ground.CHILD.STATVAR.layerThick = snow_volume ./ ground.CHILD.STATVAR.area;
-                    %ground.CHILD = compute_diagnostic(ground.CHILD, forcing); %splits snow in 2 grid cells
                    
                     %make snow a real class
                     ground.CHILD.PARENT = 0;

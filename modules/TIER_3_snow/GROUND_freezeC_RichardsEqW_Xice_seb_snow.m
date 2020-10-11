@@ -1,4 +1,9 @@
-
+%========================================================================
+% CryoGrid GROUND class GROUND_freezeC_RichardsEqW_Xice_seb_snow
+% heat conduction, Richards equation water scheme, freeze curve based on
+% freezing=drying assumption, surface energy balance, excess ice 
+% S. Westermann, October 2020
+%========================================================================
 
 classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_Xice_seb
     properties
@@ -9,21 +14,22 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
     
     methods
         
-        %mandatory functions for each class
+        %----mandatory functions---------------
+        %----initialization--------------------
         
-        function self = GROUND_freezeC_RichardsEqW_Xice_seb_snow(index, pprovider, cprovider, forcing)
-            self@GROUND_freezeC_RichardsEqW_Xice_seb(index, pprovider, cprovider, forcing);
+        function ground = GROUND_freezeC_RichardsEqW_Xice_seb_snow(index, pprovider, cprovider, forcing)
+            ground@GROUND_freezeC_RichardsEqW_Xice_seb(index, pprovider, cprovider, forcing);
         end
 
-       function ground = provide_PARA(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_PARA(ground)  
             ground = provide_PARA@GROUND_freezeC_RichardsEqW_Xice_seb(ground);
        end
        
-       function ground = provide_CONST(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_CONST(ground)  
            ground = provide_CONST@GROUND_freezeC_RichardsEqW_Xice_seb(ground);
        end
        
-       function ground = provide_STATVAR(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_STATVAR(ground)  
            ground = provide_STATVAR@GROUND_freezeC_RichardsEqW_Xice_seb(ground);
        end
        
@@ -34,7 +40,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
        end
 
        
-       %-------------------
+        %---time integration------
         
         function ground = get_boundary_condition_u(ground, forcing)
             
@@ -56,7 +62,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                     ground.CHILD = get_boundary_condition_u_create_CHILD(ground.CHILD, forcing);  %initialize with fresh snowfall
                 end
             else %CHILD exists
-                total_area = ground.STATVAR.area; %store the total area of the ground
+                total_area = ground.STATVAR.area; %store the totals of the GROUND class
                 total_waterIce = ground.STATVAR.waterIce;
                 total_water = ground.STATVAR.water;
                 total_ice = ground.STATVAR.ice;
@@ -66,6 +72,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                 total_Xice = ground.STATVAR.Xice;
                 total_Xwater = ground.STATVAR.Xwater;
                 
+                %split up area in snow-covered (CHILD) and snow-free part (PARENT)                 
                 ground.STATVAR.area = ground.STATVAR.area - ground.CHILD.STATVAR.area(1,1); %replace by snow-free area
                 reduction = ground.STATVAR.area(1) ./ total_area(1);
                 ground.STATVAR.waterIce = ground.STATVAR.waterIce .* reduction;
@@ -93,9 +100,8 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                 ground.STATVAR.Qh = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qh + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qh) ./ total_area(1,1);
                 ground.STATVAR.Qe = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qe + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qe) ./ total_area(1,1);
                 
-                %----------------
-                
-                ground.STATVAR.area = total_area; %reassign the true area of ground
+                %reassign the true totals of ground
+                ground.STATVAR.area = total_area; 
                 ground.STATVAR.waterIce = total_waterIce;
                 ground.STATVAR.water = total_water;
                 ground.STATVAR.ice = total_ice;
@@ -105,7 +111,6 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                 ground.STATVAR.Xice = total_Xice;
                 ground.STATVAR.Xwater = total_Xwater;
             end
-           
         end
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
@@ -137,7 +142,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
             end
         end
         
-        function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
+        function ground = advance_prognostic(ground, timestep) 
             if ground.CHILD == 0
                 ground =  advance_prognostic@GROUND_freezeC_RichardsEqW_Xice_seb(ground, timestep);
             else                
@@ -146,7 +151,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
             end
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
             ground = L_star(ground, forcing);
         end
         
@@ -182,7 +187,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                     ground.PREVIOUS.NEXT = ground.CHILD;
                     ground.PREVIOUS = ground.CHILD;
                     ground.CHILD = 0;
-                    ground.IA_PREVIOUS = ground.IA_CHILD; %should already point right
+                    ground.IA_PREVIOUS = ground.IA_CHILD; 
                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
                     ground.IA_CHILD = 0;
                 end

@@ -1,4 +1,9 @@
-
+%========================================================================
+% CryoGrid GROUND class GROUND_freeW_bucketW_seb_snow
+% heat conduction, bucket water scheme, free water freeze curve, surface
+% energy balance
+% S. Westermann, October 2020
+%========================================================================
 
 classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
     properties
@@ -9,21 +14,22 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
     
     methods
         
-        %mandatory functions for each class
+        %----mandatory functions---------------
+        %----initialization--------------------
         
-        function self = GROUND_freeW_bucketW_seb_snow(index, pprovider, cprovider, forcing)
-            self@GROUND_freeW_bucketW_seb(index, pprovider, cprovider, forcing);
+        function ground = GROUND_freeW_bucketW_seb_snow(index, pprovider, cprovider, forcing)
+            ground@GROUND_freeW_bucketW_seb(index, pprovider, cprovider, forcing);
         end
 
-       function ground = provide_PARA(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_PARA(ground) 
             ground = provide_PARA@GROUND_freeW_bucketW_seb(ground);
        end
        
-       function ground = provide_CONST(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_CONST(ground)  
            ground = provide_CONST@GROUND_freeW_bucketW_seb(ground);
        end
        
-       function ground = provide_STATVAR(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_STATVAR(ground) 
            ground = provide_STATVAR@GROUND_freeW_bucketW_seb(ground);
        end
        
@@ -34,7 +40,7 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
        end
 
        
-       %-------------------
+        %---time integration------
         
         function ground = get_boundary_condition_u(ground, forcing)
             
@@ -57,9 +63,6 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
                     ground.CHILD = get_boundary_condition_u_create_CHILD(ground.CHILD, forcing);  %initialize with fresh snowfall
                 end
             else %CHILD exists
-                %total_area = ground.STATVAR.area(1,1); %store the total area of the ground
-                %ground.STATVAR.area(1,1) = ground.STATVAR.area(1,1) - ground.CHILD.STATVAR.area(1,1); %replace by snow-free area
-                
                 total_area = ground.STATVAR.area; %store the total area of the ground
                 total_waterIce = ground.STATVAR.waterIce;
                 total_water = ground.STATVAR.water;
@@ -67,6 +70,7 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
                 total_mineral = ground.STATVAR.mineral;
                 total_organic = ground.STATVAR.organic;
                 
+                %split up area in snow-covered (CHILD) and snow-free part (PARENT)                 
                 ground.STATVAR.area = ground.STATVAR.area - ground.CHILD.STATVAR.area(1,1); %replace by snow-free area
                 reduction = ground.STATVAR.area(1) ./ total_area(1);
                 ground.STATVAR.waterIce = ground.STATVAR.waterIce .* reduction;
@@ -80,19 +84,6 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
                 ground.CHILD = get_boundary_condition_u_CHILD(ground.CHILD, forcing);
                 ground = get_boundary_condition_u@GROUND_freeW_bucketW_seb(ground, forcing);
                 
-                %was here!
-                %call designated mandatory function for CHILD-PARENT interactions in
-                %the IA class governing IA between SNOW and GROUND
-                
-%                 ground.STATVAR.Lout = (ground.STATVAR.area(1,1) .* ground.STATVAR.Lout + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Lout) ./ total_area; %mix the surface heat fluxes from snow and ground
-%                 ground.STATVAR.Sout = (ground.STATVAR.area(1,1) .* ground.STATVAR.Sout + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Sout) ./ total_area;
-%                 ground.STATVAR.Qh = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qh + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qh) ./ total_area;
-%                 ground.STATVAR.Qe = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qe + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qe) ./ total_area;
-%                 
-%                 ground.STATVAR.area(1,1) = total_area; %reassign the true area of ground
-%                 
-%                 get_IA_CHILD_boundary_condition_u(ground.IA_CHILD); %should require the full area of the ground class
-                
                 get_IA_CHILD_boundary_condition_u(ground.IA_CHILD);
                 %call designated mandatory function for CHILD-PARENT interactions in
                 %the IA class governing IA between SNOW and GROUND
@@ -102,9 +93,8 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
                 ground.STATVAR.Qh = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qh + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qh) ./ total_area(1,1);
                 ground.STATVAR.Qe = (ground.STATVAR.area(1,1) .* ground.STATVAR.Qe + ground.CHILD.STATVAR.area .* ground.CHILD.STATVAR.Qe) ./ total_area(1,1);
                 
-                %----------------
-                
-                ground.STATVAR.area = total_area; %reassign the true area of ground
+                %reassign the true area of ground
+                ground.STATVAR.area = total_area; 
                 ground.STATVAR.waterIce = total_waterIce;
                 ground.STATVAR.water = total_water;
                 ground.STATVAR.ice = total_ice;
@@ -120,9 +110,7 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
         
         function ground = get_boundary_condition_l(ground, forcing)
               ground = get_boundary_condition_l@GROUND_freeW_bucketW_seb(ground, forcing);
-
         end
-        
         
         function ground = get_derivatives_prognostic(ground)
             if ground.CHILD == 0  
@@ -139,12 +127,11 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
             else 
                 timestep_snow = get_timestep_CHILD(ground.CHILD);
                 timestep_ground =  get_timestep@GROUND_freeW_bucketW_seb(ground);
-                %timestep = timestep_ground + double(timestep_snow > 0 && timestep_snow < timestep_ground) .* (timestep_snow - timestep_ground);
                 timestep = min(timestep_snow, timestep_ground);
             end
         end
         
-        function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
+        function ground = advance_prognostic(ground, timestep)
             if ground.CHILD == 0
                 ground =  advance_prognostic@GROUND_freeW_bucketW_seb(ground, timestep);
             else                
@@ -191,7 +178,7 @@ classdef GROUND_freeW_bucketW_seb_snow < GROUND_freeW_bucketW_seb
                     ground.PREVIOUS.NEXT = ground.CHILD;
                     ground.PREVIOUS = ground.CHILD;
                     ground.CHILD = 0;
-                    ground.IA_PREVIOUS = ground.IA_CHILD; %should already point right
+                    ground.IA_PREVIOUS = ground.IA_CHILD; 
                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
                     ground.IA_CHILD = 0;
                 end

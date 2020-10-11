@@ -1,5 +1,5 @@
 %========================================================================
-% CryoGrid GROUND class GROUND_freeW_bucketW_seb
+% CryoGrid GROUND class GROUND_freezeC_bucketW_seb
 % heat conduction, bucket water scheme, freeze curve based on
 % freezing=drying assumption, surface energy balance
 % S. Westermann, October 2020
@@ -23,8 +23,8 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
 
-            ground.PARA.rootDepth = []; %e-folding constant of transpiration reduction with depth [m]
-            ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [m]
+            ground.PARA.rootDepth = []; %e-folding constant of transpiration reduction with depth [1/m]
+            ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
             ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
 
@@ -65,7 +65,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
             ground.STATVAR.Qe = [];     % latent heat flux [W/m2]
             
             ground.STATVAR.field_capacity = [];  %field capacity in fraction of the total volume [-]
-            ground.STATVAR.excessWater = 0;  %water volume overtopping first grid cell (i.e. surface water [m3]
+            ground.STATVAR.excessWater = 0;  %water volume overtopping first grid cell (i.e. surface water) [m3]
             
         end
         

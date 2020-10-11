@@ -1,4 +1,12 @@
-
+%========================================================================
+% CryoGrid GROUND class LAKE_simple_bucketW_seb_snow
+% water body with heat conduction, bucket water scheme with free water evaporation, free water freeze curve, surface
+% energy balance, penetration of SW radiation (single band)
+% representation of frozen water body, works in concert with 
+% LAKE_simple_unfrozen_bucketW_seb for unfrozen water body (no snow
+% representation when unfrozen, snow enters the water and melts)
+% S. Westermann, October 2020
+%========================================================================
 
 classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
     properties
@@ -9,17 +17,13 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
     
     methods
         
-        %mandatory functions for each class
+        %----mandatory functions---------------
+        %----initialization--------------------
         
-        function self = LAKE_simple_bucketW_seb_snow(index, pprovider, cprovider, forcing)
-            self@LAKE_simple_bucketW_seb(index, pprovider, cprovider, forcing);
+        function ground = LAKE_simple_bucketW_seb_snow(index, pprovider, cprovider, forcing)
+            ground@LAKE_simple_bucketW_seb(index, pprovider, cprovider, forcing);
         end
         
-%        function ground = initialize_from_LAKE_unfrozen(ground, LAKE_simple_unfrozen)
-%             ground = initialize_from_LAKE_unfrozen@LAKE_simple_bucketW_seb(ground, LAKE_simple_unfrozen);
-%             ground.CHILD = 0; % no snow
-%             ground.IA_CHILD = 0;
-%        end
          
        function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)
             ground = initialize_from_LAKE_previous_season@LAKE_simple_bucketW_seb(ground, LAKE_simple_unfrozen);
@@ -27,15 +31,15 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
             ground.IA_CHILD = 0;
          end
 
-       function ground = provide_PARA(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_PARA(ground)  
             ground = provide_PARA@LAKE_simple_bucketW_seb(ground);
        end
        
-       function ground = provide_CONST(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_CONST(ground)  
            ground = provide_CONST@LAKE_simple_bucketW_seb(ground);
        end
        
-       function ground = provide_STATVAR(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_STATVAR(ground)  
            ground = provide_STATVAR@LAKE_simple_bucketW_seb(ground);
        end
        
@@ -46,7 +50,7 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
        end
 
        
-       %-------------------
+        %---time integration------
         
         function ground = get_boundary_condition_u(ground, forcing)
             
@@ -116,7 +120,7 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
             end
         end
         
-        function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
+        function ground = advance_prognostic(ground, timestep) 
             if ground.CHILD == 0
                 ground =  advance_prognostic@LAKE_simple_bucketW_seb(ground, timestep);
             else                
@@ -125,7 +129,7 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
             end
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
             ground = L_star(ground, forcing);
         end
         
@@ -161,7 +165,7 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
                     ground.PREVIOUS.NEXT = ground.CHILD;
                     ground.PREVIOUS = ground.CHILD;
                     ground.CHILD = 0;
-                    ground.IA_PREVIOUS = ground.IA_CHILD; %should already point right
+                    ground.IA_PREVIOUS = ground.IA_CHILD; 
                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
                     ground.IA_CHILD = 0;
                 end
