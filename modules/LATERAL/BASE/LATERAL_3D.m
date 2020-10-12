@@ -1,3 +1,11 @@
+%========================================================================
+% CryoGrid LATERAL_3D class which manages all LATERAL_IA classes for multi tile (3D) runs 
+% LATERAL_IA classes that can be used for multi tile runs are stored in the folder LAT_3D.  
+% The field IA_CLASSES stores all active LATERAL_IA classes in a cell array
+% and LATERAL_3D evaluates this list top-down for each interaction timestep.
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, Oct 2020
+%========================================================================
+
 classdef LATERAL_3D < matlab.mixin.Copyable
  
     properties
@@ -168,7 +176,10 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         end
         
       
-        %main lateral function
+        %---time integration----------------
+        %five steps: 1. pull for stratigraphy, 2. pack, send, receive and unpack, 3.
+        %calculate fluxes/derivatives, 4. push to stratigraphy (prgnostic step), 5.
+        %recompute diagnostic step
         function lateral = interact(lateral, forcing, t)
             if t>=lateral.IA_TIME
                 if sum(lateral.ACTIVE) > 0

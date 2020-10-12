@@ -1,3 +1,13 @@
+%========================================================================
+% CryoGrid LATERAL_1D class which manages all LATERAL_IA classes for single tile (1D) runs 
+% LATERAL_IA classes that can be used for singel tile runs are stored in the folder LAT_1D.  
+% The field IA_CLASSES stores all active LATERAL_IA classes in a cell array
+% and LATERAL_1D evaluates this list top-down for each interaction timestep.
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, Oct 2020
+%========================================================================
+%NOTE: currently contains a lot of code not necessary for 1D lateral
+%interactions. Clean this class at some time
+
 classdef LATERAL_1D < matlab.mixin.Copyable
  
     properties
@@ -17,6 +27,8 @@ classdef LATERAL_1D < matlab.mixin.Copyable
     end
     
     methods
+        
+        %constructor reading the tile information
         function lateral = LATERAL_1D(tile)    %lateral_class_list, TOP, BOTTOM, t
             lateral = lateral.provide_PARA();
             lateral = lateral.provide_CONST();
@@ -47,7 +59,7 @@ classdef LATERAL_1D < matlab.mixin.Copyable
             lateral.PARA.num_realizations = 1;
         end
         
-        
+        %---initialization---------
         function lateral = provide_PARA(lateral)
             lateral.PARA.ia_time_increment = [];
         end
@@ -111,7 +123,8 @@ classdef LATERAL_1D < matlab.mixin.Copyable
             end 
         end
         
-        %main lateral function
+        %---time integration----------------
+        
         function lateral = interact(lateral, forcing, t)
             if t>=lateral.IA_TIME
                 if sum(lateral.ACTIVE) > 0
@@ -172,6 +185,7 @@ classdef LATERAL_1D < matlab.mixin.Copyable
                         end
                     end
                     
+                    %---main step for 1D lateral interactions ------------
                     %PUSH information (fluxes) back to individual stratigraphy classes
                     for i=1:size(lateral.IA_CLASSES,1)
                         if lateral.ACTIVE(i,1)

@@ -1,3 +1,12 @@
+%========================================================================
+% CryoGrid STRATIGRAPHY class STRAT_layers defines the initial stratigraphy
+% state variables as seperate layers with constant values. The depth
+% below the surface for the top position of each layer must be provided,
+% and the last layer is assumed to reach until the bottom of the model
+% domain.
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+%========================================================================
+
 classdef STRAT_layers
     
     properties
@@ -11,6 +20,7 @@ classdef STRAT_layers
     
     methods
         
+        %constructor
 		function self = STRAT_layers(varargin)               % Temporary definition, to allow old code to run
         %function self = STRAT_layers(index, pprovider, grid)      % Definition to be used when old code is no longer supported
             % CONSTRUCTOR for STRAT_layers
@@ -109,75 +119,75 @@ classdef STRAT_layers
 			xls_out = {'STRATIGRAPHY','index';'STRAT_linear',1;NaN,NaN;'depth','T';'[m]','[degree C]';'TOP',NaN;0,1;1,0;10,-5;100,0;5000,20;'BOTTOM',NaN;'STRATIGRAPHY_END',NaN};
         end
         
-		% ==========================================
-        % DEPRECATED METHODS
-        % to be deleted when new implementation
-        % is validated for backwards compatibility
-        % ==========================================
-		
-        function self = initalize_from_file(self, section)
-			st = dbstack;
-			warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-					 
-            pos_list = get_range_TOP_BOTTOM(section);
-            self.depth = cell2mat(section(pos_list(1,1):pos_list(1,2), 1));
-            self.variable_names={};
-            self.variable_values=[];
-            i=2;
-            field=cell2mat(section(pos_list(1,1)-3, i));
-            
-            while i<=size(section,2) && ~isnan(field(1))
-                field=cell2mat(section(pos_list(1,1)-3, i));
-                self.variable_names=[self.variable_names section{pos_list(1,1)-3, i}];
-                self.variable_values = [self.variable_values cell2mat(section(pos_list(1,1):pos_list(1,2), i))];
-                i=i+1;
-            end
-        end
-        
-		function self = initialize_from_table(self, table)
-			% INITIALIZE_FROM_TABLE  Initializes the variables from the output table of the csv parser.
-			
-			%	ARGUMENTS:
-			%	table:	Matlab output table from the csv parser
-			
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Code should be moved to new PARAMETER_PROVIDER class ',...
-                     'to streamline file access and the population of parameters.']); 
-					 
-            self.depth = table.depth;
-            self.variable_names = {};
-            self.variable_values = [];
-            i = 2;
-            field = table.Properties.VariableNames{i};
-            % Are the commented lines really necessary ? Seems to function
-            % without it ...
-            while i<=length(table.Properties.VariableNames) %&& ~isnan(field(1))
-                self.variable_names = [self.variable_names table.Properties.VariableNames{i}];
-                self.variable_values = [self.variable_values table.(self.variable_names{i-1})];
-                i=i+1;
-                %field = table.Properties.VariableNames{i};
-            end
-        end
-		
-        function self = interpolate_to_grid(self, grid)
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
-           
-			self.variable_gridded = repmat(grid.MIDPOINTS .* 0, 1, size(self.variable_values,2));
-            for j=1:size(self.variable_values,1)-1
-                range = grid.MIDPOINTS > self.depth(j,1) & grid.MIDPOINTS <= self.depth(j+1,1);
-                for i=1:size(self.variable_values,2)
-                    self.variable_gridded(range,i) = self.variable_gridded(range,i) + self.variable_values(j,i);
-                end
-            end
-            range = grid.MIDPOINTS > self.depth(end,1);
-            for i=1:size(self.variable_values,2)
-                    self.variable_gridded(range,i) = self.variable_gridded(range,i) + self.variable_values(end,i);
-            end
-        end
+%         % ==========================================
+%         % DEPRECATED METHODS
+%         % to be deleted when new implementation
+%         % is validated for backwards compatibility
+%         % ==========================================
+%         
+%         function self = initalize_from_file(self, section)
+%             st = dbstack;
+%             warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                 'Use PARAMETER_PROVIDER class to obtain parameter values.']);
+%             
+%             pos_list = get_range_TOP_BOTTOM(section);
+%             self.depth = cell2mat(section(pos_list(1,1):pos_list(1,2), 1));
+%             self.variable_names={};
+%             self.variable_values=[];
+%             i=2;
+%             field=cell2mat(section(pos_list(1,1)-3, i));
+%             
+%             while i<=size(section,2) && ~isnan(field(1))
+%                 field=cell2mat(section(pos_list(1,1)-3, i));
+%                 self.variable_names=[self.variable_names section{pos_list(1,1)-3, i}];
+%                 self.variable_values = [self.variable_values cell2mat(section(pos_list(1,1):pos_list(1,2), i))];
+%                 i=i+1;
+%             end
+%         end
+%         
+%         function self = initialize_from_table(self, table)
+%             % INITIALIZE_FROM_TABLE  Initializes the variables from the output table of the csv parser.
+%             
+%             %	ARGUMENTS:
+%             %	table:	Matlab output table from the csv parser
+%             
+%             st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                 'Code should be moved to new PARAMETER_PROVIDER class ',...
+%                 'to streamline file access and the population of parameters.']);
+%             
+%             self.depth = table.depth;
+%             self.variable_names = {};
+%             self.variable_values = [];
+%             i = 2;
+%             field = table.Properties.VariableNames{i};
+%             % Are the commented lines really necessary ? Seems to function
+%             % without it ...
+%             while i<=length(table.Properties.VariableNames) %&& ~isnan(field(1))
+%                 self.variable_names = [self.variable_names table.Properties.VariableNames{i}];
+%                 self.variable_values = [self.variable_values table.(self.variable_names{i-1})];
+%                 i=i+1;
+%                 %field = table.Properties.VariableNames{i};
+%             end
+%         end
+%         
+%         function self = interpolate_to_grid(self, grid)
+%             st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                 'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
+%             
+%             self.variable_gridded = repmat(grid.MIDPOINTS .* 0, 1, size(self.variable_values,2));
+%             for j=1:size(self.variable_values,1)-1
+%                 range = grid.MIDPOINTS > self.depth(j,1) & grid.MIDPOINTS <= self.depth(j+1,1);
+%                 for i=1:size(self.variable_values,2)
+%                     self.variable_gridded(range,i) = self.variable_gridded(range,i) + self.variable_values(j,i);
+%                 end
+%             end
+%             range = grid.MIDPOINTS > self.depth(end,1);
+%             for i=1:size(self.variable_values,2)
+%                 self.variable_gridded(range,i) = self.variable_gridded(range,i) + self.variable_values(end,i);
+%             end
+%         end
         
     end
     

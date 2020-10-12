@@ -1,3 +1,9 @@
+%========================================================================
+% CryoGrid GRID class  for defining the compute grid
+% GRID_user_defined defines the compute grid as layers with constant grid spacing
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+%========================================================================
+
 classdef GRID_user_defined
 
     properties
@@ -108,53 +114,53 @@ classdef GRID_user_defined
         % ==========================================
 		
 		
-        function self = initalize_from_file(self, section)
-			st = dbstack;
-            warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-            
-			pos_list = get_range_TOP_BOTTOM(section);
-            grid_breaks = cell2mat(section(pos_list(1,1):pos_list(1,2), 1:3));
-            grid_breaks(2:end,1) = grid_breaks(2:end,1) + grid_breaks(2:end,2);
-            self.GRID =[];
-            for i=1:size(grid_breaks)
-                self.GRID = [self.GRID; [grid_breaks(i,1):grid_breaks(i,2):grid_breaks(i,3)]'];
-            end
-        end
-        
-        function self = initialize_from_table(self, table)
-			% INITIALIZE_FROM_TABLE  Initializes the variables from the output table of the csv parser.
-			
-			%	ARGUMENTS:
-			%	table:	Matlab output table from the csv parser
-			
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Code should be moved to new PARAMETER_PROVIDER class ',...
-                     'to streamline file access and the population of parameters.']);   
-					 
-            grid_breaks = table2array(table);
-            grid_breaks(2:end,1) = grid_breaks(2:end,1) + grid_breaks(2:end,2);
-            self.GRID =[];
-            for i=1:size(grid_breaks)
-                self.GRID = [self.GRID; [grid_breaks(i,1):grid_breaks(i,2):grid_breaks(i,3)]'];
-            end
-        end
-		
-        function self = reduce_grid(self, forcing)
-			% REDUCE_GRID  Adapts grid to domain depth specified during the forcing initialization.
-			
-			%	ARGUMENTS:
-			%	forcing:	instance of FORCING class
-			
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
-					 
-            self.GRID(self.GRID > forcing.PARA.domain_depth)=[]; 
-            self.MIDPOINTS = (self.GRID(2:end,1) + self.GRID(1:end-1,1))./2;
-            self.LAYERTHICK = (self.GRID(2:end,1) - self.GRID(1:end-1,1));
-        end
+%         function self = initalize_from_file(self, section)
+% 			st = dbstack;
+%             warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Use PARAMETER_PROVIDER class to obtain parameter values.']);
+%             
+% 			pos_list = get_range_TOP_BOTTOM(section);
+%             grid_breaks = cell2mat(section(pos_list(1,1):pos_list(1,2), 1:3));
+%             grid_breaks(2:end,1) = grid_breaks(2:end,1) + grid_breaks(2:end,2);
+%             self.GRID =[];
+%             for i=1:size(grid_breaks)
+%                 self.GRID = [self.GRID; [grid_breaks(i,1):grid_breaks(i,2):grid_breaks(i,3)]'];
+%             end
+%         end
+%         
+%         function self = initialize_from_table(self, table)
+% 			% INITIALIZE_FROM_TABLE  Initializes the variables from the output table of the csv parser.
+% 			
+% 			%	ARGUMENTS:
+% 			%	table:	Matlab output table from the csv parser
+% 			
+% 			st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Code should be moved to new PARAMETER_PROVIDER class ',...
+%                      'to streamline file access and the population of parameters.']);   
+% 					 
+%             grid_breaks = table2array(table);
+%             grid_breaks(2:end,1) = grid_breaks(2:end,1) + grid_breaks(2:end,2);
+%             self.GRID =[];
+%             for i=1:size(grid_breaks)
+%                 self.GRID = [self.GRID; [grid_breaks(i,1):grid_breaks(i,2):grid_breaks(i,3)]'];
+%             end
+%         end
+% 		
+%         function self = reduce_grid(self, forcing)
+% 			% REDUCE_GRID  Adapts grid to domain depth specified during the forcing initialization.
+% 			
+% 			%	ARGUMENTS:
+% 			%	forcing:	instance of FORCING class
+% 			
+% 			st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
+% 					 
+%             self.GRID(self.GRID > forcing.PARA.domain_depth)=[]; 
+%             self.MIDPOINTS = (self.GRID(2:end,1) + self.GRID(1:end-1,1))./2;
+%             self.LAYERTHICK = (self.GRID(2:end,1) - self.GRID(1:end-1,1));
+%         end
     end
     
 end

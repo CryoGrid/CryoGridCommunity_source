@@ -1,4 +1,13 @@
-% forcing data
+%========================================================================
+% CryoGrid OUT class defining storage format of the output 
+% OUT_all_lateral stores identical copies of all GROUND classses (including STATVAR, TEMP, PARA) in the
+% stratigraphy for each output timestep and copies of all LATERAL classes.
+% Other than that, it is identical to OUT_all.
+% The user can specify the save date and the save interval (e.g. yearly
+% files), as well as the output timestep (e.g. 6 hourly). The output files
+% are in Matlab (".mat") format.
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+%========================================================================
 
 
 classdef OUT_all_lateral
@@ -19,6 +28,7 @@ classdef OUT_all_lateral
     
     methods
 		
+        %constructor
 		function out = OUT_all_lateral(varargin)               % Temporary definition, to allow old code to run
         %function out = OUT_all(index, pprovider, forcing)      % Definition to be used when old code is no longer supported
             % CONSTRUCTOR for OUT_all
@@ -49,6 +59,8 @@ classdef OUT_all_lateral
             out = out.finalize_setup(forcing);
         end
 		
+        %-------initialization--------------
+        
 		function out = initialize(out)
             % INITIALIZE  Initializes all properties needed by the class.
 			
@@ -99,7 +111,9 @@ classdef OUT_all_lateral
             else
                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
             end
-		end
+        end
+        
+        %-------time integration----------------
 		
 		function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path)
             
@@ -127,7 +141,7 @@ classdef OUT_all_lateral
                     end
                     res = copy(CURRENT);
                     if isprop(res, 'LUT')
-                        res.LUT =[];  %remove look-up tables, runs out of memeory otherwise
+                        res.LUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  %cut all dependencies
                     if isprop(res, 'CHILD')
@@ -177,92 +191,82 @@ classdef OUT_all_lateral
         end
          
         
-		% ==========================================
-        % DEPRECATED METHODS
-        % to be deleted when new implementation
-        % is validated for backwards compatibility
-        % ==========================================
-		
-		% function res = initialize_out_all(run_info) %discontinued
-%             res.PARA.output_timestep = 1/4;
-%             res.PARA.save_date = '01.09.';
-%             res.PARA.save_interval = 1;
-%             res.OUTPUT_TIME = run_info.START_TIME + res.PARA.output_timestep;
-%             if isempty (res.PARA.save_interval)
-%                 res.SAVE_TIME = run_info.END_TIME;
-%             else
-%                 res.SAVE_TIME = min(run_info.END_TIME,  datenum([res.PARA.save_date num2str(str2num(datestr(run_info.START_TIME,'yyyy')) + res.PARA.save_interval)], 'dd.mm.yyyy'));
-%             end
+% 		% ==========================================
+%         % DEPRECATED METHODS
+%         % to be deleted when new implementation
+%         % is validated for backwards compatibility
+%         % ==========================================
+% 		
+% 
+% 		
+%         function out = provide_variables(out)
+% 			st = dbstack;
+%             warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Use PARAMETER_PROVIDER class to obtain parameter values.']);
+%             out.PARA.output_timestep = [];
+%             out.PARA.save_date = [];
+%             out.PARA.save_interval = [];
 %         end
-		
-        function out = provide_variables(out)
-			st = dbstack;
-            warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-            out.PARA.output_timestep = [];
-            out.PARA.save_date = [];
-            out.PARA.save_interval = [];
-        end
-        
-        function out = initalize_from_file(out, section)
-			st = dbstack;
-			warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-					 
-			variables = fieldnames(out.PARA);
-			for i=1:size(variables,1)
-				for j=1:size(section,1)
-					if strcmp(variables{i,1}, section{j,1})
-						out.PARA.(variables{i,1}) = section{j,2};
-					end
-				end
-			end
-		end
-
-		function out = initialize_from_ini(out, ini)
-			% INITIALIZE_FROM_INI  Initializes the variables from output structure of the ini parser, and compares the
-			%	names of the variables from the class to the ini structure.
-			% 	If the variables from the class mismatch the variables from
-			% 	the ini file, an error message is displayed.
-			
-			%	ARGUMENTS:
-			%	ini:	output structure from the ini parser
-					
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Code should be moved to new PARAMETER_PROVIDER class ',...
-                     'to streamline file access and the population of parameters.']);
-					 
-			ini_variables = fields(ini.OUT_all);
-			out_variables = fieldnames(out.PARA);
-			ismatch_class_ini_variables(ini_variables, out_variables) 
-			for i=1:length(out_variables)
-				for j=1:length(ini_variables)
-					if strcmp(out_variables{i,1},ini_variables{i,1})
-						out.PARA.(out_variables{i,1}) = ini.out_all.(ini_variables{i,1})
-					end
-				end
-			end
-		end
-			
-		% 
-        function out = complete_init_out(out, forcing)
-			% COMPLETE_INIT_OUT  Completes the initialization of the member variables of the class by creating them based on out.PARA and forcing.PARA.
-			
-			%	ARGUMENTS:
-			%	forcing:	instance of FORCING class
-			
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-            'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
-            
-            out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.output_timestep;
-            if isempty(out.PARA.save_interval) || isnan(out.PARA.save_interval) 
-                out.SAVE_TIME = forcing.PARA.end_time;
-            else
-                out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
-            end
-        end 
+%         
+%         function out = initalize_from_file(out, section)
+% 			st = dbstack;
+% 			warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Use PARAMETER_PROVIDER class to obtain parameter values.']);
+% 					 
+% 			variables = fieldnames(out.PARA);
+% 			for i=1:size(variables,1)
+% 				for j=1:size(section,1)
+% 					if strcmp(variables{i,1}, section{j,1})
+% 						out.PARA.(variables{i,1}) = section{j,2};
+% 					end
+% 				end
+% 			end
+% 		end
+% 
+% 		function out = initialize_from_ini(out, ini)
+% 			% INITIALIZE_FROM_INI  Initializes the variables from output structure of the ini parser, and compares the
+% 			%	names of the variables from the class to the ini structure.
+% 			% 	If the variables from the class mismatch the variables from
+% 			% 	the ini file, an error message is displayed.
+% 			
+% 			%	ARGUMENTS:
+% 			%	ini:	output structure from the ini parser
+% 					
+% 			st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Code should be moved to new PARAMETER_PROVIDER class ',...
+%                      'to streamline file access and the population of parameters.']);
+% 					 
+% 			ini_variables = fields(ini.OUT_all);
+% 			out_variables = fieldnames(out.PARA);
+% 			ismatch_class_ini_variables(ini_variables, out_variables) 
+% 			for i=1:length(out_variables)
+% 				for j=1:length(ini_variables)
+% 					if strcmp(out_variables{i,1},ini_variables{i,1})
+% 						out.PARA.(out_variables{i,1}) = ini.out_all.(ini_variables{i,1})
+% 					end
+% 				end
+% 			end
+% 		end
+% 			
+% 		% 
+%         function out = complete_init_out(out, forcing)
+% 			% COMPLETE_INIT_OUT  Completes the initialization of the member variables of the class by creating them based on out.PARA and forcing.PARA.
+% 			
+% 			%	ARGUMENTS:
+% 			%	forcing:	instance of FORCING class
+% 			
+% 			st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%             'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
+%             
+%             out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.output_timestep;
+%             if isempty(out.PARA.save_interval) || isnan(out.PARA.save_interval) 
+%                 out.SAVE_TIME = forcing.PARA.end_time;
+%             else
+%                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
+%             end
+%         end 
         
     end
 end

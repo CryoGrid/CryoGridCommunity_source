@@ -1,3 +1,11 @@
+%========================================================================
+% CryoGrid STRATIGRAPHY class STRAT_linear defines the initial stratigraphy
+% state variables by linearly interpolating between values at depths
+% provided. Depths must be given as depth below the ground surface, and the
+% final depth value must extend below the depth of the model domain.
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+%========================================================================
+
 classdef STRAT_linear
     
     properties
@@ -11,6 +19,7 @@ classdef STRAT_linear
     
     methods
         
+        %constructor
 		function self = STRAT_linear(varargin)               % Temporary definition, to allow old code to run
         %function self = STRAT_linear(index, pprovider, grid)      % Definition to be used when old code is no longer supported
             % CONSTRUCTOR for STRAT_linear
@@ -100,69 +109,69 @@ classdef STRAT_linear
             xls_out = {'STRATIGRAPHY','index';'STRAT_linear',1;NaN,NaN;'depth','T';'[m]','[degree C]';'TOP',NaN;0,1;1,0;10,-5;100,0;5000,20;'BOTTOM',NaN;'STRATIGRAPHY_END',NaN};
         end
         
-		% ==========================================
-        % DEPRECATED METHODS
-        % to be deleted when new implementation
-        % is validated for backwards compatibility
-        % ==========================================
-		
-        function self = initalize_from_file(self, section)
-			st = dbstack;
-			warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-					 
-            pos_list = get_range_TOP_BOTTOM(section);
-            self.depth = cell2mat(section(pos_list(1,1):pos_list(1,2), 1));
-            self.variable_names={};
-            self.variable_values=[];
-            i=2;
-            field=cell2mat(section(pos_list(1,1)-3, i));
-			
-            while i<=size(section,2) && ~isnan(field(1))
-                self.variable_names=[self.variable_names section{pos_list(1,1)-3, i}];
-                self.variable_values = [self.variable_values cell2mat(section(pos_list(1,1):pos_list(1,2), i))];
-                i=i+1;
-                field=cell2mat(section(pos_list(1,1)-3, i));
-            end
-        end
-		
-		function self = initialize_from_table(self, table)
-			% INITIALIZE_FROM_TABLE  Initializes the variables from the output table of the csv parser.
-			
-			%	ARGUMENTS:
-			%	table:	Matlab output table from the csv parser
-			
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Code should be moved to new PARAMETER_PROVIDER class ',...
-                     'to streamline file access and the population of parameters.']);   
-					 
-            self.depth = table.depth;
-            self.variable_names = {};
-            self.variable_values = [];
-            i = 2;
-            field = table.Properties.VariableNames{i};
-            % Are the commented lines really necessary ? Seems to function
-            % without it ...
-            while i<=length(table.Properties.VariableNames) %&& ~isnan(field(1))
-                self.variable_names = [self.variable_names table.Properties.VariableNames{i}];
-                self.variable_values = [self.variable_values table.(self.variable_names{i-1})];
-                i=i+1;
-                %field = table.Properties.VariableNames{i};
-            end
-        end
-        
-        function self = interpolate_to_grid(self, grid)
-			st = dbstack;
-            warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-                     'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
-            
-			self.variable_gridded = [];
-            size(self.variable_values,2);
-            for i=1:size(self.variable_values,2)
-                self.variable_gridded = [self.variable_gridded; interp1(self.depth, self.variable_values(:,i), grid.MIDPOINTS, 'linear')];
-            end
-        end
+% 		% ==========================================
+%         % DEPRECATED METHODS
+%         % to be deleted when new implementation
+%         % is validated for backwards compatibility
+%         % ==========================================
+% 		
+%         function self = initalize_from_file(self, section)
+% 			st = dbstack;
+% 			warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Use PARAMETER_PROVIDER class to obtain parameter values.']);
+% 					 
+%             pos_list = get_range_TOP_BOTTOM(section);
+%             self.depth = cell2mat(section(pos_list(1,1):pos_list(1,2), 1));
+%             self.variable_names={};
+%             self.variable_values=[];
+%             i=2;
+%             field=cell2mat(section(pos_list(1,1)-3, i));
+% 			
+%             while i<=size(section,2) && ~isnan(field(1))
+%                 self.variable_names=[self.variable_names section{pos_list(1,1)-3, i}];
+%                 self.variable_values = [self.variable_values cell2mat(section(pos_list(1,1):pos_list(1,2), i))];
+%                 i=i+1;
+%                 field=cell2mat(section(pos_list(1,1)-3, i));
+%             end
+%         end
+% 		
+% 		function self = initialize_from_table(self, table)
+% 			% INITIALIZE_FROM_TABLE  Initializes the variables from the output table of the csv parser.
+% 			
+% 			%	ARGUMENTS:
+% 			%	table:	Matlab output table from the csv parser
+% 			
+% 			st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Code should be moved to new PARAMETER_PROVIDER class ',...
+%                      'to streamline file access and the population of parameters.']);   
+% 					 
+%             self.depth = table.depth;
+%             self.variable_names = {};
+%             self.variable_values = [];
+%             i = 2;
+%             field = table.Properties.VariableNames{i};
+%             % Are the commented lines really necessary ? Seems to function
+%             % without it ...
+%             while i<=length(table.Properties.VariableNames) %&& ~isnan(field(1))
+%                 self.variable_names = [self.variable_names table.Properties.VariableNames{i}];
+%                 self.variable_values = [self.variable_values table.(self.variable_names{i-1})];
+%                 i=i+1;
+%                 %field = table.Properties.VariableNames{i};
+%             end
+%         end
+%         
+%         function self = interpolate_to_grid(self, grid)
+% 			st = dbstack;
+%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
+%                      'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
+%             
+% 			self.variable_gridded = [];
+%             size(self.variable_values,2);
+%             for i=1:size(self.variable_values,2)
+%                 self.variable_gridded = [self.variable_gridded; interp1(self.depth, self.variable_values(:,i), grid.MIDPOINTS, 'linear')];
+%             end
+%         end
         
     end
     
