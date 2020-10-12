@@ -1,9 +1,20 @@
+%========================================================================
+% CryoGrid LATERAL_IA class LAT3D_SNOW_CROCUS 
+% simulates lateral wind drift of snow between different CryoGrid
+% stratigraphies. Blowing snow is assigned to stratigraphies with lower
+% surface elevation.
+% NOTE: works only for the SNOW classes SNOW_crocus_... and SNOW_crocus2_... 
+% S. Westermann, Oct 2020
+%========================================================================
+
 
 classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
 
     
     methods
-        
+
+        %----mandatory functions---------------
+        %----initialization--------------------
         
         function lateral = provide_PARA(lateral)
             lateral.PARA.N_drift = 5;
@@ -22,13 +33,13 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
         function lateral = provide_STATVAR(lateral)
             
         end
-        
-        %----mandatory functions---------------
-        %----initialization--------------------
+
         
         function lateral = finalize_init(lateral)
             
         end
+        
+        %----time integration------------
         
         function lateral = pull(lateral)
             lateral.PARENT.STATVAR2ALL.snow_drift = 0; % 0: no snow class; 2: driftable snow; 1: snow class, but snow is not driftable
@@ -45,8 +56,6 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
         function lateral = get_derivatives(lateral) %no need to loop through stratigraphy, all the information is in lateral.PARENT
             %calculate the exposure
             %loop over all ensemble members, mix the drifting part of the snow 
-           
-            
             
             lateral.STATVAR.snow_drift_yes_no = 0;
             if lateral.PARENT.STATVAR2ALL.snow_drift > 0 %uppermost class is SNOW

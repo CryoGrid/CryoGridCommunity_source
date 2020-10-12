@@ -1,8 +1,17 @@
+%========================================================================
+% CryoGrid LATERAL_IA class which removes all subsurface water for GROUND classses with water bucket scheme, 
+% all water exceeding the field capacity is removed
+% S. Westermann, Oct 2020
+%========================================================================
 
 classdef LAT_REMOVE_SUBSURFACE_WATER < BASE_LATERAL
 
     
     methods
+        
+                
+        %----mandatory functions---------------
+        %----initialization--------------------
         
         function lateral = LAT_REMOVE_SUBSURFACE_WATER(index, pprovider, cprovider)
             lateral@BASE_LATERAL(index, pprovider, cprovider);
@@ -19,14 +28,14 @@ classdef LAT_REMOVE_SUBSURFACE_WATER < BASE_LATERAL
         function lateral = provide_STATVAR(lateral)
             lateral.STATVAR.subsurface_run_off = [];
         end
-        
-        %----mandatory functions---------------
-        %----initialization--------------------
-        
+
         function lateral = finalize_init(lateral)
             lateral.STATVAR.subsurface_run_off = 0;
         end
         
+        %----time integration-----
+        
+        %only push function required
         function lateral = push(lateral, forcing)
             
             CURRENT = lateral.PARENT.TOP.NEXT;

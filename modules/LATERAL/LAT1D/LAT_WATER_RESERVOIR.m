@@ -1,7 +1,20 @@
+%========================================================================
+% CryoGrid LATERAL_IA class LAT_WATER_RESERVOIR 
+% simulates lateral water flow between a static water reservoir at defined
+% elevation (absolute elevation, not relative to the surface!), 
+% as well as contact lengths (i.e. width) and distance from the GROUND column.
+% Water temperatures of the reservoir can have a defined constant
+% temperature (only relevant for inflow), otherwise inflow at grid cell temperature is assumed. 
+% S. Westermann, Oct 2020
+%========================================================================
 
 classdef LAT_WATER_RESERVOIR < BASE_LATERAL
     
     methods
+        
+        %----mandatory functions---------------
+        %----initialization--------------------
+        
         function lateral = LAT_WATER_RESERVOIR(index, pprovider, cprovider)  
             lateral@BASE_LATERAL(index, pprovider, cprovider);
         end
@@ -23,13 +36,13 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
             lateral.STATVAR.subsurface_run_off = [];
         end
         
-        %----mandatory functions---------------
-        %----initialization--------------------
-        
         function lateral = finalize_init(lateral)
             lateral.STATVAR.subsurface_run_off = 0;
         end
         
+        %-----time integration-------------
+        
+        %only push function needed
         function lateral = push(lateral, forcing)
             CURRENT = lateral.PARENT.TOP.NEXT;
             lateral.TEMP.open_system = 1; %start with open system

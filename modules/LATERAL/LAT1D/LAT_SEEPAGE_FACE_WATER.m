@@ -1,14 +1,25 @@
+%========================================================================
+% CryoGrid LATERAL_IA class LAT_SEEPAGE_FACE_WATER 
+% simulates lateral water flow through a seepage face with defined upper
+% and lower elevation (absolute elevation, not relative to the surface!), 
+%  as well as contact lengths (i.e. width) and distance from the GROUND column.
+% At the seepage face, air pressure is assumed.
+% S. Westermann, Oct 2020
+%========================================================================
+
 
 classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
 
     
     methods
         
+        %----mandatory functions---------------
+        %----initialization--------------------
+        
         function lateral = LAT_SEEPAGE_FACE_WATER(index, pprovider, cprovider)
             lateral@BASE_LATERAL(index, pprovider, cprovider);
         end
-        
-        
+
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = [];
         end
@@ -24,14 +35,14 @@ classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
         function lateral = provide_STATVAR(lateral)
             lateral.STATVAR.subsurface_run_off = [];
         end
-        
-        %----mandatory functions---------------
-        %----initialization--------------------
-        
+
         function lateral = finalize_init(lateral)
             lateral.STATVAR.subsurface_run_off = 0;
         end
+
+        %----time integration------
         
+        %only push function needed
         function lateral = push(lateral, forcing)
             
             CURRENT = lateral.PARENT.TOP.NEXT;
