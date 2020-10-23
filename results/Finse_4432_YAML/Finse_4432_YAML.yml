@@ -172,7 +172,7 @@ STRAT_linear:
 # END OF STRATIGRAPHY_INITIAL DEFINITIONS
 
 
-GROUND_CLASS:
+SUBSURFACE_CLASS:
 # NEW CLASS
 - { type:                   GROUND_freeW_seb,
     index:                  1,

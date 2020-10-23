@@ -160,7 +160,7 @@ STRAT_linear:
 # END OF STRATIGRAPHY_INITIAL DEFINITIONS
 
 
-GROUND_CLASS:
+SUBSURFACE_CLASS:
 # NEW CLASS
 - { type:                   GROUND_freezeC_bucketW_seb_snow,
     index:                  1,

@@ -89,7 +89,8 @@ classdef INITIALIZE < BASE
             %   ARGUMENTS:
             %   pprovider:  instance of PARAMETER_PROVIDER class
             
-            self.PARA = pprovider.populate_struct(self.PARA, 'GROUND_CLASS', class(self), self.class_index);  %CHANGED_SEBASTIAN!!!
+            %self.PARA = pprovider.populate_struct(self.PARA, 'GROUND_CLASS', class(self), self.class_index);  %CHANGED_SEBASTIAN!!!
+            self.PARA = pprovider.populate_struct(self.PARA, 'SUBSURFACE_CLASS', class(self), self.class_index);  %CHANGED_SEBASTIAN!!!
         end
         
         function self = populate_CONST(self, cprovider)
