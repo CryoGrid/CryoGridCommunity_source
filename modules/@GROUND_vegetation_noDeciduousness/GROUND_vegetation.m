@@ -61,9 +61,7 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
             end
             
             % % %             ground = finalize_STATVAR(ground); %assign all variables, that must be calculated or assigned otherwise, including energy, water and ice contents, thermal conductivity
-            ground = set_up_canopy_summer(ground);
-            ground = set_up_canopy_winter(ground);            
-            ground = set_up_canopy(ground);            
+            ground = set_up_canopy(ground);
             ground = finalize_STATVAR(ground, forcing); %assign all variables, that must be calculated or assigned otherwise
         end
         
@@ -134,12 +132,15 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
                 [vegetation] = set_up_forcing(vegetation, forcing);
 
                 [vegetation] = canopy_fluxes_multilayer(vegetation);
-                                
+                
                 ground.STATVAR.vegetation = vegetation;
                 
                 ground.STATVAR.execution_t = ground.STATVAR.execution_t + 1/24;
        
             end
         end
-    end  
+    end
+    
+    
+    
 end

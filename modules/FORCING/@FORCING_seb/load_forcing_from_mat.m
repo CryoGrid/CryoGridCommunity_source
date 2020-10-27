@@ -7,6 +7,10 @@ forcing.DATA.snowfall=temp.FORCING.data.snowfall.*forcing.PARA.snow_fraction;
 forcing.DATA.Tair = temp.FORCING.data.Tair;
 forcing.DATA.Lin = temp.FORCING.data.Lin;
 forcing.DATA.Sin = temp.FORCING.data.Sin;
+
+forcing.DATA.Sin_dif = temp.FORCING.data.Sin_Irradiance_diffuse;
+forcing.DATA.Sin_dir = temp.FORCING.data.Sin_Irradiance_direct;
+
 forcing.DATA.q = temp.FORCING.data.q;
 forcing.DATA.wind = temp.FORCING.data.wind;
 forcing.DATA.timeForcing = temp.FORCING.data.t_span;
@@ -65,3 +69,5 @@ forcing.TEMP.Tair=0;
 forcing.TEMP.wind=0;
 forcing.TEMP.q=0;
 forcing.TEMP.p=0;
+forcing.TEMP.Sin_dif = 0;
+forcing.TEMP.Sin_dir = 0;

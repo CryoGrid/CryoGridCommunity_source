@@ -12,7 +12,7 @@ for f = 1:vegetation.canopy.num_exposedvegp
     p = vegetation.canopy.filter_exposedvegp(f);
     
     
-    [Az, El] = SolarAzEl(forcing.TEMP.t,63.18946,118.19596,121); %52.5243700,13.4105300,43
+    [Az, El] = SolarAzEl(forcing.TEMP.t,52.5243700,13.4105300,43);
     El = max(El, 5); %ML: min sun elevation fix
     vegetation.sun.solar_az(p) = Az*pi/180;  % Az Azimuth location of the sun (deg)
     
@@ -25,15 +25,10 @@ for f = 1:vegetation.canopy.num_exposedvegp
     vegetation.mlcanopyinst.zref(p) = vegetation.mlcanopyinst.zref;  %forc_hgt(g);
     vegetation.mlcanopyinst.uref(p) = forcing.TEMP.wind; %ground.STATVAR.vegetation.mlcanopyinst.uref;  %max (1.0 , sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)));
     
-    vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin_dir;            % Direct beam solar radiation for visible waveband (W/m2)
-    vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin_dif;            % Diffuse solar radiation for visible waveband (W/m2)
-    vegetation.atmos.swskyb(p,inir) = forcing.TEMP.Sin_dir;            % Direct beam solar radiation for near-infrared waveband (W/m2)
-    vegetation.atmos.swskyd(p,inir) = forcing.TEMP.Sin_dif;            % Diffuse solar radiation for near-infrared waveband (W/m2)   
-    
-%        vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin*0.9;            % Direct beam solar radiation for visible waveband (W/m2)
-%        vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin*0.1;            % Diffuse solar radiation for visible waveband (W/m2)
-%        vegetation.atmos.swskyb(p,inir) = forcing.TEMP.Sin*0.9;            % Direct beam solar radiation for near-infrared waveband (W/m2)
-%        vegetation.atmos.swskyd(p,inir) = forcing.TEMP.Sin*0.1;            % Diffuse solar radiation for near-infrared waveband (W/m2)
+    vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin*0.5*0.5;            % Direct beam solar radiation for visible waveband (W/m2)
+    vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin*0.5*0.5;            % Diffuse solar radiation for visible waveband (W/m2)
+    vegetation.atmos.swskyb(p,inir) = forcing.TEMP.Sin*0.5*0.5;            % Direct beam solar radiation for near-infrared waveband (W/m2)
+    vegetation.atmos.swskyd(p,inir) = forcing.TEMP.Sin*0.5*0.5;            % Diffuse solar radiation for near-infrared waveband (W/m2)
     
     % Atmospheric forcing: CLM column (c) variables -> patch (p) variables
     
@@ -41,8 +36,8 @@ for f = 1:vegetation.canopy.num_exposedvegp
     vegetation.mlcanopyinst.qref(p) = forcing.TEMP.q; %ground.STATVAR.vegetation.mlcanopyinst.qref; %forc_q(c);
     vegetation.mlcanopyinst.pref(p) = forcing.TEMP.p; % 101325.0; %  ground.STATVAR.vegetation.mlcanopyinst.pref; %forc_pbot(c);
     vegetation.mlcanopyinst.irsky(p) = forcing.TEMP.Lin; %ground.STATVAR.vegetation.mlcanopyinst.irsky; %forc_lwrad(c);
-    vegetation.mlcanopyinst.qflx_rain(p) = forcing.TEMP.rainfall ./ (24*3600); %ground.STATVAR.vegetation.mlcanopyinst.qflx_rain; %forc_rain(c);
-    vegetation.mlcanopyinst.qflx_snow(p) = forcing.TEMP.snowfall ./ (24*3600); %ground.STATVAR.vegetation.mlcanopyinst.qflx_snow; %forc_snow(c);
+    vegetation.mlcanopyinst.qflx_rain(p) = forcing.TEMP.rainfall; %ground.STATVAR.vegetation.mlcanopyinst.qflx_rain; %forc_rain(c);
+    vegetation.mlcanopyinst.qflx_snow (p) = forcing.TEMP.snowfall; %ground.STATVAR.vegetation.mlcanopyinst.qflx_snow; %forc_snow(c);
     
     % CO2 and O2: note unit conversion
     

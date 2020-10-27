@@ -20,7 +20,12 @@ classdef FORCING_seb
             for i=1:size(section,1)
                 if strcmp(section{i,1}, 'filename')
                     forcing.PARA.filename = section{i,2};
+%                       forcing.PARA.filename = 'Mongolei_CCSM_rcp8_5_1979_2100';
+%                     forcing.PARA.filename = 'Batagai_2015011503-2020070118';
+%                     forcing.PARA.filename = 'Chukotka_T0_CCSM_rcp8_5_1979_2100';
                 end
+                
+                
                 if strcmp(section{i,1}, 'rain_fraction')
                     forcing.PARA.rain_fraction = section{i,2};
                 end
@@ -47,6 +52,7 @@ classdef FORCING_seb
                 end
                 if strcmp(section{i,1}, 'start_time')
                     forcing.PARA.start_time = section{i,2};
+%                     forcing.PARA.start_time = '10.08.2015'; %start time for Batagai, ERA 5
                 end
                 if strcmp(section{i,1}, 'end_time')
                     forcing.PARA.end_time = section{i,2};

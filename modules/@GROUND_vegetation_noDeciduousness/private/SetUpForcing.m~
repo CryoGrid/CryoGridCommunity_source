@@ -1,4 +1,8 @@
-function vegetation = set_up_forcing(vegetation, forcing)
+function vegetation = SetUpForcing(vegetation, FORCING)
+%---------------------------------------------------------------------
+% Copy CLM variables to multilayer canopy variables
+% Will be taken from CryoGrid and Forcing
+%---------------------------------------------------------------------
 
 ivis = vegetation.params.vis; % Array index for visible waveband
 inir = vegetation.params.nir; % Array index for near-infrared waveband
@@ -12,37 +16,41 @@ for f = 1:vegetation.canopy.num_exposedvegp
     p = vegetation.canopy.filter_exposedvegp(f);
     
     
-    [Az, El] = SolarAzEl(forcing.TEMP.t,63.18946,118.19596,121); %52.5243700,13.4105300,43
-    El = max(El, 5); %ML: min sun elevation fix
-    vegetation.sun.solar_az(p) = Az*pi/180;  % Az Azimuth location of the sun (deg)
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    vegetation.sun.solar_zenit(p) = (90-El) * pi / 180;
-    
+[Az, El] = SolarAzEl(FORCING.i.t_span,52.5243700,13.4105300,43);
+El = max(El, 5)
+vegetation.sun.solar_az(p) = Az*pi/180;  % Az Azimuth location of the sun (deg)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% With E1 = 30, the drop at ic = 10 (top) is not as much. 
+vegetation.sun.solar_zenit(p) = (90-El) * pi / 180; 
+
+
+% vegetation.sun.solar_elevation(p) = 30 * pi / 180;      % El Elevation location of the sun (deg)
+% vegetation.sun.solar_elevation = min(vegetation.sun.solar_elevation, 0.4);
+
+% datestr(FORCING.i.t_span)
+   
     % Atmospheric forcing: CLM grid cell (g) variables -> patch (p) variables
     
     vegetation.mlcanopyinst.zref(p) = vegetation.mlcanopyinst.zref;  %forc_hgt(g);
-    vegetation.mlcanopyinst.uref(p) = forcing.TEMP.wind; %ground.STATVAR.vegetation.mlcanopyinst.uref;  %max (1.0 , sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)));
+    vegetation.mlcanopyinst.uref(p) = FORCING.i.wind; %vegetation.mlcanopyinst.uref;  %max (1.0 , sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)));
+    % vegetation.mlcanopyinst.rhref(p) = vegetation.mlcanopyinst.rhref; %forc_rh(g);
     
-    vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin_dir;            % Direct beam solar radiation for visible waveband (W/m2)
-    vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin_dif;            % Diffuse solar radiation for visible waveband (W/m2)
-    vegetation.atmos.swskyb(p,inir) = forcing.TEMP.Sin_dir;            % Direct beam solar radiation for near-infrared waveband (W/m2)
-    vegetation.atmos.swskyd(p,inir) = forcing.TEMP.Sin_dif;            % Diffuse solar radiation for near-infrared waveband (W/m2)   
+    vegetation.atmos.swskyb(p,ivis) = FORCING.i.Sin*1.0*1.0;            % Direct beam solar radiation for visible waveband (W/m2)
+    vegetation.atmos.swskyd(p,ivis) = FORCING.i.Sin*1.0*1.0;            % Diffuse solar radiation for visible waveband (W/m2)
+    vegetation.atmos.swskyb(p,inir) = FORCING.i.Sin*0.5*0.;            % Direct beam solar radiation for near-infrared waveband (W/m2)
+    vegetation.atmos.swskyd(p,inir) = FORCING.i.Sin*0.5*0.;            % Diffuse solar radiation for near-infrared waveband (W/m2)
     
-%        vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin*0.9;            % Direct beam solar radiation for visible waveband (W/m2)
-%        vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin*0.1;            % Diffuse solar radiation for visible waveband (W/m2)
-%        vegetation.atmos.swskyb(p,inir) = forcing.TEMP.Sin*0.9;            % Direct beam solar radiation for near-infrared waveband (W/m2)
-%        vegetation.atmos.swskyd(p,inir) = forcing.TEMP.Sin*0.1;            % Diffuse solar radiation for near-infrared waveband (W/m2)
     
     % Atmospheric forcing: CLM column (c) variables -> patch (p) variables
     
-    vegetation.mlcanopyinst.tref(p) = forcing.TEMP.Tair+273.15; %ground.STATVAR.vegetation.mlcanopyinst.tref; %forc_t(c);
-    vegetation.mlcanopyinst.qref(p) = forcing.TEMP.q; %ground.STATVAR.vegetation.mlcanopyinst.qref; %forc_q(c);
-    vegetation.mlcanopyinst.pref(p) = forcing.TEMP.p; % 101325.0; %  ground.STATVAR.vegetation.mlcanopyinst.pref; %forc_pbot(c);
-    vegetation.mlcanopyinst.irsky(p) = forcing.TEMP.Lin; %ground.STATVAR.vegetation.mlcanopyinst.irsky; %forc_lwrad(c);
-    vegetation.mlcanopyinst.qflx_rain(p) = forcing.TEMP.rainfall ./ (24*3600); %ground.STATVAR.vegetation.mlcanopyinst.qflx_rain; %forc_rain(c);
-    vegetation.mlcanopyinst.qflx_snow(p) = forcing.TEMP.snowfall ./ (24*3600); %ground.STATVAR.vegetation.mlcanopyinst.qflx_snow; %forc_snow(c);
+    vegetation.mlcanopyinst.tref (p) = FORCING.i.Tair+273.15; %vegetation.mlcanopyinst.tref; %forc_t(c);
+    vegetation.mlcanopyinst.qref(p) = FORCING.i.q; %vegetation.mlcanopyinst.qref; %forc_q(c);
+    vegetation.mlcanopyinst.pref (p) = FORCING.i.p; %vegetation.mlcanopyinst.pref; %forc_pbot(c);
+    vegetation.mlcanopyinst.irsky(p) = FORCING.i.Lin; %vegetation.mlcanopyinst.irsky; %forc_lwrad(c);
+    vegetation.mlcanopyinst.qflx_rain(p) = FORCING.i.rainfall; %vegetation.mlcanopyinst.qflx_rain; %forc_rain(c);
+    vegetation.mlcanopyinst.qflx_snow (p) = FORCING.i.snowfall; %vegetation.mlcanopyinst.qflx_snow; %forc_snow(c);
     
     % CO2 and O2: note unit conversion
     
@@ -66,11 +74,11 @@ end
 %---------------------------------------------------------------------
 % Derived atmospheric input
 %---------------------------------------------------------------------
+
 for f = 1:vegetation.canopy.num_exposedvegp
     p = vegetation.canopy.filter_exposedvegp(f);
     vegetation.mlcanopyinst.eref(p) = vegetation.mlcanopyinst.qref(p) * vegetation.mlcanopyinst.pref (p) / (vegetation.physcon.mmh2o / vegetation.physcon.mmdry + (1  - vegetation.physcon.mmh2o / vegetation.physcon.mmdry) * vegetation.mlcanopyinst.qref(p));
-    %     vegetation.mlcanopyinst.rhomol(p) = vegetation.mlcanopyinst.pref(p) / (vegetation.physcon.rgasc * vegetation.mlcanopyinst.tref(p));
-    vegetation.mlcanopyinst.rhomol(p) = vegetation.mlcanopyinst.pref(p) / (8.3145 * vegetation.mlcanopyinst.tref(p));
+    vegetation.mlcanopyinst.rhomol(p) = vegetation.mlcanopyinst.pref(p) / (vegetation.physcon.rgasc * vegetation.mlcanopyinst.tref(p));
     vegetation.mlcanopyinst.rhoair(p) = vegetation.mlcanopyinst.rhomol(p) * vegetation.physcon.mmdry * (1  - (1  - vegetation.physcon.mmh2o/vegetation.physcon.mmdry) * vegetation.mlcanopyinst.eref(p) / vegetation.mlcanopyinst.pref (p));
     vegetation.mlcanopyinst.mmair(p) = vegetation.mlcanopyinst.rhoair(p) / vegetation.mlcanopyinst.rhomol(p);
     vegetation.mlcanopyinst.cpair(p) = vegetation.physcon.cpd * (1  + (vegetation.physcon.cpw/vegetation.physcon.cpd - 1 ) * vegetation.mlcanopyinst.qref(p)) * vegetation.mlcanopyinst.mmair(p); %1200; %

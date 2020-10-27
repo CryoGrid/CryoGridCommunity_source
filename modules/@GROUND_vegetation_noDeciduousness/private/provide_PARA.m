@@ -7,8 +7,7 @@ function ground = provide_PARA(ground)
     ground.PARA.dE_max = []; %[J/m3]
     
     % Vegetation parameters
-    ground.PARA.lai = [];
-    ground.PARA.lai_winter = [];
+    ground.PARA.pai = [];
     ground.PARA.sai = [];
     ground.PARA.ztop = [];
     ground.PARA.zref = [];
