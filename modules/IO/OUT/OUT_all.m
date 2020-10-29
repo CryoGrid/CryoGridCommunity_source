@@ -156,7 +156,7 @@ classdef OUT_all
                    if ~(exist([result_path run_number])==7)
                        mkdir([result_path run_number])
                    end
-                   save([result_path run_number '/' run_number '_' datestr(t,'yyyy') '.mat'], 'out')
+                   save([result_path run_number '/' run_number '_' datestr(t,'yyyymmdd') '.mat'], 'out')
                    out.STRATIGRAPHY=[];
                    out.TIMESTAMP=[];
                    out.MISC=[];
