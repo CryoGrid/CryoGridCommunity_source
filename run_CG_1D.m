@@ -10,7 +10,7 @@ clear all
 %=========================================================================
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'example1'; %paramter file name and result directory 
+run_number = 'example3'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 
 
