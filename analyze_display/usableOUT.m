@@ -20,7 +20,7 @@ function [result] = usableOUT(out, interpVect)
 % Note 4 : the function offer the possibility to interpolate the result at
 % a new resolution. For this, uses the input interpVect variable. It has
 % to include 2 element, the resolution of the interpolation and the depth
-% to which the interpolation is stopped, both in meters. 
+% to which the interpolation is stopped, both in meters.
 %          Example : interpVect = [0.02 3];
 %
 % Author : Léo Martin, l.c.p.martin@uu.nl, October 2020, Oslo
@@ -181,6 +181,42 @@ else
     
     fprintf('usableOUT : this function does not handle simulation results with subsidence\n            Output only partially filled.\n')
     
+end
+
+% Store lateral data
+if ~isempty(out.LATERAL)
+    fprintf('usableOUT : out contain LATERAL data, only the subsurface_run_off value\n            of the first module of each time step will be read\n')
+    result.subsurface_run_off=nan(1,length(out.LATERAL));
+    for i=1:length(out.LATERAL)
+        result.subsurface_run_off(i)=out.LATERAL{1,i}{1,1}.STATVAR.subsurface_run_off;
+    end
+end
+
+% Infos about variables
+result.varInfo(5).name=[];
+result.varInfo(1).name='T';
+result.varInfo(2).name='waterIce';
+result.varInfo(3).name='water';
+result.varInfo(4).name='ice';
+result.varInfo(5).name='air';
+result.varInfo(6).name='snow';
+result.varInfo(7).name='z';
+result.varInfo(8).name='organic';
+result.varInfo(9).name='mineral';
+
+result.varInfo(1).unit='degree C';
+result.varInfo(2).unit='volumetric fraction';
+result.varInfo(3).unit='volumetric fraction';
+result.varInfo(4).unit='volumetric fraction';
+result.varInfo(5).unit='volumetric fraction';
+result.varInfo(6).unit='snow depth in meter';
+result.varInfo(7).unit='meter';
+result.varInfo(8).unit='volumetric fraction';
+result.varInfo(9).unit='volumetric fraction';
+
+if ~isempty(out.LATERAL)
+    result.varInfo(10).name='subsurface_run_off';
+    result.varInfo(10).unit='m3, cumulative';
 end
 
 end
