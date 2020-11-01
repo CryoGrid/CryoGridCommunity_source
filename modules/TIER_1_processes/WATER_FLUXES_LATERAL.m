@@ -104,12 +104,16 @@ classdef WATER_FLUXES_LATERAL < BASE
                     saturated_height = max(0, saturated_height - fraction_below_out(i,1) .* ground.STATVAR.layerThick(i,1) ); %seepage face threshold below
                     lateral.TEMP.head = lateral.TEMP.head + saturated_height;                 
                 end
-                if hardBottom(i,1) %set head to zero if hard layer is reached
+                if hardBottom(i,1)  %set head to zero if hard layer is reached
                     lateral.TEMP.head = 0;
                 end
 
                 %flow
                 if lateral.TEMP.head >0  %avoid unnecessary computation 
+                    %added Sebastian
+                    saturated_height = (water_volumetric(i,1) - ground.STATVAR.field_capacity(i,1)) ./ (porosity(i,1) - ground.STATVAR.field_capacity(i,1)) .* ground.STATVAR.layerThick(i,1);
+                    saturated_height = max(0, saturated_height - fraction_below_out(i,1) .* ground.STATVAR.layerThick(i,1) ); %seepage face threshold below
+                    %end add Sebastian
                     saturated_height = min(saturated_height , (1-fraction_above_out(i,1)) .* ground.STATVAR.layerThick(i,1)); %seepage face threshold above
                     cross_section = lateral.PARA.seepage_contact_length .* saturated_height;
                     
