@@ -10,9 +10,9 @@ clear all
 %=========================================================================
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'example3'; %paramter file name and result directory 
+run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
-
+result_path = '../CryoGrid_Git_results/';
 
 %=========================================================================
 %DO NOT MODIFY BELOW
@@ -23,7 +23,6 @@ const_file = 'CONSTANTS_excel'; %file with constants
 %set various paths
 modules_path = 'modules';
 addpath(genpath(modules_path));
-result_path = './results/';
 config_path = fullfile(result_path, run_number);
 forcing_path = fullfile ('./forcing/');
 
