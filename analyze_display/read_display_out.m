@@ -3,6 +3,15 @@
 %interpolates the given target variables to the variable "new_grid" and
 %displays them as color plots
 
+modules_path = 'modules';
+addpath(genpath(modules_path));
+
+result_path = '../results/';
+run_number = 'example2';
+out_timstamp = '19820901';
+
+load([result_path run_number '/' run_number '_' out_timstamp '.mat'])
+
 %define the grid to which variables are interpolated
 target_cell_size = 0.02;
 new_grid = [15:target_cell_size:21]';
@@ -18,8 +27,8 @@ result.ice = [];
   result.Xwater = [];
   result.XwaterIce = [];
   result.waterPotential = [];
-%result.saltConc = [];
-%result.salt_c_brine=[];
+result.saltConc = [];
+result.salt_c_brine=[];
 result.class_number = [];
 %must all have the same dimensions in all fields
 
