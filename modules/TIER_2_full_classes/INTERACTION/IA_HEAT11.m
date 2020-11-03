@@ -1,3 +1,10 @@
+%========================================================================
+% CryoGrid INTERACTION (IA) class for heat conduction between two GROUND
+% classes without water cycle
+% contains function for SNOW CHILD phase 
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_HEAT11 <  IA_HEAT 
     
     methods

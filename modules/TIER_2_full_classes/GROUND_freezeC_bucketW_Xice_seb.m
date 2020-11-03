@@ -1,146 +1,141 @@
-
+%========================================================================
+% CryoGrid GROUND class GROUND_freezeC_bucketW_Xice_seb
+% heat conduction, bucket water scheme, freeze curve based on
+% freezing=drying assumption, surface energy balance, excess ice
+% S. Westermann, October 2020
+%========================================================================
 
 classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL & INITIALIZE
 
     
     methods
         
-        function self = GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing)  
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
+        %----mandatory functions---------------
+        %----initialization--------------------
+        
+        function ground = GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing)  
+            ground@INITIALIZE(index, pprovider, cprovider, forcing);
+        end
+        
+         function ground = provide_PARA(ground)
+            
+            ground.PARA.albedo = [];   %surface albedo [-]
+            ground.PARA.epsilon = [];  % surface emissivity [-]
+            ground.PARA.z0 = [];      %roughness length [m]
+
+            ground.PARA.rootDepth = [];  %e-folding constant of transpiration reduction with depth [1/m]
+            ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
+            ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
+            ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
+
+            ground.PARA.dt_max = []; %maximum possible timestep [sec]
+            ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
+
+            ground.PARA.LUT_size_waterIce = []; %size of lookup table for the waterIce variable [-]
+            ground.PARA.LUT_size_T = [];   %size of lookup table for the (temperature) T variable [-]
+            ground.PARA.min_T = [];          %minimum temperature for which the LUT is calculated (modeled temperatures must be above this value) [degree C]
+            ground.PARA.min_waterIce = [];   %minimum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be above this value) [-]
+            ground.PARA.max_waterIce = [];   %maximum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be below this value) [-]
+            ground.PARA.min_mineral_organic = [];   %maximum mineral plus organic content in volumetric fraction for which the LUT is calculated (mineral plus organic content must be below this value) [-]
+
+            %trigger parameters
+            ground.PARA.threshold_Xwater = []; %excess water height in first grid cell for which a LAKE is triggered, or for which water is moved to the variable "excessWater"
+            ground.PARA.threshold_Xwater_class = []; %LAKE class that is added by trigger, no LAKE triggered if empty. Must correspond to a sleeping class in the initialization!
+            ground.PARA.threshold_Xwater_index = []; %index of LAKE class that is added by trigger
+            
+        end
+        
+        function ground = provide_STATVAR(ground)
+            
+            ground.STATVAR.upperPos = []; % upper surface elevation [m]
+            ground.STATVAR.lowerPos = []; % lower surface elevation [m]
+            ground.STATVAR.layerThick = []; % thickness of grid cells [m]
+            
+            ground.STATVAR.waterIce = [];  % total volume of water plus ice in a grid cell [m3]
+            ground.STATVAR.XwaterIce = [];  % total volume of excess water plus excess ice in a grid cell [m3]
+            ground.STATVAR.mineral = [];   % total volume of minerals [m3]
+            ground.STATVAR.organic = []; % total volume of organics [m3]
+            ground.STATVAR.energy = [];   % total internal energy [J]
+            ground.STATVAR.soil_type = [];  % integer code for soil_type; 1: sand; 2: silt: 3: clay: 4: peat; 5: water (i.e. approximation of free water, very large-pore ground material).
+                        
+            ground.STATVAR.T = [];  % temperature [degree C]
+            ground.STATVAR.water = [];  % total volume of water [m3]
+            ground.STATVAR.waterPotential = []; %soil water potential [Pa]
+            ground.STATVAR.Xwater = [];  % total volume of excess water [m3]
+            ground.STATVAR.Xice = []; % total volume of excess ice [m3]
+            ground.STATVAR.ice = [];  %total volume of ice [m3]
+            ground.STATVAR.air = [];   % total volume of air [m3] - NOT USED
+            ground.STATVAR.thermCond = [];   %thermal conductivity [W/mK]
+            ground.STATVAR.hydraulicConductivity = [];  % hydraulic conductivity [m/sec]
+            
+            ground.STATVAR.Lstar = [];   %Obukhov length [m]
+            ground.STATVAR.Qh = [];      %sensible heat flux [W/m2]
+            ground.STATVAR.Qe = [];      % latent heat flux [W/m2]
+            
+            ground.STATVAR.field_capacity = [];  %field capacity in fraction of the total volume [-]
+            ground.STATVAR.excessWater = 0;     %water volume overtopping first grid cell (i.e. surface water) [m3]
+            
         end
         
         function ground = provide_CONST(ground)
             
-            ground.CONST.L_f = [];
-            ground.CONST.Tmfw = [];
+            ground.CONST.L_f = [];  % volumetric latent heat of fusion, freezing
+            ground.CONST.Tmfw = [];  % freezing temperature of free water [K]
+             
+            ground.CONST.c_w = []; % volumetric heat capacity water
+            ground.CONST.c_i = []; % volumetric heat capacity ice
+            ground.CONST.c_o = []; % volumetric heat capacity organic
+            ground.CONST.c_m = []; % volumetric heat capacity mineral
             
-            ground.CONST.c_w = [];
-            ground.CONST.c_i = [];
-            ground.CONST.c_o = [];
-            ground.CONST.c_m = [];
-            
-            ground.CONST.k_a = [];       %air [Hillel(1982)]
-            ground.CONST.k_w = [];        %water [Hillel(1982)]
-            ground.CONST.k_i = [];         %ice [Hillel(1982)]
-            ground.CONST.k_o = [];        %organic [Hillel(1982)]
-            ground.CONST.k_m = [];
+            ground.CONST.k_a = [];   % thermal conductivity air
+            ground.CONST.k_w = [];   % thermal conductivity water
+            ground.CONST.k_i = [];   % thermal conductivity ice 
+            ground.CONST.k_o = [];   % thermal conductivity organic 
+            ground.CONST.k_m = [];   % thermal conductivity mineral 
             
             ground.CONST.sigma = []; %Stefan-Boltzmann constant
-            ground.CONST.kappa = [];
-            ground.CONST.L_s = []; %latent heat of vaporization
+            ground.CONST.kappa = [];  % von Karman constant
+            ground.CONST.L_s = [];  %latent heat of sublimation, latent heat of evaporation handled in a dedicated function
             
-            ground.CONST.cp = [];
-            ground.CONST.g = [];
+            ground.CONST.cp = [];  %specific heat capacity at constant pressure of air
+            ground.CONST.g = [];   % gravitational acceleration Earth surface
             
-            ground.CONST.rho_w = [];
-            ground.CONST.rho_i = [];
+            ground.CONST.rho_w = []; % water density
+            ground.CONST.rho_i = []; %ice density
             
             %Mualem Van Genuchten model
-            ground.CONST.alpha_water = [];
+            ground.CONST.alpha_water = [];  %alpha parameter for different soil types [m^-1]
             ground.CONST.alpha_sand = [];
             ground.CONST.alpha_silt = [];
             ground.CONST.alpha_clay = [];
             ground.CONST.alpha_peat = [];
             
-            ground.CONST.n_water = [];
+            ground.CONST.n_water = [];   %n parameter for different soil types [-]
             ground.CONST.n_sand = [];
             ground.CONST.n_silt = [];
             ground.CONST.n_clay = [];
             ground.CONST.n_peat = [];
             
-            ground.CONST.residual_wc_water = [];
-            ground.CONST.residual_wc_sand = [];
+            ground.CONST.residual_wc_water = [];    %residual water content for different soil types [-]
+            ground.CONST.residual_wc_sand = [];    %NOTE: this parameter is generally set to 0
             ground.CONST.residual_wc_silt = [];
             ground.CONST.residual_wc_clay = [];
             ground.CONST.residual_wc_peat = [];
 
         end
         
-        function ground = provide_PARA(ground)
-            
-            ground.PARA.albedo = [];
-            ground.PARA.epsilon = [];
-            ground.PARA.airT_height = []; %measurement height [m]
-            ground.PARA.z0 = []; %roughness length [m]
-            
-            ground.PARA.area =[]; %initial area of the realization [m2]
-            
-            ground.PARA.rootDepth = [];
-            ground.PARA.evaporationDepth = [];
-            ground.PARA.ratioET = [];
-            
-            ground.PARA.hydraulicConductivity = []; %change to a prametrization later?
-            ground.PARA.externalWaterFlux = [] ; %external water flux added
-            
-            ground.PARA.heatFlux_lb = [];
-            
-            ground.PARA.dt_max = [] ; %[sec]
-            ground.PARA.dE_max = []; %[J/m3]
-
-            ground.PARA.LUT_size_waterIce = [];
-            ground.PARA.LUT_size_T = [];
-            ground.PARA.min_T = []; %minimum an maximum values for which the LUT is calculated (only roughly)
-            ground.PARA.min_waterIce = [];
-            ground.PARA.max_waterIce = [];
-            ground.PARA.min_mineral_organic = [];
-
-            %trigger parameters
-            ground.PARA.threshold_Xwater = 0.05;
-            %ground.PARA.threshold_Xwater_class = [];
-            ground.PARA.threshold_Xwater_class = 'LAKE_simple_bucketW_seb_snow';  %default trigger if empty (this ensures stable run) 
-            %otherwise interaction class trigger, must correspond to a sleeping class in the initialization!
-            ground.PARA.threshold_Xwater_index = 1;
-            
-        end
-        
-        function ground = provide_STATVAR(ground)
-            
-            ground.STATVAR.upperPos = [];
-            ground.STATVAR.lowerPos = [];
-            ground.STATVAR.layerThick = []; % [m]
-            
-            ground.STATVAR.waterIce = []; % [m]
-            ground.STATVAR.XwaterIce = [];
-            ground.STATVAR.mineral = []; % [m]
-            ground.STATVAR.organic = []; % [m]
-            ground.STATVAR.energy = [];  % [J/m2]
-            ground.STATVAR.soil_type = [];
-                        
-            ground.STATVAR.T = [];  % [degree C]
-            ground.STATVAR.water = [];  % [m]
-            ground.STATVAR.waterPotential = []; % [m]
-            ground.STATVAR.Xwater = [];
-            ground.STATVAR.Xice = [];
-            ground.STATVAR.ice = [];
-            ground.STATVAR.air = [];  % [m]
-            ground.STATVAR.thermCond = [];
-            ground.STATVAR.hydraulicConductivity = [];
-            
-            ground.STATVAR.Lstar = [];
-            ground.STATVAR.Qh = [];
-            ground.STATVAR.Qe = [];
-            
-            ground.STATVAR.field_capacity = [];
-            ground.STATVAR.excessWater = 0;
-            
-        end
-        
-        %----mandatory functions---------------
-        %----initialization--------------------
-        
-        function ground = finalize_init(ground, forcing) %assign all variables, that must be calculated or assigned otherwise for initialization
+        function ground = finalize_init(ground, forcing) 
             ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
             ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = ground.PARA.area + ground.STATVAR.T .* 0;
-            
-            
+            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
+
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
             ground.CONST.vanGen_residual_wc = [ ground.CONST.residual_wc_sand ground.CONST.residual_wc_silt ground.CONST.residual_wc_clay ground.CONST.residual_wc_peat ground.CONST.residual_wc_water];
             
             ground = get_E_freezeC_Xice(ground);
             ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity_Xice(ground);
+            ground = calculate_hydraulicConductivity_Xice(ground); 
             
             ground = create_LUT_freezeC(ground);
 
@@ -151,9 +146,10 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             ground = set_TEMP_2zero(ground);
         end
         
+        
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing) %functions specific for individual class, allow changing from Dirichlet to SEB
+        function ground = get_boundary_condition_u(ground, forcing)
       
             ground = surface_energy_balance(ground, forcing);
             ground = get_boundary_condition_u_water_Xice(ground, forcing); %checked that this flux can be taken up!!
@@ -173,35 +169,30 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             ground = get_derivative_energy(ground);
             ground = get_derivative_water_Xice(ground); %normal downward water flow in matrix
             ground = get_derivative_Xwater(ground); %upward flow of Xwater
-
         end
         
-        function timestep = get_timestep(ground)  %could involve check for several state variables
+        function timestep = get_timestep(ground) 
            timestep = get_timestep_heat_coduction(ground);
-           timestep = min(timestep, get_timestep_water(ground)); 
-           %timestep = min(timestep, get_timestep_Xwater(ground));
-           %add check for water fluxes timestep
+           timestep = min(timestep, get_timestep_water_Xice(ground)); 
         end
         
         function ground = advance_prognostic(ground, timestep) 
             %energy
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
-            ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_water_energy + ground.TEMP.d_Xwater_energy; %add energy from water advection
+            ground.STATVAR.energy = ground.STATVAR.energy + timestep .* (ground.TEMP.d_water_energy + ground.TEMP.d_Xwater_energy); %add energy from water advection
             %water
-            ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water; %subtract water from ET
+            ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water; 
             ground.STATVAR.XwaterIce = ground.STATVAR.XwaterIce + timestep .* ground.TEMP.d_Xwater;
             ground.STATVAR.XwaterIce(ground.STATVAR.XwaterIce<0) = 0; %remove rounding errors
+            ground.STATVAR.Xwater = ground.STATVAR.Xwater + timestep .* ground.TEMP.d_Xwater;
+            ground.STATVAR.Xwater(ground.STATVAR.Xwater<0) = 0; %remove rounding errors
             
             %correction_minus = double(ground.STATVAR.XwaterIce<0) .* -ground.STATVAR.XwaterIce; %positive
             %ground.STATVAR.XwaterIce = ground.STATVAR.XwaterIce + correction_minus;
             
             ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_Xwater ./ ground.STATVAR.area;
             %ground.STATVAR.layerThick = ground.STATVAR.layerThick + correction_minus./ ground.STATVAR.area;
-            
-            %if sum(ground.STATVAR.layerThick .* ground.STATVAR.area < ground.STATVAR.XwaterIce + ground.STATVAR.mineral + ground.STATVAR.waterIce) > 0
-            %    gfegf
-            %end
-            
+
         end
         
         function ground = compute_diagnostic_first_cell(ground, forcing)
@@ -209,7 +200,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
         end
        
         function ground = compute_diagnostic(ground, forcing)
-            
+          
             %equilibrate water between matrix and Xwater within cells
             air = ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce - ground.STATVAR.waterIce - ground.STATVAR.mineral - ground.STATVAR.organic; 
             move_cells = (ground.STATVAR.Xwater > 0) & (air > 0);
@@ -219,7 +210,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             ground.STATVAR.layerThick(move_cells) = ground.STATVAR.layerThick(move_cells) - move_Xwater ./  ground.STATVAR.area(move_cells);
             
             ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, ...
-                (ground.STATVAR.XwaterIce + ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ ground.STATVAR.area);  %prevent rounding errors, would lead to wrong sign water fluxes in next prognostic step
+                (ground.STATVAR.XwaterIce + ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ ground.STATVAR.area);  %prevent rounding errors, would lead to wrong sign of water fluxes in next prognostic step
             
             ground = get_T_water_freezeC_Xice(ground);
             
@@ -239,11 +230,11 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
                     ground.STATVAR.XwaterIce(1) = ground.STATVAR.XwaterIce(1) - remove_first_cell;
                     ground.STATVAR.layerThick(1) = ground.STATVAR.layerThick(1) - remove_first_cell ./ ground.STATVAR.area(1);
                     ground.STATVAR.energy(1) = ground.STATVAR.energy(1) - remove_first_cell .* ground.STATVAR.T(1) .* ground.CONST.c_w;
-                    ground.STATVAR.excessWater = ground.STATVAR.excessWater + remove_first_cell;  %water must be removed laterally for runoff output, otherwise it accumulates
+                    ground.STATVAR.excessWater = ground.STATVAR.excessWater + remove_first_cell;  %water must be removed laterally for runoff output, otherwise it accumulates in excessWater
                 else
                     
                     trigger_class = get_IA_class(ground.PARA.threshold_Xwater_class, class(ground));
-                    trigger_create_LAKE(trigger_class, ground, forcing); %creates a new class and does all the rearranging of the stratigraphy (I hope!)
+                    trigger_create_LAKE(trigger_class, ground, forcing); %creates a new class and does all the rearranging of the stratigraphy
                     
                     trigger_yes_no = 1; %can be used to prevent several triggers ocurring in one timestep, like create a lake and create snow simulataneously
                 end
@@ -279,24 +270,29 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
         end
         
         
-        %lateral fluxes---------------------------
+        %-----LATERAL-------------------
+        
+        %-----LAT_REMOVE_SURFACE_WATER-----
         function ground = lateral_push_remove_surfaceWater(ground, lateral)
             ground = lateral_push_remove_surfaceWater_Xice(ground, lateral);
         end
-        
+       
+        %-----LAT_REMOVE_SUBSURFACE_WATER-----
         function ground = lateral_push_remove_subsurfaceWater(ground, lateral)
             ground = lateral_push_remove_subsurfaceWater_simple(ground, lateral);
         end
         
+        %----LAT_SEEPAGE_FACE----------               
         function ground = lateral_push_remove_water_seepage(ground, lateral)
             ground = lateral_push_remove_water_seepage_Xice(ground, lateral);
         end
         
+        %----LAT_WATER_RESERVOIR------------          
         function ground = lateral_push_water_reservoir(ground, lateral)
             ground = lateral_push_water_reservoir_Xice(ground, lateral);
         end
         
-        
+        %----LAT3D_WATER_UNCONFINED_AQUIFER------------         
         function ground = lateral3D_pull_water_unconfined_aquifer(ground, lateral)
             ground = lateral3D_pull_water_unconfined_aquifer_Xice(ground, lateral);
         end
@@ -309,6 +305,9 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_Xice(ground, lateral);
         end
         
+        %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
+        
+        %-------LAT3D_HEAT-------------        
         function ground = lateral3D_pull_heat(ground, lateral)
             ground = lateral3D_pull_heat_simple(ground, lateral);
         end
@@ -320,7 +319,6 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
         
         
         %----inherited Tier 1 functions ------------
-        
         function ground = get_derivative_energy(ground)
            ground = get_derivative_energy@HEAT_CONDUCTION(ground); 
         end

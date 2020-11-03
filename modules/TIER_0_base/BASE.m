@@ -1,18 +1,28 @@
+%========================================================================
+% CryoGrid BASE class for all GROUND classes 
+% S. Westermann, Oct 2020
+%========================================================================
+
 classdef BASE < matlab.mixin.Copyable
     
     properties
         class_index
-        CONST %constants
-        PARA %external service parameters, all other
-        STATVAR  %energy, water content, etc.
-        TEMP  %derivatives in prognostic timestep and optimal timestep
-        PREVIOUS
-        NEXT
-        IA_PREVIOUS
-        IA_NEXT
+        CONST       %constants
+        PARA        %external service parameters
+        STATVAR     %state varibales, e.g. energy, water content
+        TEMP        %mainly derivatives in prognostic timestep 
+        PREVIOUS    %pointer to GROUND class above current class in stratigraphy
+        NEXT        %pointer to GROUND class below current class in stratigraphy
+        IA_PREVIOUS  %pointer to IA class with GROUND class above current class in stratigraphy
+        IA_NEXT      %pointer to IA class with GROUND class below current class in stratigraphy
     end
     
-    methods %empty functions for lateral interactions, overwritten in TIER 2-3 if the functions are active
+    methods 
+        
+        %----LATERAL----------
+        
+        %empty functions for lateral interactions, overwritten in TIER 2-3 if the functions are active
+        %all functions used in lateral IA classes must be declared here
         function base = lateral_push_remove_surfaceWater(base, lateral)
             
         end
@@ -58,9 +68,7 @@ classdef BASE < matlab.mixin.Copyable
             
         end
         
-%         function ground = lateral3D_pull_snow(ground, lateral)
-%             lateral.STATVAR2ALL.snow_drift = 0;
-%         end
+
     end
     
 end

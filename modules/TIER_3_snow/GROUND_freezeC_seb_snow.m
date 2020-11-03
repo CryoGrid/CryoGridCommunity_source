@@ -1,4 +1,9 @@
-
+%========================================================================
+% CryoGrid GROUND class GROUND_freezeC_seb_snow
+% heat conduction, constant water  +ice, freeze curve based on
+% freezing=drying assumption, surface energy balance
+% S. Westermann, October 2020
+%========================================================================
 
 classdef GROUND_freezeC_seb_snow < GROUND_freezeC_seb
     properties
@@ -9,21 +14,22 @@ classdef GROUND_freezeC_seb_snow < GROUND_freezeC_seb
     
     methods
         
-        %mandatory functions for each class
+        %----mandatory functions---------------
+        %----initialization--------------------
         
-        function self = GROUND_freezeC_seb_snow(index, pprovider, cprovider, forcing)
-            self@GROUND_freezeC_seb(index, pprovider, cprovider, forcing);
+        function ground = GROUND_freezeC_seb_snow(index, pprovider, cprovider, forcing)
+            ground@GROUND_freezeC_seb(index, pprovider, cprovider, forcing);
         end
 
-       function ground = provide_PARA(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_PARA(ground)  
             ground = provide_PARA@GROUND_freezeC_seb(ground);
        end
        
-       function ground = provide_CONST(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_CONST(ground)  
            ground = provide_CONST@GROUND_freezeC_seb(ground);
        end
        
-       function ground = provide_STATVAR(ground)  %initializes the subvariables as empty arrays
+       function ground = provide_STATVAR(ground)  
            ground = provide_STATVAR@GROUND_freezeC_seb(ground);
        end
        
@@ -34,7 +40,7 @@ classdef GROUND_freezeC_seb_snow < GROUND_freezeC_seb
        end
 
        
-       %-------------------
+        %---time integration------
         
         function ground = get_boundary_condition_u(ground, forcing)
             
@@ -106,7 +112,7 @@ classdef GROUND_freezeC_seb_snow < GROUND_freezeC_seb
             end
         end
         
-        function ground = advance_prognostic(ground, timestep) %real timestep derived as minimum of several classes in [sec] here!
+        function ground = advance_prognostic(ground, timestep) 
             if ground.CHILD == 0
                 ground =  advance_prognostic@GROUND_freezeC_seb(ground, timestep);
             else                
@@ -115,7 +121,7 @@ classdef GROUND_freezeC_seb_snow < GROUND_freezeC_seb
             end
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing);
+        function ground = compute_diagnostic_first_cell(ground, forcing)
             ground = L_star(ground, forcing);
         end
         
@@ -150,7 +156,7 @@ classdef GROUND_freezeC_seb_snow < GROUND_freezeC_seb
                     ground.PREVIOUS.NEXT = ground.CHILD;
                     ground.PREVIOUS = ground.CHILD;
                     ground.CHILD = 0;
-                    ground.IA_PREVIOUS = ground.IA_CHILD; %should already point right
+                    ground.IA_PREVIOUS = ground.IA_CHILD; 
                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
                     ground.IA_CHILD = 0;
                 end

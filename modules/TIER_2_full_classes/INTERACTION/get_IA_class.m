@@ -1,10 +1,18 @@
+%========================================================================
+% CryoGrid get_IA_class function
+% identifies and initializes the correct interaction class between pairs of
+% GROUND classes, returns 0 if classes are not compatible
+% INPUT: GROUND class nacmes as strings
+% NOTE: be very careful when updating the interaction matrix "ia"! Keep the
+% last working version in the code (commented out)
+% S. Westermann, October 2020
+%========================================================================
+
+
 function ia_class = get_IA_class(above_class, below_class)
 
-%change Tier 4 cases to their TIER3 and TIER2 base classes 
 
-%[above_class, below_class] = get_IA_class_TIER4(above_class, below_class);
-
-
+%list of all CryoGrid GROUND classes
 classes = [ {'GROUND_freeW_seb'};
     {'GROUND_freeW_seb_snow'};
     {'GROUND_freeW_bucketW_seb'};
@@ -47,31 +55,6 @@ end
 
 
 
-% ia=[1	0	3	3	3	3	1	0	3	3	3	3	6	6	0	0	0	0	0	0	0	0	0	0;
-%     1	1	3	3	3	3	1	1	3	3	3	3	6	6	0	0	0	0	0	0	0	0	0	0;
-%     2	0	4	4	4	4	2	0	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     2	0	4	0	4	0	2	0	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     2	0	4	4	0	0	2	0	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     2	0	4	0	0	0	2	0	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     1	0	3	3	3	3	1	0	3	3	3	3	6	6	0	0	0	0	0	0	0	0	0	0;
-%     1	1	3	3	3	3	1	1	3	3	3	3	6	6	0	0	0	0	0	0	0	0	0	0;
-%     2	0	4	4	4	4	2	0	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     2	0	4	0	4	0	2	0	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     2	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     2	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     5	0	0	0	0	0	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     5	0	0	0	0	0	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-%     1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	101	0	0	0	0	0	0	0;
-%     1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	101	0	0	0	0	0	0	0;
-%     7	7	0	0	0	0	7	7	0	0	0	0	0	0	101	101	0	0	0	0	0	0	0	0;
-%     8	8	9	9	9	9	8	8	9	9	13	13	0	0	0	0	0	101	101	101	0	0	0	0;
-%     8	8	9	9	9	9	8	8	9	9	13	13	0	0	0	0	0	101	101	101	0	0	0	0;
-%     8	8	9	9	9	9	8	8	9	9	13	13	0	0	0	0	0	101	101	101	0	0	0	0;
-%     0	1	0	3	0	3	0	1	0	3	0	3	0	1	0	1	0	0	3	0	0	0	0	0;
-%     0	2	0	10	0	10	0	2	0	10	0	11	0	2	0	2	0	0	12	0	0	0	0	0;
-%     0	2	0	10	0	10	0	2	0	10	0	11	0	2	0	2	0	0	12	0	0	0	0	0;
-%     0	0	0	0	0	0	0	0	0	10	0	11	0	0	0	0	0	0	12	0	0	0	0	0];
-
 % ia=[1	0	3	3	3	3	1	0	3	3	3	3	0	0	6	6	0	0	0	0	0	0	0	0	0	0;
 %     1	1	3	3	3	3	1	1	3	3	3	3	0	0	6	6	0	0	0	0	0	0	0	0	0	0;
 %     2	0	4	4	4	4	2	0	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
@@ -99,6 +82,7 @@ end
 %     0	2	0	10	0	10	0	2	0	10	0	11	0	15	0	2	0	2	0	0	12	0	0	0	0	0;
 %     0	0	0	0	0	0	0	0	0	10	0	11	0	15	0	0	0	0	0	0	12	0	0	0	0	0];
 
+%interaction matrix
 ia=[1	0	3	3	3	3	1	0	3	3	3	3	0	0	0	0	6	6	0	0	0	0	0	0	0	0	0	0;
     1	1	3	3	3	3	1	1	3	3	3	3	0	0	0	0	6	6	0	0	0	0	0	0	0	0	0	0;
     2	0	4	4	4	4	2	0	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
@@ -129,8 +113,7 @@ ia=[1	0	3	3	3	3	1	0	3	3	3	3	0	0	0	0	6	6	0	0	0	0	0	0	0	0	0	0;
     0	0	0	0	0	0	0	0	0	10	0	11	0	15	0	18	0	0	0	0	0	0	12	0	0	0	0	0];
 
 
-
-
+%all avilable INTERACTION (IA) classes
 if ia(id_b,id_a) == 1
     ia_class = IA_HEAT11();
 elseif ia(id_b,id_a) == 2

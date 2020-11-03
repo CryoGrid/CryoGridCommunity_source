@@ -1,3 +1,8 @@
+%========================================================================
+% CryoGrid INTERACTION (IA) class for heat conduction and water fluxes between a two GROUND classes with bucket water
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_HEAT11_WATER11 < IA_WATER & IA_HEAT 
     
     methods
@@ -8,6 +13,5 @@ classdef IA_HEAT11_WATER11 < IA_WATER & IA_HEAT
             ia_heat_water.NEXT.TEMP.surface_runoff = 0;
         end
         
-
     end
 end

@@ -1,3 +1,9 @@
+%========================================================================
+% CryoGrid INTERACTION (IA) class for heat conduction between two GROUND
+% classes and zero salt flux boundary conditions for below class 
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_HEAT11_SALT01 <  IA_HEAT & IA_SALT
     
     methods

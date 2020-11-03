@@ -1,6 +1,12 @@
+%========================================================================
+% CryoGrid TIER1 INTERACTION (IA) class for functions related to water fluxes
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_WATER < IA_BASE
     
     methods
+        %water fluxes between two normal GROUND classes with bucket water scheme
         function get_boundary_condition_BUCKET_m(ia_heat_water) %water fluxes between classes with bucket water scheme
             saturation_previous = (ia_heat_water.PREVIOUS.STATVAR.waterIce(end) - ia_heat_water.PREVIOUS.STATVAR.field_capacity(end) .* ia_heat_water.PREVIOUS.STATVAR.layerThick(end).*ia_heat_water.PREVIOUS.STATVAR.area(end))./ ...
                 (ia_heat_water.PREVIOUS.STATVAR.layerThick(end).*ia_heat_water.PREVIOUS.STATVAR.area(end) - ia_heat_water.PREVIOUS.STATVAR.mineral(end) - ia_heat_water.PREVIOUS.STATVAR.organic(end) - ...
@@ -44,6 +50,7 @@ classdef IA_WATER < IA_BASE
             %ia_heat_water.NEXT.TEMP.d_water_ET_energy = 0;
         end
         
+        %zero flux boundary condition
         function get_boundary_condition_ZEROFLUX_NEXT_m(ia_heat_water) %coupling between classes without (PREVIOUS) and with (NEXT) water balance
             ia_heat_water.NEXT.TEMP.F_ub_water = 0;
             ia_heat_water.NEXT.TEMP.F_ub_water_energy = 0;
@@ -53,6 +60,7 @@ classdef IA_WATER < IA_BASE
             ia_heat_water.NEXT.TEMP.d_water_energy(1) = ia_heat_water.NEXT.TEMP.d_water_energy(1) + ia_heat_water.NEXT.TEMP.F_ub_water_energy;
         end
         
+        %zero flux boundary condition
         function get_boundary_condition_ZEROFLUX_PREVIOUS_m(ia_heat_water) %coupling between classes with (PREVIOUS) and without (NEXT) water balance
             ia_heat_water.PREVIOUS.TEMP.F_lb_water = 0;
             ia_heat_water.PREVIOUS.TEMP.F_lb_water_energy = 0;
@@ -60,6 +68,7 @@ classdef IA_WATER < IA_BASE
             ia_heat_water.PREVIOUS.TEMP.d_water_energy(end) = ia_heat_water.PREVIOUS.TEMP.d_water_energy(end) + ia_heat_water.PREVIOUS.TEMP.F_lb_water_energy;
         end
         
+        %water fluxes between LAKE and GROUND class with bucket water scheme
         function get_boundary_condition_BUCKET_LAKE_m(ia_heat_water)
             
             saturation_next = (ia_heat_water.NEXT.STATVAR.waterIce(1) - ia_heat_water.NEXT.STATVAR.field_capacity(1) .* ia_heat_water.NEXT.STATVAR.layerThick(1).*ia_heat_water.NEXT.STATVAR.area(1))./ ...
@@ -98,6 +107,7 @@ classdef IA_WATER < IA_BASE
             
         end
         
+        %water fluxes between SNOW and GROUND class with bucket water scheme
         function get_boundary_condition_BUCKET_SNOW_m(ia_heat_water) %water fluxes between classes with bucket water scheme
             remaining_pore_space = ia_heat_water.PREVIOUS.STATVAR.layerThick(end).* ia_heat_water.PREVIOUS.STATVAR.area(end) - ia_heat_water.PREVIOUS.STATVAR.mineral(end) - ia_heat_water.PREVIOUS.STATVAR.organic(end) - ia_heat_water.PREVIOUS.STATVAR.ice(end);
             saturation_previous = (ia_heat_water.PREVIOUS.STATVAR.water(end) - ia_heat_water.PREVIOUS.PARA.field_capacity .* remaining_pore_space) ./ ...
@@ -142,7 +152,7 @@ classdef IA_WATER < IA_BASE
             %ia_heat_water.NEXT.TEMP.d_water_ET_energy = 0;
         end
         
-        
+        %water fluxes between SNOW and excess ice GROUND class with bucket water scheme
         function get_boundary_condition_BUCKET_SNOW_XICE_m(ia_heat_water) %snow and classes with Xice scheme
             remaining_pore_space = ia_heat_water.PREVIOUS.STATVAR.layerThick(end).* ia_heat_water.PREVIOUS.STATVAR.area(end) - ia_heat_water.PREVIOUS.STATVAR.mineral(end) - ia_heat_water.PREVIOUS.STATVAR.organic(end) - ia_heat_water.PREVIOUS.STATVAR.ice(end);
             saturation_previous = (ia_heat_water.PREVIOUS.STATVAR.water(end) - ia_heat_water.PREVIOUS.PARA.field_capacity .* remaining_pore_space) ./ ...
@@ -186,7 +196,7 @@ classdef IA_WATER < IA_BASE
             %ia_heat_water.NEXT.TEMP.d_water_ET_energy = 0;
         end
         
-        
+        %water fluxes between LAKE and excess ice GROUND class with bucket water scheme
         function get_boundary_condition_BUCKET_LAKE_XICE_m(ia_heat_water) %LAKE to Xice classes, routes "normal" water down
             
             volume_matrix = ia_heat_water.NEXT.STATVAR.layerThick(1) .* ia_heat_water.NEXT.STATVAR.area(1) - ia_heat_water.NEXT.STATVAR.XwaterIce(1);
@@ -221,7 +231,7 @@ classdef IA_WATER < IA_BASE
             
         end
         
-        
+        %upwards excess water fluxes between LAKE and excess ice GROUND class with bucket water scheme
         function get_boundary_condition_BUCKET_LAKE_XWATER_UP_m(ia_heat_water) %LAKE to Xice classes, routes Xwater flux up into lake
 
             d_Xwater_out = ia_heat_water.NEXT.STATVAR.hydraulicConductivity(1) .* ia_heat_water.NEXT.STATVAR.area(1);             
@@ -242,7 +252,7 @@ classdef IA_WATER < IA_BASE
 
         end
         
-        
+        %water fluxes between SNOW and LAKE class with bucket water scheme
         function get_boundary_condition_BUCKET_SNOW_LAKE_m(ia_heat_water) %water fluxes between classes with bucket water scheme
             remaining_pore_space = ia_heat_water.PREVIOUS.STATVAR.layerThick(end).* ia_heat_water.PREVIOUS.STATVAR.area(end) - ia_heat_water.PREVIOUS.STATVAR.mineral(end) - ia_heat_water.PREVIOUS.STATVAR.organic(end) - ia_heat_water.PREVIOUS.STATVAR.ice(end);
             saturation_previous = (ia_heat_water.PREVIOUS.STATVAR.water(end) - ia_heat_water.PREVIOUS.PARA.field_capacity .* remaining_pore_space) ./ ...
@@ -284,6 +294,7 @@ classdef IA_WATER < IA_BASE
             end
         end
            
+        %water fluxes between LAKE and LAKE class with bucket water scheme
         function get_boundary_condition_BUCKET_LAKE_LAKE_m(ia_heat_water) %water fluxes between classes with bucket water scheme
             
             %check if water can penetrate through ice, and get first (almost) unfrozen cell
@@ -318,7 +329,9 @@ classdef IA_WATER < IA_BASE
             end
         end
         
-        %Richards Equation----------------------
+        %----------Richards Equation----------------------
+        
+        %water fluxes between LAKE and GROUND class with Richards equation
         function get_boundary_condition_RichardsEq_LAKE_m(ia_heat_water) %should be done
             
 %             saturation_next = (ia_heat_water.NEXT.STATVAR.waterIce(1) - ia_heat_water.NEXT.STATVAR.field_capacity(1) .* ia_heat_water.NEXT.STATVAR.layerThick(1).*ia_heat_water.NEXT.STATVAR.area(1))./ ...
@@ -361,6 +374,7 @@ classdef IA_WATER < IA_BASE
             
         end
         
+        %water fluxes between SNOW class (bucket water) and GROUND class with Richards equation
         function get_boundary_condition_RichardsEq_SNOW_m(ia_heat_water) %water fluxes between classes with bucket water scheme
             remaining_pore_space = ia_heat_water.PREVIOUS.STATVAR.layerThick(end).* ia_heat_water.PREVIOUS.STATVAR.area(end) - ia_heat_water.PREVIOUS.STATVAR.mineral(end) - ia_heat_water.PREVIOUS.STATVAR.organic(end) - ia_heat_water.PREVIOUS.STATVAR.ice(end);
             saturation_previous = (ia_heat_water.PREVIOUS.STATVAR.water(end) - ia_heat_water.PREVIOUS.PARA.field_capacity .* remaining_pore_space) ./ ...
@@ -398,8 +412,8 @@ classdef IA_WATER < IA_BASE
             
         end
         
-        %Richards equation Xice
-        function get_boundary_condition_RichardsEq_Xice_LAKE_m(ia_heat_water) %done
+        %%water fluxes between LAKE and excess ice GROUND class with Richards equation
+        function get_boundary_condition_RichardsEq_Xice_LAKE_m(ia_heat_water) 
             
 %             saturation_next = (ia_heat_water.NEXT.STATVAR.waterIce(1) - ia_heat_water.NEXT.STATVAR.field_capacity(1) .* ia_heat_water.NEXT.STATVAR.layerThick(1).*ia_heat_water.NEXT.STATVAR.area(1))./ ...
 %                 (ia_heat_water.NEXT.STATVAR.layerThick(1).*ia_heat_water.NEXT.STATVAR.area(1) - ia_heat_water.NEXT.STATVAR.mineral(1) - ia_heat_water.NEXT.STATVAR.organic(1) - ...
@@ -449,6 +463,7 @@ classdef IA_WATER < IA_BASE
             
         end
         
+        %water fluxes between SNOW class (bucket water) and excess ice GROUND class with Richards equation
         function get_boundary_condition_RichardsEq_Xice_SNOW_m(ia_heat_water) %water fluxes between classes with bucket water scheme
             remaining_pore_space = ia_heat_water.PREVIOUS.STATVAR.layerThick(end).* ia_heat_water.PREVIOUS.STATVAR.area(end) - ia_heat_water.PREVIOUS.STATVAR.mineral(end) - ia_heat_water.PREVIOUS.STATVAR.organic(end) - ia_heat_water.PREVIOUS.STATVAR.ice(end);
             saturation_previous = (ia_heat_water.PREVIOUS.STATVAR.water(end) - ia_heat_water.PREVIOUS.PARA.field_capacity .* remaining_pore_space) ./ ...
@@ -491,8 +506,10 @@ classdef IA_WATER < IA_BASE
         
         
         
-        %--------------------
-        
+        %---service functions-----------------
+        %redce in and outflow close to field capacity and full saturation,
+        %bucket water scheme
+        %Note: these functions are duplicates of the respective functions in TIER1 WATER_FLUXES of the GROUND classes 
         function rf = reduction_factor_out(saturation, ia_heat_water)  %part of get_derivative_water2(ground)
             smoothness = 3e-2;
             rf = (1-exp(-saturation./smoothness));

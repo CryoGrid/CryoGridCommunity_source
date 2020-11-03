@@ -1,13 +1,22 @@
+%========================================================================
+% CryoGrid TIER1 library class, functions related to salt fluxes 
+% NOTE: also contains functions related to the  freeze curve representation "fcSimple"
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+%========================================================================
+
 classdef SALT < BASE
     
     methods
+        %------boundary conditions-----
         
         function ground = get_boundary_condition_u_ZERO_SALT(ground)
-            ground.TEMP.F_ub_salt=0; %zero flux bc, could be changed to Dirichlet BC, but this makes only sense when temperature bc is also Dirichlet
+            ground.TEMP.F_ub_salt = 0; %zero flux boundary condiition 
+            ground.TEMP.d_salt(1) = ground.TEMP.d_salt(1) + ground.TEMP.F_ub_salt .* ground.STATVAR.area(1);
         end
         
         function ground = get_boundary_condition_l_ZERO_SALT(ground)
-            ground.TEMP.F_lb_salt=0; %zero flux bc
+            ground.TEMP.F_lb_salt = 0; %zero flux boundary condition
+            ground.TEMP.d_salt(end) = ground.TEMP.d_salt(end) + ground.TEMP.F_lb_salt .* ground.STATVAR.area(end);
         end
         
 
@@ -16,23 +25,27 @@ classdef SALT < BASE
         function ground = get_derivative_salt(ground)
             fluxes = (ground.STATVAR.salt_c_brine(1:end-1) - ground.STATVAR.salt_c_brine(2:end)) .* ground.STATVAR.diffusivitySalt(1:end-1) .* ground.STATVAR.diffusivitySalt(2:end) ./...
                 (ground.STATVAR.diffusivitySalt(1:end-1).* ground.STATVAR.layerThick(2:end)./2 +  ground.STATVAR.diffusivitySalt(2:end).* ground.STATVAR.layerThick(1:end-1)./2 );
+            fluxes(isnan(fluxes)) = 0; % in case diffusivitySalt is 0 for both cells 
             %unit mol/m2, so flux through 1m2 unit cross section between cells!
+            
             d_salt=ground.STATVAR.energy.*0;
             d_salt(1) =  - fluxes(1);
             d_salt(2:end-1) = fluxes(1:end-1) - fluxes(2:end);  
             d_salt(end) =  + fluxes(end);
-            
             d_salt = d_salt.*ground.STATVAR.area;  %multiply by area, in [mol/sec] 
             
             ground.TEMP.d_salt = ground.TEMP.d_salt + d_salt;
         end
         
+        
         %-----------timesteps----------
-        function timestep = get_timestep_salt(ground)
-            timestep = ground.PARA.dt_max; %change later
+        
+        function timestep = get_timestep_salt(ground) %not used at this stage, modify if necessary!
+            timestep = ground.PARA.dt_max; 
         end
         
-        %----diagnostic functions---------
+        
+        %----diagnostic step---------
         
         function ground = get_T_water_salt_fcSimple_Xice(ground)
             
@@ -45,28 +58,23 @@ classdef SALT < BASE
             Tmfw = ground.CONST.Tmfw;
             
             deltaT = ground.STATVAR.deltaT;
-            %
-            freeWaterIce = 0; %[m]  %change later for snow
+            
+            freeWaterIce = 0; %[m]  possible excess ice amount (i.e. free ice that melts at exactly 0 degree)
             
             waterIce = ground.STATVAR.waterIce ./ ground.STATVAR.area ./ ground.STATVAR.layerThick;
             mineral = ground.STATVAR.mineral ./ ground.STATVAR.area ./ ground.STATVAR.layerThick;
             organic = ground.STATVAR.organic ./ ground.STATVAR.area ./ ground.STATVAR.layerThick;
             energy = ground.STATVAR.energy ./ ground.STATVAR.area ./ ground.STATVAR.layerThick ;
-            N = ground.STATVAR.saltConc./ ground.STATVAR.area ./ground.STATVAR.layerThick; %concentration in grid cell mol/m3, not concentration in waterIce phase
+            N = ground.STATVAR.saltConc./ ground.STATVAR.area ./ground.STATVAR.layerThick; %concentration per grid cell volume [mol/m3]
             
-            A = 1 + c_i.*deltaT.*freeWaterIce./(waterIce.*L_f);
-            
-            A1 = c_w.*waterIce + c_m.*mineral + c_o.*organic;
-            
-            A2 = c_i.*waterIce + c_m.*mineral + c_o.*organic;
-            
-            A3 = (c_w-c_i).*waterIce;
-            
-            A4 = waterIce .* L_f;
-            
+            A = 1 + c_i.*deltaT.*freeWaterIce./(waterIce.*L_f);            
+            A1 = c_w.*waterIce + c_m.*mineral + c_o.*organic;            
+            A2 = c_i.*waterIce + c_m.*mineral + c_o.*organic;            
+            A3 = (c_w-c_i).*waterIce;            
+            A4 = waterIce .* L_f;            
             B = -L_f./(R.* Tmfw.^2);
             
-            %quadratic equation in Tm, the onset of freezing T
+            %quadratic equation in Tm, the onset of freezing temperature
             %a*Tm^2 + b*Tm + c = 0
             
             %zero-th order terms
@@ -79,7 +87,7 @@ classdef SALT < BASE
             a = B.* (-c_i.*freeWaterIce./A - (c_i .* deltaT .* freeWaterIce .*A1) ./ (A .*A4) - A2);
             
             %Tm_2 = (-b + sqrt(b.^2 - 4.*a.*c)) ./ (2.*a);
-            Tm_1 = (-b - sqrt(b.^2 - 4.*a.*c)) ./ (2.*a); %thius is the right branch!!
+            Tm_1 = (-b - sqrt(b.^2 - 4.*a.*c)) ./ (2.*a); %this is the right branch of the two solutions
             
             thresh1 = 0;
             thresh2 = - L_f.*freeWaterIce;
@@ -106,8 +114,7 @@ classdef SALT < BASE
             ground.STATVAR.salt_c_brine = salt_c_brine;
         end
         
-        
-        function ground = get_E_water_salt_FreezeDepress_Xice(ground)
+        function ground = get_E_water_salt_FreezeDepress_Xice(ground) %used during initialization to calculate initial state for energy, water, salt concetrations
             
             L_f = ground.CONST.L_f;
             c_w = ground.CONST.c_w;
@@ -116,18 +123,16 @@ classdef SALT < BASE
             c_m = ground.CONST.c_m;
             R = ground.CONST.R;
             Tmfw = ground.CONST.Tmfw;
-            freeWaterIce = 0; %[m]  %no Xice here            
+            freeWaterIce = 0; %[m]  possible excess ice amount (i.e. free ice that melts at exactly 0 degree), set to 0 here          
 
             deltaT = ground.STATVAR.deltaT;
-            waterIce = ground.STATVAR.waterIce; %still in [-]
+            waterIce = ground.STATVAR.waterIce; % in volumetric fractions as provided byy the initialization 
             mineral = ground.STATVAR.mineral;
             organic = ground.STATVAR.organic;
             area = ground.STATVAR.area;
             T = ground.STATVAR.T;
             
-            N = ground.STATVAR.saltConc.*waterIce;  %this should be saltConc.*waterIce?  in the initialization, it should be the concentration in the brine water?
-            %N = ground.STATVAR.saltConc./waterIce;  the original
-            %formulation, this does not make sense at all for me
+            N = ground.STATVAR.saltConc.*waterIce; 
             
             A = 1 + c_i.*deltaT.*freeWaterIce./(waterIce.*L_f);
             A1 = c_w.*waterIce + c_m.*mineral + c_o.*organic;
@@ -176,9 +181,9 @@ classdef SALT < BASE
             ground.STATVAR.organic = ground.STATVAR.organic .* ground.STATVAR.layerThick .* ground.STATVAR.area;
             ground.STATVAR.air = ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.waterIce - ground.STATVAR.mineral - ground.STATVAR.organic;
             
-            ground.STATVAR.saltConc = N .* ground.STATVAR.layerThick .* ground.STATVAR.area;  %unit mol
+            ground.STATVAR.saltConc = N .* ground.STATVAR.layerThick .* ground.STATVAR.area;  % [mol]
             
-            salt_c_brine = N ./ water;  %unit mol/m3
+            salt_c_brine = N ./ water;  % [mol/m3]
             salt_c_brine(isnan(salt_c_brine))=0;
             ground.STATVAR.salt_c_brine = salt_c_brine;
         end
@@ -186,11 +191,12 @@ classdef SALT < BASE
         
         
         %---diffusivity salt--------------
+        
         function ground = diffusivity_salt(ground)
             
             water = ground.STATVAR.water./ground.STATVAR.layerThick ./ ground.STATVAR.area;
             
-            D0 = ((6.06 + 9.60)/2  + max(ground.STATVAR.T, 0) .* (0.297  + 0.438)/2) .* 1e-10; %from Boudreau, B., 1997, Diagenetic Models and thier implementation, Springer, Berlin.
+            D0 = ((6.06 + 9.60)/2  + max(ground.STATVAR.T, 0) .* (0.297  + 0.438)/2) .* 1e-10; %from Boudreau, B., 1997, Diagenetic Models and their implementation, Springer, Berlin.
             %average between values for Na+ and Cl-
             
             ground.STATVAR.diffusivitySalt = D0 .* water ./ground.PARA.tortuosity.^2;

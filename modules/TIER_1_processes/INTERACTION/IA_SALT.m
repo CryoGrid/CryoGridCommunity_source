@@ -1,3 +1,10 @@
+%========================================================================
+% CryoGrid TIER1 INTERACTION (IA) class for functions related to salt
+% diffusion
+% NOTE: at this pooint, only zero flux boundary conditions are implemented
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_SALT < IA_BASE
     
     methods

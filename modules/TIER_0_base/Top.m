@@ -1,8 +1,15 @@
+%========================================================================
+% CryoGrid TOP class 
+% top confining class of stratigraphy, storage for sleeping GROUND classes, pointer to lateral class 
+% S. Westermann, Oct 2020
+%========================================================================
+
 classdef Top  < matlab.mixin.Copyable 
 
     properties
         NEXT
         STORE
+        LATERAL
     end
     
     methods

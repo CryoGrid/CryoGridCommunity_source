@@ -1,9 +1,17 @@
+%========================================================================
+% CryoGrid TIER1 library class for functions related to the freeze curve
+% caclulated by the freezing = drying assumption, Dall'Amico et al., 2011
+% S. Westermann, October 2020
+%========================================================================
+
+
 classdef FREEZE_CURVE < BASE
     
-    properties
-        LUT
-    end
     
+    properties
+        LUT   %additional variable LUT for LookUpTable 
+    end
+        
     methods
         
         
@@ -34,9 +42,7 @@ classdef FREEZE_CURVE < BASE
             
             waterPotZero = -1./alpha .*(((waterIce - thetaRes)./(porosity - thetaRes)).^(-1./m)-1).^(1./n);
             waterPotZero = real(waterPotZero);
-            
 
-            
             Tstar =  g .* Tmfw ./ L_sl .* waterPotZero;
             
             unfrozen_positive = energy >= 0;
@@ -48,7 +54,7 @@ classdef FREEZE_CURVE < BASE
             ground.STATVAR.T(unfrozen_positive) = energy(unfrozen_positive) ./ (waterIce(unfrozen_positive) .* c_w + mineral(unfrozen_positive) .* c_m + organic(unfrozen_positive) .* c_o);
             ground.STATVAR.T(unfrozen_negative) = energy(unfrozen_negative) ./ (waterIce(unfrozen_negative) .* c_i + mineral(unfrozen_negative) .* c_m + organic(unfrozen_negative) .* c_o);
             
-            %iunterpolate in look-up tables
+            %interpolate in look-up tables
             Tstar = Tstar(~linear_range) + Tmfw;
             a = g .* Tstar ./ L_sl;
             A = Tstar - Tmfw - a .*waterPotZero(~linear_range);
@@ -59,14 +65,11 @@ classdef FREEZE_CURVE < BASE
             soil_type = ground.STATVAR.soil_type(~linear_range)-1;
             size_LUT = ground.PARA.LUT_size_waterIce .* ground.PARA.LUT_size_T;
             
-            
             energy_shifted_and_scaled = real((energy(~linear_range) - b.*A + B) ./ (a.*b.*c));
             scale_factor = real(C ./ (a.*b.*c));
             
-
             sf_matrix = ground.LUT.sf_matrix;
             LUT = ground.LUT.lut_energy_T_water;
-            
             
             pos_sf = (scale_factor - ground.LUT.min_sf(soil_type + 1,1)) ./ (ground.LUT.max_sf(soil_type + 1,1) - ground.LUT.min_sf(soil_type + 1,1)) .* ground.PARA.LUT_size_waterIce;
             pos_sf(pos_sf<1) = 1;
@@ -93,31 +96,6 @@ classdef FREEZE_CURVE < BASE
                 LUT(pos_sf + (pos_energy).*ground.PARA.LUT_size_waterIce + soil_type.*size_LUT));
 
             X_interp = left + fraction_energy .*(right - left);
-            
-            
-            %----------
-            
-%             pos_energy1 = (energy_shifted_and_scaled - sf_matrix(pos_sf+soil_type.*ground.PARA.LUT_size_waterIce,2)) ./ ...
-%                 (sf_matrix(pos_sf+soil_type.*ground.PARA.LUT_size_waterIce,3)-sf_matrix(pos_sf+soil_type.*ground.PARA.LUT_size_waterIce,2)) .* ground.PARA.LUT_size_T;
-%             fraction1 = pos_energy1 - floor(pos_energy1);
-%             pos_energy1 = floor(pos_energy1);
-%             
-%             X1 = LUT(pos_sf + (pos_energy1-1).*ground.PARA.LUT_size_T + soil_type.*size_LUT) + ...
-%                 fraction1 .*(LUT(pos_sf + pos_energy1.*ground.PARA.LUT_size_T + soil_type.*size_LUT) - ...
-%                 LUT(pos_sf + (pos_energy1-1).*ground.PARA.LUT_size_T + soil_type.*size_LUT));
-%             
-%             pos_energy2 = (energy_shifted_and_scaled - sf_matrix(pos_sf+1+soil_type.*ground.PARA.LUT_size_waterIce,2)) ./ ...
-%                 (sf_matrix(pos_sf+1+soil_type.*ground.PARA.LUT_size_waterIce,3) - sf_matrix(pos_sf+1+soil_type.*ground.PARA.LUT_size_waterIce,2)) .* ground.PARA.LUT_size_T;
-%             fraction2 = pos_energy2 - floor(pos_energy2);
-%             pos_energy2 = floor(pos_energy2);
-%                         
-%             X2 = LUT(pos_sf+1 + (pos_energy2-1).*ground.PARA.LUT_size_T + soil_type.*size_LUT) + ...
-%                 fraction2 .*(LUT(pos_sf+1 + pos_energy2.*ground.PARA.LUT_size_T + soil_type.*size_LUT) - ...
-%                 LUT(pos_sf+1 + (pos_energy2-1).*ground.PARA.LUT_size_T + soil_type.*size_LUT));
-%               
-%             X_interp = X1 + fraction_sf .*(X2-X1);
-            
-            %-------------------
             
             waterPot_interp = X_interp./-alpha(~linear_range);
             T_interp = (waterPot_interp-waterPotZero(~linear_range)).* Tstar.*g ./L_sl + Tstar - Tmfw;
@@ -258,9 +236,9 @@ classdef FREEZE_CURVE < BASE
         
         
         
-        % get energy from temeprature and water contenst, normally part of initialziation----------
+        % get energy from temeprature and water contents, normally part of initializiation
         
-        function ground = get_E_freezeC(ground) %required for initialization, creates lookup table LUT
+        function ground = get_E_freezeC(ground) %required for initialization
         
             L_sl = ground.CONST.L_f ./ ground.CONST.rho_w;
             c_w = ground.CONST.c_w;
@@ -312,7 +290,7 @@ classdef FREEZE_CURVE < BASE
         
         
         
-        function ground = get_E_freezeC_Xice(ground) %required for initialization, creates lookup table LUT
+        function ground = get_E_freezeC_Xice(ground) %required for initialization
         
             L_sl = ground.CONST.L_f ./ ground.CONST.rho_w;
             c_w = ground.CONST.c_w;
@@ -332,22 +310,7 @@ classdef FREEZE_CURVE < BASE
             soil_type = ground.STATVAR.soil_type;
             
             Xice = ground.STATVAR.Xice .* double(T <= 0); % Xice initially only possible when frozen, provided in multiples of the "matrix", 1 means 50 vol% Xice, 50 % normal soil
-            
-%             n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2);
-%             ground.STATVAR.n = n;
-%             alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2);
-%             ground.STATVAR.alpha = alpha;
-%             thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2);
-%             ground.STATVAR.thetaRes = thetaRes;
-%             
-%             n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2) + double(soil_type == 3) .* ground.CONST.vanGen_n(3);
-%             ground.STATVAR.n = n;
-%             alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2) + double(soil_type == 3) .* ground.CONST.vanGen_alpha(3);
-%             ground.STATVAR.alpha = alpha;
-%             thetaRes = double(soil_type == 1) .* ground.CONST.vanGen_residual_wc(1) + double(soil_type == 2) .* ground.CONST.vanGen_residual_wc(2) + double(soil_type == 3) .* ground.CONST.vanGen_residual_wc(3);
-%             ground.STATVAR.thetaRes = thetaRes;
-            
-            
+
             n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2) + double(soil_type == 3) .* ground.CONST.vanGen_n(3) + double(soil_type == 4) .* ground.CONST.vanGen_n(4) + double(soil_type == 5) .* ground.CONST.vanGen_n(5);
             ground.STATVAR.n = n;
             alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2) + double(soil_type == 3) .* ground.CONST.vanGen_alpha(3) + double(soil_type == 4) .* ground.CONST.vanGen_alpha(4) + + double(soil_type == 5) .* ground.CONST.vanGen_alpha(5);
@@ -385,7 +348,6 @@ classdef FREEZE_CURVE < BASE
         
         
         %---look-up tables initialization-----------
-        
         function ground = create_LUT_freezeC(ground) % creates lookup table LUT
             
             disp('creating look-up tables')
@@ -415,11 +377,9 @@ classdef FREEZE_CURVE < BASE
                 max_sf = -1e20;
                 for j=0:1  %max and min matrix fill
                     for waterIce = ground.PARA.min_waterIce:0.005:ground.PARA.max_waterIce
-                        
-                        
+
                         mineral = double(j).*(1 - waterIce) + double(~j) .* ground.PARA.min_mineral_organic;
                         organic = 0;
-                        
                         porosity = 1-mineral-organic;
                         
                         m=1-1./n;
@@ -457,7 +417,6 @@ classdef FREEZE_CURVE < BASE
                         max_sf = max(max_sf, scale_factor);
                         
                     end
-                    
                 end
                 
                 %delete duplicates
@@ -503,9 +462,7 @@ classdef FREEZE_CURVE < BASE
             end
             
         end
-        
-        
-        
+
     end
 end
 

@@ -1,4 +1,9 @@
-
+%========================================================================
+% CryoGrid GROUND class SNOW_simple_bucketW_seb
+% largely corresponds to snow scheme in the old CryoGrid 3, but without short-wave radiation penetration
+% constant initial density, sublimation, water flow, refreezing, variable albedo
+% S. Westermann, October 2020
+%========================================================================
 
 classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_FLUXES_LATERAL & SNOW & INITIALIZE & REGRID
 
@@ -9,103 +14,97 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
     
     methods
         
-        function self = SNOW_simple_bucketW_seb(index, pprovider, cprovider, forcing)  
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
+        %----mandatory functions---------------
+        %----initialization--------------------
+        
+        function snow = SNOW_simple_bucketW_seb(index, pprovider, cprovider, forcing)  
+            snow@INITIALIZE(index, pprovider, cprovider, forcing);
         end
         
         function snow = provide_PARA(snow)
             
-            snow.PARA.albedo = [];
-            snow.PARA.max_albedo = [];
-            snow.PARA.min_albedo = [];
-            snow.PARA.tau_1 = [];
+            snow.PARA.max_albedo = []; %maximum surface albedo (fresh snow) [-]
+            snow.PARA.min_albedo = []; %minimum surface albedo (old snow) [-]
+            snow.PARA.tau_1 = []; % time constants for transient albedo
             snow.PARA.tau_a = [];
             snow.PARA.tau_f = [];
             
-            snow.PARA.epsilon = [];
-            snow.PARA.airT_height = []; %measurement height [m]
+            snow.PARA.epsilon = []; %surface emissivity [-]
             snow.PARA.z0 = []; %roughness length [m]
             
-            snow.PARA.density = []; 
-            snow.PARA.field_capacity = [];
-            snow.PARA.hydraulicConductivity = [];
-            snow.PARA.swe_per_cell = [];
+            snow.PARA.density = []; %(initial) snow density [kg/m3]
+            snow.PARA.field_capacity = []; %snow field capacity in fraction of available pore space [-] NOTE: the definition is different for GROUND_XX classes
+            snow.PARA.hydraulicConductivity = []; %hydraulic conductivity of snow [m/sec]
+            snow.PARA.swe_per_cell = []; %target SWE per grid cell [m]
             
-            snow.PARA.area = []; %initial area of the realization [m2]
-
-            snow.PARA.heatFlux_lb = [];
-            
-            snow.PARA.dt_max = [] ; %[sec]
-            snow.PARA.dE_max = []; %[J/m3]
+            snow.PARA.dt_max = []; %maximum possible timestep [sec]
+            snow.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
         
         function snow = provide_STATVAR(snow)
             
-            snow.STATVAR.upperPos = [];
-            snow.STATVAR.lowerPos = [];
-            snow.STATVAR.layerThick = []; % [m]
+            snow.STATVAR.upperPos = []; % upper surface elevation [m]
+            snow.STATVAR.lowerPos = []; % lower surface elevation [m]
+            snow.STATVAR.layerThick = [];  % thickness of grid cells [m]
             
-            snow.STATVAR.waterIce = []; % [m]
-            snow.STATVAR.mineral = []; % [m]
-            snow.STATVAR.organic = []; % [m]
-            snow.STATVAR.energy = [];  % [J/m2]
+            snow.STATVAR.waterIce = []; % total volume of water plus ice in a grid cell [m3]
+            snow.STATVAR.mineral = []; % total volume of minerals [m3]
+            snow.STATVAR.organic = []; % total volume of organics [m3]
+            snow.STATVAR.energy = [];  % total internal energy[J]
             
-            snow.STATVAR.T = [];  % [degree C]
-            snow.STATVAR.water = [];  % [m]
-            snow.STATVAR.ice = [];
-            snow.STATVAR.air = [];  % [m]
-            snow.STATVAR.thermCond = [];
-            snow.STATVAR.hydraulicConductivity = [];
-            snow.STATVAR.albedo = [];
+            snow.STATVAR.T = [];      % temperature [degree C]
+            snow.STATVAR.water = [];  % total volume of water [m3]
+            snow.STATVAR.ice = [];    %total volume of ice [m3]
+            snow.STATVAR.air = [];    % total volume of air [m3] - NOT USED
+            snow.STATVAR.thermCond = []; %thermal conductivity [W/mK]
+            snow.STATVAR.hydraulicConductivity = []; %hydraulic conductivity of snow [m/sec]
+            snow.STATVAR.albedo = []; %snow albedo [-]
             
-            snow.STATVAR.Lstar = [];
-            snow.STATVAR.Qh = [];
-            snow.STATVAR.Qe = [];
+            snow.STATVAR.Lstar = []; %Obukhov length [m]
+            snow.STATVAR.Qh = [];    %sensible heat flux [W/m2]
+            snow.STATVAR.Qe = [];    % latent heat flux [W/m2]
         end
     
         function snow = provide_CONST(snow)
             
-            snow.CONST.L_f = [];
+            snow.CONST.L_f = []; % volumetric latent heat of fusion, freezing
+            snow.CONST.c_w = []; % volumetric heat capacity water
+            snow.CONST.c_i = []; % volumetric heat capacity ice
+            snow.CONST.c_o = []; % volumetric heat capacity organic
+            snow.CONST.c_m = []; % volumetric heat capacity mineral
             
-            snow.CONST.c_w = [];
-            snow.CONST.c_i = [];
-            snow.CONST.c_o = [];
-            snow.CONST.c_m = [];
-            
-            snow.CONST.k_a = [];       %air [Hillel(1982)]
-            snow.CONST.k_w = [];        %water [Hillel(1982)]
-            snow.CONST.k_i = [];         %ice [Hillel(1982)]
-            snow.CONST.k_o = [];        %organic [Hillel(1982)]
-            snow.CONST.k_m = [];
+            snow.CONST.k_a = [];   % thermal conductivity air
+            snow.CONST.k_w = [];   % thermal conductivity water
+            snow.CONST.k_i = [];   % thermal conductivity ice 
+            snow.CONST.k_o = [];   % thermal conductivity organic 
+            snow.CONST.k_m = [];   % thermal conductivity mineral 
             
             snow.CONST.sigma = []; %Stefan-Boltzmann constant
-            snow.CONST.kappa = [];
-            snow.CONST.L_s = []; %latent heat of vaporization
+            snow.CONST.kappa = []; % von Karman constant
+            snow.CONST.L_s = [];   %latent heat of sublimation, evaporation handled in a dedicated function
             
-            snow.CONST.cp = [];
-            snow.CONST.g = [];
+            snow.CONST.cp = []; % specific heat capacity at constant pressure of air
+            snow.CONST.g = []; % gravitational acceleration Earth surface
             
-            snow.CONST.rho_w = [];
-            snow.CONST.rho_i = [];
+            snow.CONST.rho_w = []; % water density
+            snow.CONST.rho_i = []; %ice density
         end
         
-        
-        %----mandatory functions---------------
-        %----initialization--------------------
-        
-        function snow = finalize_init(snow, forcing) %assign all variables, that must be calculated or assigned otherwise for initialization
+        function snow = finalize_init(snow, forcing)
             snow.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
             snow.PARA.airT_height = forcing.PARA.airT_height;
             
-            snow = initialize_zero_snow_BASE(snow);  %initialize all values to be zero
+            snow = initialize_zero_snow_BASE(snow); 
             snow.TEMP.d_energy = snow.STATVAR.energy .*0;
             snow.TEMP.d_water = snow.STATVAR.energy .*0;
             snow.TEMP.d_water_energy = snow.STATVAR.energy .*0;
             snow.TEMP.newSnow = 0;
             snow.STATVAR.albedo = snow.PARA.max_albedo;
+            snow.STATVAR.excessWater = 0;
         end
         
         %---time integration------
+        %separate functions for CHILD pphase of snow cover
         
         function snow = get_boundary_condition_u(snow, forcing) 
             snow = surface_energy_balance(snow, forcing);
@@ -122,7 +121,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         end
         
         function snow = get_boundary_condition_u_create_CHILD(snow, forcing)
-            snow = get_boundary_condition_allSNOW_u(snow, forcing); %add all snow, no rain
+            snow = get_boundary_condition_allSNOW_u(snow, forcing); %add full snow, no rain
             
             snow.TEMP.d_energy = 0;
             snow.TEMP.d_water = 0;
@@ -139,7 +138,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow.TEMP.rain_energy = 0;
             snow.TEMP.rainfall = 0;
             snow.STATVAR.area = 0;
-            snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ (snow.PARA.density ./1000); %[m] constant layerThick
+            snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ (snow.PARA.density ./1000); %[m] constant layerThick during CHILD phase
             snow.STATVAR.ice = 0;
             snow.STATVAR.upperPos = snow.PARENT.STATVAR.upperPos;
         end
@@ -156,13 +155,12 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
                 snow = get_derivative_energy(snow);
                 snow = get_derivative_water_SNOW(snow);
             else
-                %snow.TEMP.d_energy = snow.TEMP.d_energy + snow.TEMP.F_ub + snow.TEMP.F_lb;
-                %snow.TEMP.d_water = snow.TEMP.d_water + snow.TEMP.F_ub_water + snow.TEMP.F_lb_water;
-                %snow.TEMP.d_water_energy = snow.TEMP.d_water_energy + snow.TEMP.F_ub_water_energy + snow.TEMP.F_lb_water_energy;
+                %handled in advance_prognostic()
             end
         end
         
         function snow = get_derivatives_prognostic_CHILD(snow)
+            %do nothing, all handled in advance_prognostic()
             %snow.TEMP.d_energy = snow.TEMP.d_energy + snow.TEMP.F_ub + snow.TEMP.F_lb;
             %snow.TEMP.d_water = snow.TEMP.d_water + snow.TEMP.F_ub_water + snow.TEMP.F_lb_water;
             %snow.TEMP.d_water_energy = snow.TEMP.d_water_energy + snow.TEMP.F_ub_water_energy + snow.TEMP.F_lb_water_energy;
@@ -188,7 +186,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             %mass
             snow.STATVAR.waterIce = snow.STATVAR.waterIce + timestep .* snow.TEMP.d_water;
             snow.STATVAR.waterIce(1) = snow.STATVAR.waterIce(1) + timestep .* (snow.TEMP.snowfall + snow.STATVAR.sublimation);
-            snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.area(1,1) ./ (snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1));
+            snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.area(1,1) ./ (snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1) ./ snow.STATVAR.area(1));
             snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + timestep .* snow.TEMP.snowfall ./snow.STATVAR.area(1,1) ./ (snow.PARA.density ./1000);
             %store "old" density
             snow.STATVAR.target_density = snow.STATVAR.ice ./ snow.STATVAR.layerThick ./ snow.STATVAR.area;
@@ -197,24 +195,11 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow = calculate_albedo_simple(snow, timestep);
         end
         
-%         function snow = advance_prognostic_create_CHILD(snow, timestep) %discontinued
-%             snow.STATVAR.energy = timestep .* snow.TEMP.snow_energy;
-%             snow.STATVAR.waterIce = timestep .* snow.TEMP.snowfall;
-%             snow.STATVAR.ice = snow.STATVAR.waterIce; %dry initially
-%             snow.STATVAR.water = 0;
-%             snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.TEMP.snowfall ./ (snow.PARA.density ./1000) ./  snow.STATVAR.layerThick ; %[m2]
-% 
-%             %snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ (snow.PARA.density ./1000); %[m] constant layerThick
-%             %snow.STATVAR.area = timestep .* snow.TEMP.snowfall ./ (0.5.*snow.PARA.swe_per_cell) ; %[m2]
-%             
-%             snow.STATVAR.target_density = snow.PARA.density ./1000;
-%         end
-        
         function snow = advance_prognostic_CHILD(snow, timestep)
 
             snow.STATVAR.energy = snow.STATVAR.energy + timestep .* (snow.TEMP.d_energy + snow.TEMP.snow_energy + snow.TEMP.d_water_energy + snow.TEMP.sublimation_energy);
             snow.STATVAR.waterIce = snow.STATVAR.waterIce + timestep .* (snow.TEMP.snowfall + snow.TEMP.d_water + snow.STATVAR.sublimation);
-            snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.layerThick ./ max(50, snow.STATVAR.ice ./ snow.STATVAR.layerThick);
+            snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.layerThick ./ max(50/1000, snow.STATVAR.ice ./ snow.STATVAR.layerThick ./ snow.STATVAR.area);
             snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.TEMP.snowfall ./ (snow.PARA.density ./1000) ./  snow.STATVAR.layerThick ; %[m2]
             snow.STATVAR.target_density = min(1,(snow.STATVAR.ice + timestep .* (snow.TEMP.snowfall + snow.STATVAR.sublimation)) ./ snow.STATVAR.layerThick ./ snow.STATVAR.area);
             
@@ -227,9 +212,9 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
        
         function snow = compute_diagnostic(snow, forcing)
             snow = get_T_water_freeW(snow);
-            snow = subtract_water(snow);
+            snow = subtract_water2(snow);
             
-            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'}, 'waterIce');
+            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'}, 'ice');
             if regridded_yesNo
                 snow = get_T_water_freeW(snow);
             end
@@ -280,11 +265,24 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         end
         
         
-        %lateral fluxes---------------------------
+        %-----LATERAL-------------------
+        
+        %-----LAT_REMOVE_SURFACE_WATER-----
         function ground = lateral_push_remove_surfaceWater(ground, lateral)
             ground = lateral_push_remove_surfaceWater_simple(ground, lateral);
         end
-
+                
+        %----LAT_SEEPAGE_FACE----------
+        function snow = lateral_push_remove_water_seepage(snow, lateral)
+            snow = lateral_push_remove_water_seepage_snow(snow, lateral);
+        end
+        
+        %----LAT_WATER_RESERVOIR------------
+        function snow = lateral_push_water_reservoir(snow, lateral)
+            snow = lateral_push_water_reservoir_snow(snow, lateral);
+        end
+        
+        %-----------------------------
         
         %----inherited Tier 1 functions ------------
         

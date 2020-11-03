@@ -1,3 +1,9 @@
+%========================================================================
+% CryoGrid INTERACTION (IA) class for heat conduction between a LAKE and a
+% normal GROUND class
+% S. Westermann, October 2020
+%========================================================================
+
 classdef IA_HEAT11_LAKE <  IA_HEAT 
     
     methods
