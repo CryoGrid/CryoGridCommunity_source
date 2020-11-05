@@ -1,5 +1,5 @@
 %========================================================================
-% CryoGrid main run file, one-dimensional (single-column) configuration
+% CryoGrid main run file, one-dimensional (single-tile) configuration
 % S. Westermann, T. Ingemann-Nielsen, J. Scheer, October 2020
 %========================================================================
 

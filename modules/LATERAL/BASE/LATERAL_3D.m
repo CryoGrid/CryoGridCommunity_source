@@ -36,18 +36,10 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
             
             t = tile.forcing.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
-
-            % NB which is correct? originally 3D inititialization had both
-            % of the following lines, effectively setting IA_TIME=t
-            % The 1D case only has the first line, IA_TIME = t + IA_TIME_INCREMENT;
             lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-            lateral.IA_TIME = t;
-            
-            lateral.TOP = TOP;
-            lateral.BOTTOM = BOTTOM;            
-            
-            % This must be updated when we decide how to input parameters
-            % for the 3D case...
+
+            lateral.TOP = tile.TOP;
+            lateral.BOTTOM = tile.BOTTOM;           
             lateral_class_list = tile.pprovider.tile_info.lateral_interactions;      % copied from 1D case
             %lateral_class_list =
             %lateral.PARA.class_list{lateral.STATVAR.index,1};  % original 3D code
@@ -55,7 +47,8 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             %user-defined in the main file
             for i=1:size(lateral_class_list,2)
                 class_handle = str2func(lateral_class_list{1,i});
-                lateral.IA_CLASSES{i,1} = class_handle();
+                %lateral.IA_CLASSES{i,1} = class_handle();
+                lateral.IA_CLASSES{i,1} = class_handle(1, tile.pprovider, tile.cprovider);
                 %lateral.IA_CLASSES{i,1} = class_handle(1, tile.pprovider, tile.cprovider); % This is the corresponding code for 1D case, update when input format decided.
             end
             
@@ -93,12 +86,12 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         
         
         function lateral = provide_STATVAR(lateral)
-            lateral.STATVAR.depths = [];
-            lateral.STATVAR.water_status = [];
-            lateral.STATVAR.hydraulicConductivity = [];
-            lateral.STATVAR.water_table_elevation = [];
-            lateral.STATVAR.water_available = [];
-            lateral.STATVAR.T_water = [];
+%             lateral.STATVAR.depths = [];
+%             lateral.STATVAR.water_status = [];
+%             lateral.STATVAR.hydraulicConductivity = [];
+%             lateral.STATVAR.water_table_elevation = [];
+%             lateral.STATVAR.water_available = [];
+%             lateral.STATVAR.T_water = [];
         end
         
         

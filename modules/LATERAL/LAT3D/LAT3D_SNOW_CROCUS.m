@@ -3,7 +3,7 @@
 % simulates lateral wind drift of snow between different CryoGrid
 % stratigraphies. Blowing snow is assigned to stratigraphies with lower
 % surface elevation.
-% NOTE: works only for the SNOW classes SNOW_crocus_... and SNOW_crocus2_... 
+% NOTE: works only with the SNOW classes SNOW_crocus_... and SNOW_crocus2_... 
 % S. Westermann, Oct 2020
 %========================================================================
 
@@ -16,17 +16,21 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
+        function lateral = LAT3D_SNOW_CROCUS(index, pprovider, cprovider)
+            lateral@BASE_LATERAL(index, pprovider, cprovider);
+        end
+        
         function lateral = provide_PARA(lateral)
-            lateral.PARA.N_drift = 5;
-            lateral.PARA.drift_loss_fraction = 0; %fraction of drifting snow that is lost from the system
-            lateral.PARA.ia_time_increment = 0.05; %must be a multiple of the time increment of the main lateral class
-            lateral.PARA.ia_time_increment_min = 0.05;
-            lateral.PARA.ia_time_increment_max = 0.25;            
-            lateral.PARA.ia_time_next = [];
+            lateral.PARA.N_drift = []; %5;
+            lateral.PARA.drift_loss_fraction = []; %0; %fraction of drifting snow that is lost from the system
+            lateral.PARA.ia_time_increment = []; %0.05; %must be a multiple of the time increment of the main lateral class
+            lateral.PARA.ia_time_increment_min = []; %0.05;
+            lateral.PARA.ia_time_increment_max = []; %0.25;            
+            %lateral.PARA.ia_time_next = [];
         end
         
         function lateral = provide_CONST(lateral)
-            lateral.CONST.day_sec = 24 .* 3600;
+            lateral.CONST.day_sec = []; %24 .* 3600;
         end
         
         

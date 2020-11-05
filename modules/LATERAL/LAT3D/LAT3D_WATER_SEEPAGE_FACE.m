@@ -18,18 +18,22 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
+        function lateral = LAT3D_WATER_SEEPAGE_FACE(index, pprovider, cprovider)
+            lateral@BASE_LATERAL(index, pprovider, cprovider);
+        end
+        
         function lateral = provide_CONST(lateral)
-            lateral.CONST.day_sec = 24 .* 3600;
+            lateral.CONST.day_sec = []; %24 .* 3600;
         end
         
         function lateral = provide_PARA(lateral)
-            lateral.PARA.upperElevation = Inf;
-            lateral.PARA.lowerElevation = 10;
-            lateral.PARA.hardBottom_cutoff = 0.03; %hard bottom if saturated and water content below
-            lateral.PARA.distance_seepageFace = 10; 
-            lateral.PARA.seepage_contact_length = 40;
-            lateral.PARA.ia_time_increment = 0.25; %must be a multiple of the time increment of the main lateral class
-            lateral.PARA.ia_time_next = [];
+            lateral.PARA.upperElevation = []; %Inf;
+            lateral.PARA.lowerElevation = []; %10;
+            lateral.PARA.hardBottom_cutoff = []; %0.03; %hard bottom if saturated and water content below
+            lateral.PARA.distance_seepageFace = []; %10; 
+            lateral.PARA.seepage_contact_length = []; %40;
+            lateral.PARA.ia_time_increment = []; %0.25; %must be a multiple of the time increment of the main lateral class
+            %lateral.PARA.ia_time_next = [];
         end
         
         function lateral = provide_STATVAR(lateral)

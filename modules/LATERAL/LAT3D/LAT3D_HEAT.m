@@ -1,7 +1,6 @@
 %========================================================================
 % CryoGrid LATERAL_IA class LAT3D_HEAT 
-% simulates lateral heat fluxes between pairs of CryoGrid
-% stratigraphies. 
+% simulates lateral conductive heat fluxes between different CryoGrid tiles. 
 % S. Westermann, Oct 2020
 %========================================================================
 
@@ -9,18 +8,21 @@ classdef LAT3D_HEAT < BASE_LATERAL
 
     
     methods
-        
-                
+            
         %----mandatory functions---------------
         %----initialization--------------------
         
+        function lateral = LAT3D_HEAT(index, pprovider, cprovider)
+            lateral@BASE_LATERAL(index, pprovider, cprovider);
+        end
+        
         function lateral = provide_CONST(lateral)
-            lateral.CONST.day_sec = 24 .* 3600;
+            lateral.CONST.day_sec = []; %24 .* 3600;
         end
         
         function lateral = provide_PARA(lateral)
-            lateral.PARA.ia_time_increment = 0.25; %must be a multiple of the time increment of the main lateral class
-            lateral.PARA.ia_time_next = [];
+            lateral.PARA.ia_time_increment = []; %0.25; %must be a multiple of the time increment of the main lateral class
+            %lateral.PARA.ia_time_next = [];
         end
         
         function lateral = provide_STATVAR(lateral)
@@ -28,7 +30,7 @@ classdef LAT3D_HEAT < BASE_LATERAL
         end
 
         function lateral = finalize_init(lateral)
-            lateral.STATVAR.subsurface_run_off = 0;
+            %lateral.STATVAR.subsurface_run_off = 0;
         end
         
         %----time integration----------------- 
