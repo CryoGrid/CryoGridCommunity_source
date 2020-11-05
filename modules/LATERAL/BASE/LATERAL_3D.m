@@ -25,7 +25,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
     end
     
     methods
-        %Use for several realizations with spmd
+        
         function lateral = LATERAL_3D(tile)
             lateral = lateral.provide_PARA();
             lateral = lateral.provide_CONST();
