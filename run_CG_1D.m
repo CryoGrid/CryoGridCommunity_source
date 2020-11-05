@@ -13,6 +13,7 @@ init_format = 'EXCEL'; %EXCEL or YAML
 run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 result_path = '../CryoGrid_Git_results/';
+result_path = './results/';
 
 %=========================================================================
 %DO NOT MODIFY BELOW

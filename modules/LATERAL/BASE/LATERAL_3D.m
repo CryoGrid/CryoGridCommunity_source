@@ -55,10 +55,10 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             for i=1:size(lateral.IA_CLASSES,1)
                 % provide_XXXX should be handled in class initialization.
                 % remove these lines when classes have been updated.
-                lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
+                %lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
+                %lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
+                %lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
+                %lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
                 lateral.IA_CLASSES{i}.PARENT = lateral;
             end
 
@@ -125,8 +125,8 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             
             lateral.PARA.contact_length = [0 24.1240351380764 0; 24.1240351380764 0 41.7840545427251;0 41.7840545427251 0]; %[0 1; 1  0];
             lateral.PARA.distance = [0 3.549647869859770 0;3.549647869859770 0 2.366431913239846;0 2.366431913239846 0]; %[0 10; 10 0];
-            lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
-                                        {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_SEEPAGE_FACE'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}};
+            %lateral.PARA.class_list ={{'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}; ...
+           %                             {'LAT3D_WATER_UNCONFINED_AQUIFER'; 'LAT3D_WATER_SEEPAGE_FACE'; 'LAT3D_HEAT'; 'LAT3D_SNOW_CROCUS'}};
 % 
 %             lateral.PARA.run_number = [1; 2];
 %             lateral.PARA.connected = [0 1; 1 0];

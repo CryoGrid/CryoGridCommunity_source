@@ -14,6 +14,9 @@ run_number = 'Herschell'; %paramter file name and result directory
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
 result_path = './results/';
+
+%must be part of the overarching concept to initialize multi-tile runs 
+lateral.PARA.run_number = [1;2;3];
 number_of_tiles = 3;
 
 %=========================================================================
@@ -29,17 +32,19 @@ config_path = fullfile(result_path, run_number);
 forcing_path = fullfile ('./forcing/');
 parpool(number_of_tiles)
 
+
+
 spmd
     
     %set run number and parameter file name for own worker - this should become part of the overarching concept to initialize multi-tile runs 
-    run_number = [run_number '_' num2str(lateral.PARA.run_number(labidex,1))]; 
+    run_number = [run_number '_' num2str(lateral.PARA.run_number(labindex,1))]; 
     parameter_file = [run_number '.xlsx'];
 
     %call provider classes to extract run parameters and constants from the
     %parameter/constant files
-    pprovider = PARAMETER_PROVIDER_EXCEL(config_path, parameter_file);
-    cprovider = CONSTANT_PROVIDER_EXCEL(config_path, const_file);
-    fprovider = FORCING_PROVIDER(forcing_path, forcing_file);
+    pprovider = PARAMETER_PROVIDER(config_path, init_format, run_number);
+    cprovider = CONSTANT_PROVIDER(config_path, init_format, const_file);
+    fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
     % Build the model tile (forcing, grid, out and stratigraphy classes)
     tile = TILE_BUILDER(pprovider, cprovider, fprovider);
@@ -126,24 +131,12 @@ spmd
         %calculate diagnostic variables
         %some effects only happen in the first cell
         TOP.NEXT = compute_diagnostic_first_cell(TOP.NEXT, forcing);
-        if isnan(TOP.NEXT.STATVAR.Lstar)
-            keyboard
-        end
-        
-%         if t> datenum(1996,5,9,18,0,0) && lateral.STATVAR.index == 1
-%             disp('Hallo1')
-%         end
-        
         
         CURRENT = BOTTOM.PREVIOUS;
         while ~isequal(CURRENT, TOP)
             CURRENT = compute_diagnostic(CURRENT, forcing);
             CURRENT = CURRENT.PREVIOUS;
         end
-%         
-%         if t> datenum(1996,5,9,18,0,0) && lateral.STATVAR.index == 1
-%             disp('Hallo2')
-%         end
         
         %check for triggers that reorganize the stratigraphy
         CURRENT = TOP.NEXT;
@@ -151,30 +144,18 @@ spmd
             CURRENT = check_trigger(CURRENT, forcing);
             CURRENT = CURRENT.NEXT;
         end
-% 
-%         if t> datenum(1996,5,9,18,0,0) && lateral.STATVAR.index == 1
-%             disp('Hallo3')
-%         end
-        
+
         TOP_CLASS = TOP.NEXT; %TOP_CLASS and BOTTOM_CLASS for convenient access
         BOTTOM_CLASS = BOTTOM.PREVIOUS;
         
-        
-        %calculate new time
-        t = t + timestep./day_sec;
-        
-        lateral = lateral_IA(lateral, forcing, t);
-        
-%         if t> datenum(1996,5,9,18,0,0) && lateral.STATVAR.index == 1
-%             disp('Hallo4')
-%         end
-        
+        lateral = interact(lateral, forcing, t);
+        %lateral = lateral_IA(lateral, forcing, t);
+
         %store the output according to the defined OUT clas
         out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path);
         
-%         if t> datenum(1996,5,9,18,0,0) && lateral.STATVAR.index == 1
-%             disp('Hallo5')
-%         end
+        %calculate new time
+        t = t + timestep./day_sec;
         
     end
     

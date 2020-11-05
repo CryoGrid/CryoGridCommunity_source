@@ -26,8 +26,8 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER < BASE_LATERAL
         
         function lateral = provide_PARA(lateral)
             lateral.PARA.hardBottom_cutoff = []; %0.03; %hard bottom if saturated and water content below
-            lateral.PARA.distance_reservoir = []; %2; 
-            lateral.PARA.reservoir_contact_length = []; %1;
+            %lateral.PARA.distance_reservoir = []; %2; 
+           % lateral.PARA.reservoir_contact_length = []; %1;
             lateral.PARA.ia_time_increment = []; %0.25; %must be a multiple of the time increment of the main lateral class
             %lateral.PARA.ia_time_next = [];
         end
