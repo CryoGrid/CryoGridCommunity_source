@@ -152,7 +152,7 @@ spmd
         %lateral = lateral_IA(lateral, forcing, t);
 
         %store the output according to the defined OUT clas
-        out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path);
+        out = store_OUT(out, t, TOP, BOTTOM, forcing, run_number, timestep, result_path);
         
         %calculate new time
         t = t + timestep./day_sec;

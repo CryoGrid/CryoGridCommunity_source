@@ -113,7 +113,7 @@ classdef OUT_all
         
         %---------------time integration-------------
 		
-		function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path)
+		function out = store_OUT(out, t, TOP, BOTTOM, forcing, run_number, timestep, result_path)
             
             if t==out.OUTPUT_TIME
                 %if id == 1
@@ -122,9 +122,7 @@ classdef OUT_all
                 %labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
-                %out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = copy(TOP_CLASS);  %append new stratigraphy, should be made more sophisticated by not adding instaneous values, but averaging/accumulating variables
-                %out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = [TOP_CLASS.STATVAR.T; TOP_CLASS.NEXT.STATVAR.T];  
-                CURRENT =TOP_CLASS;
+                CURRENT =TOP.NEXT;
                 if isprop(CURRENT, 'CHILD') && CURRENT.CHILD ~= 0
                     out.MISC=[out.MISC [CURRENT.CHILD.STATVAR.T(1,1); CURRENT.CHILD.STATVAR.layerThick(1,1)]]; 
                 else

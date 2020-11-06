@@ -127,6 +127,6 @@ while t < forcing.PARA.end_time
     t = t + timestep./day_sec;
     
     %model output
-    out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path);
+    out = store_OUT(out, t, TOP, BOTTOM, forcing, run_number, timestep, result_path);
 end
 
