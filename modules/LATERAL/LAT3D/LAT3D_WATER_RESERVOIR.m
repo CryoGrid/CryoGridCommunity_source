@@ -46,11 +46,11 @@ classdef LAT3D_WATER_RESERVOIR < BASE_LATERAL
         
         %---time integration-----------------
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             %taken care of by the 3D water exchange
         end
         
-        function lateral = get_derivatives(lateral)
+        function lateral = get_derivatives(lateral, tile)
             
             %
             if lateral.PARENT.STATVAR.water_available
@@ -72,7 +72,7 @@ classdef LAT3D_WATER_RESERVOIR < BASE_LATERAL
         end
         
         
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             %taken care of by the 3D water exchange
         end
         

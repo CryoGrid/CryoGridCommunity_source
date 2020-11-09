@@ -9,7 +9,7 @@ classdef IA_HEAT11_WATER11_SNOW_LAKE < IA_WATER & IA_HEAT
     
     methods
         
-        function get_boundary_condition_m(ia_heat_water)
+        function get_boundary_condition_m(ia_heat_water, tile)
             get_boundary_condition_HEAT_m(ia_heat_water);
             %MODIFY
             %ia_heat_water.PREVIOUS.TEMP.F_lb_water = 0;
@@ -21,7 +21,7 @@ classdef IA_HEAT11_WATER11_SNOW_LAKE < IA_WATER & IA_HEAT
         end
         
         %SNOW
-        function get_IA_CHILD_boundary_condition_u(ia_heat_water)
+        function get_IA_CHILD_boundary_condition_u(ia_heat_water, tile)
             get_boundary_condition_HEAT_IA_CHILD(ia_heat_water);
             %ia_heat_water.PREVIOUS.TEMP.F_lb_water = 0;
             %ia_heat_water.PREVIOUS.TEMP.F_lb_water_energy = 0;

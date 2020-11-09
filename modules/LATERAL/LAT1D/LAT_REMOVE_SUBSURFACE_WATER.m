@@ -36,23 +36,27 @@ classdef LAT_REMOVE_SUBSURFACE_WATER < BASE_LATERAL
         %----time integration-----
         
         %only push function required
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             
             CURRENT = lateral.PARENT.TOP.NEXT;
             while ~(strcmp(class(CURRENT), 'Bottom'))
                 CURRENT = lateral_push_remove_subsurfaceWater(CURRENT, lateral);
-                CURRENT = compute_diagnostic(CURRENT, forcing);
+                CURRENT = compute_diagnostic(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
+            
+        end
+
+        function lateral = get_derivatives(lateral, tile)
+            
+        end
+
+        function lateral = pull(lateral, tile)
             
         end
         
         function lateral = set_ACTIVE(lateral, i, t)
             lateral.PARENT.ACTIVE(i,1) = 1;
-        end
-        
-        function lateral = pull(lateral)
-            
         end
     end
     

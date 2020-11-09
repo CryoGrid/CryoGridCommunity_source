@@ -8,7 +8,7 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
     
     methods
         
-        function get_boundary_condition_m(ia_heat_water)
+        function get_boundary_condition_m(ia_heat_water, tile)
             get_boundary_condition_HEAT_LAKE_m(ia_heat_water);
             get_boundary_condition_BUCKET_LAKE_XICE_m(ia_heat_water); %gravity-driven downwards flow
             get_boundary_condition_BUCKET_LAKE_XWATER_UP_m(ia_heat_water); %Xwater upward flow
@@ -16,7 +16,7 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
         
         %trigger function creating the LAKE class, called by the GROUND
         %class
-        function trigger_create_LAKE(ia_heat_water, ground, forcing)
+        function trigger_create_LAKE(ia_heat_water, ground, tile)
                         
             CURRENT = ground.PREVIOUS;  %go to Top() and get the stored SLEEPING classes
             while ~strcmp(class(CURRENT), 'Top')
@@ -55,7 +55,7 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
                 end
             end
             new_lake.STATVAR.layerThick = new_lake.STATVAR.waterIce ./ new_lake.STATVAR.area;
-            new_lake = compute_diagnostic(new_lake, forcing);
+            new_lake = compute_diagnostic(new_lake, tile);
             
             %change stratigraphy
             ground.PREVIOUS.NEXT = new_lake;
@@ -73,7 +73,7 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
                 
         %trigger function removing the LAKE class, called by the LAKE 
         %class itself
-        function trigger_remove_LAKE(ia_heat_water, forcing)
+        function trigger_remove_LAKE(ia_heat_water, tile)
             lake = ia_heat_water.PREVIOUS;
             ground = ia_heat_water.NEXT;
             
@@ -106,7 +106,7 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
                 ground.IA_PREVIOUS.PREVIOUS = ground.PREVIOUS;
                 ground.IA_PREVIOUS.NEXT = ground;
             end
-           ground = compute_diagnostic(ground,forcing);
+           ground = compute_diagnostic(ground,tile);
         end
                 
     end

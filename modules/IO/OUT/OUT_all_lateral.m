@@ -87,7 +87,7 @@ classdef OUT_all_lateral
             
             out.TEMP = struct();
         end	
-		
+	
 		function out = populate_PARA(out, pprovider)
             % POPULATE_PARA  Updates the PARA structure with values from pprovider.
             %
@@ -115,7 +115,18 @@ classdef OUT_all_lateral
         
         %-------time integration----------------
 		
-		function out = store_OUT(out, t, TOP, BOTTOM, forcing, run_number, timestep, result_path)
+		%function out = store_OUT(out, t, TOP, BOTTOM, forcing, run_number, timestep, result_path)
+            
+        function out = store_OUT(out, tile)
+            
+             t = tile.t;
+             TOP = tile.TOP; 
+             BOTTOM = tile.BOTTOM;
+             forcing = tile.FORCING;
+             run_number = tile.RUN_NUMBER;
+             timestep = tile.timestep;
+             result_path = tile.RESULT_PATH;
+
             
             if t==out.OUTPUT_TIME
                 %if id == 1

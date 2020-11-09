@@ -46,11 +46,11 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
         
         %-----time integration-------
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             %taken care of by the 3D water exchange
         end
         
-        function lateral = get_derivatives(lateral) %no need to loop through stratigraphy, all the information is in lateral.PARENT
+        function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
             
             %seepage flow of saturated cells above other cell's water table
             if lateral.PARENT.STATVAR.water_available
@@ -72,7 +72,7 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
         end
         
         
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             %taken care of by the 3D water exchange
         end
         

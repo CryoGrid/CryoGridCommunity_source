@@ -125,7 +125,8 @@ classdef LATERAL_1D < matlab.mixin.Copyable
         
         %---time integration----------------
         
-        function lateral = interact(lateral, forcing, t)
+        function lateral = interact(lateral, tile)
+            t=tile.t;
             if t>=lateral.IA_TIME
                 if sum(lateral.ACTIVE) > 0
                     %disp(t-floor(t))
@@ -143,7 +144,7 @@ classdef LATERAL_1D < matlab.mixin.Copyable
                     %PULL information from individual stratigraphy classes
                     for i=1:size(lateral.IA_CLASSES,1)
                         if lateral.ACTIVE(i,1)
-                            lateral.IA_CLASSES{i} = pull(lateral.IA_CLASSES{i}); %After that, each lateral class has all the info it needs in STATVAR-> assign all the variables to class.PARENT in pull
+                            lateral.IA_CLASSES{i} = pull(lateral.IA_CLASSES{i}, tile); %After that, each lateral class has all the info it needs in STATVAR-> assign all the variables to class.PARENT in pull
                         end
                     end
                     
@@ -181,7 +182,7 @@ classdef LATERAL_1D < matlab.mixin.Copyable
                     %calculate all derivatives/fluxes
                     for i=1:size(lateral.IA_CLASSES,1)
                         if lateral.ACTIVE(i,1)
-                            lateral.IA_CLASSES{i} = get_derivatives(lateral.IA_CLASSES{i});
+                            lateral.IA_CLASSES{i} = get_derivatives(lateral.IA_CLASSES{i}, tile);
                         end
                     end
                     
@@ -189,13 +190,13 @@ classdef LATERAL_1D < matlab.mixin.Copyable
                     %PUSH information (fluxes) back to individual stratigraphy classes
                     for i=1:size(lateral.IA_CLASSES,1)
                         if lateral.ACTIVE(i,1)
-                            lateral.IA_CLASSES{i} = push(lateral.IA_CLASSES{i}, forcing);
+                            lateral.IA_CLASSES{i} = push(lateral.IA_CLASSES{i}, tile);
                         end
                     end
                     
                     CURRENT = lateral.TOP.NEXT;
                     while ~(strcmp(class(CURRENT), 'Bottom'))
-                        CURRENT = compute_diagnostic(CURRENT, forcing);
+                        CURRENT = compute_diagnostic(CURRENT, tile);
                         CURRENT = CURRENT.NEXT;
                     end
                 end

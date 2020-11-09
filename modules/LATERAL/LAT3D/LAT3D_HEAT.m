@@ -35,7 +35,7 @@ classdef LAT3D_HEAT < BASE_LATERAL
         
         %----time integration----------------- 
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             
             lateral.PARENT.STATVAR.depths_heat = [];
             lateral.PARENT.STATVAR.thermCond = [];
@@ -48,7 +48,7 @@ classdef LAT3D_HEAT < BASE_LATERAL
             end
         end
         
-        function lateral = get_derivatives(lateral) %no need to loop through stratigraphy, all the information is in lateral.PARENT
+        function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
 
             lateral.PARENT = get_overlap_cells(lateral.PARENT, 'depths_heat', 'overlap_heat');
             
@@ -77,7 +77,7 @@ classdef LAT3D_HEAT < BASE_LATERAL
         end
 
         
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             
             CURRENT = lateral.PARENT.TOP.NEXT; %find correct stratigraphy class
             

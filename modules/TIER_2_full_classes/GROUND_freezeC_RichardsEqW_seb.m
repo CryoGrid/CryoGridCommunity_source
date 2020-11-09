@@ -150,8 +150,8 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE &
         
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing)
-      
+        function ground = get_boundary_condition_u(ground, tile)
+            forcing = tile.FORCING;
             ground = surface_energy_balance(ground, forcing);
             ground = get_boundary_condition_u_RichardsEq(ground, forcing); %checked that this flux can be taken up!!
         end
@@ -160,23 +160,25 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE &
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
-        function ground = get_boundary_condition_l(ground, forcing)
-             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
-             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
-             ground = get_boundary_condition_l_water2(ground);  %if flux not zero, check that the water flowing out is available! Not implemented here.
+        function ground = get_boundary_condition_l(ground, tile)
+            forcing = tile.FORCING;
+            ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
+            ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
+            ground = get_boundary_condition_l_water2(ground);  %if flux not zero, check that the water flowing out is available! Not implemented here.
         end
         
-        function ground = get_derivatives_prognostic(ground)
+        function ground = get_derivatives_prognostic(ground, tile)
             ground = get_derivative_energy(ground);
             ground = get_derivative_water_RichardsEq(ground);
         end
         
-        function timestep = get_timestep(ground)  
+        function timestep = get_timestep(ground, tile)  
            timestep = get_timestep_heat_coduction(ground);
            timestep = min(timestep, get_timestep_water_RichardsEq(ground)); 
         end
         
-        function ground = advance_prognostic(ground, timestep) 
+        function ground = advance_prognostic(ground, tile) 
+            timestep = tile.timestep;
             %energy
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_water_energy; %add energy from water advection
@@ -188,11 +190,12 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE &
             ground.STATVAR.excessWater = ground.STATVAR.excessWater + timestep .* ground.TEMP.surface_runoff;
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
+        function ground = compute_diagnostic_first_cell(ground, tile)
+            forcing = tile.FORCING;
             ground = L_star(ground, forcing);
         end
        
-        function ground = compute_diagnostic(ground, forcing)
+        function ground = compute_diagnostic(ground, tile)
             
             ground = get_T_water_freezeC(ground);
             ground = conductivity(ground);
@@ -206,7 +209,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE &
             ground.TEMP.surface_runoff = 0;
         end
         
-        function ground = check_trigger(ground, forcing)
+        function ground = check_trigger(ground, tile)
             %do nothing at this stage - add create LAKE if there is too
             %much surface water, similar to Xice 
         end

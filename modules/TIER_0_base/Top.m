@@ -10,6 +10,10 @@ classdef Top  < matlab.mixin.Copyable
         NEXT
         STORE
         LATERAL
+        FORCING
+        TIME
+        RUN_NUMBER
+        RESULT_PATH
     end
     
     methods

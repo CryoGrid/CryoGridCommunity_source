@@ -40,7 +40,7 @@ classdef LAT3D_WATER < BASE_LATERAL
         
         %---- time integration-----------------
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             
             lateral.PARENT.STATVAR.depths = [];
             lateral.PARENT.STATVAR.water_status = [];
@@ -94,7 +94,7 @@ classdef LAT3D_WATER < BASE_LATERAL
             
         end
         
-        function lateral = get_derivatives(lateral) %no need to loop through stratigraphy, all the information is in lateral.PARENT
+        function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
             
             %calculate the bulk indices for the overlap between each pair of aquifers
             number_of_own_aquifers = max(lateral.PARENT.STATVAR.aquifer_index);
@@ -412,7 +412,7 @@ classdef LAT3D_WATER < BASE_LATERAL
 
         
         
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             if ~isempty(lateral.PARENT.STATVAR.water_flux)
                 if lateral.PARENT.STATVAR.water_table_top_cell>0
                     lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell,1) = lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell,1) + lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell+1,1);

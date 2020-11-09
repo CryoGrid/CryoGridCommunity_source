@@ -45,7 +45,7 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
         
         %----time integration------------
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             lateral.PARENT.STATVAR2ALL.snow_drift = 0; % 0: no snow class; 2: driftable snow; 1: snow class, but snow is not driftable
             
             CURRENT = lateral.PARENT.TOP.NEXT;
@@ -57,7 +57,7 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
             end
         end
         
-        function lateral = get_derivatives(lateral) %no need to loop through stratigraphy, all the information is in lateral.PARENT
+        function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
             %calculate the exposure
             %loop over all ensemble members, mix the drifting part of the snow 
             
@@ -149,7 +149,7 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
         end
 
         
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             
             CURRENT = lateral.PARENT.TOP.NEXT; %find correct stratigraphy class
             while ~(strcmp(class(CURRENT), 'Bottom'))

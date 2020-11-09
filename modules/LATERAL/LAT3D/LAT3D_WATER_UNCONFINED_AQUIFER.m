@@ -44,7 +44,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER < BASE_LATERAL
         
         %--- time integration---------------
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             
             lateral.PARENT.STATVAR.depths = [];
             lateral.PARENT.STATVAR.water_status = [];
@@ -63,7 +63,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER < BASE_LATERAL
             end
         end
         
-        function lateral = get_derivatives(lateral) %no need to loop through stratigraphy, all the information is in lateral.PARENT
+        function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
 
             lateral.PARENT = get_overlap_cells(lateral.PARENT, 'depths', 'overlap');
             
@@ -161,7 +161,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER < BASE_LATERAL
             
         end
 
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             if ~isempty(lateral.PARENT.STATVAR.water_flux)
                 
                 %modified Sep2020

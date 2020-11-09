@@ -10,7 +10,7 @@ clear all
 %=========================================================================
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'example1'; %paramter file name and result directory 
+run_number = 'test_BGC'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
 result_path = '../results/';
@@ -58,11 +58,15 @@ day_sec = 24.*3600;
 
 %initialize running time variable t [days]
 t = forcing.PARA.start_time;
+TOP.TIME = t;
+
 
 %=========================================================================
 %TIME INTEGRATION
 %=========================================================================
 while t < forcing.PARA.end_time
+    
+    TOP.TIME = t;
     
     %interpolate focing data to time t
     forcing = interpolate_forcing(t, forcing);
@@ -125,7 +129,7 @@ while t < forcing.PARA.end_time
     %set TOP_CLASS and BOTTOM_CLASS for convenient access
     TOP_CLASS = TOP.NEXT; 
     BOTTOM_CLASS = BOTTOM.PREVIOUS;
-    TOP.TIME = t;
+
     
     %update time variable t
     t = t + timestep./day_sec;

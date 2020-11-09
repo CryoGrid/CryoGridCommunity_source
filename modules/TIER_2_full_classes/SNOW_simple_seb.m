@@ -92,17 +92,20 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
         %---time integration------
         %separate functions for CHILD pphase of snow cover
         
-        function snow = get_boundary_condition_u(snow, forcing) 
+        function snow = get_boundary_condition_u(snow, tile) 
+            forcing = tile.FORCING;
             snow = surface_energy_balance(snow, forcing);
             snow = get_boundary_condition_SNOW_u(snow, forcing);
         end
         
-        function snow = get_boundary_condition_u_CHILD(snow, forcing)
+        function snow = get_boundary_condition_u_CHILD(snow, tile)
+            forcing = tile.FORCING;
             snow = surface_energy_balance(snow, forcing);
             snow = get_boundary_condition_allSNOW_rain_u(snow, forcing); %add full snow, but rain only for snow-covered part
         end
         
-        function snow = get_boundary_condition_u_create_CHILD(snow, forcing)
+        function snow = get_boundary_condition_u_create_CHILD(snow, tile)
+            forcing = tile.FORCING;
             snow = get_boundary_condition_allSNOW_u(snow, forcing); %add full snow, no rain
             snow.TEMP.d_energy = 0;
             snow.TEMP.F_ub = 0;
@@ -115,12 +118,13 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             snow.STATVAR.upperPos = snow.PARENT.STATVAR.upperPos;
         end
         
-        function snow = get_boundary_condition_l(snow, forcing)
-             snow.TEMP.F_lb = forcing.PARA.heatFlux_lb .* snow.STATVAR.area(end);
-             snow.TEMP.d_energy(end) = snow.TEMP.d_energy(end) + snow.TEMP.F_lb;
+        function snow = get_boundary_condition_l(snow, tile)
+            forcing = tile.FORCING;
+            snow.TEMP.F_lb = forcing.PARA.heatFlux_lb .* snow.STATVAR.area(end);
+            snow.TEMP.d_energy(end) = snow.TEMP.d_energy(end) + snow.TEMP.F_lb;
         end
         
-        function snow = get_derivatives_prognostic(snow)
+        function snow = get_derivatives_prognostic(snow, tile)
             if size(snow.STATVAR.layerThick,1) > 1
                 snow = get_derivative_energy(snow);
             else
@@ -129,21 +133,22 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.rain_energy;  %add rain energy here, since it can melt snow and does not change layerThick - must be taken into account for timestep calculation
         end
         
-        function snow = get_derivatives_prognostic_CHILD(snow)
+        function snow = get_derivatives_prognostic_CHILD(snow, tile)
             snow.TEMP.d_energy = snow.TEMP.d_energy + snow.TEMP.rain_energy;
         end
         
-        function timestep = get_timestep(snow) 
+        function timestep = get_timestep(snow, tile) 
             timestep1 = get_timestep_heat_coduction(snow);
             timestep2 = get_timestep_SNOW_mass_balance(snow);
             timestep = min(timestep1, timestep2);
         end
         
-        function timestep = get_timestep_CHILD(snow)  
+        function timestep = get_timestep_CHILD(snow, tile)  
             timestep = get_timestep_SNOW_CHILD(snow);
         end
         
-        function snow = advance_prognostic(snow, timestep) 
+        function snow = advance_prognostic(snow, tile)
+            timestep = tile.timestep;
             %energy
             snow.STATVAR.energy = snow.STATVAR.energy + timestep .* snow.TEMP.d_energy;
             %mass
@@ -155,19 +160,21 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             snow.STATVAR.target_density(1) = (snow.STATVAR.ice(1) + timestep .* snow.TEMP.snowfall) ./ snow.STATVAR.layerThick(1) ./ snow.STATVAR.area(1,1);
         end
         
-        function snow = advance_prognostic_CHILD(snow, timestep)
-            
+        function snow = advance_prognostic_CHILD(snow, tile)
+            timestep = tile.timestep;
             snow.STATVAR.energy = snow.STATVAR.energy + timestep .* (snow.TEMP.d_energy + snow.TEMP.snow_energy);
             snow.STATVAR.waterIce = snow.STATVAR.waterIce + timestep .* (snow.TEMP.snowfall + snow.TEMP.rainfall);
             snow.STATVAR.area = snow.STATVAR.area + timestep .* snow.TEMP.snowfall ./ (snow.PARA.density ./1000) ./  snow.STATVAR.layerThick ; 
             snow.STATVAR.target_density = min(1,(snow.STATVAR.ice + timestep .* snow.TEMP.snowfall) ./ snow.STATVAR.layerThick ./ snow.STATVAR.area);
         end
         
-        function snow = compute_diagnostic_first_cell(snow, forcing)
+        function snow = compute_diagnostic_first_cell(snow, tile)
+            forcing = tile.FORCING;
             snow = L_star(snow, forcing);
         end
        
-        function snow = compute_diagnostic(snow, forcing)
+        function snow = compute_diagnostic(snow, tile)
+            
             snow = get_T_water_freeW(snow);
             snow = subtract_water2(snow);
             
@@ -182,7 +189,7 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             snow.TEMP.d_energy = snow.STATVAR.energy.*0;
         end
         
-        function snow = compute_diagnostic_CHILD(snow, forcing)
+        function snow = compute_diagnostic_CHILD(snow, tile)
             snow = get_T_water_freeW(snow);
             snow = subtract_water_CHILD(snow);
 
@@ -193,7 +200,7 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             
         end
         
-        function snow = check_trigger(snow, forcing)
+        function snow = check_trigger(snow, tile)
             snow = make_SNOW_CHILD(snow); 
         end
         

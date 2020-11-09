@@ -14,7 +14,7 @@
 
 %define the grid to which variables are interpolated
 target_cell_size = 0.02;
-new_grid = [15:target_cell_size:21]';
+new_grid = 20 + [-3:target_cell_size:1]';
 %new_grid = [15:target_cell_size:21]';
 threshold = target_cell_size/10;  
 

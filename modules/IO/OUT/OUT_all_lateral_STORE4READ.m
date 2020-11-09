@@ -114,7 +114,15 @@ classdef OUT_all_lateral_STORE4READ
         
         %-------time integration----------------
 		
-		function out = store_OUT(out, t, TOP, BOTTOM, forcing, run_number, timestep, result_path)
+		function out = store_OUT(out, tile)
+            
+             t = tile.t;
+             TOP = tile.TOP; 
+             BOTTOM = tile.BOTTOM;
+             forcing = tile.FORCING;
+             run_number = tile.RUN_NUMBER;
+             timestep = tile.timestep;
+             result_path = tile.RESULT_PATH;
             
             if t==out.OUTPUT_TIME
 
@@ -141,11 +149,14 @@ classdef OUT_all_lateral_STORE4READ
                     count = count + 1;
                     CURRENT = CURRENT.PREVIOUS;
                 end
-                new_TOP = Top();
+                new_TOP = copy(TOP);
+                new_TOP.STORE = [];
+                new_TOP.LATERAL = [];
+                new_TOP.FORCING = [];
                 new_CURRENT.PREVIOUS = new_TOP;
                 new_TOP.NEXT = new_CURRENT;
                 
-                out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = new_TOP;
+                out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = new_BOTTOM;
                 
                 %lateral, read only STATVAR and PARA---
                 result={};
