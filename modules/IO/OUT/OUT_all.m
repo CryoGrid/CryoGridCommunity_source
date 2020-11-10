@@ -150,6 +150,9 @@ classdef OUT_all
                     if isprop(res, 'LUT')
                         res.LUT =[];  %remove look-up tables, runs out of memeory otherwise
                     end
+                    if isprop(res, 'READ_OUT')
+                        res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
+                    end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  %cut all dependencies
                     if isprop(res, 'CHILD')
                         res.CHILD = [];

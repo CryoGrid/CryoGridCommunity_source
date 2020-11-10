@@ -17,7 +17,8 @@ clear all
 
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'example4'; %paramter file name and result directory 
+run_number = 'test_BGC'; %paramter file name and result directory 
+%run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
 result_path = '../results/';
@@ -101,7 +102,7 @@ while tile.t < tile.FORCING.PARA.end_time
     
     %calculate timestep [second]
     CURRENT = TOP.NEXT;
-    tile.timestep = tile.CONST.day_sec;
+    tile.timestep = 1e8;
     while ~isequal(CURRENT, BOTTOM)
         tile.timestep = min(tile.timestep, get_timestep(CURRENT, tile));
         CURRENT = CURRENT.NEXT;

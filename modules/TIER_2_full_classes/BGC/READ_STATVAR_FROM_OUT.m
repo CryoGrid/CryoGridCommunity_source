@@ -1,12 +1,10 @@
 %========================================================================
-% CryoGrid GROUND class READ_OUT_BGC
-% heat conduction, bucket water scheme, freeze curve based on
-% freezing=drying assumption, surface energy balance, excess ice
-% testing coupling to biogeochemistry (BGC) classes
-% S. Westermann, October 2020
+% CryoGrid GROUND class READ_STATVAR_FROM_OUT
+% reads variables from OUT files of the OUT class OUT_all_lateral_STORE4READ
+% S. Westermann, November 2020
 %========================================================================
 
-classdef READ_OUT_BGC < INITIALIZE
+classdef READ_STATVAR_FROM_OUT < INITIALIZE
 
     properties
         READ_OUT
@@ -19,7 +17,7 @@ classdef READ_OUT_BGC < INITIALIZE
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function ground = READ_OUT_BGC(index, pprovider, cprovider, forcing)  
+        function ground = READ_STATVAR_FROM_OUT(index, pprovider, cprovider, forcing)  
             ground@INITIALIZE(index, pprovider, cprovider, forcing);
         end
         
@@ -50,15 +48,15 @@ classdef READ_OUT_BGC < INITIALIZE
         end
         
         function ground = finalize_init(ground, forcing) 
-            ground.STATVAR.year_list = [ground.PARA.start_year:ground.PARA.out_save_interval:ground.PARA.end_year];
-            ground.STATVAR.year_index = 1; 
+            ground.PARA.year_list = [ground.PARA.start_year:ground.PARA.out_save_interval:ground.PARA.end_year];
+            ground.PARA.year_index = 1; 
             
-            filename = [ground.PARA.run_number '_' datestr(datenum([ground.PARA.out_save_date num2str(ground.STATVAR.year_list(ground.STATVAR.year_index))], 'dd.mm.yyyy'), 'yyyymmdd') '.mat'];
+            filename = [ground.PARA.run_number '_' datestr(datenum([ground.PARA.out_save_date num2str(ground.PARA.year_list(ground.PARA.year_index))], 'dd.mm.yyyy'), 'yyyymmdd') '.mat'];
             load([ground.PARA.result_path '/' ground.PARA.run_number '/' filename]);
             ground.READ_OUT = out;  %load the first file
             
-            ground.PARA.time_offset = datenum([ground.PARA.out_save_date '2002'], 'dd.mm.yyyy')-datenum(2000,1,1);
-            
+            %ground.PARA.time_offset = datenum([ground.PARA.out_save_date '2002'], 'dd.mm.yyyy')-datenum(2002,1,1);
+            ground.PARA.time_offset = datenum([ground.PARA.out_save_date num2str(ground.PARA.year_list(ground.PARA.year_index))], 'dd.mm.yyyy') - datenum(ground.PARA.year_list(ground.PARA.year_index),1,1);
             ground.RUN_PARA = ground.PARA;
             ground.RUN_CONST = ground.CONST;
             ground.RUN_PARA.next_read_time = forcing.PARA.start_time + ground.RUN_PARA.timestep; 
@@ -68,7 +66,7 @@ classdef READ_OUT_BGC < INITIALIZE
         
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing)
+        function ground = get_boundary_condition_u(ground, tile)
 
         end
         
@@ -77,39 +75,53 @@ classdef READ_OUT_BGC < INITIALIZE
             %[ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
-        function ground = get_boundary_condition_l(ground, forcing)
+        function ground = get_boundary_condition_l(ground, tile)
 
         end
         
-        function ground = get_derivatives_prognostic(ground)
+        function ground = get_derivatives_prognostic(ground, tile)
 
         end
         
-        function timestep = get_timestep(ground) 
+        function timestep = get_timestep(ground, tile) 
             if ground.RUN_PARA.active
-                timestep = ground.RUN_PARA.next_read_time - ground.PREVIOUS.TIME;  %Refers to the field TOP.TIME
+                timestep = ground.RUN_PARA.next_read_time - tile.t;  %Refers to the field TOP.TIME
                 timestep = timestep .* ground.RUN_CONST.day_sec;
             else
                timestep = Inf;
            end
         end
         
-        function ground = advance_prognostic(ground, timestep) 
+        function ground = advance_prognostic(ground, tile) 
 
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
+        function ground = compute_diagnostic_first_cell(ground, tile)
 
         end
        
-        function ground = compute_diagnostic(ground, forcing)
-            %[year, month, day, hour, minute] = datevec(ground.PREVIOUS.TIME - ground.PARA.time_offset);
-            time_adjusted = (ground.PREVIOUS.TIME - ground.RUN_PARA.time_offset); %adjust this!!
+        function ground = compute_diagnostic(ground, tile)
+             
+            index = floor((tile.t - tile.FORCING.PARA.start_time) ./ (365.25 .* ground.RUN_PARA.out_save_interval));
+            index = mod(index, size(ground.RUN_PARA.year_list,2)) + 1;
+            
+            %load new out file
+            if ground.RUN_PARA.year_index ~= index
+                ground.RUN_PARA.year_index = index;
+                filename = [ground.RUN_PARA.run_number '_' datestr(datenum([ground.RUN_PARA.out_save_date num2str(ground.RUN_PARA.year_list(ground.RUN_PARA.year_index))], 'dd.mm.yyyy'), 'yyyymmdd') '.mat'];
+                disp(['reading ' filename])
+                load([ground.RUN_PARA.result_path '/' ground.RUN_PARA.run_number '/' filename]);
+                ground.READ_OUT = out;
+                ground.RUN_PARA.time_offset = datenum([ground.RUN_PARA.out_save_date num2str(ground.RUN_PARA.year_list(ground.RUN_PARA.year_index))], 'dd.mm.yyyy') - datenum(ground.RUN_PARA.year_list(ground.RUN_PARA.year_index),1,1);
+            end
+
+            time_adjusted = (tile.t - ground.RUN_PARA.time_offset);
             [year, month, day] = datevec(time_adjusted);
             doy_since_end =datenum(year+1, 1, 1) - time_adjusted;
             
-            i= size(ground.READ_OUT.TIMESTAMP,2) -  doy_since_end./ground.RUN_PARA.out_output_timestep
+            i= mod(round(size(ground.READ_OUT.TIMESTAMP,2) -  doy_since_end./ground.RUN_PARA.out_output_timestep) - 1, size(ground.READ_OUT.TIMESTAMP,2)) + 1;
 
+            
             ground.RUN_PARA.next_read_time = ground.RUN_PARA.next_read_time + ground.RUN_PARA.timestep; 
             
             CURRENT = ground;
@@ -127,7 +139,7 @@ classdef READ_OUT_BGC < INITIALIZE
             
             while ~isequal(class(CURRENT.PREVIOUS), 'Top')
                 CURRENT = CURRENT.PREVIOUS;
-                new_GROUND = READ_OUT_BGC(-1,0,0,0);
+                new_GROUND = READ_STATVAR_FROM_OUT(-1,0,0,0);
                 new_GROUND.STATVAR = CURRENT.STATVAR;
                 new_GROUND.PARA = CURRENT.PARA;
                 new_GROUND.TEMP = CURRENT.TEMP;
@@ -142,10 +154,11 @@ classdef READ_OUT_BGC < INITIALIZE
             ground.PREVIOUS = old_Top;
             old_Top.NEXT = ground;
             
+            
 
         end
         
-        function ground = check_trigger(ground, forcing)
+        function ground = check_trigger(ground, tile)
 
         end
         

@@ -9,7 +9,7 @@ classdef IA_DO_NOTHING <  IA_BASE
     
     methods
         
-        function get_boundary_condition_m(ia_heat)
+        function get_boundary_condition_m(ia_heat, tile)
 
         end
         
