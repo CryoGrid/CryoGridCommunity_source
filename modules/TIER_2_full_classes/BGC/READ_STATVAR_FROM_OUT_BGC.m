@@ -82,9 +82,9 @@ classdef READ_STATVAR_FROM_OUT_BGC < READ_STATVAR_FROM_OUT
         end
         
         function timestep = get_timestep(ground, tile)
-            timestep_phyiscal = get_timestep@READ_STATVAR_FROM_OUT(ground, tile);
+            timestep_ground = get_timestep@READ_STATVAR_FROM_OUT(ground, tile);
             timestep_BGC = get_timestep(ground.BGC, tile);
-            timestep = min(timestep_phyiscal, timestep_BGC);
+            timestep = min(timestep_ground, timestep_BGC);
         end
         
         function ground = advance_prognostic(ground, tile) 

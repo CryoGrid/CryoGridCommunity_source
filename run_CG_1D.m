@@ -17,7 +17,7 @@ clear all
 
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'test_BGC'; %paramter file name and result directory 
+run_number = 'test_BGC_2'; %paramter file name and result directory 
 %run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
