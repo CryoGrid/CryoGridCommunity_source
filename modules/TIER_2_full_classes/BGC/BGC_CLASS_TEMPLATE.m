@@ -8,6 +8,7 @@ classdef BGC_CLASS_TEMPLATE < INITIALIZE
 
     properties
         PARENT
+        IA_BGC
     end
     
     methods
@@ -26,8 +27,15 @@ classdef BGC_CLASS_TEMPLATE < INITIALIZE
         
         function ground = provide_STATVAR(ground)
             %initialize the STATVAR here
-            GROUND.STATVAR.layerThick = [0.2; 0.2];
-            ground.STATVAR.upperPosition_gridCell = [0; 0.2]; %upper position of each grid cell, normally [0; cumsum(GROUND.STATVAR.layerThick(1:end-1))]
+            ground.STATVAR.layerThick = [0.01; 0.2; 0.2];
+            ground.STATVAR.upperPosition_gridCell = [0; 0.01; 0.21]; %upper position of each grid cell, not used now, but will get relevant for Xice
+            
+            %initialize with some random values, is overwritten in first timestep
+            ia_BGC.BGC.STATVAR.vol_water = ground.STATVAR.layerThick .*0 + 0.5;
+            ia_BGC.BGC.STATVAR.vol_mineral = ground.STATVAR.layerThick .*0 + 0.3;
+            ia_BGC.BGC.STATVAR.porosity = ground.STATVAR.layerThick .*0 + 0.5;
+            ia_BGC.BGC.STATVAR.field_capacity = ground.STATVAR.layerThick .*0 + 0.3;
+            ia_BGC.BGC.STATVAR.T = ground.STATVAR.layerThick .*0 + 5;
         end
         
         function ground = provide_CONST(ground)
@@ -42,6 +50,8 @@ classdef BGC_CLASS_TEMPLATE < INITIALIZE
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile)
+            %only needs to be done if BGC is doing anything in this timestep
+            get_ground_variables(ground.IA_BGC, tile); %get the physical variables over to the BGC class, so that it starts with correct state from the last timestep
             %add here
         end
         
@@ -69,6 +79,8 @@ classdef BGC_CLASS_TEMPLATE < INITIALIZE
        
         function ground = compute_diagnostic(ground, tile)
             %add here
+            
+            send_BGC_variables(ground.IA_BGC, tile); %send the BGC variables over to the 
         end
         
         function ground = check_trigger(ground, forcing)

@@ -8,17 +8,9 @@ clear all
 %=========================================================================
 %MODIFY TO RUN
 %=========================================================================
-% %set parameter files for initialization
-% init_format = 'EXCEL'; %EXCEL or YAML
-% run_number = 'example4'; %paramter file name and result directory 
-% const_file = 'CONSTANTS_excel'; %file with constants
-% %result_path = '../CryoGrid_Git_results/';
-% result_path = '../results/';
-
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'test_BGC'; %paramter file name and result directory 
-%run_number = 'example1'; %paramter file name and result directory 
+run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
 result_path = '../results/';
@@ -42,110 +34,103 @@ cprovider = CONSTANT_PROVIDER(config_path, init_format, const_file);
 fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the model tile (forcing, grid, out and stratigraphy classes)
-tile_built = TILE_BUILDER(pprovider, cprovider, fprovider);
+tile = TILE_BUILDER(pprovider, cprovider, fprovider);
 
 %initialize LATERAL classes as defined in the parameter file
-tile = TILE();
-tile.CONST.day_sec = 24.*3600;
-
-tile.LATERAL = LATERAL_1D(tile_built);
+lateral = LATERAL_1D(tile);
 
 %assign focing and out classes
-tile.FORCING = tile_built.forcing;
-tile.OUT = tile_built.out;
-
-tile.RUN_NUMBER = run_number;
-tile.RESULT_PATH = result_path;
+forcing = tile.forcing;
+out = tile.out;
 
 %assign bottom and top classes
-TOP_CLASS = tile_built.TOP_CLASS;
-BOTTOM_CLASS = tile_built.BOTTOM_CLASS;
-TOP = tile_built.TOP;
-tile.TOP = TOP;
-BOTTOM = tile_built.BOTTOM;
-tile.BOTTOM = BOTTOM;
-TOP.LATERAL = tile.LATERAL;
+TOP_CLASS = tile.TOP_CLASS;
+BOTTOM_CLASS = tile.BOTTOM_CLASS;
+TOP = tile.TOP;
+BOTTOM = tile.BOTTOM;    
+TOP.LATERAL = lateral;
+TOP.FORCING = forcing;
+TOP.RUN_NUMBER = run_number;
+TOP.RESULT_PATH = result_path;
+
+%global variable assigned here (possibly remove this in the future) 
+day_sec = 24.*3600;
 
 %initialize running time variable t [days]
-tile.t = tile.FORCING.PARA.start_time;
-
-
-clear pprovider cprovider fprovider forcing_path config_path modules_path run_number result_path const_file init_format
+t = forcing.PARA.start_time;
 
 %=========================================================================
 %TIME INTEGRATION
 %=========================================================================
-while tile.t < tile.FORCING.PARA.end_time
-        
+while t < forcing.PARA.end_time
+    
     %interpolate focing data to time t
-    tile = interpolate_forcing_tile(tile);
+    forcing = interpolate_forcing(t, forcing);
 
     %upper boundar condition (uppermost class only)
-    TOP.NEXT = get_boundary_condition_u(TOP.NEXT, tile);
+    TOP.NEXT = get_boundary_condition_u(TOP.NEXT, forcing);
     
     %set fluxes between classes in the stratigrapht
     CURRENT = TOP.NEXT;
     while ~isequal(CURRENT.NEXT, BOTTOM)
-        get_boundary_condition_m(CURRENT.IA_NEXT, tile); %call interaction class function
+        get_boundary_condition_m(CURRENT.IA_NEXT); %call interaction class function
         CURRENT = CURRENT.NEXT;
     end
 
     %lower boundary condition (lowermost class)
-    CURRENT = get_boundary_condition_l(CURRENT,  tile);  %At this point, CURRENT is equal to BOTTOM_CLASS
+    CURRENT = get_boundary_condition_l(CURRENT,  forcing);  %At this point, CURRENT is equal to BOTTOM_CLASS
 
     %calculate spatial derivatives
     CURRENT = TOP.NEXT;
     while ~isequal(CURRENT, BOTTOM)
-        CURRENT = get_derivatives_prognostic(CURRENT, tile);
+        CURRENT = get_derivatives_prognostic(CURRENT);
         CURRENT = CURRENT.NEXT;
     end
     
     %calculate timestep [second]
     CURRENT = TOP.NEXT;
-    tile.timestep = 1e8;
+    timestep = day_sec;
     while ~isequal(CURRENT, BOTTOM)
-        tile.timestep = min(tile.timestep, get_timestep(CURRENT, tile));
+        timestep = min(timestep, get_timestep(CURRENT));
         CURRENT = CURRENT.NEXT;
     end
-    tile.next_break_time = min(tile.LATERAL.IA_TIME, tile.OUT.OUTPUT_TIME);
-    tile.timestep = min(tile.timestep, (tile.next_break_time - tile.t).*tile.CONST.day_sec);
+    next_break_time = min(lateral.IA_TIME, out.OUTPUT_TIME);
+    timestep = min(timestep, (next_break_time - t).*day_sec);
     
     %prognostic step - integrate prognostic variables in time
     CURRENT = TOP.NEXT;
     while ~isequal(CURRENT, BOTTOM)
-        CURRENT = advance_prognostic(CURRENT, tile);
+        CURRENT = advance_prognostic(CURRENT, timestep);
         CURRENT = CURRENT.NEXT;
     end
            
     %diagnostic step - compute diagnostic variables
-    TOP.NEXT = compute_diagnostic_first_cell(TOP.NEXT, tile); %calculate Lstar, only uppermost class
+    TOP.NEXT = compute_diagnostic_first_cell(TOP.NEXT, forcing); %calculate Lstar, only uppermost class
     CURRENT = BOTTOM.PREVIOUS;
     while ~isequal(CURRENT, TOP)
-        CURRENT = compute_diagnostic(CURRENT, tile);
+        CURRENT = compute_diagnostic(CURRENT, forcing);
         CURRENT = CURRENT.PREVIOUS;
     end
     
     %triggers
     CURRENT = TOP.NEXT;
     while ~isequal(CURRENT, BOTTOM)
-        CURRENT = check_trigger(CURRENT, tile);
+        CURRENT = check_trigger(CURRENT, forcing);
         CURRENT = CURRENT.NEXT;
     end
     
     %lateral interactions
-    %lateral = interact(lateral, forcing, t);
-    tile = interact_lateral(tile);
+    lateral = interact(lateral, forcing, t);
     
     %set TOP_CLASS and BOTTOM_CLASS for convenient access
     TOP_CLASS = TOP.NEXT; 
     BOTTOM_CLASS = BOTTOM.PREVIOUS;
-
+    TOP.TIME = t;
     
     %update time variable t
-    tile.t = tile.t + tile.timestep./tile.CONST.day_sec;
+    t = t + timestep./day_sec;
     
     %model 
-    %out = store_OUT(out, t, TOP, BOTTOM, timestep);
-    tile = store_OUT_tile(tile);
+    out = store_OUT(out, t, TOP, BOTTOM, timestep);
 end
 

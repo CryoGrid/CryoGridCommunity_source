@@ -54,13 +54,21 @@ classdef READ_STATVAR_FROM_OUT < INITIALIZE
             filename = [ground.PARA.run_number '_' datestr(datenum([ground.PARA.out_save_date num2str(ground.PARA.year_list(ground.PARA.year_index))], 'dd.mm.yyyy'), 'yyyymmdd') '.mat'];
             load([ground.PARA.result_path '/' ground.PARA.run_number '/' filename]);
             ground.READ_OUT = out;  %load the first file
-            
+
             %ground.PARA.time_offset = datenum([ground.PARA.out_save_date '2002'], 'dd.mm.yyyy')-datenum(2002,1,1);
             ground.PARA.time_offset = datenum([ground.PARA.out_save_date num2str(ground.PARA.year_list(ground.PARA.year_index))], 'dd.mm.yyyy') - datenum(ground.PARA.year_list(ground.PARA.year_index),1,1);
             ground.RUN_PARA = ground.PARA;
             ground.RUN_CONST = ground.CONST;
             ground.RUN_PARA.next_read_time = forcing.PARA.start_time + ground.RUN_PARA.timestep; 
             ground.RUN_PARA.active = 1;
+            
+            %assign the first stratigraphy
+            CURRENT = ground.READ_OUT.STRATIGRAPHY{1,1}.PREVIOUS;
+            ground.STATVAR = CURRENT.STATVAR;
+            ground.PARA = CURRENT.PARA;
+            ground.TEMP = CURRENT.TEMP;
+            ground.CONST = CURRENT.CONST;
+            
         end
         
         

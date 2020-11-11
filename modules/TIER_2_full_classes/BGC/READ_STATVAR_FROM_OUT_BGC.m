@@ -9,6 +9,7 @@ classdef READ_STATVAR_FROM_OUT_BGC < READ_STATVAR_FROM_OUT
 
     properties
         BGC
+        IA_BGC
     end
     
     methods
@@ -47,7 +48,7 @@ classdef READ_STATVAR_FROM_OUT_BGC < READ_STATVAR_FROM_OUT
         function ground = finalize_init(ground, forcing) 
             ground = finalize_init@READ_STATVAR_FROM_OUT(ground, forcing);
 
-            class_handle = str2func(ground.PARA.BGC_CLASS);
+            class_handle = str2func(ground.RUN_PARA.BGC_CLASS);
             ground.BGC = class_handle(-1,0,0,0); 
             ground.BGC.PARENT = ground;
             %remove this in the end
@@ -55,17 +56,24 @@ classdef READ_STATVAR_FROM_OUT_BGC < READ_STATVAR_FROM_OUT
             ground.BGC = provide_STATVAR(ground.BGC);
             ground.BGC = provide_CONST(ground.BGC);
             ground.BGC = finalize_init(ground.BGC, forcing);
+            
+            ground.IA_BGC = IA_BGC_simple();
+            ground.IA_BGC.BGC = ground.BGC;
+            ground.IA_BGC.GROUND = ground;
+            ground.BGC.IA_BGC = ground.IA_BGC;
         end
         
         
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile)
+           
             ground.BGC = get_boundary_condition_u(ground.BGC, tile);
         end
         
         
         function ground = get_boundary_condition_l(ground, tile)
+            
             ground.BGC = get_boundary_condition_l(ground.BGC, tile);
         end
         
@@ -88,9 +96,12 @@ classdef READ_STATVAR_FROM_OUT_BGC < READ_STATVAR_FROM_OUT
         end
        
         function ground = compute_diagnostic(ground, tile)
-            
+
             ground.BGC = compute_diagnostic(ground.BGC, tile);
+
+                        
             ground = compute_diagnostic@READ_STATVAR_FROM_OUT(ground, tile);
+
 
         end
         
