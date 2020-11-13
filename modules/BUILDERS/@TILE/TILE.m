@@ -1,6 +1,6 @@
 % base class build a model tile
 
-classdef TILE_BUILDER
+classdef TILE
     properties
         pprovider
         cprovider
@@ -14,17 +14,25 @@ classdef TILE_BUILDER
         strat_classes_id = nan
         %stratigraphy_id = [1 2 3]
         
+        FORCING
+        CONST = struct()
+        t
+        timestep
+        next_break_time
+        LATERAL
+        TOP          % Indicates current top position
+        BOTTOM       % Indicates current bottom position
+        TOP_CLASS    % Uppermost ground/snow class in the soil column
+        BOTTOM_CLASS % Lowermost ground class in the soil column
+        RUN_NUMBER
+        RESULT_PATH
+        OUT
+        
         % CryoGrid class instances
-        forcing
         grid
-        out
         strat_linear
         strat_layers
         strat_classes
-        TOP % Indicates current top position
-        BOTTOM % Indicates current bottom position
-        TOP_CLASS % Uppermost ground/snow class in the soil column
-        BOTTOM_CLASS % Lowermost ground class in the soil column
         
         % Secondary variables: stratigraphy assembly
         stratigraphy_list
@@ -35,15 +43,17 @@ classdef TILE_BUILDER
     
     methods
         
-        function self = TILE_BUILDER(pprovider, cprovider, fprovider, varargin)% To add to the argin: fprovider,
-            % CONSTRUCTOR for TILE_BUILDER
+        function self = TILE(pprovider, cprovider, fprovider, run_number, result_path, varargin)% To add to the argin: fprovider,
+            % CONSTRUCTOR for TILE
             %   Builds a model tile, by instantiating forcing, grid and
             %   out-classes, and building the stratigraphy.
             %
             %   ARGUMENTS:
-            %   pprovider:  instance of PARAMETER_PROVIDER class
-            %   cprovider:  instance of CONSTANT_PROVIDER class
-            %   fprovider:  instance of FORCING_PROVIDER class
+            %   pprovider:   instance of PARAMETER_PROVIDER class
+            %   cprovider:   instance of CONSTANT_PROVIDER class
+            %   fprovider:   instance of FORCING_PROVIDER class
+            %   run_number:  model run number
+            %   result_path: path to store results
             %
             %   IDs of forcing, grid, strat_layers definitions etc are
             %   obtained from the PARAMETER_PROVIDER. However, they can
@@ -59,9 +69,10 @@ classdef TILE_BUILDER
             %   strat_classes_id: id of the strat_classes definition to use
             %
             %   User must provide the optional arguments as name,value
-            %   pairs, uisng the call signature:
+            %   pairs, using the call signature:
             %
             %   tile = TILE_BUILDER(pprovider, cprovider, fprovider, ...
+            %                                  run_number, result_path, ...
             %                                  'forcing_id', 1, ...
             %                                  'grid_id', 2, ...
             %                                  'out_id', 1, ...
@@ -94,7 +105,7 @@ classdef TILE_BUILDER
             % Support name-value pair arguments when constructing object
             % if the argument name is in the properties of the class
             % set the appropriate property to the argument value
-            for i=1:2:nargin-3
+            for i=1:2:nargin-5
                 if any(strcmp(properties(self), varargin{i}))
                     self.(varargin{i}) = varargin{i+1};
                 end
@@ -121,7 +132,17 @@ classdef TILE_BUILDER
             % build/instantiated...
             
             % ... others?...
+
+            self.CONST.day_sec = self.cprovider.get_constant('day_sec');
             
+            %initialize LATERAL classes as defined in the parameter file
+            self.LATERAL = LATERAL_1D(self);
+            
+            self.RUN_NUMBER = run_number;
+            self.RESULT_PATH = result_path;
+
+            %initialize running time variable t [days]
+            self.t = self.FORCING.PARA.start_time;            
         end
         
         
@@ -131,7 +152,7 @@ classdef TILE_BUILDER
             [name, index] = self.pprovider.get_class_name_and_index_by_id('FORCING', self.forcing_id);
             
             class_handle = str2func(name);
-            self.forcing = class_handle(index, self.pprovider, self.fprovider);
+            self.FORCING = class_handle(index, self.pprovider, self.fprovider);
         end
         
         
@@ -141,7 +162,7 @@ classdef TILE_BUILDER
             [name, index] = self.pprovider.get_class_name_and_index_by_id('GRID', self.grid_id);
             
             class_handle = str2func(name);
-            self.grid = class_handle(index, self.pprovider, self.forcing);
+            self.grid = class_handle(index, self.pprovider, self.FORCING);
         end
         
         
@@ -151,7 +172,7 @@ classdef TILE_BUILDER
             [name, index] = self.pprovider.get_class_name_and_index_by_id('OUT', self.out_id);
             
             class_handle = str2func(name);
-            self.out = class_handle(index, self.pprovider, self.forcing);
+            self.OUT = class_handle(index, self.pprovider, self.FORCING);
         end
         
         function self = build_strat_linear(self)
@@ -201,7 +222,7 @@ classdef TILE_BUILDER
                 name = self.strat_classes.class_name{i};
                 index = self.strat_classes.class_index(i);
                 class_handle = str2func(name);
-                self.class_list{i,1} = class_handle(index, self.pprovider, self.cprovider, self.forcing);
+                self.class_list{i,1} = class_handle(index, self.pprovider, self.cprovider, self.FORCING);
                 self.class_list{i,2} = index;
             end
             %MODIFIED SEBASTIAN: snow class, now optional
@@ -209,7 +230,7 @@ classdef TILE_BUILDER
             if ~isnan(name)
                 index = self.strat_classes.snow_class.index;
                 class_handle = str2func(name);
-                self.class_list{size(self.class_list,1)+1,1} = class_handle(index, self.pprovider, self.cprovider, self.forcing);
+                self.class_list{size(self.class_list,1)+1,1} = class_handle(index, self.pprovider, self.cprovider, self.FORCING);
                 self.class_list{size(self.class_list,1),2} = index;
             end
             %MODIFIED SEBASTIAN: add sleeping classes to class_list
@@ -218,7 +239,7 @@ classdef TILE_BUILDER
                     name = self.strat_classes.sleeping_classes.class_name{i,1};
                     index = self.strat_classes.sleeping_classes.class_index{i,1};
                     class_handle = str2func(name);
-                    self.class_list{size(self.class_list,1)+1,1} = class_handle(index, self.pprovider, self.cprovider, self.forcing);
+                    self.class_list{size(self.class_list,1)+1,1} = class_handle(index, self.pprovider, self.cprovider, self.FORCING);
                     self.class_list{size(self.class_list,1),2} = index;
                 end
             end
@@ -246,8 +267,8 @@ classdef TILE_BUILDER
             for j=1:size(self.class_list,1)
                 if strcmp(class(self.class_list{j,1}), class_stratigraphy.class_name{i,1}) && self.class_list{j,2}==class_stratigraphy.class_index(i,1)
                     self.TOP_CLASS = copy(self.class_list{j,1}); %make an identical copy of the class stored in class_list -> classes in class_list are fully independet of the ones in class_list
-                    self.TOP_CLASS = initialize_STATVAR_from_file(self, self.TOP_CLASS, self.grid, self.forcing, class_stratigraphy.depth(i,:));  %CHANGED SEBASTIAN
-                    self.TOP_CLASS = finalize_init(self.TOP_CLASS, self.forcing);   %CHANGED SEBASTIAN
+                    self.TOP_CLASS = initialize_STATVAR_from_file(self, self.TOP_CLASS, self.grid, self.FORCING, class_stratigraphy.depth(i,:));  %CHANGED SEBASTIAN
+                    self.TOP_CLASS = finalize_init(self.TOP_CLASS, self.FORCING);   %CHANGED SEBASTIAN
                     CURRENT = self.TOP_CLASS;
                 end
             end
@@ -256,8 +277,8 @@ classdef TILE_BUILDER
                 for j=1:size(self.class_list,1)
                     if strcmp(class(self.class_list{j,1}), class_stratigraphy.class_name{i,1}) && self.class_list{j,2}==class_stratigraphy.class_index(i,1)
                         CURRENT.NEXT = copy(self.class_list{j,1}); %make an identical copy of the class stored in class_list
-                        CURRENT.NEXT = initialize_STATVAR_from_file(self, CURRENT.NEXT, self.grid, self.forcing, class_stratigraphy.depth(i,:));  %CHANGED SEBASTIAN
-                        CURRENT.NEXT = finalize_init(CURRENT.NEXT, self.forcing);  %CHANGED SEBASTIAN
+                        CURRENT.NEXT = initialize_STATVAR_from_file(self, CURRENT.NEXT, self.grid, self.FORCING, class_stratigraphy.depth(i,:));  %CHANGED SEBASTIAN
+                        CURRENT.NEXT = finalize_init(CURRENT.NEXT, self.FORCING);  %CHANGED SEBASTIAN
                         CURRENT.NEXT.PREVIOUS = CURRENT;
                         CURRENT = CURRENT.NEXT;
                     end
@@ -318,7 +339,7 @@ classdef TILE_BUILDER
                     self.TOP.STORE.SNOW=copy(self.class_list{i,1});
                 end
             end
-            self.TOP.STORE.SNOW = finalize_init(self.TOP.STORE.SNOW, self.forcing);
+            self.TOP.STORE.SNOW = finalize_init(self.TOP.STORE.SNOW, self.FORCING);
             
         end
         
@@ -335,7 +356,7 @@ classdef TILE_BUILDER
                 for j = 1:size(class_stratigraphy.sleeping_classes.class_name,1)
                     if strcmp(class(self.class_list{i,1}), class_stratigraphy.sleeping_classes.class_name{j,1}) && self.class_list{i,2} == class_stratigraphy.sleeping_classes.class_index{j,1}
                         self.TOP.STORE.SLEEPING{j,1} = copy(self.class_list{i,1});
-                        self.TOP.STORE.SLEEPING{j,1} = finalize_init(self.TOP.STORE.SLEEPING{j,1}, self.forcing);
+                        self.TOP.STORE.SLEEPING{j,1} = finalize_init(self.TOP.STORE.SLEEPING{j,1}, self.FORCING);
                         self.TOP.STORE.SLEEPING{j,2} = class_stratigraphy.sleeping_classes.class_index{j,1};
                     end
                 end
@@ -424,5 +445,23 @@ classdef TILE_BUILDER
         %               get_class_id_by_name_and_index(self, section, name, index)
         % %           end
         %         end
+        
+        
+        function self = interpolate_forcing_tile(self)
+             self.FORCING = interpolate_forcing(self.t, self.FORCING);
+        end
+
+        function self = interact_lateral(self)
+            self.LATERAL = interact(self.LATERAL, self);
+        end
+        
+        function self = store_OUT_tile(self)
+            %tile.OUT = store_OUT(tile.OUT, tile.t, tile.TOP, tile.BOTTOM, tile.FORCING, tile.RUN_NUMBER, tile.timestep, tile.RESULT_PATH,);
+            self.OUT = store_OUT(self.OUT, self);
+        end        
+        
     end
 end
+
+
+

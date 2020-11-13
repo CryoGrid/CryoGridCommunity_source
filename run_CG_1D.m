@@ -17,11 +17,11 @@ clear all
 
 %set parameter files for initialization
 init_format = 'EXCEL'; %EXCEL or YAML
-run_number = 'test_BGC_2'; %paramter file name and result directory 
+run_number = 'example2'; %paramter file name and result directory 
 %run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
-result_path = '../results/';
+result_path = './results/';
 
 %=========================================================================
 %DO NOT MODIFY BELOW
@@ -42,33 +42,14 @@ cprovider = CONSTANT_PROVIDER(config_path, init_format, const_file);
 fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the model tile (forcing, grid, out and stratigraphy classes)
-tile_built = TILE_BUILDER(pprovider, cprovider, fprovider);
-
-%initialize LATERAL classes as defined in the parameter file
-tile = TILE();
-tile.CONST.day_sec = 24.*3600;
-
-tile.LATERAL = LATERAL_1D(tile_built);
-
-%assign focing and out classes
-tile.FORCING = tile_built.forcing;
-tile.OUT = tile_built.out;
-
-tile.RUN_NUMBER = run_number;
-tile.RESULT_PATH = result_path;
+tile = TILE(pprovider, cprovider, fprovider, run_number, result_path);
 
 %assign bottom and top classes
-TOP_CLASS = tile_built.TOP_CLASS;
-BOTTOM_CLASS = tile_built.BOTTOM_CLASS;
-TOP = tile_built.TOP;
-tile.TOP = TOP;
-BOTTOM = tile_built.BOTTOM;
-tile.BOTTOM = BOTTOM;
+TOP_CLASS = tile.TOP_CLASS;
+BOTTOM_CLASS = tile.BOTTOM_CLASS;
+TOP = tile.TOP;
+BOTTOM = tile.BOTTOM;
 TOP.LATERAL = tile.LATERAL;
-
-%initialize running time variable t [days]
-tile.t = tile.FORCING.PARA.start_time;
-
 
 clear pprovider cprovider fprovider forcing_path config_path modules_path run_number result_path const_file init_format
 

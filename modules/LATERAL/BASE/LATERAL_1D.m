@@ -38,7 +38,7 @@ classdef LATERAL_1D < matlab.mixin.Copyable
             
             lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
             
-            t = tile.forcing.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
+            t = tile.FORCING.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
             lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
             lateral.TOP = tile.TOP;
             lateral.BOTTOM = tile.BOTTOM;
