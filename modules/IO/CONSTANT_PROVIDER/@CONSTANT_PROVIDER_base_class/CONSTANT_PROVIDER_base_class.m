@@ -26,6 +26,19 @@ classdef CONSTANT_PROVIDER_base_class
             self.filepath = [];
         end
         
+        function value = get_constant(self, name)
+            % GET_CONSTANT  retrieves the value of a particular constant
+            %   from the constant source
+            %
+            %   ARGUMENTS:
+            %   name:  the name (string) of the constant to retrieve
+            %
+            %   RETURNS: 
+            %   val:   the the value requested
+            
+            error('get_constant method not implemented for base_class. You should call a specific sub-class.');
+        end
+        
         function structure = populate_struct(self, structure)
             % POPULATE_STRUCT  Populates the fields of the provided structure with
             %   values from the constant source
@@ -38,7 +51,7 @@ classdef CONSTANT_PROVIDER_base_class
             %
             %   Must be overloaded when sub-classing.
             
-            error('get_parameters method not implemented for base_class. You should call a specific sub-class.');
+            error('populate struct method not implemented for base_class. You should call a specific sub-class.');
         end
 
     end

@@ -21,8 +21,32 @@ classdef CONSTANT_PROVIDER_YAML < CONSTANT_PROVIDER_base_class
             self.source_type = 'yml';
             self.filepath = mypath;
         end
+
         
+        function value = get_constant(self, name)
+            % GET_CONSTANT  retrieves the value of a particular constant
+            %   from the constant source
+            %
+            %   ARGUMENTS:
+            %   name:  the name (string) of the constant to retrieve
+            %
+            %   RETURNS: 
+            %   val:   the the value requested
+            
+            if ~ischar(name)
+                % Do nothing if we are not passed a string name.
+                return
+            end
+            
+            % Extract relevant constant from the loaded source
+            if isfield(self.const_data, name)
+                value = self.const_data.(name);
+            else
+                error('Constant ' + name + ' not provided!')
+            end
+        end
          
+        
         function structure = populate_struct(self, structure)
             % POPULATE_STRUCT  Populates the fields of the provided structure with
             %   values from the constant source (here yml file)
