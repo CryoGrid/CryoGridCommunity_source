@@ -18,18 +18,49 @@ classdef CONSTANT_PROVIDER_EXCEL < CONSTANT_PROVIDER_base_class
             %   const_file:   filename of const_file
 
             self.const_file = const_file;
-            self.const_data = read_excel2cell([mypath '/' const_file]);
+            data = read_excel2cell([mypath '/' const_file]);
+            
+            % Remove blank lines from cell array
+            ids = [];
+            for i = 1:size(data,1)
+                if ~isnan(data{i,1}) & ~all(isspace(data{i,1})) 
+                    ids = [ids; i];
+                end
+            end
+            self.const_data = data(ids,1:end);
+            
             self.source_type = 'xlsx';
             self.filepath = mypath;
         end
+
         
-         
+        function value = get_constant(self, name)
+            % GET_CONSTANT  retrieves the value of a particular constant
+            %   from the constant source
+            %
+            %   ARGUMENTS:
+            %   name:  the name (string) of the constant to retrieve
+            %
+            %   RETURNS: 
+            %   val:   the the value requested
+            
+            if ~ischar(name)
+                % Do nothing if we are not passed a string name.
+                return
+            end
+            
+            % Extract relevant section from Excel file data
+            [tf, idx] = ismember(name, self.const_data(1:end,1));
+            if tf
+                value = self.const_data{idx,2};
+            else
+                error('Constant ' + name + ' not provided!')
+            end
+        end
+            
         function structure = populate_struct(self, structure)
             % POPULATE_STRUCT  Populates the fields of the provided structure with
             %   values from the constant source (here xlsx file)
-            %
-            %   NOTICE: The index is here the actual index specified for a
-            %     certain class in the xlsx file.
             %
             %   ARGUMENTS:
             %   structure:  a structure with empty fields to be populated
