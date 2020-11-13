@@ -43,13 +43,13 @@ classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
         %----time integration------
         
         %only push function needed
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             
             CURRENT = lateral.PARENT.TOP.NEXT;
             lateral.TEMP.head = 0;
             while ~(strcmp(class(CURRENT), 'Bottom'))
                 CURRENT = lateral_push_remove_water_seepage(CURRENT, lateral);
-                CURRENT = compute_diagnostic(CURRENT, forcing);
+                CURRENT = compute_diagnostic(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
             
@@ -60,11 +60,11 @@ classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
             lateral.PARENT.ACTIVE(i,1) = 1;
         end
         
-        function lateral = get_derivatives(lateral)
+        function lateral = get_derivatives(lateral, tile)
             
         end
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             
         end
     end

@@ -36,7 +36,7 @@ classdef LAT_REMOVE_SURFACE_WATER < BASE_LATERAL
         %------time integration-------------
         
         %only push function needed
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             %remove water from first class in stratigraphy only
             TOP.NEXT = lateral_push_remove_surfaceWater(lateral.PARENT.TOP.NEXT, lateral); 
         end
@@ -45,11 +45,11 @@ classdef LAT_REMOVE_SURFACE_WATER < BASE_LATERAL
             lateral.PARENT.ACTIVE(i,1) = 1;
         end
         
-        function lateral = get_derivatives(lateral)
+        function lateral = get_derivatives(lateral, tile)
             
         end
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             
         end
 

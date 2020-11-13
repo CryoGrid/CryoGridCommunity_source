@@ -113,7 +113,18 @@ classdef OUT_all
         
         %---------------time integration-------------
 		
-		function out = store_OUT(out, t, TOP_CLASS, BOTTOM, forcing, run_number, timestep, result_path)
+% 		function out = store_OUT(out, t, TOP, BOTTOM, forcing, run_number, timestep, result_path)
+            
+        function out = store_OUT(out, tile)           
+            
+             t = tile.t;
+             TOP = tile.TOP; 
+             BOTTOM = tile.BOTTOM;
+             forcing = tile.FORCING;
+             run_number = tile.RUN_NUMBER;
+             timestep = tile.timestep;
+             result_path = tile.RESULT_PATH;
+            
             
             if t==out.OUTPUT_TIME
                 %if id == 1
@@ -122,9 +133,7 @@ classdef OUT_all
                 %labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
-                %out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = copy(TOP_CLASS);  %append new stratigraphy, should be made more sophisticated by not adding instaneous values, but averaging/accumulating variables
-                %out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = [TOP_CLASS.STATVAR.T; TOP_CLASS.NEXT.STATVAR.T];  
-                CURRENT =TOP_CLASS;
+                CURRENT =TOP.NEXT;
                 if isprop(CURRENT, 'CHILD') && CURRENT.CHILD ~= 0
                     out.MISC=[out.MISC [CURRENT.CHILD.STATVAR.T(1,1); CURRENT.CHILD.STATVAR.layerThick(1,1)]]; 
                 else
@@ -140,6 +149,9 @@ classdef OUT_all
                     res = copy(CURRENT);
                     if isprop(res, 'LUT')
                         res.LUT =[];  %remove look-up tables, runs out of memeory otherwise
+                    end
+                    if isprop(res, 'READ_OUT')
+                        res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  %cut all dependencies
                     if isprop(res, 'CHILD')

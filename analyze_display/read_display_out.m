@@ -3,18 +3,18 @@
 %interpolates the given target variables to the variable "new_grid" and
 %displays them as color plots
 
-modules_path = 'modules';
-addpath(genpath(modules_path));
-
-result_path = '../results/';
-run_number = 'example2';
-out_timstamp = '19820901';
-
-load([result_path run_number '/' run_number '_' out_timstamp '.mat'])
+% modules_path = 'modules';
+% addpath(genpath(modules_path));
+% 
+% result_path = '../results/';
+% run_number = 'example2';
+% out_timstamp = '19820901';
+% 
+% load([result_path run_number '/' run_number '_' out_timstamp '.mat'])
 
 %define the grid to which variables are interpolated
 target_cell_size = 0.02;
-new_grid = [15:target_cell_size:21]';
+new_grid = 20 + [-3:target_cell_size:1]';
 %new_grid = [15:target_cell_size:21]';
 threshold = target_cell_size/10;  
 

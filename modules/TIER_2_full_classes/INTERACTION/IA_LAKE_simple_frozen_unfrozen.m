@@ -18,13 +18,13 @@ classdef IA_LAKE_simple_frozen_unfrozen < IA_WATER & IA_HEAT
         
 
         %experimental code connecting two LAKES, not used at this stage
-        function get_boundary_condition_m(ia_heat_water)
+        function get_boundary_condition_m(ia_heat_water, tile)
             get_boundary_condition_HEAT_m(ia_heat_water);
             get_boundary_condition_BUCKET_LAKE_LAKE_m(ia_heat_water);
         end
         
         
-        function trigger_remove_LAKE(ia_heat_water, forcing)
+        function trigger_remove_LAKE(ia_heat_water, tile)
             lake1 = ia_heat_water.PREVIOUS;
             lake2 = ia_heat_water.NEXT;
             
@@ -50,7 +50,7 @@ classdef IA_LAKE_simple_frozen_unfrozen < IA_WATER & IA_HEAT
                 lake2.IA_PREVIOUS.PREVIOUS = lake2.PREVIOUS;
                 lake2.IA_PREVIOUS.NEXT = lake2;
             end
-           lake2 = compute_diagnostic(lake2,forcing);
+           lake2 = compute_diagnostic(lake2,tile);
         end
         
     end

@@ -96,8 +96,8 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
         
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing)
-            
+        function ground = get_boundary_condition_u(ground, tile)
+            forcing = tile.FORCING;
             ground = surface_energy_balance(ground, forcing);
             ground = get_boundary_condition_u_ZERO_SALT(ground); %zero salt flux assumed at upper and lower boundary
         end
@@ -107,37 +107,37 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
-        function ground = get_boundary_condition_l(ground, forcing)
-            
+        function ground = get_boundary_condition_l(ground, tile)
+            forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
             ground = get_boundary_condition_l_ZERO_SALT(ground);
         end
         
-        function ground = get_derivatives_prognostic(ground)
+        function ground = get_derivatives_prognostic(ground, tile)
             
             ground = get_derivative_energy(ground);
             ground = get_derivative_salt(ground);            
         end
         
-        function timestep = get_timestep(ground) %no timestep check for salt is performed, add if necesssary
+        function timestep = get_timestep(ground, tile) %no timestep check for salt is performed, add if necesssary
             
             timestep = get_timestep_heat_coduction(ground);
         end
         
-        function ground = advance_prognostic(ground, timestep)
-            
+        function ground = advance_prognostic(ground, tile)
+            timestep = tile.timestep;
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
             ground.STATVAR.saltConc = ground.STATVAR.saltConc + timestep .* ground.TEMP.d_salt;
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
-            
+        function ground = compute_diagnostic_first_cell(ground, tile)
+            forcing = tile.FORCING;
             ground = L_star(ground, forcing);
         end
         
-        function ground = compute_diagnostic(ground, forcing)
-            
+        function ground = compute_diagnostic(ground, tile)
+            forcing = tile.FORCING;
             ground = get_T_water_salt_fcSimple_Xice(ground); % calculate temperature, water and ice contents and brine salt concentration 
             ground = conductivity(ground); %calculate thermal conductivity
             ground = diffusivity_salt(ground); % calculate salt diffusivity 
@@ -146,7 +146,7 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.TEMP.d_salt = ground.STATVAR.energy.*0;
         end
         
-        function ground = check_trigger(ground, forcing)
+        function ground = check_trigger(ground, tile)
             %do nothing
         end
         

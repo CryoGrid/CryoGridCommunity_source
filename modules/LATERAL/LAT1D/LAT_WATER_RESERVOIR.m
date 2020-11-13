@@ -43,12 +43,12 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
         %-----time integration-------------
         
         %only push function needed
-        function lateral = push(lateral, forcing)
+        function lateral = push(lateral, tile)
             CURRENT = lateral.PARENT.TOP.NEXT;
             lateral.TEMP.open_system = 1; %start with open system
             while ~(strcmp(class(CURRENT), 'Bottom'))
                 CURRENT = lateral_push_water_reservoir(CURRENT, lateral);
-                CURRENT = compute_diagnostic(CURRENT, forcing);
+                CURRENT = compute_diagnostic(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
         end
@@ -57,11 +57,11 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
             lateral.PARENT.ACTIVE(i,1) = 1;
         end
         
-        function lateral = get_derivatives(lateral)
+        function lateral = get_derivatives(lateral, tile)
             
         end
         
-        function lateral = pull(lateral)
+        function lateral = pull(lateral, tile)
             
         end
     end

@@ -149,8 +149,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
         
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing)
-      
+        function ground = get_boundary_condition_u(ground, tile)
+            forcing = tile.FORCING;
             ground = surface_energy_balance(ground, forcing);
             ground = get_boundary_condition_u_water_Xice(ground, forcing); %checked that this flux can be taken up!!
         end
@@ -159,24 +159,26 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
-        function ground = get_boundary_condition_l(ground, forcing)
-             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
-             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
-             ground = get_boundary_condition_l_water2(ground);  %if flux not zero, check that the water flowing out is available! Not implemented here.
+        function ground = get_boundary_condition_l(ground, tile)
+            forcing = tile.FORCING;
+            ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
+            ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
+            ground = get_boundary_condition_l_water2(ground);  %if flux not zero, check that the water flowing out is available! Not implemented here.
         end
         
-        function ground = get_derivatives_prognostic(ground)
+        function ground = get_derivatives_prognostic(ground, tile)
             ground = get_derivative_energy(ground);
             ground = get_derivative_water_Xice(ground); %normal downward water flow in matrix
             ground = get_derivative_Xwater(ground); %upward flow of Xwater
         end
         
-        function timestep = get_timestep(ground) 
+        function timestep = get_timestep(ground, tile) 
            timestep = get_timestep_heat_coduction(ground);
            timestep = min(timestep, get_timestep_water_Xice(ground)); 
         end
         
-        function ground = advance_prognostic(ground, timestep) 
+        function ground = advance_prognostic(ground, tile) 
+            timestep = tile.timestep;
             %energy
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* (ground.TEMP.d_water_energy + ground.TEMP.d_Xwater_energy); %add energy from water advection
@@ -195,12 +197,13 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
 
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
+        function ground = compute_diagnostic_first_cell(ground, tile)
+            forcing = tile.FORCING;
             ground = L_star(ground, forcing);
         end
        
-        function ground = compute_diagnostic(ground, forcing)
-          
+        function ground = compute_diagnostic(ground, tile)
+            forcing = tile.FORCING;
             %equilibrate water between matrix and Xwater within cells
             air = ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce - ground.STATVAR.waterIce - ground.STATVAR.mineral - ground.STATVAR.organic; 
             move_cells = (ground.STATVAR.Xwater > 0) & (air > 0);
@@ -220,7 +223,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
             ground = set_TEMP_2zero(ground);
         end
         
-        function ground = check_trigger(ground, forcing)
+        function ground = check_trigger(ground, tile)
+            forcing = tile.FORCING;
             trigger_yes_no = 0;
             %water overtopping first cell
             if isequal(class(ground.PREVIOUS), 'Top') && ground.STATVAR.Xwater(1) > ground.PARA.threshold_Xwater .* ground.STATVAR.area(1) % no snow cover and too much Xwater

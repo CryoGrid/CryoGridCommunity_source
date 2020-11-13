@@ -143,11 +143,13 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE & INITIALIZE
         
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing)
+        function ground = get_boundary_condition_u(ground, tile)
+            forcing = tile.FORCING;
             ground = surface_energy_balance(ground, forcing);
         end
         
-        function ground = get_boundary_condition_l(ground, forcing)
+        function ground = get_boundary_condition_l(ground, tile)
+            forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
         end
@@ -156,26 +158,27 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE & INITIALIZE
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
-        function ground = get_derivatives_prognostic(ground)
+        function ground = get_derivatives_prognostic(ground, tile)
             ground = get_derivative_energy(ground);
             
         end
         
-        function timestep = get_timestep(ground)  
+        function timestep = get_timestep(ground, tile)  
             timestep = get_timestep_heat_coduction(ground);
         end
         
-        function ground = advance_prognostic(ground, timestep)
+        function ground = advance_prognostic(ground, tile)
+            timestep = tile.timestep;
             %energy
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
+        function ground = compute_diagnostic_first_cell(ground, tile)
+            forcing = tile.FORCING;
             ground = L_star(ground, forcing);
         end
         
-        function ground = compute_diagnostic(ground, forcing)
-            
+        function ground = compute_diagnostic(ground, tile)
             ground = move_ice_up(ground);
             ground = get_T_water_freeW(ground);
             ground = conductivity(ground);
@@ -184,7 +187,7 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE & INITIALIZE
         end
         
         %shifts to unfrozen LAKE class
-        function ground = check_trigger(ground, forcing)
+        function ground = check_trigger(ground, tile)
             if sum(double(ground.STATVAR.energy<0),1)==0  %all cells unfrozen
                 
                 ia_create_next_season_lake = get_IA_class(class(ground), ground.PARA.next_season_lake_class); %delivers IA-class that creates and initializes the next season LAKE class

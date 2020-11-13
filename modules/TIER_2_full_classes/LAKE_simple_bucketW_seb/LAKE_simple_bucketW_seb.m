@@ -142,8 +142,8 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing)
-      
+        function ground = get_boundary_condition_u(ground, tile)
+            forcing = tile.FORCING;
             ground = surface_energy_balance(ground, forcing);
             ground = get_boundary_condition_u_water_LAKE_frozen(ground, forcing);
         end
@@ -152,25 +152,27 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             [ground, S_up] = penetrate_SW_transmission_bulk(ground, S_down);
         end
         
-        function ground = get_boundary_condition_l(ground, forcing)
-             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
-             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
-
-             ground.TEMP.F_lb_water = 0;
-             ground.TEMP.F_lb_water_energy =0;
+        function ground = get_boundary_condition_l(ground, tile)
+            forcing = tile.FORCING;
+            ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
+            ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
+            
+            ground.TEMP.F_lb_water = 0;
+            ground.TEMP.F_lb_water_energy =0;
         end
         
-        function ground = get_derivatives_prognostic(ground)
+        function ground = get_derivatives_prognostic(ground, tile)
             if size(ground.STATVAR.energy,1)>1
                 ground = get_derivative_energy(ground);
             end
         end
         
-        function timestep = get_timestep(ground)  %could involve check for several state variables
+        function timestep = get_timestep(ground, tile)  %could involve check for several state variables
            timestep = get_timestep_heat_coduction(ground);
         end
         
-        function ground = advance_prognostic(ground, timestep) 
+        function ground = advance_prognostic(ground, tile) 
+            timestep = tile.timestep;
             %energy
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* (ground.TEMP.d_energy + ground.TEMP.d_water_energy);
             %water - no water added at top yet
@@ -178,11 +180,12 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_water ./ ground.STATVAR.area;
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
+        function ground = compute_diagnostic_first_cell(ground, tile)
+            forcing = tile.FORCING;
             ground = L_star(ground, forcing);
         end
        
-        function ground = compute_diagnostic(ground, forcing)
+        function ground = compute_diagnostic(ground, tile)
             
             ground = move_ice_up(ground);
             ground = stratify(ground);
@@ -196,7 +199,7 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         end
         
         
-        function ground = check_trigger(ground, forcing)
+        function ground = check_trigger(ground, tile)
             trigger_yes_no = 0;
             if sum(double(ground.STATVAR.energy<0),1)==0  && strcmp(class(ground.PREVIOUS), 'Top')  %all cells unfrozen and no more snow cover on top, switch to LAKE_unfrozen class
                 %Change second condition, so that snow is combined with lake
@@ -233,7 +236,7 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             
             if ~trigger_yes_no & sum(ground.STATVAR.waterIce./ground.STATVAR.area ,1) < ground.PARA.threshold_water 
                 trigger_yes_no = 1;
-                trigger_remove_LAKE(ground.IA_NEXT, forcing);
+                trigger_remove_LAKE(ground.IA_NEXT, tile);
             end
 
         end

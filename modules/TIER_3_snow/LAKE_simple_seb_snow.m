@@ -50,10 +50,10 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
        
         %---time integration------
         
-        function ground = get_boundary_condition_u(ground, forcing)
-            
+        function ground = get_boundary_condition_u(ground, tile)
+            forcing = tile.FORCING;
             if ground.CHILD == 0  %CHILD does not exist
-                ground = get_boundary_condition_u@LAKE_simple_seb(ground, forcing); %call the native function for the ground class
+                ground = get_boundary_condition_u@LAKE_simple_seb(ground, tile); %call the native function for the ground class
                 
                 if forcing.TEMP.snowfall > 0  %create CHILD 
                     CURRENT = ground.PREVIOUS;  %go to Top() and get the stored SNOW class
@@ -67,7 +67,7 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
                     ground.IA_CHILD.PREVIOUS = ground.CHILD;
                     ground.IA_CHILD.NEXT = ground; %SNOW CHILD created
                     
-                    ground.CHILD = get_boundary_condition_u_create_CHILD(ground.CHILD, forcing);  %initialize with fresh snowfall
+                    ground.CHILD = get_boundary_condition_u_create_CHILD(ground.CHILD, tile);  %initialize with fresh snowfall
                 end
             else %CHILD exists
                 total_area = ground.STATVAR.area(1,1); %store the total area of the ground
@@ -75,10 +75,10 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
                 
                 ground.CHILD.STATVAR.Lstar = ground.STATVAR.Lstar;
                 
-                ground.CHILD = get_boundary_condition_u_CHILD(ground.CHILD, forcing);
-                ground = get_boundary_condition_u@LAKE_simple_seb(ground, forcing);
+                ground.CHILD = get_boundary_condition_u_CHILD(ground.CHILD, tile);
+                ground = get_boundary_condition_u@LAKE_simple_seb(ground, tile);
                 
-                get_IA_CHILD_boundary_condition_u(ground.IA_CHILD);
+                get_IA_CHILD_boundary_condition_u(ground.IA_CHILD, tile);
                 %call designated mandatory function for CHILD-PARENT interactions in
                 %the IA class governing IA between SNOW and GROUND
                 
@@ -91,57 +91,58 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
             end
         end
         
-        function ground = get_boundary_condition_l(ground, forcing)
-              ground = get_boundary_condition_l@LAKE_simple_seb(ground, forcing);
+        function ground = get_boundary_condition_l(ground, tile)
+              ground = get_boundary_condition_l@LAKE_simple_seb(ground, tile);
         end
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
             [ground, S_up] = penetrate_SW@LAKE_simple_seb(ground, S_down);
         end
         
-        function ground = get_derivatives_prognostic(ground)
+        function ground = get_derivatives_prognostic(ground, tile)
             if ground.CHILD == 0  
-                ground = get_derivatives_prognostic@LAKE_simple_seb(ground); %call normal function
+                ground = get_derivatives_prognostic@LAKE_simple_seb(ground, tile); %call normal function
             else
-                ground.CHILD = get_derivatives_prognostic_CHILD(ground.CHILD);
-                ground = get_derivatives_prognostic@LAKE_simple_seb(ground); 
+                ground.CHILD = get_derivatives_prognostic_CHILD(ground.CHILD, tile);
+                ground = get_derivatives_prognostic@LAKE_simple_seb(ground, tile); 
             end
         end
         
-        function timestep = get_timestep(ground) 
+        function timestep = get_timestep(ground, tile) 
             if ground.CHILD == 0
-                timestep = get_timestep@LAKE_simple_seb(ground);
+                timestep = get_timestep@LAKE_simple_seb(ground, tile);
             else 
-                timestep_snow = get_timestep_CHILD(ground.CHILD);
-                timestep_ground =  get_timestep@LAKE_simple_seb(ground);
+                timestep_snow = get_timestep_CHILD(ground.CHILD, tile);
+                timestep_ground =  get_timestep@LAKE_simple_seb(ground, tile);
                 timestep = timestep_ground + double(timestep_snow > 0 && timestep_snow < timestep_ground) .* (timestep_snow - timestep_ground);
             end
         end
         
-        function ground = advance_prognostic(ground, timestep) 
+        function ground = advance_prognostic(ground, tile) 
             if ground.CHILD == 0
-                ground =  advance_prognostic@LAKE_simple_seb(ground, timestep);
+                ground =  advance_prognostic@LAKE_simple_seb(ground, tile);
             else                
-                ground.CHILD = advance_prognostic_CHILD(ground.CHILD, timestep);
-                ground =  advance_prognostic@LAKE_simple_seb(ground, timestep);
+                ground.CHILD = advance_prognostic_CHILD(ground.CHILD, tile);
+                ground =  advance_prognostic@LAKE_simple_seb(ground, tile);
             end
         end
         
-        function ground = compute_diagnostic_first_cell(ground, forcing)
+        function ground = compute_diagnostic_first_cell(ground, tile)
+            forcing = tile.FORCING;
             ground = L_star(ground, forcing);
         end
         
-        function ground = compute_diagnostic(ground, forcing)
+        function ground = compute_diagnostic(ground, tile)
             if ground.CHILD == 0
-                ground = compute_diagnostic@LAKE_simple_seb(ground, forcing);
+                ground = compute_diagnostic@LAKE_simple_seb(ground, tile);
             else
-                ground = compute_diagnostic@LAKE_simple_seb(ground, forcing);
-                ground.CHILD = compute_diagnostic_CHILD(ground.CHILD, forcing);
+                ground = compute_diagnostic@LAKE_simple_seb(ground, tile);
+                ground.CHILD = compute_diagnostic_CHILD(ground.CHILD, tile);
                 
             end
         end
         
-        function ground = check_trigger(ground, forcing)
+        function ground = check_trigger(ground, tile)
 
             %snow trigger
             if ground.CHILD ~= 0
@@ -171,7 +172,7 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
             end
             
             %lake trigger
-           dummy = check_trigger@LAKE_simple_seb(ground, forcing);
+           dummy = check_trigger@LAKE_simple_seb(ground, tile);
         end
         
     end

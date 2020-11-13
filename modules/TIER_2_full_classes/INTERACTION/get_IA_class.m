@@ -12,6 +12,8 @@
 function ia_class = get_IA_class(above_class, below_class)
 
 
+
+
 %list of all CryoGrid GROUND classes
 classes = [ {'GROUND_freeW_seb'};
     {'GROUND_freeW_seb_snow'};
@@ -154,5 +156,9 @@ else
     ia_class=0;
     disp('combination of classes not supported')
 end
+
+% if  strcmp(below_class,'READ_OUT_BGC') && strcmp(above_class,'READ_OUT_BGC')
+%     ia_class = IA_DO_NOTHING();
+% end
 
 end
