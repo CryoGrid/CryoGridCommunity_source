@@ -138,9 +138,10 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
         end
         
         function timestep = get_timestep(snow, tile) 
-            timestep1 = get_timestep_heat_coduction(snow);
-            timestep2 = get_timestep_SNOW_mass_balance(snow);
-            timestep = min(timestep1, timestep2);
+%             timestep1 = get_timestep_heat_coduction(snow);
+%             timestep2 = get_timestep_SNOW_mass_balance(snow);
+%             timestep = min(timestep1, timestep2);
+            timestep = get_timestep_SNOW(snow);
         end
         
         function timestep = get_timestep_CHILD(snow, tile)  
