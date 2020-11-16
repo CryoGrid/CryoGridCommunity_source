@@ -21,7 +21,7 @@ run_number = 'example2'; %paramter file name and result directory
 %run_number = 'example1'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
-result_path = './results/';
+result_path = '../results/';
 
 %=========================================================================
 %DO NOT MODIFY BELOW
@@ -43,6 +43,7 @@ fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
 % Build the model tile (forcing, grid, out and stratigraphy classes)
 tile = TILE(pprovider, cprovider, fprovider, run_number, result_path);
+tile.LATERAL = LATERAL_1D(tile);
 
 %assign bottom and top classes
 TOP_CLASS = tile.TOP_CLASS;

@@ -55,8 +55,19 @@ classdef SNOW < BASE
             timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
         
+        function timestep = get_timestep_SNOW(snow) %at maximum timestep maximum half the cell is melted under melting conditions, otherwise normal heat conduction timestep
+            timestep = min(double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
+             double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area)); 
+             
+            timestep(isnan(timestep)) = snow.PARA.dt_max;
+        end
+        
         function timestep = get_timestep_SNOW_CHILD(snow)
-            timestep = (-snow.STATVAR.energy ./ snow.TEMP.d_energy) .* double(snow.TEMP.d_energy>0) + double(snow.TEMP.d_energy<=0).*snow.PARA.dt_max;
+            %timestep = (-snow.STATVAR.energy ./ snow.TEMP.d_energy) .* double(snow.TEMP.d_energy>0) + double(snow.TEMP.d_energy<=0).*snow.PARA.dt_max;
+            
+            timestep = double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
+             double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area); 
+            
             timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
         

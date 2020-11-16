@@ -171,11 +171,12 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         end
         
         function timestep = get_timestep(snow, tile) 
-            timestep1 = get_timestep_heat_coduction(snow);
-            timestep2 = get_timestep_SNOW_mass_balance(snow);
+            timestep = get_timestep_SNOW(snow);
+            %timestep1 = get_timestep_heat_coduction(snow);
+            %timestep2 = get_timestep_SNOW_mass_balance(snow);
             timestep3 = get_timestep_water_SNOW(snow);
 
-            timestep = min(timestep1, timestep2);
+            %timestep = min(timestep1, timestep2);
             timestep = min(timestep, timestep3);
         end
         

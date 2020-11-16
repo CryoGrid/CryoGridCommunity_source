@@ -136,7 +136,7 @@ classdef TILE
             self.CONST.day_sec = self.cprovider.get_constant('day_sec');
             
             %initialize LATERAL classes as defined in the parameter file
-            self.LATERAL = LATERAL_1D(self);
+            %self.LATERAL = LATERAL_1D(self);
             
             self.RUN_NUMBER = run_number;
             self.RESULT_PATH = result_path;

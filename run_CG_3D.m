@@ -47,11 +47,13 @@ spmd
     fprovider = FORCING_PROVIDER(pprovider, forcing_path);
 
     % Build the model tile (forcing, grid, out and stratigraphy classes)
-    tile_built = TILE_BUILDER(pprovider, cprovider, fprovider);
+    %tile_built = TILE_BUILDER(pprovider, cprovider, fprovider);
+    tile = TILE(pprovider, cprovider, fprovider, run_number, result_path);
+    tile.LATERAL = LATERAL_3D(tile);
+    
+%     tile = TILE();
+%     tile.CONST.day_sec = 24.*3600;
 
-    tile = TILE();
-    tile.CONST.day_sec = 24.*3600;
-    tile.LATERAL = LATERAL_3D(tile_built);
     
     %initialize LATERAL classes as defined in the parameter file
 
@@ -64,20 +66,20 @@ spmd
     tile.LATERAL = get_index(tile.LATERAL);
 
     %assign forcing and out classes
-    tile.FORCING = tile_built.forcing;
-    tile.OUT = tile_built.out;
-
-    tile.RUN_NUMBER = run_number;
-    tile.RESULT_PATH = result_path;
+%     tile.FORCING = tile_built.forcing;
+%     tile.OUT = tile_built.out;
+% 
+%     tile.RUN_NUMBER = run_number;
+%     tile.RESULT_PATH = result_path;
     
     %assign bottom and top classes
-    TOP_CLASS = tile_built.TOP_CLASS;
-    TOP = tile_built.TOP;
-    tile.TOP = TOP;
+    TOP_CLASS = tile.TOP_CLASS;
+    TOP = tile.TOP;
+    %tile.TOP = TOP;
 
-    BOTTOM_CLASS = tile_built.BOTTOM_CLASS;
-    BOTTOM = tile_built.BOTTOM;
-    tile.BOTTOM = BOTTOM;
+    BOTTOM_CLASS = tile.BOTTOM_CLASS;
+    BOTTOM = tile.BOTTOM;
+    %tile.BOTTOM = BOTTOM;
 
     TOP.LATERAL = tile.LATERAL;
 %     TOP.FORCING = forcing;
@@ -88,7 +90,7 @@ spmd
 %     day_sec = 24.*3600;
     
     %initialize running time variable t [days]
-    tile.t = tile.FORCING.PARA.start_time;
+    %tile.t = tile.FORCING.PARA.start_time;
     
     %lateral = initialize_lateral_3D(lateral, TOP, BOTTOM, t);
 
