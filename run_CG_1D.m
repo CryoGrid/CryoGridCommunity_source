@@ -19,9 +19,13 @@ clear all
 init_format = 'EXCEL'; %EXCEL or YAML
 run_number = 'example2'; %paramter file name and result directory 
 %run_number = 'example1'; %paramter file name and result directory 
+run_number = 'Paiku_g5_meteoc19';
+run_number = 'abramov';
+run_number = 'example2'; %paramter file name and result directory 
 const_file = 'CONSTANTS_excel'; %file with constants
 %result_path = '../CryoGrid_Git_results/';
 result_path = '../results/';
+forcing_path = fullfile ('./forcing/');
 
 %=========================================================================
 %DO NOT MODIFY BELOW
@@ -33,7 +37,7 @@ result_path = '../results/';
 modules_path = 'modules';
 addpath(genpath(modules_path));
 config_path = fullfile(result_path, run_number);
-forcing_path = fullfile ('./forcing/');
+
 
 %call provider classes to extract run parameters and constants from the
 %parameter/constant files

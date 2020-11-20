@@ -363,40 +363,6 @@ classdef TILE
             end            
         end
 
-        %         function self = add_CHILD_snow(self)  %discontinued
-        %             % ADD_CHILD_SNOW  Connects the uppermost ground module to a snow module that is built as a child, using an interaction. The snow child class is at first initilized with empty pointers and zero snow conditions.
-        %
-        %
-        %
-        %             %replace by matrix
-        %
-        %             if strcmp(class(self.TOP_CLASS), 'GROUND_freeW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_bucketW')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND();
-        %             elseif strcmp(class(self.TOP_CLASS), 'GROUND_freeW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_crocus')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND_crocus();
-        %             elseif strcmp(class(self.TOP_CLASS), 'GROUND_fcSimple_salt_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_bucketW')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND_fcSimple_salt();
-        %             elseif strcmp(class(self.TOP_CLASS), 'GROUND_fcSimple_salt_seb_snow') && strcmp(class(snow), 'SNOW_crocus_no_inheritance')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND_fcSimple_salt_crocus();
-        %             elseif strcmp(class(self.TOP_CLASS), 'GROUND_freeW_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_bucketW')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND();
-        %             elseif strcmp(class(self.TOP_CLASS), 'GROUND_freeW_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb_crocus')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND_crocus();
-        %             elseif strcmp(class(self.TOP_CLASS), 'GROUND_freeW_bucketW_seb_snow') && strcmp(class(snow), 'SNOW_crocus_no_inheritance')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND_crocus();
-        %             elseif strcmp(class(self.TOP_CLASS), 'GROUND_freeW_seb_snow') && strcmp(class(snow), 'SNOW_simple_seb')
-        %                 self.TOP_CLASS.IA_CHILD = IA_SNOW_GROUND();
-        %             end
-        %
-        %
-        %             CURRENT = self.TOP_CLASS.IA_CHILD; %change to interaction class
-        %             CURRENT.STATUS = 0; %snow initially inactive
-        %             CURRENT.IA_PARENT_GROUND = self.TOP_CLASS;
-        %             CURRENT.IA_CHILD_SNOW = snow;
-        %             CURRENT.IA_CHILD_SNOW = initialize_zero_snow(CURRENT.IA_CHILD_SNOW, CURRENT.IA_PARENT_GROUND);
-        %
-        %             self.TOP_CLASS.IA_CHILD = CURRENT; %reassign to ground
-        %         end
         
         
         function ground = initialize_STATVAR_from_file(self, ground, grid, forcing, depths);

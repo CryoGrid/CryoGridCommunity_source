@@ -189,7 +189,7 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             
             ground = move_ice_up(ground);
             ground = stratify(ground);
-            ground = regrid_split(ground, {'layerThick'; 'waterIce'; 'mineral'; 'organic'});
+            ground = regrid_split(ground, {'layerThick'; 'energy'; 'waterIce'; 'mineral'; 'organic'});
             ground = get_T_water_freeW(ground);
             ground = conductivity(ground);
             
