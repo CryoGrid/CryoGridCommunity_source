@@ -1,4 +1,4 @@
-classdef IA_HEAT11_WATER11_LAKE_LAKE < IA_WATER & IA_HEAT 
+classdef IA_HEAT11_WATER11_LAKE_LAKE_discontinued < IA_WATER & IA_HEAT 
     
     methods
         

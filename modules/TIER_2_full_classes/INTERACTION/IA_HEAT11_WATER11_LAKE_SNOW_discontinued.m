@@ -1,4 +1,4 @@
-classdef IA_HEAT11_WATER11_LAKE_SNOW < IA_WATER & IA_HEAT 
+classdef IA_HEAT11_WATER11_LAKE_SNOW_discontinued < IA_WATER & IA_HEAT 
     %lake on top of snow - not completed!!
     
     methods
