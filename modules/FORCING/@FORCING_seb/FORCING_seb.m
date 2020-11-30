@@ -225,13 +225,13 @@ classdef FORCING_seb
             posit = floor((t-times(1,1))./(times(2,1)-times(1,1)))+1;
 
             self.TEMP.snowfall = self.lin_interp(t, posit, self.DATA.snowfall, times);
-            self.TEMP.rainfall = self.lin_interp(t, posit, self.DATA.rainfall(posit,1), times);
-            self.TEMP.Lin =      self.lin_interp(t, posit, self.DATA.Lin(posit,1), times);
-            self.TEMP.Sin =      self.lin_interp(t, posit, self.DATA.Sin(posit,1), times);
-            self.TEMP.Tair =     self.lin_interp(t, posit, self.DATA.Tair(posit,1), times);
-            self.TEMP.wind =     self.lin_interp(t, posit, self.DATA.wind(posit,1), times);
-            self.TEMP.q =        self.lin_interp(t, posit, self.DATA.q(posit,1), times);
-            self.TEMP.p =        self.lin_interp(t, posit, self.DATA.p(posit,1), times);
+            self.TEMP.rainfall = self.lin_interp(t, posit, self.DATA.rainfall, times);
+            self.TEMP.Lin =      self.lin_interp(t, posit, self.DATA.Lin, times);
+            self.TEMP.Sin =      self.lin_interp(t, posit, self.DATA.Sin, times);
+            self.TEMP.Tair =     self.lin_interp(t, posit, self.DATA.Tair, times);
+            self.TEMP.wind =     self.lin_interp(t, posit, self.DATA.wind, times);
+            self.TEMP.q =        self.lin_interp(t, posit, self.DATA.q, times);
+            self.TEMP.p =        self.lin_interp(t, posit, self.DATA.p, times);
 
             % forcing.TEMP.snowfall = forcing.DATA.snowfall(posit,1)+ (forcing.DATA.snowfall(posit+1,1) - forcing.DATA.snowfall(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
             % forcing.TEMP.rainfall = forcing.DATA.rainfall(posit,1)+ (forcing.DATA.rainfall(posit+1,1) - forcing.DATA.rainfall(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
