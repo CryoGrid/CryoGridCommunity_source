@@ -1,16 +1,16 @@
 %==========================================================================
-% Generate class inheritance diagrams from main CryoGrid classes Tier 1
+% Generate class inheritance diagrams from main CryoGrid forcing classes
 % T. Ingemann-Nielsen, November 2020
 %==========================================================================
 
-files = rdir('..\modules\TIER_1_processes\**\*.m');
-exclude_folders = {'..\modules\TIER_1_processes\INTERACTION'
+files = rdir('..\modules\Forcing\**\*.m');
+exclude_folders = {'..\modules\Forcing\EXCLUDE'        % doesn't exist so does nothing
                    };
 
 % The use of relative paths in matlab is not well supported.
 % Carefully test, if adding additional paths above.
 
-process_Tier1 = true;
+process_forcing = true;
 open_svg = false;   % Set to true to open each svg file in the browser window
 
 
@@ -33,7 +33,7 @@ addpath(genpath('..\modules'));
 
 
 % Now generate one file for all Tier 1 classes
-if process_Tier1
+if process_forcing
     % get all files from folder               
     class_list = {};
     cid = 1;
@@ -56,8 +56,8 @@ if process_Tier1
         end
     end
 
-    fileBaseName = 'TIER1_CLASS_INHERITANCE';
-    mytitle = ['Inheritance map for TIER 1 classes'];
+    fileBaseName = 'FORCING_CLASS_INHERITANCE';
+    mytitle = ['Inheritance map for FORCING classes'];
     graphic_file = create_uml_svg(class_list, fileBaseName, mytitle);
 
     absolute2relative_svglinkpath(graphic_file)     
@@ -148,4 +148,3 @@ function graphic_file = create_uml_svg(class_list, fileBaseName, mytitle)
 
     graphic_file = m2uml.puml2graphic( 'PlantUmlScript',puml_script, 'GraphicFormat','svg' );
 end
-

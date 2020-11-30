@@ -8,10 +8,10 @@ filename = 'index.html';
 
 files = rdir('*.svg');
 
-
 tier1_classes = files(contains({files.name}, 'TIER1'));
 tier2_classes = files(contains({files.name}, 'TIER2'));
 tier3_classes = files(contains({files.name}, 'TIER3'));
+forcing_classes = files(contains({files.name}, 'FORCING'));
 
 header = {
     '<!DOCTYPE html>'
@@ -49,6 +49,9 @@ tier2 = {
 tier3 = {
     '<h2 style="color: #2e6c80;">TIER 3</h2>'};
 
+forcing = {
+    '<h2 style="color: #2e6c80;">FORCING 3</h2>'};
+
 footer = {
     ''
     '</body>'
@@ -84,4 +87,17 @@ if ~isempty(tier3_classes)
 end
 fprintf(fid, '%s\n', tier3{:});
 fprintf(fid, '%s\n', nbsp);
+
+if ~isempty(forcing_classes)
+    for k = 1:length(forcing_classes)
+        [filepath,name,ext] = fileparts(forcing_classes(k).name);
+        forcing{end+1} = sprintf(link, ['.\' name ext], name);
+    end
+end
+fprintf(fid, '%s\n', forcing{:});
+fprintf(fid, '%s\n', nbsp);
+
+
+fprintf(fid, '%s\n', footer{:});
+
 fclose(fid) ;
