@@ -19,6 +19,10 @@ classdef BASE < matlab.mixin.Copyable
     
     methods 
         
+        function base = initialize_excel(base)
+        
+        end
+        
         %----LATERAL----------
         
         %empty functions for lateral interactions, overwritten in TIER 2-3 if the functions are active

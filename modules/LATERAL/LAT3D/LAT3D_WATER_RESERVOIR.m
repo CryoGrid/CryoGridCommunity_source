@@ -17,9 +17,9 @@ classdef LAT3D_WATER_RESERVOIR < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function lateral = LAT3D_WATER_RESERVOIR(index, pprovider, cprovider)
-            lateral@BASE_LATERAL(index, pprovider, cprovider);
-        end
+%         function lateral = LAT3D_WATER_RESERVOIR(index, pprovider, cprovider)
+%             lateral@BASE_LATERAL(index, pprovider, cprovider);
+%         end
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;
@@ -30,7 +30,7 @@ classdef LAT3D_WATER_RESERVOIR < BASE_LATERAL
             lateral.PARA.reservoir_temperature = []; %only active for Xice classes - if empty, water added at the temperature of the respective grid cell
             lateral.PARA.hardBottom_cutoff = []; %0.03; %hard bottom if saturated and water content below
             lateral.PARA.distance_reservoir = []; %10; 
-            lateral.PARA.reservoir_contact_length = []% 1;
+            lateral.PARA.reservoir_contact_length = [];% 1;
             lateral.PARA.ia_time_increment = []; %0.25; %must be a multiple of the time increment of the main lateral class
             %lateral.PARA.ia_time_next = [];
         end
@@ -39,7 +39,7 @@ classdef LAT3D_WATER_RESERVOIR < BASE_LATERAL
             lateral.STATVAR.subsurface_run_off = [];
         end
 
-        function lateral = finalize_init(lateral)
+        function lateral = finalize_init(lateral, tile)
             lateral.STATVAR.subsurface_run_off = 0;
         end
 

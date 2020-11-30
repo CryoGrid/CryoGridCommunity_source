@@ -9,7 +9,6 @@
 classdef LATERAL_3D < matlab.mixin.Copyable
  
     properties
-        class_index = 1
         IA_TIME_INCREMENT
         IA_TIME
         ACTIVE
@@ -26,52 +25,9 @@ classdef LATERAL_3D < matlab.mixin.Copyable
     
     methods
         
-        function lateral = LATERAL_3D(tile)
-            lateral = lateral.provide_PARA();
-            lateral = lateral.provide_CONST();
-            lateral = lateral.provide_STATVAR();
-            lateral = lateral.populate_CONST(tile.cprovider);
-            lateral = lateral.populate_PARA(tile.pprovider);
-            
-            lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
-            
-            t = tile.FORCING.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
-            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-
-            lateral.TOP = tile.TOP;
-            lateral.BOTTOM = tile.BOTTOM;           
-            lateral_class_list = tile.pprovider.tile_info.lateral_interactions;      % copied from 1D case
-            %lateral_class_list =
-            %lateral.PARA.class_list{lateral.STATVAR.index,1};  % original 3D code
-            
-            %user-defined in the main file
-            for i=1:size(lateral_class_list,2)
-                class_handle = str2func(lateral_class_list{1,i});
-                %lateral.IA_CLASSES{i,1} = class_handle();
-                lateral.IA_CLASSES{i,1} = class_handle(1, tile.pprovider, tile.cprovider);
-                %lateral.IA_CLASSES{i,1} = class_handle(1, tile.pprovider, tile.cprovider); % This is the corresponding code for 1D case, update when input format decided.
-            end
-            
-            for i=1:size(lateral.IA_CLASSES,1)
-                % provide_XXXX should be handled in class initialization.
-                % remove these lines when classes have been updated.
-                %lateral.IA_CLASSES{i} = provide_CONST(lateral.IA_CLASSES{i});
-                %lateral.IA_CLASSES{i} = provide_PARA(lateral.IA_CLASSES{i});
-                %lateral.IA_CLASSES{i} = provide_STATVAR(lateral.IA_CLASSES{i});
-                %lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i}.PARENT = lateral;
-            end
-
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = set_ia_time(lateral.IA_CLASSES{i}, t);
-                lateral.IA_CLASSES{i} = set_ACTIVE(lateral.IA_CLASSES{i}, i, t - lateral.IA_TIME_INCREMENT);
-            end
-
-            lateral.ENSEMBLE={};
-            lateral.ACTIVE = zeros(size(lateral_class_list,1),1);
-            
-        end
-
+        %---initialization---------
+        
+        
         
         function lateral = provide_PARA(lateral)
             lateral.PARA.ia_time_increment = [];
@@ -93,27 +49,55 @@ classdef LATERAL_3D < matlab.mixin.Copyable
 %             lateral.STATVAR.water_available = [];
 %             lateral.STATVAR.T_water = [];
         end
+       
         
-        
-        function self = populate_PARA(self, pprovider)
-            % POPULATE_PARa  Updates the PARA structure with values from cprovider.
-            %
-            %   ARGUMENTS:
-            %   pprovider:  instance of PARAMETER_PROVIDER class
+        function lateral = initialize_excel(lateral)
             
-            self.PARA = pprovider.populate_struct(self.PARA, 'LATERAL_CLASS', class(self), self.class_index);
-        end            
+        end
         
+
         
-        function self = populate_CONST(self, cprovider)
-            % POPULATE_CONST  Updates the CONST structure with values from cprovider.
-            %
-            %   ARGUMENTS:
-            %   cprovider:  instance of CONSTANT_PROVIDER class
+        function lateral = finalize_init(lateral, tile)
             
-            self.CONST = cprovider.populate_struct(self.CONST);
-        end       
+            lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
             
+            lateral.IA_TIME = tile.FORCING.PARA.start_time + lateral.IA_TIME_INCREMENT;
+            lateral.TOP = tile.TOP;
+            lateral.BOTTOM = tile.BOTTOM;
+            
+            %user-defined in the paraemter file
+            for i=1:size(tile.PARA.lateral_IA_classes, 1)
+                lat_ia_class = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.lateral_IA_classes{i,1});
+                lat_ia_class = lat_ia_class{tile.PARA.lateral_IA_classes_index, 1};
+                lateral.IA_CLASSES{i,1} = copy(lat_ia_class);
+                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i}, tile);
+                lateral.IA_CLASSES{i}.PARENT = lateral;
+            end
+            
+%             lateral.ENSEMBLE={};
+%             lateral.STATVAR.index = 0; %set index to zero for 1D runs
+%             lateral.PARA.num_realizations = 1;
+
+            for i=1:size(lateral.IA_CLASSES,1)
+                lateral.IA_CLASSES{i} = set_ia_time(lateral.IA_CLASSES{i}, tile.t);
+                lateral.IA_CLASSES{i} = set_ACTIVE(lateral.IA_CLASSES{i}, i, tile.t - lateral.IA_TIME_INCREMENT);
+            end
+
+            lateral.ENSEMBLE={};
+            lateral.ACTIVE = zeros(size(lateral.IA_CLASSES,1),1);
+            
+            lateral.PARA.connected = tile.RUN_INFO.PARA.connected;
+            lateral.PARA.contact_length = tile.RUN_INFO.PARA.contact_length;
+            lateral.PARA.distance = tile.RUN_INFO.PARA.distance;
+            lateral.PARA.worker_number = tile.RUN_INFO.PARA.worker_number;
+            lateral.PARA.num_realizations = tile.RUN_INFO.PARA.number_of_tiles;
+            
+            lateral.STATVAR.index = lateral.PARA.worker_number; % this is double, but it is necessary to store the index also in STATVAR
+        end
+
+ 
+        
+    
         
         function lateral = assign_number_of_realizations(lateral, num_realizations)
              lateral.PARA.num_realizations = num_realizations;           

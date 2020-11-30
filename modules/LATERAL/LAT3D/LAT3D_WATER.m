@@ -14,9 +14,9 @@ classdef LAT3D_WATER < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function lateral = LAT3D_WATER(index, pprovider, cprovider)
-            lateral@BASE_LATERAL(index, pprovider, cprovider);
-        end
+%         function lateral = LAT3D_WATER(index, pprovider, cprovider)
+%             lateral@BASE_LATERAL(index, pprovider, cprovider);
+%         end
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;
@@ -33,7 +33,7 @@ classdef LAT3D_WATER < BASE_LATERAL
             lateral.STATVAR.surface_runoff = []; %0;
         end
 
-        function lateral = finalize_init(lateral)
+        function lateral = finalize_init(lateral, tile)
             lateral.STATVAR.subsurface_run_off = 0;
             lateral.STATVAR.surface_runoff = 0;
         end

@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL & INITIALIZE
+classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL %& INITIALIZE
 
     
     methods
@@ -13,9 +13,9 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function ground = GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing)  
-            ground@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
+%         function ground = GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing)  
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
          function ground = provide_PARA(ground)
             
@@ -124,10 +124,10 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE 
 
         end
         
-        function ground = finalize_init(ground, forcing) 
-            ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
-            ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
+        function ground = finalize_init(ground, tile)
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
 
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];

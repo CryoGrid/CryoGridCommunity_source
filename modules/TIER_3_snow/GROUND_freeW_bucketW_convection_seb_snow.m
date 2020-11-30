@@ -18,9 +18,9 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function self = GROUND_freeW_bucketW_convection_seb_snow(index, pprovider, cprovider, forcing)
-            self@GROUND_freeW_bucketW_convection_seb(index, pprovider, cprovider, forcing);
-        end
+%         function self = GROUND_freeW_bucketW_convection_seb_snow(index, pprovider, cprovider, forcing)
+%             self@GROUND_freeW_bucketW_convection_seb(index, pprovider, cprovider, forcing);
+%         end
 
        function ground = provide_PARA(ground)  %initializes the subvariables as empty arrays
             ground = provide_PARA@GROUND_freeW_bucketW_convection_seb(ground);
@@ -34,8 +34,8 @@ classdef GROUND_freeW_bucketW_convection_seb_snow < GROUND_freeW_bucketW_convect
            ground = provide_STATVAR@GROUND_freeW_bucketW_convection_seb(ground);
        end
        
-       function ground = finalize_init(ground, forcing)
-           ground = finalize_init@GROUND_freeW_bucketW_convection_seb(ground, forcing);
+       function ground = finalize_init(ground, tile)
+           ground = finalize_init@GROUND_freeW_bucketW_convection_seb(ground, tile);
            ground.CHILD = 0; % no snow
            ground.IA_CHILD = 0;
        end

@@ -19,9 +19,9 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function ground = LAKE_simple_seb_snow(index, pprovider, cprovider, forcing)
-            ground@LAKE_simple_seb(index, pprovider, cprovider, forcing);
-        end
+%         function ground = LAKE_simple_seb_snow(index, pprovider, cprovider, forcing)
+%             ground@LAKE_simple_seb(index, pprovider, cprovider, forcing);
+%         end
          
        function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)
             ground = initialize_from_LAKE_previous_season@LAKE_simple_seb(ground, LAKE_simple_unfrozen);
@@ -41,8 +41,8 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
            ground = provide_STATVAR@LAKE_simple_seb(ground);
        end
        
-       function ground = finalize_init(ground, forcing)
-           ground = finalize_init@LAKE_simple_seb(ground, forcing);
+       function ground = finalize_init(ground, tile)
+           ground = finalize_init@LAKE_simple_seb(ground, tile);
            ground.CHILD = 0; % no snow
            ground.IA_CHILD = 0;
        end

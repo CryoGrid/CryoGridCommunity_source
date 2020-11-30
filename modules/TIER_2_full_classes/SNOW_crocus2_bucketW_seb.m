@@ -11,7 +11,7 @@
 %========================================================================
 
 
-classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL & SNOW & SNOW_FLUXES_LATERAL & INITIALIZE & REGRID
+classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL & SNOW & SNOW_FLUXES_LATERAL & REGRID
 
     properties
         PARENT
@@ -23,9 +23,9 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         %----mandatory functions---------------
         %----initialization--------------------  
         
-        function self = SNOW_crocus2_bucketW_seb(index, pprovider, cprovider, forcing)  
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
+%         function self = SNOW_crocus2_bucketW_seb(index, pprovider, cprovider, forcing)  
+%             self@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         function snow = provide_PARA(snow)
 
@@ -105,9 +105,9 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow.CONST.rho_i = []; % ice density
         end
         
-        function snow = finalize_init(snow, forcing) %assign all variables, that must be calculated or assigned otherwise for initialization
-            snow.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
-            snow.PARA.airT_height = forcing.PARA.airT_height;
+        function snow = finalize_init(snow, tile)
+            snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
             
             snow = initialize_zero_snow_BASE(snow);  %initialize all values to be zero
             snow.PARA.spectral_ranges = [snow.PARA.SW_spectral_range1 snow.PARA.SW_spectral_range2 1 - snow.PARA.SW_spectral_range1 - snow.PARA.SW_spectral_range2];

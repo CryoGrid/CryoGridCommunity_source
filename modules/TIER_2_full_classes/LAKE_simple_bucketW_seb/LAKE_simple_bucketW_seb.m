@@ -7,7 +7,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES & REGRID & HEAT_FLUXES_LATERAL & INITIALIZE
+classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES & REGRID & HEAT_FLUXES_LATERAL 
 
     
     methods
@@ -15,9 +15,9 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         %----mandatory functions---------------
         %----initialization--------------------
         
-       function ground = LAKE_simple_bucketW_seb(index, pprovider, cprovider, forcing)  
-            ground@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
+%        function ground = LAKE_simple_bucketW_seb(index, pprovider, cprovider, forcing)  
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
 
          %initializes class when switching from unfrozen to frozen conditions
          function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)
@@ -99,10 +99,10 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground = provide_STATVAR(ground);
         end
         
-        function ground = finalize_init(ground, forcing)
-            ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
-            ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
+        function ground = finalize_init(ground, tile)
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);            
             
