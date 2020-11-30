@@ -5,17 +5,24 @@
 % a struct FORCING with field “data”, which contain the time series of the actual 
 % forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures. 
 % Have a look at the existing forcing files in the folder “forcing” and prepare 
-% new forcing files in the same way. The mandatory forcing variables are air temperature 
-% (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2), 
-% incoming short-.wave radiation (Sin, in W/m2), absolute humidity (q, in 
-% kg water vapor / kg air), wind speed (wind, in m/sec), rainfall (rainfall, in mm/day), 
-% snowfall (snowfall, in mm/day) and timestamp (t_span, 
-% in Matlab time / increment 1 corresponds to one day). 
+% new forcing files in the same way. 
+%
+% The mandatory forcing variables are:
+% Tair:      Air temperature (Tair, in degree Celsius)
+% Lin:       Incoming long-wave radiation (Lin, in W/m2)
+% Sin:       Incoming short-wave radiation (Sin, in W/m2), 
+% q:         Absolute humidity (q, in kg water vapor / kg air), 
+% wind:      Wind speed (wind, in m/sec), 
+% rainfall:  Rainfall (rainfall, in mm/day), 
+% snowfall:  Snowfall (snowfall, in mm/day)
+% t_span:    Timestamp (t_span, in Matlab time / increment 1 corresponds to one day)
+%
 % IMPORTANT POINT: the time series must be equally spaced in time, and this must be 
 % really exact. When reading the timestamps from an existing data set (e.g. an Excel file),
 % rounding errors can result in small differences in the forcing timestep, often less 
 % than a second off. In this case, it is better to manually compile a new, equally spaced 
 % timestep in Matlab.
+%
 % S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
 %========================================================================
 
@@ -210,97 +217,40 @@ classdef FORCING_seb
 			
             xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};
         end
+
         
-        
-%         % ==========================================
-%         % DEPRECATED METHODS
-%         % to be deleted when new implementation
-%         % is validated for backwards compatibility
-%         % ==========================================
-%         
-%         
-%         function self = initalize_from_file(self, section)
-%             st = dbstack;
-%             warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-%                      'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-%             
-%             for i=1:size(section,1)
-%                 if strcmp(section{i,1}, 'filename')
-%                     self.PARA.filename = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'rain_fraction')
-%                     self.PARA.rain_fraction = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'snow_fraction')
-%                     self.PARA.snow_fraction = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'latitude')
-%                     self.PARA.latitude = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'longitude')
-%                     self.PARA.longitude = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'altitude')
-%                     self.PARA.altitude = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'domain_depth')
-%                     self.PARA.domain_depth = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'heatFlux_lb')
-%                     self.PARA.heatFlux_lb = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'airT_height')
-%                     self.PARA.airT_height = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'start_time')
-%                     self.PARA.start_time = section{i,2};
-%                 end
-%                 if strcmp(section{i,1}, 'end_time')
-%                     self.PARA.end_time = section{i,2};
-%                 end 
-%             end
-%         end
-%         
-%         
-% 		% 
-%         function self = initialize_from_ini(self, ini)
-% 			% INITIALIZE_FROM_INI  Initializes the variables from output structure of the ini parser, and compares the
-% 			%	names of the variables from the class to the ini structure.
-% 			% 	If the variables from the class mismatch the variables from
-% 			% 	the ini file, an error message is displayed.
-% 			
-% 			%	ARGUMENTS:
-% 			%	ini:	output structure from the ini parser
-% 			
-%             st = dbstack;
-%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-%                      'Code should be moved to new PARAMETER_PROVIDER class ',...
-%                      'to streamline file access and the population of parameters.']);
-%             
-% 			ini_variables = fields(ini.FORCING_seb);
-%             forcing_variables = fields(self.PARA);
-%             ismatch_class_ini_variables(ini_variables, forcing_variables) 
-%             for i=1:length(forcing_variables)
-%                 for j=1:length(ini_variables)
-%                     if strcmp(forcing_variables{i,1},ini_variables{i,1})
-%                         self.PARA.(forcing_variables{i,1}) = ini.FORCING_seb.(ini_variables{i,1});
-%                     end
-%                 end
-%             end
-%         end
-% 		
-%         
-%         function self = set_parameters(self, filename, rain_fraction, snow_fraction, altitude)
-%             st = dbstack;
-%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-%                      'Parameters should be initialized in the ' mfilename('class') '.initialize_variables() ',... 
-%                      'method and populated using the ' mfilename('class') '.populate() method.']);
-%             
-%             self.PARA.filename = filename;
-%             self.PARA.rain_fraction = rain_fraction;
-%             self.PARA.snow_fraction = snow_fraction;
-%             self.PARA.altitude = altitude;
-%         end
-%         
+        function self = interpolate(self, t)
+            % Interpolate forcing data to timestep t
+            times = self.DATA.timeForcing;
+            posit = floor((t-times(1,1))./(times(2,1)-times(1,1)))+1;
+
+            self.TEMP.snowfall = self.lin_interp(t, posit, self.DATA.snowfall, times);
+            self.TEMP.rainfall = self.lin_interp(t, posit, self.DATA.rainfall(posit,1), times);
+            self.TEMP.Lin =      self.lin_interp(t, posit, self.DATA.Lin(posit,1), times);
+            self.TEMP.Sin =      self.lin_interp(t, posit, self.DATA.Sin(posit,1), times);
+            self.TEMP.Tair =     self.lin_interp(t, posit, self.DATA.Tair(posit,1), times);
+            self.TEMP.wind =     self.lin_interp(t, posit, self.DATA.wind(posit,1), times);
+            self.TEMP.q =        self.lin_interp(t, posit, self.DATA.q(posit,1), times);
+            self.TEMP.p =        self.lin_interp(t, posit, self.DATA.p(posit,1), times);
+
+            % forcing.TEMP.snowfall = forcing.DATA.snowfall(posit,1)+ (forcing.DATA.snowfall(posit+1,1) - forcing.DATA.snowfall(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            % forcing.TEMP.rainfall = forcing.DATA.rainfall(posit,1)+ (forcing.DATA.rainfall(posit+1,1) - forcing.DATA.rainfall(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            % forcing.TEMP.Lin =      forcing.DATA.Lin(posit,1)     + (forcing.DATA.Lin(posit+1,1)      - forcing.DATA.Lin(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            % forcing.TEMP.Sin =      forcing.DATA.Sin(posit,1)     + (forcing.DATA.Sin(posit+1,1)      - forcing.DATA.Sin(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            % forcing.TEMP.Tair =     forcing.DATA.Tair(posit,1)    + (forcing.DATA.Tair(posit+1,1)     - forcing.DATA.Tair(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            % forcing.TEMP.wind =     forcing.DATA.wind(posit,1)    + (forcing.DATA.wind(posit+1,1)     - forcing.DATA.wind(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            % forcing.TEMP.q =        forcing.DATA.q(posit,1)       + (forcing.DATA.q(posit+1,1)        - forcing.DATA.q(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            % forcing.TEMP.p =        forcing.DATA.p(posit,1)       + (forcing.DATA.p(posit+1,1)        - forcing.DATA.p(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+
+            self.TEMP.rainfall = self.TEMP.rainfall + double(self.TEMP.Tair > 2) .* self.TEMP.snowfall;  %reassign unphysical snowfall
+            self.TEMP.snowfall = double(self.TEMP.Tair <= 2) .* self.TEMP.snowfall;
+            self.TEMP.t = t;
+        end
     end
+    
+    methods(Static)
+        function value = lin_interp(t, posit, times, data)
+            value = data(posit,1)+ (data(posit+1,1) - data(posit,1)).*(t-times(posit,1))./(times(2,1)-times(1,1));
+        end        
+    end    
 end

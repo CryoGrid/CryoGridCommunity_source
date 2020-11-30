@@ -448,7 +448,7 @@ classdef TILE
         
         
         function self = interpolate_forcing_tile(self)
-             self.FORCING = interpolate_forcing(self.t, self.FORCING);
+             self.FORCING = self.FORCING.interpolate(self.t);
         end
 
         function self = interact_lateral(self)
