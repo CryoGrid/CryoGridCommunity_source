@@ -224,14 +224,14 @@ classdef FORCING_seb
             times = self.DATA.timeForcing;
             posit = floor((t-times(1,1))./(times(2,1)-times(1,1)))+1;
 
-            self.TEMP.snowfall = self.lin_interp(t, posit, self.DATA.snowfall, times);
-            self.TEMP.rainfall = self.lin_interp(t, posit, self.DATA.rainfall, times);
-            self.TEMP.Lin =      self.lin_interp(t, posit, self.DATA.Lin, times);
-            self.TEMP.Sin =      self.lin_interp(t, posit, self.DATA.Sin, times);
-            self.TEMP.Tair =     self.lin_interp(t, posit, self.DATA.Tair, times);
-            self.TEMP.wind =     self.lin_interp(t, posit, self.DATA.wind, times);
-            self.TEMP.q =        self.lin_interp(t, posit, self.DATA.q, times);
-            self.TEMP.p =        self.lin_interp(t, posit, self.DATA.p, times);
+            self.TEMP.snowfall = self.lin_interp(t, posit, times, self.DATA.snowfall);
+            self.TEMP.rainfall = self.lin_interp(t, posit, times, self.DATA.rainfall);
+            self.TEMP.Lin =      self.lin_interp(t, posit, times, self.DATA.Lin);
+            self.TEMP.Sin =      self.lin_interp(t, posit, times, self.DATA.Sin);
+            self.TEMP.Tair =     self.lin_interp(t, posit, times, self.DATA.Tair);
+            self.TEMP.wind =     self.lin_interp(t, posit, times, self.DATA.wind);
+            self.TEMP.q =        self.lin_interp(t, posit, times, self.DATA.q);
+            self.TEMP.p =        self.lin_interp(t, posit, times, self.DATA.p);
 
             % forcing.TEMP.snowfall = forcing.DATA.snowfall(posit,1)+ (forcing.DATA.snowfall(posit+1,1) - forcing.DATA.snowfall(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
             % forcing.TEMP.rainfall = forcing.DATA.rainfall(posit,1)+ (forcing.DATA.rainfall(posit+1,1) - forcing.DATA.rainfall(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
@@ -250,7 +250,7 @@ classdef FORCING_seb
     
     methods(Static)
         function value = lin_interp(t, posit, times, data)
-            value = data(posit,1)+ (data(posit+1,1) - data(posit,1)).*(t-times(posit,1))./(times(2,1)-times(1,1));
+            value = data(posit,1) + (data(posit+1,1) - data(posit,1)).*(t-times(posit,1))./(times(2,1)-times(1,1));
         end        
     end    
 end
