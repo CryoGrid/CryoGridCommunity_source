@@ -4,6 +4,6 @@
 files = rdir('*.svg');
 
 for k = 1:length(files)
-    disp(['Localizing file: ' files(k).name]);
+    disp(['Converting to relative paths, file: ' files(k).name]);
     absolute2relative_svglinkpath(files(k).name);
 end

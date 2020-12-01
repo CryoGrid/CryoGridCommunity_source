@@ -13,6 +13,14 @@ tier2_classes = files(contains({files.name}, 'TIER2'));
 tier3_classes = files(contains({files.name}, 'TIER3'));
 forcing_classes = files(contains({files.name}, 'FORCING'));
 
+%            file_list, Section_name, Description
+sections = {{{}, 'TIER 0', 'Tier 0 classes inherit only from intrinsic Matlab classes.'},   % No classes listed, thus empty struct
+            {tier1_classes, 'TIER 1',  'Tier 1 classes inherit from Tier 0 classes and are not full functioning classes.'},
+            {tier2_classes, 'TIER 2',  ''},
+            {tier3_classes, 'TIER 3',  ''},
+            {forcing_classes, 'FORCING', ''},
+           };
+
 header = {
     '<!DOCTYPE html>'
     '<html>'
@@ -35,22 +43,9 @@ header = {
 nbsp = '<p>&nbsp;</p>';
 link = '<p><a href="%s" target="_blank" rel="noopener">%s</a></p>';
 
-tier0 = {
-    '<h2 style="color: #2e6c80;">TIER 0</h2>'
-    '<p>Tier 0 classes inherit only from intrinsic Matlab classes.</p>'};
-
-tier1 = {
-    '<h2 style="color: #2e6c80;">TIER 1</h2>'
-    '<p>Tier 1 classes inherit from Tier 0 classes and are not full functioning classes.</p>'};
-
-tier2 = {
-    '<h2 style="color: #2e6c80;">TIER 2</h2>'};
-
-tier3 = {
-    '<h2 style="color: #2e6c80;">TIER 3</h2>'};
-
-forcing = {
-    '<h2 style="color: #2e6c80;">FORCING 3</h2>'};
+heading = {
+    '<h2 style="color: #2e6c80;"><a id="%s">%s</a></h2>\n'
+    '<p>%s</p>\n'};
 
 footer = {
     ''
@@ -59,44 +54,26 @@ footer = {
 
 fid = fopen(filename,'w'); 
 fprintf(fid, '%s\n', header{:});
-fprintf(fid, '%s\n', tier0{:});
 
-if ~isempty(tier1_classes)
-    for k = 1:length(tier1_classes)
-        [filepath,name,ext] = fileparts(tier1_classes(k).name);
-        tier1{end+1} = sprintf(link, ['.\' name ext], name);
-    end
+fprintf(fid, '<h2 style="color: #2e6c80;">Contents</h2>\n');
+for m = 1:length(sections)
+    fprintf(fid, '<p><a href="#%s">Jump to: %s</a></p>\n', sections{m}{2}, sections{m}{2});
 end
-fprintf(fid, '%s\n', tier1{:});
 fprintf(fid, '%s\n', nbsp);
 
-if ~isempty(tier2_classes)
-    for k = 1:length(tier2_classes)
-        [filepath,name,ext] = fileparts(tier2_classes(k).name);
-        tier2{end+1} = sprintf(link, ['.\' name ext], name);
+for m = 1:length(sections)
+    fprintf(fid, heading{1}, sections{m}{2}, sections{m}{2});
+    fprintf(fid, heading{2}, sections{m}{3});
+    
+    classes = sections{m}{1};
+    if ~isempty(classes)
+        for k = 1:length(classes)
+            [filepath,name,ext] = fileparts(classes(k).name);
+            fprintf(fid, link, ['.\' name ext], name);
+        end
     end
+    fprintf(fid, '%s\n', nbsp);
 end
-fprintf(fid, '%s\n', tier2{:});
-fprintf(fid, '%s\n', nbsp);
-
-if ~isempty(tier3_classes)
-    for k = 1:length(tier3_classes)
-        [filepath,name,ext] = fileparts(tier3_classes(k).name);
-        tier3{end+1} = sprintf(link, ['.\' name ext], name);
-    end
-end
-fprintf(fid, '%s\n', tier3{:});
-fprintf(fid, '%s\n', nbsp);
-
-if ~isempty(forcing_classes)
-    for k = 1:length(forcing_classes)
-        [filepath,name,ext] = fileparts(forcing_classes(k).name);
-        forcing{end+1} = sprintf(link, ['.\' name ext], name);
-    end
-end
-fprintf(fid, '%s\n', forcing{:});
-fprintf(fid, '%s\n', nbsp);
-
 
 fprintf(fid, '%s\n', footer{:});
 
