@@ -52,7 +52,6 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
             
             run_info = customize(run_info);
             
-            %tile = copy(run_info.PPROVIDER.FUNCTIONAL_CLASSES.TILE{run_info.PARA.tile_number(1,1),1});
             tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{1,1}){run_info.PARA.tile_class_index(1,1),1});
 
             tile.RUN_INFO = run_info;
@@ -66,7 +65,7 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
             tile = run(tile);  %time integration
             
             for i=2:size(run_info.PARA.tile_class,1)
-                disp(['running tile number  ' num2str(i)])
+                disp(['running tile number ' num2str(i)])
                 for j=1:run_info.PARA.number_of_runs_per_tile(i,1)
                     disp(['running round ' num2str(j)])
 

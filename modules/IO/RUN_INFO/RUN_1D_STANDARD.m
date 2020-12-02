@@ -1,4 +1,3 @@
-% base class build a model tile
 
 classdef RUN_1D_STANDARD < matlab.mixin.Copyable
     
@@ -43,21 +42,18 @@ classdef RUN_1D_STANDARD < matlab.mixin.Copyable
         
         
         function [run_info, tile] = run(run_info)
-            %this could first open spmd and assign run_number depending on
-            %worker, then do another round of pprovider
-            %it could also do a loop over different tile representing
-            %different sections of the run, e.g. initial inial init, spin-up, actual run 
+            
+            %run_info = customize(run_info)
             
             tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class){run_info.PARA.tile_class_index,1});
             tile.RUN_INFO = run_info;
             run_info.TILE = tile;
-
             
-            %do the run(s) - this is blanked out, and the code is handled in the main run file - for more complicated or opertaional runs, it should be handled here. 
-            %assemble the stratigraphy, etc.
+            
+            %do the run(s) 
             tile = finalize_init(tile);
             tile = run(tile);  %time integration
-
+            
         end
  
         
@@ -66,8 +62,10 @@ classdef RUN_1D_STANDARD < matlab.mixin.Copyable
             %here customizations can be done by directly writing pprovider
             %one can for example change parameters in the different
             %subsurface classes
-            %run_info.PPROVIDER.FUNCTIONAL_CLASSES.XX = YY;
-            %run_info.PPROVIDER.FUNCTIONAL_CLASSES.TILE{run_info.PARA.tile_number,1}.PARA.lat = f(id)
+%             run_info.PPROVIDER.CLASSES.GROUND_freeW_seb.PARA.albedo = i/100;
+%             run_info.PPROVIDER.CLASSES.FROCING_seb.filename = ['myfocing_ ' num2str(i) '.mat'];
+%             run_info.PPROVIDER.FUNCTIONAL_CLASSES.XX = YY;
+%             run_info.PPROVIDER.FUNCTIONAL_CLASSES.TILE{run_info.PARA.tile_number,1}.PARA.lat = f(id)
             
         end
         
