@@ -26,6 +26,7 @@
         {field} + TEMP [[[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m',13);{No tooltip}]]]
         ---
         {method} + get_saturated_hardBottom_first_cell  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','get_saturated_hardBottom_first_cell');{No tooltip}]]]
+        {method} + initialize_excel  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','initialize_excel');{No tooltip}]]]
         {method} + lateral3D_pull_heat  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_heat');{No tooltip}]]]
         {method} + lateral3D_pull_water_general_aquifer  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_water_general_aquifer');{No tooltip}]]]
         {method} + lateral3D_pull_water_unconfined_aquifer  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_water_unconfined_aquifer');{No tooltip}]]]
@@ -36,6 +37,16 @@
         {method} + lateral_push_remove_surfaceWater  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral_push_remove_surfaceWater');{No tooltip}]]]
         {method} + lateral_push_remove_water_seepage  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral_push_remove_water_seepage');{No tooltip}]]]
         {method} + lateral_push_water_reservoir  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral_push_water_reservoir');{No tooltip}]]]
+    }
+    class BGC_CLM4 <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m',7);{No tooltip}]] {
+        ---
+        {method} + aerobicRate  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m','aerobicRate');{AERODECOMP Simulates the decomposition of soil organic matter and}]]]
+        {method} + anaerobicRate  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m','anaerobicRate');{ANAEROBIC Calculates the rate of methane production and the}]]]
+        {method} + CH4Oxidation  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m','CH4Oxidation');{CH4OXIDATION Calculates the rate of methane oxidation (methanotrophy).}]]]
+        {method} + NPP  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m','NPP');{NPPtoLitter allocates fresh litter to litter pools.}]]]
+        {method} + rootDistribution  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m','rootDistribution');{ROOTDISTRIBUTION calculates the relative distribution of roots between}]]]
+        {method} + sedimentationSimpleNPP  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m','sedimentationSimpleNPP');{No tooltip}]]]
+        {method} + SOCdiffusionRate  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\BGC_CLM4.m','SOCdiffusionRate');{Read the depths of the cells from the lowest air cell to the lowest}]]]
     }
     class FREEZE_CURVE <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\FREEZE_CURVE.m',8);{No tooltip}]] {
         {field} + LUT [[[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\FREEZE_CURVE.m',12);{No tooltip}]]]
@@ -138,8 +149,10 @@
         {method} + get_sublimation  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_sublimation');{No tooltip}]]]
         {method} + get_T_gradient_snow  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_T_gradient_snow');{No tooltip}]]]
         {method} + get_T_gradient_snow_single_cell  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_T_gradient_snow_single_cell');{No tooltip}]]]
-        {method} + get_timestep_SNOW_CHILD  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW_CHILD');{No tooltip}]]]
+        {method} + get_timestep_SNOW  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW');{No tooltip}]]]
+        {method} + get_timestep_SNOW_CHILD  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW_CHILD');{timestep = (-snow.STATVAR.energy ./ snow.TEMP.d_energy) .* double(snow.TEMP.d_energy>0) + double(snow.TEMP.d_energy<=0).*snow.PARA.dt_max;}]]]
         {method} + get_timestep_SNOW_mass_balance  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW_mass_balance');{No tooltip}]]]
+        {method} + get_timestep_SNOW_sublimation  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW_sublimation');{No tooltip}]]]
         {method} + initialize_zero_snow_BASE  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','initialize_zero_snow_BASE');{No tooltip}]]]
         {method} + make_SNOW_CHILD  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','make_SNOW_CHILD');{No tooltip}]]]
         {method} + prog_metamorphism  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','prog_metamorphism');{No tooltip}]]]
@@ -154,6 +167,17 @@
         {method} + lateral3D_pull_snow_crocus  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW_FLUXES_LATERAL.m','lateral3D_pull_snow_crocus');{No tooltip}]]]
         {method} + lateral3D_push_snow_crocus  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW_FLUXES_LATERAL.m','lateral3D_push_snow_crocus');{No tooltip}]]]
         {method} + lateral3D_push_snow_crocus2  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW_FLUXES_LATERAL.m','lateral3D_push_snow_crocus2');{No tooltip}]]]
+    }
+    class SOIL_GAS <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m',7);{No tooltip}]] {
+        ---
+        {method} + BubbleVolumeSolver  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','BubbleVolumeSolver');{not sure what this is for}]]]
+        {method} + cFromMass  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','cFromMass');{CFROMMASS Calculates the headspace concentration from the mass}]]]
+        {method} + gasDifRateSurfEquil  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','gasDifRateSurfEquil');{We use Fick's first law of diffusion for adjoining cells}]]]
+        {method} + Henry_solubility  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','Henry_solubility');{Henry_solubility This function calculates the dimmensionless Henry}]]]
+        {method} + massFrom_c  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','massFrom_c');{CFROMMASS Calculates the headspace concentration from the mass}]]]
+        {method} + soil_gas_diffusivities  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','soil_gas_diffusivities');{DIFFUSIVITIES This function calculates the diffusion}]]]
+        {method} + totalCmass  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','totalCmass');{TOCMASS Calculates the total carbon mass in the GRID variable struct}]]]
+        {method} + waterPressure  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SOIL_GAS.m','waterPressure');{No tooltip}]]]
     }
     class WATER_FLUXES <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\WATER_FLUXES.m',6);{No tooltip}]] {
         ---
@@ -215,6 +239,7 @@
         {method} + lateral_push_water_reservoir_Xice  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\WATER_FLUXES_LATERAL.m','lateral_push_water_reservoir_Xice');{No tooltip}]]]
     }
     BASE <|-- AIR_CONVECTION
+    BASE <|-- BGC_CLM4
     BASE <|-- FREEZE_CURVE
     BASE <|-- HEAT_CONDUCTION
     BASE <|-- HEAT_FLUXES_LATERAL
@@ -225,6 +250,7 @@
     BASE <|-- SEB
     BASE <|-- SNOW
     BASE <|-- SNOW_FLUXES_LATERAL
+    BASE <|-- SOIL_GAS
     BASE <|-- WATER_FLUXES
     BASE <|-- WATER_FLUXES_LATERAL
 @enduml
