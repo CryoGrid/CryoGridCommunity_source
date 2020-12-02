@@ -82,7 +82,7 @@ if process_Tier2_Tier3
         mytitle = ['Inheritance map for ' class_list{k,1}];
         graphic_file = create_uml_svg({class_list{k,1}}, fileBaseName, mytitle);
 
-        absolute2relative_path(graphic_file)     
+        absolute2relative_svglinkpath(graphic_file)     
 
         if open_svg
             m2uml.display_class_diagram( 'GraphicFile',graphic_file );
@@ -171,54 +171,3 @@ function graphic_file = create_uml_svg(class_list, fileBaseName, mytitle)
     graphic_file = m2uml.puml2graphic( 'PlantUmlScript',puml_script, 'GraphicFormat','svg' );
 end
 
-
-function absolute2relative_path(graphic_file)
-    s=importdata(graphic_file);
-
-    expr_line = "matlab:matlab.desktop.editor.openAndGoToLine\(([^),]+),([^),]+)\)";
-    expr_func = "matlab:matlab.desktop.editor.openAndGoToFunction\(([^),]+),([^),]+)\)";
-
-    for m = 1:length(s)
-        [startID, endID,tokens, matches] = regexp(s{m},expr_line,'start','end','tokens','match');
-        %disp(['Matches in line: ' num2str(length(matches))]);
-
-        for n = 1:length(matches)
-            mstr = matches{n};
-
-            cs = {tokens{n}{1}(2:end-1); pwd};
-            Schar = char(cs(:));
-            b = diff(Schar, 1, 1) == 0;
-            pstr = tokens{n}{1}(2:end-1);
-            cpath = pstr(find(b));
-
-            mstr2 = strrep(mstr,tokens{n}{1}, ['fullfile(pwd, ''' strrep(pstr, cpath, '..\') ''')']);
-
-            s{m} = strrep(s{m}, mstr, mstr2);
-        end
-
-        [startID, endID,tokens, matches] = regexp(s{m},expr_func,'start','end','tokens','match');
-        %disp(['Matches in line: ' num2str(length(matches))]);
-
-        for n = 1:length(matches)
-            mstr = matches{n};
-
-            cs = {tokens{n}{1}(2:end-1); pwd};
-            Schar = char(cs(:));
-            b = diff(Schar, 1, 1) == 0;
-            pstr = tokens{n}{1}(2:end-1);
-            cpath = pstr(find(b));
-
-            mstr2 = strrep(mstr,tokens{n}{1}, ['fullfile(pwd, ''' strrep(pstr, cpath, '..\') ''')']);
-
-            s{m} = strrep(s{m}, mstr, mstr2);
-        end
-
-    end
-
-
-    % Now we just need to save to text file
-
-    fid = fopen(graphic_file,'w'); 
-    fprintf(fid, '%s\n',s{:}) ;
-    fclose(fid) ;
-end
