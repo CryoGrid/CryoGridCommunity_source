@@ -3,13 +3,71 @@ This is the modular version of CryoGrid which is based on an object-oriented pro
 
 ## Get started as a user
 
-### The Graphic interface
 
+### Get the main CryoGrid code
 
-
-What you need to get started: - Download the code as zip-file - Unzip to your preferred directory - Open matlab and navigate to CryoGrid folder - In the MatLab terminal run the file run_CG.m file The code will start running. It will produce one ouput file per year, which is written to the disc
+Download the CryoGrid code as zip-file. From the main GitHub repository page, click the green `code` button and choose `Download Zip`. See screenshot below.
 
 ![image-20201203092734144](./readme_im1.png)
+
+Now unzip the code to your preferred folder, f.ex. `c:\my_matlab_code\cryogrid\`.
+
+### Get the test example
+
+Download zip-file containing the test model setup files from the following link: [Link to example code](https://nextcloud.awi.de/s/wiHWsrrxXtszH4m
+).
+
+Create a new folder `results` in your cryogrid folder (`c:\my_matlab_code\cryogrid\results`) and unzip the contents of the zip-file here.
+
+### Run the test model 
+
+Open MatLab and change the path to `c:\my_matlab_code\cryogrid\develop_SW\`. This can be done either using the MatLab path selector dialog, or by typing in the command window:
+
+`cd c:\my_matlab_code\cryogrid\develop_SW\`
+
+Change the paths according to your actual install directory.
+
+To run the example model, in the MatLab terminal run the file run_CG.m file by typing:
+
+`run_CG`
+
+The code will start running. It will produce one ouput file per year, which is written to the disc at a specific date (defined in the parameter Excel file `c:\my_matlab_code\cryogrid\results\test\test.xlsx`). You can stop the code any time after a full year has been calculated (to ensure you have an output file written to disc).
+
+The first output file written to disc will have the name `c:\my_matlab_code\cryogrid\results\test\test_19800901.mat`.
+
+To plot the results, change the path to `c:\my_matlab_code\cryogrid\develp_SW\analyze_display\`:
+
+```
+cd c:\my_matlab_code\cryogrid\develp_SW\analyze_display\
+load(`c:\my_matlab_code\cryogrid\results\test\test_19800901.mat`)
+read_display_out()
+```
+
+### To change the model parameters
+
+The model is defined in the file `c:\my_matlab_code\cryogrid\results\test\test.xlsx`.
+You may play around with the model parameters and se how the output changes.
+
+For example, you could change the thickness of layer 1:
+
+- Open the excel file
+- Find the section `STRAT_layers`
+- First column is the depth to the bottom of the layers ( so row 1 has the depth to the bottom of layer 1)
+- The first layer is by default from 0 - 0.5 m (o.5 m thick).
+- To change the thickness of the first layer to 1 m, simply change the value from 0.5 to 1.
+
+Rerun the model to see the changes. (Be aware that the out files are overwritten, back them up if you want to store for comparison.)
+
+### Full documentation
+
+There is a pdf file available with more in depth explanation of the model ![link](./CryoGrid_documentation.pdf)
+
+
+
+
+
+# BELOW HERE NOT YET UPDATED
+
 
 ### From the command line
 
@@ -38,7 +96,7 @@ You can directly edit a page on our [GitHub]() documentation repository, or you 
 Creating a new page is as easy as 
 
 ### Steps to create documentation from scratch
-1. install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+1. install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)`
 2. Then in your terminal (assuming you're on Linux or MacOS)
 ```shell
 # creates a virtual environment
