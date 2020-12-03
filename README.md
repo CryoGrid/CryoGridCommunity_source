@@ -61,7 +61,7 @@ Rerun the model to see the changes. (Be aware that the out files are overwritten
 
 ### Full documentation
 
-There is a pdf file available with more in depth explanation of the model [link](./CryoGrid_documentation.pdf)
+There is a pdf file available with more in depth explanation of the model: [CryoGrid_documentation.pdf](./CryoGrid_documentation.pdf)
 
 
 
