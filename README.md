@@ -1,7 +1,9 @@
 # CryoGrid
 This is the modular version of CryoGrid which is based on an object-oriented programming paradigm.
 
-## Get started
+## Get started as a user
+
+### From the command line
 
 First clone the code with 
 ```
@@ -14,6 +16,8 @@ git clone git@github.com:CryoGrid/CryoGrid.git
 git clone https://github.com/CryoGrid/CryoGrid.git
 ```
 Github has a [Desktop GUI]() software that can be used to clone the repository.
+
+## Get started as a developer
 
 
 ## Documentation
