@@ -7,6 +7,7 @@ This is the modular version of CryoGrid which is based on an object-oriented pro
 ### Get the main CryoGrid code
 
 Download the CryoGrid code as zip-file. From the main GitHub repository page, click the green `code` button and choose `Download Zip`. See screenshot below.
+(In the upper left hand corner, make sure the `develop_SW` branch is selected).
 
 ![image-20201203092734144](./readme_im1.png)
 
