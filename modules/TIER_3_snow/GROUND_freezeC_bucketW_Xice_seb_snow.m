@@ -17,9 +17,9 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow < GROUND_freezeC_bucketW_Xice_seb
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function ground = GROUND_freezeC_bucketW_Xice_seb_snow(index, pprovider, cprovider, forcing)
-            ground@GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing);
-        end
+%         function ground = GROUND_freezeC_bucketW_Xice_seb_snow(index, pprovider, cprovider, forcing)
+%             ground@GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing);
+%         end
         
         function ground = provide_PARA(ground)
             ground = provide_PARA@GROUND_freezeC_bucketW_Xice_seb(ground);
@@ -33,8 +33,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow < GROUND_freezeC_bucketW_Xice_seb
             ground = provide_STATVAR@GROUND_freezeC_bucketW_Xice_seb(ground);
         end
         
-        function ground = finalize_init(ground, forcing)
-            ground = finalize_init@GROUND_freezeC_bucketW_Xice_seb(ground, forcing);
+        function ground = finalize_init(ground, tile)
+            ground = finalize_init@GROUND_freezeC_bucketW_Xice_seb(ground, tile);
             ground.CHILD = 0; % no snow
             ground.IA_CHILD = 0;
         end

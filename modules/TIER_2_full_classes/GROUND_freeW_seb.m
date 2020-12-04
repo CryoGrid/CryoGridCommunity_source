@@ -4,7 +4,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIALIZE
+classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& INITIALIZE
 
     
     methods
@@ -12,9 +12,9 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIA
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function self = GROUND_freeW_seb(index, pprovider, cprovider, forcing)  
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
+%         function self = GROUND_freeW_seb(index, pprovider, cprovider, forcing)  
+%             self@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         function ground = provide_PARA(ground)
             
@@ -74,10 +74,10 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & INITIA
             ground.CONST.rho_i = [];   %ice density
         end
         
-        function ground = finalize_init(ground, forcing)
-            ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
-            ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
+        function ground = finalize_init(ground, tile)
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
 

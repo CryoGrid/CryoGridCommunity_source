@@ -5,16 +5,16 @@
 %========================================================================
 
 
-classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERAL & INITIALIZE
+classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERAL %& INITIALIZE
     
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-        function ground = GROUND_fcSimple_salt_seb(index, pprovider, cprovider, forcing)
-            ground@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
+%         function ground = GROUND_fcSimple_salt_seb(index, pprovider, cprovider, forcing)
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
                 
         function ground = provide_PARA(ground)
             
@@ -76,11 +76,11 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.CONST.rho_i = []; %ice density
         end
 
-        function ground = finalize_init(ground, forcing) 
             
-            ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
-            ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
+        function ground = finalize_init(ground, tile)
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_water_salt_FreezeDepress_Xice(ground); %calculate energy, water and ice contents and brine salt concentration
             ground = conductivity(ground); %calculate thermal conductivity

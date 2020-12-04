@@ -13,9 +13,9 @@ classdef LAT_REMOVE_SUBSURFACE_WATER < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function lateral = LAT_REMOVE_SUBSURFACE_WATER(index, pprovider, cprovider)
-            lateral@BASE_LATERAL(index, pprovider, cprovider);
-        end
+%         function lateral = LAT_REMOVE_SUBSURFACE_WATER(index, pprovider, cprovider)
+%             lateral@BASE_LATERAL(index, pprovider, cprovider);
+%         end
         
         function lateral = provide_CONST(lateral)
             
@@ -29,7 +29,7 @@ classdef LAT_REMOVE_SUBSURFACE_WATER < BASE_LATERAL
             lateral.STATVAR.subsurface_run_off = [];
         end
 
-        function lateral = finalize_init(lateral)
+        function lateral = finalize_init(lateral, tile)
             lateral.STATVAR.subsurface_run_off = 0;
         end
         

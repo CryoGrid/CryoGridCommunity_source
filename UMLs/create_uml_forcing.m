@@ -3,8 +3,8 @@
 % T. Ingemann-Nielsen, November 2020
 %==========================================================================
 
-files = rdir('..\modules\Forcing\**\*.m');
-exclude_folders = {'..\modules\Forcing\EXCLUDE'        % doesn't exist so does nothing
+files = rdir('..\modules\IO\Forcing\**\*.m');
+exclude_folders = {'..\modules\IO\Forcing\EXCLUDE'        % doesn't exist so does nothing
                    };
 
 % The use of relative paths in matlab is not well supported.

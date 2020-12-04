@@ -16,6 +16,7 @@
         {field} + TEMP [[[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m',13);{No tooltip}]]]
         ---
         {method} + get_saturated_hardBottom_first_cell  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','get_saturated_hardBottom_first_cell');{No tooltip}]]]
+        {method} + initialize_excel  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','initialize_excel');{No tooltip}]]]
         {method} + lateral3D_pull_heat  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_heat');{No tooltip}]]]
         {method} + lateral3D_pull_water_general_aquifer  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_water_general_aquifer');{No tooltip}]]]
         {method} + lateral3D_pull_water_unconfined_aquifer  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_water_unconfined_aquifer');{No tooltip}]]]
@@ -36,17 +37,6 @@
         {method} + get_E_freeW  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\HEAT_CONDUCTION.m','get_E_freeW');{No tooltip}]]]
         {method} + get_T_water_freeW  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\HEAT_CONDUCTION.m','get_T_water_freeW');{No tooltip}]]]
         {method} + get_timestep_heat_coduction  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\HEAT_CONDUCTION.m','get_timestep_heat_coduction');{No tooltip}]]]
-    }
-    class INITIALIZE <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m',7);{No tooltip}]] {
-        ---
-        {method} + INITIALIZE  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','INITIALIZE');{function self = GROUND_base_class(index, pprovider, cprovider, forcing)      % Definition to be used when old code is no longer supported}]]]
-        {method} + initialize  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize');{INITIALIZE  Initializes all properties needed by the class.}]]]
-        {method} + initialize_CONST  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_CONST');{INITIALIZE_CONST  Initializes CONST structure. Only the parameters populated by the CONSTANT_PROVIDER should be defined here.}]]]
-        {method} + initialize_PARA  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_PARA');{INITIALIZE_PARA  Initializes PARA structure. Only the parameters populated by the PARAMETER_PROVIDER should be defined here, additional parameters will be dinamically created during the final stage of the initialization (finalize_setup).}]]]
-        {method} + initialize_STATVAR  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_STATVAR');{INITIALIZE_STATVAR  Initializes STATVAR structure.}]]]
-        {method} + initialize_TEMP  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_TEMP');{INITIALIZE_TEMP  Initializes TEMP structure.}]]]
-        {method} + populate_CONST  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','populate_CONST');{POPULATE_CONST  Updates the CONST structure with values from cprovider.}]]]
-        {method} + populate_PARA  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','populate_PARA');{POPULATE_PARA  Updates the PARA structure with values from pprovider.}]]]
     }
     class REGRID <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\REGRID.m',6);{No tooltip}]] {
         ---
@@ -100,6 +90,7 @@
         {method} + get_timestep_SNOW  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW');{No tooltip}]]]
         {method} + get_timestep_SNOW_CHILD  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW_CHILD');{timestep = (-snow.STATVAR.energy ./ snow.TEMP.d_energy) .* double(snow.TEMP.d_energy>0) + double(snow.TEMP.d_energy<=0).*snow.PARA.dt_max;}]]]
         {method} + get_timestep_SNOW_mass_balance  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW_mass_balance');{No tooltip}]]]
+        {method} + get_timestep_SNOW_sublimation  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','get_timestep_SNOW_sublimation');{No tooltip}]]]
         {method} + initialize_zero_snow_BASE  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','initialize_zero_snow_BASE');{No tooltip}]]]
         {method} + make_SNOW_CHILD  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','make_SNOW_CHILD');{No tooltip}]]]
         {method} + prog_metamorphism  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SNOW.m','prog_metamorphism');{No tooltip}]]]
@@ -112,7 +103,6 @@
     class SNOW_simple_seb <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\SNOW_simple_seb.m',8);{No tooltip}]] {
         {field} + PARENT [[[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\SNOW_simple_seb.m',11);{No tooltip}]]]
         ---
-        {method} + SNOW_simple_seb  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\SNOW_simple_seb.m','SNOW_simple_seb');{No tooltip}]]]
         {method} + advance_prognostic  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\SNOW_simple_seb.m','advance_prognostic');{No tooltip}]]]
         {method} + advance_prognostic_CHILD  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\SNOW_simple_seb.m','advance_prognostic_CHILD');{No tooltip}]]]
         {method} + check_trigger  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\SNOW_simple_seb.m','check_trigger');{No tooltip}]]]
@@ -183,7 +173,6 @@
         {method} + lateral_push_water_reservoir_Xice  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\WATER_FLUXES_LATERAL.m','lateral_push_water_reservoir_Xice');{No tooltip}]]]
     }
     BASE <|-- HEAT_CONDUCTION
-    BASE <|-- INITIALIZE
     BASE <|-- REGRID
     BASE <|-- SEB
     BASE <|-- SNOW
@@ -191,7 +180,6 @@
     HEAT_CONDUCTION <|-- SNOW_simple_seb
     SNOW <|-- SNOW_simple_seb
     WATER_FLUXES_LATERAL <|-- SNOW_simple_seb
-    INITIALIZE <|-- SNOW_simple_seb
     REGRID <|-- SNOW_simple_seb
     BASE <|-- WATER_FLUXES_LATERAL
 @enduml

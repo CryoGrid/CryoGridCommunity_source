@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL & INITIALIZE & REGRID
+classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL & REGRID %& INITIALIZE
 
     properties
         PARENT
@@ -16,9 +16,9 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
         
         %----mandatory functions---------------
         %----initialization--------------------
-        function snow = SNOW_simple_seb(index, pprovider, cprovider, forcing)  
-            snow@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
+%         function snow = SNOW_simple_seb(index, pprovider, cprovider, forcing)  
+%             snow@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         function snow = provide_PARA(snow)
             
@@ -79,9 +79,9 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
         end
         
         
-        function snow = finalize_init(snow, forcing) 
-            snow.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
-            snow.PARA.airT_height = forcing.PARA.airT_height;
+        function ground = finalize_init(ground, tile)
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
             
             snow = initialize_zero_snow_BASE(snow); 
             snow.STATVAR.excessWater = 0;

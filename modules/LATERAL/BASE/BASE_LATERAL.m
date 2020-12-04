@@ -18,23 +18,28 @@ classdef BASE_LATERAL < matlab.mixin.Copyable
     
     methods
         
-        function self = BASE_LATERAL(index, pprovider, cprovider)
-            % CONSTRUCTOR for BASE_LATERAL class
-            %   Reads in class parameters from parameter providers
-            %
-            %   ARGUMENTS:
-            %   index:      user defined class index
-            %   pprovider:  instance of PARAMETER_PROVIDER class
-            %   cprovider:  instance of CONSTANT_PROVIDER class
+%         function self = BASE_LATERAL(index, pprovider, cprovider)
+%             % CONSTRUCTOR for BASE_LATERAL class
+%             %   Reads in class parameters from parameter providers
+%             %
+%             %   ARGUMENTS:
+%             %   index:      user defined class index
+%             %   pprovider:  instance of PARAMETER_PROVIDER class
+%             %   cprovider:  instance of CONSTANT_PROVIDER class
+%             
+%             if index ~=-1
+%                 self.class_index = index;
+%                 self = self.initialize();
+%                 self = self.populate_PARA(pprovider);
+%                 self = self.populate_CONST(cprovider);
+%             end
+%         end
+
+        function self = initialize_excel(self)
             
-            if index ~=-1
-                self.class_index = index;
-                self = self.initialize();
-                self = self.populate_PARA(pprovider);
-                self = self.populate_CONST(cprovider);
-            end
-        end
-        
+        end        
+
+
         function self = initialize(self)
             % INITIALIZE  Initializes all properties needed by the class.
             self = self.initialize_PARA();

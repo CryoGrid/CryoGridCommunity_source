@@ -16,9 +16,9 @@ classdef GROUND_fcSimple_salt_seb_snow < GROUND_fcSimple_salt_seb
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function self = GROUND_fcSimple_salt_seb_snow(index, pprovider, cprovider, forcing)
-            self@GROUND_fcSimple_salt_seb(index, pprovider, cprovider, forcing);
-        end
+%         function self = GROUND_fcSimple_salt_seb_snow(index, pprovider, cprovider, forcing)
+%             self@GROUND_fcSimple_salt_seb(index, pprovider, cprovider, forcing);
+%         end
         
         function ground = provide_PARA(ground)
             ground = provide_PARA@GROUND_fcSimple_salt_seb(ground);
@@ -32,8 +32,8 @@ classdef GROUND_fcSimple_salt_seb_snow < GROUND_fcSimple_salt_seb
             ground = provide_STATVAR@GROUND_fcSimple_salt_seb(ground);
         end
         
-        function ground = finalize_init(ground, forcing)
-            ground = finalize_init@GROUND_fcSimple_salt_seb(ground, forcing);
+        function ground = finalize_init(ground, tile)
+            ground = finalize_init@GROUND_fcSimple_salt_seb(ground, tile);
             ground.CHILD = 0; % no snow in the beginning
             ground.IA_CHILD = 0;
         end

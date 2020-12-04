@@ -67,9 +67,21 @@ classdef SNOW < BASE
             
             timestep = double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
              double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area); 
-            
+         
+         a=double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy);
+         b =double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area);
+         
+         
             timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
+        
+        function timestep = get_timestep_SNOW_sublimation(snow) %at maximum timestep maximum half the cell is melted under melting conditions, otherwise normal heat conduction timestep
+            timestep = double(snow.TEMP.sublimation_energy > 0) .*0.5 .*  (-snow.STATVAR.energy(1,1) ./ snow.TEMP.sublimation_energy) +  double(snow.TEMP.sublimation_energy <= 0) .* snow.PARA.dt_max;
+             
+                
+            timestep(isnan(timestep)) = snow.PARA.dt_max;
+        end
+        
         
         %--diagnostic step------------
         %remove or reroute meltwater in excess of snow matrix - check if

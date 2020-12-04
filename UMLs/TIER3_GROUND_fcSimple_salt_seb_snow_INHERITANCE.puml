@@ -16,6 +16,7 @@
         {field} + TEMP [[[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m',13);{No tooltip}]]]
         ---
         {method} + get_saturated_hardBottom_first_cell  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','get_saturated_hardBottom_first_cell');{No tooltip}]]]
+        {method} + initialize_excel  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','initialize_excel');{No tooltip}]]]
         {method} + lateral3D_pull_heat  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_heat');{No tooltip}]]]
         {method} + lateral3D_pull_water_general_aquifer  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_water_general_aquifer');{No tooltip}]]]
         {method} + lateral3D_pull_water_unconfined_aquifer  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_0_base\BASE.m','lateral3D_pull_water_unconfined_aquifer');{No tooltip}]]]
@@ -29,7 +30,6 @@
     }
     class GROUND_fcSimple_salt_seb <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\GROUND_fcSimple_salt_seb.m',8);{No tooltip}]] {
         ---
-        {method} + GROUND_fcSimple_salt_seb  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\GROUND_fcSimple_salt_seb.m','GROUND_fcSimple_salt_seb');{No tooltip}]]]
         {method} + advance_prognostic  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\GROUND_fcSimple_salt_seb.m','advance_prognostic');{No tooltip}]]]
         {method} + check_trigger  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\GROUND_fcSimple_salt_seb.m','check_trigger');{do nothing}]]]
         {method} + compute_diagnostic  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_2_full_classes\GROUND_fcSimple_salt_seb.m','compute_diagnostic');{No tooltip}]]]
@@ -52,7 +52,6 @@
         {field} + CHILD [[[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_3_snow\GROUND_fcSimple_salt_seb_snow.m',10);{No tooltip}]]]
         {field} + IA_CHILD [[[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_3_snow\GROUND_fcSimple_salt_seb_snow.m',11);{No tooltip}]]]
         ---
-        {method} + GROUND_fcSimple_salt_seb_snow  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_3_snow\GROUND_fcSimple_salt_seb_snow.m','GROUND_fcSimple_salt_seb_snow');{No tooltip}]]]
         {method} + advance_prognostic  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_3_snow\GROUND_fcSimple_salt_seb_snow.m','advance_prognostic');{timestep = tile.timestep;}]]]
         {method} + check_trigger  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_3_snow\GROUND_fcSimple_salt_seb_snow.m','check_trigger');{forcing = tile.FORCING;}]]]
         {method} + compute_diagnostic  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_3_snow\GROUND_fcSimple_salt_seb_snow.m','compute_diagnostic');{forcing = tile.FORCING;}]]]
@@ -81,17 +80,6 @@
         ---
         {method} + lateral3D_pull_heat_simple  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\HEAT_FLUXES_LATERAL.m','lateral3D_pull_heat_simple');{No tooltip}]]]
         {method} + lateral3D_push_heat_simple  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\HEAT_FLUXES_LATERAL.m','lateral3D_push_heat_simple');{No tooltip}]]]
-    }
-    class INITIALIZE <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m',7);{No tooltip}]] {
-        ---
-        {method} + INITIALIZE  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','INITIALIZE');{function self = GROUND_base_class(index, pprovider, cprovider, forcing)      % Definition to be used when old code is no longer supported}]]]
-        {method} + initialize  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize');{INITIALIZE  Initializes all properties needed by the class.}]]]
-        {method} + initialize_CONST  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_CONST');{INITIALIZE_CONST  Initializes CONST structure. Only the parameters populated by the CONSTANT_PROVIDER should be defined here.}]]]
-        {method} + initialize_PARA  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_PARA');{INITIALIZE_PARA  Initializes PARA structure. Only the parameters populated by the PARAMETER_PROVIDER should be defined here, additional parameters will be dinamically created during the final stage of the initialization (finalize_setup).}]]]
-        {method} + initialize_STATVAR  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_STATVAR');{INITIALIZE_STATVAR  Initializes STATVAR structure.}]]]
-        {method} + initialize_TEMP  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','initialize_TEMP');{INITIALIZE_TEMP  Initializes TEMP structure.}]]]
-        {method} + populate_CONST  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','populate_CONST');{POPULATE_CONST  Updates the CONST structure with values from cprovider.}]]]
-        {method} + populate_PARA  [[[matlab:matlab.desktop.editor.openAndGoToFunction('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\INITIALIZE.m','populate_PARA');{POPULATE_PARA  Updates the PARA structure with values from pprovider.}]]]
     }
     class SALT <<(H,#E6FFE6)>> [[matlab:matlab.desktop.editor.openAndGoToLine('C:\thin\02_Code\Matlab\CryoGRID\202008_CryoGrid_NewOOP_GIT_CURRENT_THIN\modules\TIER_1_processes\SALT.m',7);{No tooltip}]] {
         ---
@@ -129,11 +117,9 @@
     HEAT_CONDUCTION <|-- GROUND_fcSimple_salt_seb
     SALT <|-- GROUND_fcSimple_salt_seb
     HEAT_FLUXES_LATERAL <|-- GROUND_fcSimple_salt_seb
-    INITIALIZE <|-- GROUND_fcSimple_salt_seb
     GROUND_fcSimple_salt_seb <|-- GROUND_fcSimple_salt_seb_snow
     BASE <|-- HEAT_CONDUCTION
     BASE <|-- HEAT_FLUXES_LATERAL
-    BASE <|-- INITIALIZE
     BASE <|-- SALT
     BASE <|-- SEB
 @enduml

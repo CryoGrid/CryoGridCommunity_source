@@ -12,7 +12,8 @@ classdef IA_LAKE_simple_frozen_unfrozen < IA_WATER & IA_HEAT
 
         function lake_next_season = create_annihilate(ia_create_next_season_lake, lake_this_season)
             class_handle = str2func(lake_this_season.PARA.next_season_lake_class);
-            lake_next_season = class_handle(-1,0,0,0); 
+            %lake_next_season = class_handle(-1,0,0,0); 
+            lake_next_season = class_handle(); 
             lake_next_season = initialize_from_LAKE_previous_season(lake_next_season, lake_this_season);
         end
         

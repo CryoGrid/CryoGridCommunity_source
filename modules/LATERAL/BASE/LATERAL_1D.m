@@ -28,37 +28,6 @@ classdef LATERAL_1D < matlab.mixin.Copyable
     
     methods
         
-        %constructor reading the tile information
-        function lateral = LATERAL_1D(tile)    %lateral_class_list, TOP, BOTTOM, t
-            lateral = lateral.provide_PARA();
-            lateral = lateral.provide_CONST();
-            lateral = lateral.provide_STATVAR();
-            lateral = lateral.populate_CONST(tile.cprovider);
-            lateral = lateral.populate_PARA(tile.pprovider);
-            
-            lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
-            
-            t = tile.FORCING.PARA.start_time;  % If we need this to be specifiable by user, we can add it as optional input argument (using varargin)
-            lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
-            lateral.TOP = tile.TOP;
-            lateral.BOTTOM = tile.BOTTOM;
-            lateral_class_list = tile.pprovider.tile_info.lateral_interactions;
-            
-            %user-defined in the main file
-            for i=1:size(lateral_class_list,2)
-                class_handle = str2func(lateral_class_list{1,i});
-                lateral.IA_CLASSES{i,1} = class_handle(1, tile.pprovider, tile.cprovider);
-            end
-            
-            for i=1:size(lateral.IA_CLASSES,1)
-                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i});
-                lateral.IA_CLASSES{i}.PARENT = lateral;
-            end
-            lateral.ENSEMBLE={};
-            lateral.STATVAR.index = 0; %set index to zero for 1D runs
-            lateral.PARA.num_realizations = 1;
-        end
-        
         %---initialization---------
         function lateral = provide_PARA(lateral)
             lateral.PARA.ia_time_increment = [];
@@ -74,31 +43,59 @@ classdef LATERAL_1D < matlab.mixin.Copyable
 
         end
         
-        
-        function self = populate_PARA(self, pprovider)
-            % POPULATE_PARa  Updates the PARA structure with values from cprovider.
-            %
-            %   ARGUMENTS:
-            %   pprovider:  instance of PARAMETER_PROVIDER class
+        function lateral = initialize_excel(lateral)
             
-            self.PARA = pprovider.populate_struct(self.PARA, 'LATERAL_CLASS', class(self), self.class_index);
-        end     
-        
-        
-        function self = populate_CONST(self, cprovider)
-            % POPULATE_CONST  Updates the CONST structure with values from cprovider.
-            %
-            %   ARGUMENTS:
-            %   cprovider:  instance of CONSTANT_PROVIDER class
-            
-            self.CONST = cprovider.populate_struct(self.CONST);
         end
         
-                
+        function lateral = finalize_init(lateral, tile) %LATERAL_1D(tile)    %lateral_class_list, TOP, BOTTOM, t
+            
+            lateral.IA_TIME_INCREMENT = lateral.PARA.ia_time_increment;
+            
+            lateral.IA_TIME = tile.FORCING.PARA.start_time + lateral.IA_TIME_INCREMENT;
+            lateral.TOP = tile.TOP;
+            lateral.BOTTOM = tile.BOTTOM;
+            
+            %user-defined in the paraemter file
+            for i=1:size(tile.PARA.lateral_IA_classes, 1)
+                lat_ia_class = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.lateral_IA_classes{i,1});
+                lat_ia_class = lat_ia_class{tile.PARA.lateral_IA_classes_index, 1};
+                lateral.IA_CLASSES{i,1} = copy(lat_ia_class);
+                lateral.IA_CLASSES{i} = finalize_init(lateral.IA_CLASSES{i}, tile);
+                lateral.IA_CLASSES{i}.PARENT = lateral;
+            end
+            
+            lateral.ENSEMBLE={};
+            lateral.STATVAR.index = 0; %set index to zero for 1D runs
+            lateral.PARA.num_realizations = 1;
+        end
+        
+
+        
+        
+%         function self = populate_PARA(self, pprovider)
+%             % POPULATE_PARa  Updates the PARA structure with values from cprovider.
+%             %
+%             %   ARGUMENTS:
+%             %   pprovider:  instance of PARAMETER_PROVIDER class
+%             
+%             self.PARA = pprovider.populate_struct(self.PARA, 'LATERAL_CLASS', class(self), self.class_index);
+%         end     
+%         
+%         
+%         function self = populate_CONST(self, cprovider)
+%             % POPULATE_CONST  Updates the CONST structure with values from cprovider.
+%             %
+%             %   ARGUMENTS:
+%             %   cprovider:  instance of CONSTANT_PROVIDER class
+%             
+%             self.CONST = cprovider.populate_struct(self.CONST);
+%         end
+%         
+%                 
         function lateral = assign_number_of_realizations(lateral, num_realizations)
              lateral.PARA.num_realizations = num_realizations;           
         end
-        
+
         
         function lateral = get_index(lateral)
             if lateral.PARA.num_realizations > 1

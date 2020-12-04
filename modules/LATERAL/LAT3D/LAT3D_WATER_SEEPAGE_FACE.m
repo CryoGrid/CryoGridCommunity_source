@@ -18,9 +18,9 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function lateral = LAT3D_WATER_SEEPAGE_FACE(index, pprovider, cprovider)
-            lateral@BASE_LATERAL(index, pprovider, cprovider);
-        end
+%         function lateral = LAT3D_WATER_SEEPAGE_FACE(index, pprovider, cprovider)
+%             lateral@BASE_LATERAL(index, pprovider, cprovider);
+%         end
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;
@@ -40,7 +40,7 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
             lateral.STATVAR.subsurface_run_off = [];
         end
 
-        function lateral = finalize_init(lateral)
+        function lateral = finalize_init(lateral, tile)
             lateral.STATVAR.subsurface_run_off = 0;
         end
         
