@@ -64,7 +64,7 @@ classdef OUT_all
             if t==out.OUTPUT_TIME
                 %if id == 1
                     disp([datestr(t)])
-              %  end
+                %end
                 labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
@@ -94,6 +94,7 @@ classdef OUT_all
                     result=[result; {res}];
                     CURRENT = CURRENT.NEXT;
                 end
+                
                 out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = result;
                 
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;

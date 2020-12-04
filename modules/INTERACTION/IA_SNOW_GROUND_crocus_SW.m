@@ -21,8 +21,7 @@ classdef IA_SNOW_GROUND_crocus_SW
                snow.STATVAR.Lstar = ground.STATVAR.Lstar;  %assign L_star from parent
                
                %partition rainfall
-%                total_rain = forcing.TEMP.rainfall;
-               total_rain_snow = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain;
+               total_rain_snow = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain + vegetation.mlcanopyinst.qflx_prec_grnd_snow;
                
                forcing.TEMP.rainfall_snow = fraction_snow .* total_rain_snow;
                
@@ -37,7 +36,7 @@ classdef IA_SNOW_GROUND_crocus_SW
 %                snow = get_boundary_condition_u(snow, forcing); %call the native function for the snow class   
                
                forcing.TEMP.rainfall_snow = (1 - fraction_snow) .* total_rain_snow;
-               ground = get_bundary_condition_u(ground, forcing); %call the native function for the ground class
+               ground = get_boundary_condition_u(ground, forcing); %call the native function for the ground class
                
                forcing.TEMP.rainfall_snow = total_rain_snow; %reassign the total rainfall, in case it is used later
                

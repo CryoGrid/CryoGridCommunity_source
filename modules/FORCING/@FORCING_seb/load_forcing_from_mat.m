@@ -16,7 +16,7 @@ forcing.DATA.wind = temp.FORCING.data.wind;
 forcing.DATA.timeForcing = temp.FORCING.data.t_span;
 forcing.DATA.p = 101325; %temp.FORCING.data.pressure; % simone!
 
-% Update spacial data if included in forcing file
+% Update spatial data if included in forcing file
 if isfield(temp.FORCING.data,'z')
     forcing.PARA.altitude = round(temp.FORCING.data.z);
 end
@@ -71,3 +71,4 @@ forcing.TEMP.q=0;
 forcing.TEMP.p=0;
 forcing.TEMP.Sin_dif = 0;
 forcing.TEMP.Sin_dir = 0;
+forcing.TEMP.snow_reservoir = 0;

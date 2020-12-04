@@ -45,7 +45,7 @@ ground.STATVAR.vegetation.pftcon.dleaf = 0.04;  %http://www.cgd.ucar.edu/tss/clm
 %1.1 Leaf Temperature and Energy Fluxes
 %1.2 Leaf Heat Capacity
 %Input
-ground.STATVAR.vegetation.pftcon.slatop = 0.01;              % Bonan 2018, Table 1    % Specific leaf area at top of canopy (m2/gC)
+ground.STATVAR.vegetation.pftcon.slatop = 0.008;              % Bonan 2018, Table 1    % Specific leaf area at top of canopy (m2/gC)
 %-----------------------------------------------------------------------
 %LeafWaterPotential
 % ground.STATVAR.vegetation.pftcon.capac = ones(1);     % Plant capacitance (mmol H2O/m2 leaf area/MPa)

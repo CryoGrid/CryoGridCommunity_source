@@ -41,7 +41,7 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
             vegetation = ia_heat_ground_vegetation.PREVIOUS;
             forcing = vegetation.ForcingV;
             
-            if ground.IA_CHILD.STATUS == 0 && forcing.TEMP.snowfall > 0  %zero SWE and snowfall occuring, snow CHILD must be initialized
+            if ground.IA_CHILD.STATUS == 0 && forcing.TEMP.snowfall > 0 %forcing.TEMP.snowfall > 10 %1.000e-12; 1.000e-3 %instead of 0!!!!!!!  %zero SWE and snowfall occuring, snow CHILD must be initialized
                 ground.IA_CHILD.STATUS = 1;
                 ia_heat_ground_snow_vegetation = ground.IA_CHILD;
                 snow = ia_heat_ground_snow_vegetation.IA_CHILD_SNOW;
@@ -88,7 +88,7 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 vegetation.STATVAR.vegetation.soilvar.thk(2) = interp1(ground.STATVAR.midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
                 vegetation.STATVAR.vegetation.soilvar.thk(3) = interp1(ground.STATVAR.midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
                 
-            elseif ground.IA_CHILD.STATUS == 2 %non-zero SWE, but snow is still a child
+            elseif ground.IA_CHILD.STATUS == 2  %non-zero SWE, but snow is still a child
                 ia_heat_ground_snow_vegetation = ground.IA_CHILD;
                 snow = ia_heat_ground_snow_vegetation.IA_CHILD_SNOW;
                 
@@ -101,10 +101,7 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 
                  %partition rainfall %%Simone: add surface runoff
                 total_rain = forcing.TEMP.rainfall + ground.STATVAR.surface_runoff + snow.STATVAR.water_reservoir;
-                
-                %partition rainfall %% Simone: Add surface runoff to rainfall
-%                 total_rain = forcing.TEMP.rainfall + (ground.STATVAR.surface_runoff*5); % ./ 1000 ./ (24*3600);
-                
+ 
                 forcing.TEMP.rainfall = fraction_snow .* total_rain;
                 snow = get_boundary_condition_u_CHILD(snow, forcing); %call the native function for the snow class
                
@@ -113,9 +110,10 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 % fluxes from ground and snow overwritten by fluxes from vegetation module
                 snow.STATVAR.Qh = vegetation.STATVAR.vegetation.mlcanopyinst.shsoi;
                 snow.STATVAR.Qe = vegetation.STATVAR.vegetation.mlcanopyinst.lhsoi;
-                snow.TEMP.F_ub = vegetation.STATVAR.vegetation.mlcanopyinst.gsoi;    % forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe;
-%                 snow.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe;
                 
+%                 snow.TEMP.F_ub = vegetation.STATVAR.vegetation.mlcanopyinst.gsoi;     
+                snow.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe;
+                                
                 forcing.TEMP.rainfall = (1 - fraction_snow) .* total_rain;
                 ground = get_boundary_condition_u(ground, forcing); %#call the native function for the ground class
                 
@@ -179,21 +177,41 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
             
 %             if ground.IA_CHILD.STATUS == -1 % Child exists -> Ground is snow covered
                 
-                %%%%%%%%%%%%%% CHANGED HERE: Overwritting of snow fluxes with vegetation fluxes! %%%%%%%%%%%%%%%
+                %%%%%%%%%%%%%% CHANGED HERE: ! %%%%%%%%%%%%%%%
                 forcing.TEMP.rainfall = forcing.TEMP.rainfall + ground.STATVAR.surface_runoff;
+                snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000./(24.*3600); % Simone!! ./(24.*3600); %snowfall is in mm/day 
+
+                if snow.TEMP.snowfall > 0
+                    if forcing.TEMP.snow_reservoir > 1.000e-4 %1.000e-2
+                        snow.TEMP.snowfall = snow.TEMP.snowfall + forcing.TEMP.snow_reservoir;
+                        forcing.TEMP.snow_reservoir = 0; 
+                    end 
+                    if snow.TEMP.snowfall < 1.000e-10
+                        forcing.TEMP.snow_reservoir = forcing.TEMP.snow_reservoir + snow.TEMP.snowfall;
+                        snow.TEMP.snowfall = 0;
+                    else
+                        snow.TEMP.snowfall = snow.TEMP.snowfall;
+                    end
+                else
+                    snow.TEMP.snowfall = snow.TEMP.snowfall;
+                end
+                
+                vegetation.ForcingV.TEMP.snow_reservoir = forcing.TEMP.snow_reservoir;
+                
+                disp('snow');
+                disp(snow.TEMP.snowfall);
                 
                 snow = get_boundary_condition_u(snow, forcing);
                 snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
                 snow.STATVAR.Sout = snow.PARA.albedo .*  forcing.TEMP.Sin;
-                % forcing.TEMP.snowfall is in mm h2o/day
-                snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000./(24.*3600); % Simone!! ./(24.*3600); %snowfall is in mm/day 
+                                                                                         
                 snow.TEMP.rainfall = forcing.TEMP.rainfall ./1000./(24.*3600); % Simone!! ./(24.*3600);
                 snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);
                 snow.TEMP.rain_energy = snow.TEMP.rainfall .* max(0, forcing.TEMP.Tair) .* snow.CONST.c_w;
                 
                 % fluxes from ground and snow overwritten by fluxes from vegetation module
-                snow.STATVAR.Qh = vegetation.STATVAR.vegetation.mlcanopyinst.shsoi;
-                snow.STATVAR.Qe = vegetation.STATVAR.vegetation.mlcanopyinst.lhsoi;
+%                 snow.STATVAR.Qh = vegetation.STATVAR.vegetation.mlcanopyinst.shsoi;
+%                 snow.STATVAR.Qe = vegetation.STATVAR.vegetation.mlcanopyinst.lhsoi;
 %                 snow.TEMP.F_ub = vegetation.STATVAR.vegetation.mlcanopyinst.gsoi;    % forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe;
                 snow.TEMP.F_ub = forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe;
                 

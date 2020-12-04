@@ -19,10 +19,11 @@ classdef FORCING_seb
         function forcing = initalize_from_file(forcing, section)
             for i=1:size(section,1)
                 if strcmp(section{i,1}, 'filename')
-                    forcing.PARA.filename = section{i,2};
-%                       forcing.PARA.filename = 'Mongolei_CCSM_rcp8_5_1979_2100';
-%                     forcing.PARA.filename = 'Batagai_2015011503-2020070118';
-%                     forcing.PARA.filename = 'Chukotka_T0_CCSM_rcp8_5_1979_2100';
+%                     forcing.PARA.filename = section{i,2};
+%                     forcing.PARA.filename = 'Chukotka_tcc_T0_ERAint_1979_2019_trialSimone';
+%                     forcing.PARA.filename = 'Nyurba_tcc_T0_ERAint_1979_2019_trialSimone';
+%                      forcing.PARA.filename = 'Spasskaya_tcc_T0_ERAint_1979_2019_trialSimone';
+                   forcing.PARA.filename = 'Mongolei_tcc_T0_ERAint_1979_2019_trialSimone';
                 end
                 
                 

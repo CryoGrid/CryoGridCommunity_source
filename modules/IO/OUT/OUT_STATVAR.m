@@ -70,34 +70,54 @@ classdef OUT_STATVAR
                 
                 %out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = copy(TOP_CLASS);  %append new stratigraphy, should be made more sophisticated by not adding instaneous values, but averaging/accumulating variables
                 %out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = [TOP_CLASS.STATVAR.T; TOP_CLASS.NEXT.STATVAR.T];  
-                CURRENT =TOP_CLASS;
+                CURRENT = TOP_CLASS;
                 if isprop(CURRENT, 'IA_CHILD') && ~isempty(CURRENT.IA_CHILD)
                     out.MISC=[out.MISC [CURRENT.IA_CHILD.IA_CHILD_SNOW.STATVAR.T(1,1); CURRENT.IA_CHILD.IA_CHILD_SNOW.STATVAR.layerThick(1,1)]]; 
                 else
-                    out.MISC=[out.MISC [NaN; NaN]];
+                    out.MISC=[out.MISC [NaN; NaN]];                    
                 end
                 result={};
+               
+                
                 while ~isequal(CURRENT, BOTTOM)
-                    if isprop(CURRENT, 'IA_CHILD') && ~isempty(CURRENT.IA_CHILD) && CURRENT.IA_CHILD.STATUS ==1
+                    if isprop(CURRENT, 'IA_CHILD') && ~isempty(CURRENT.IA_CHILD) && CURRENT.IA_CHILD.STATUS == 1
                         res=copy(CURRENT.IA_CHILD.IA_CHILD_SNOW);
                         res = res.STATVAR;
                         res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  %cut all dependencies
                         result=[result; {res}];
                     end
+                    
+                    % Simone, 20200603, added if statement for CURRENT = TOP_CLASS to only save/output 
+                    % vegetation.mlcanopyinst instead of the entire vegetation container.
                     res = copy(CURRENT);
+                    if CURRENT == TOP_CLASS 
+%                     res=[res.STATVAR.vegetation.mlcanopyinst, res.STATVAR.vegetation.flux];
+                    
+                    aa_t = struct2table( res.STATVAR.vegetation.mlcanopyinst );
+                    bb_t = struct2table( res.STATVAR.vegetation.flux );
+                    % Concatonate tables
+                    merge_t = [ aa_t ,bb_t ];
+                    % Convert table to structure
+                    res = table2struct( merge_t );
+                    
+                                       
+                    else
                     res=res.STATVAR;
+                    end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  %cut all dependencies
+
                     if isprop(res, 'IA_CHILD')
                         res.IA_CHILD =[];
                     end
                     result=[result; {res}];
                     CURRENT = CURRENT.NEXT;
                 end
+                
                 out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = result;
                 
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
-                if t==out.SAVE_TIME 
-                   
+                
+                if t==out.SAVE_TIME                    
                    save([result_path run_number '/' run_number num2str(labindex) '_' datestr(t,'yyyy') '.mat'], 'out', '-v7.3')
                    out.STRATIGRAPHY=[];
                    out.TIMESTAMP=[];
@@ -105,7 +125,6 @@ classdef OUT_STATVAR
                    out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
                 end
             end
-        end
-        
+        end        
     end
 end

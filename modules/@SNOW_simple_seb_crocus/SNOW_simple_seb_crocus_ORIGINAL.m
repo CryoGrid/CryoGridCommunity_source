@@ -69,6 +69,11 @@ classdef SNOW_simple_seb_crocus< SNOW_simple_seb
             snow.TEMP.T_rainWater = forcing.TEMP.Tair; % same as below
             snow.TEMP.F_ub_water = snow.TEMP.rainfall; % Needed when using the bucketW water infiltration scheme, change advance_prognostics
             
+            if snow.TEMP.d_ice_sublim < inf
+                disp('d_ice')
+            end
+            
+            
 %             fraction_snow = snow.IA_PARENT.FRACTIONAL_SNOW_COVER;
 %             snow.TEMP.d_ice_sublim = fraction_snow .* snow.TEMP.d_ice_sublim;
 %             snow.TEMP.d_E_sublim = fraction_snow .* snow.TEMP.d_E_sublim;

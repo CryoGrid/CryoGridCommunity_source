@@ -11,6 +11,7 @@ function ground = provide_ForcingV(ground)
     ground.ForcingV.TEMP.Lin = []; % [m]
     ground.ForcingV.TEMP.p = [];  % [J/m2]
     
+    ground.ForcingV.TEMP.snow_reservoir = 0;
     ground.ForcingV.TEMP.snowfall = [];  % [degree C]
     ground.ForcingV.TEMP.rainfall = [];  % [m]
     ground.ForcingV.TEMP.q = [];

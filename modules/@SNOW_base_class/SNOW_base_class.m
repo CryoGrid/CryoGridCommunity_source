@@ -159,7 +159,7 @@ classdef SNOW_base_class < matlab.mixin.Copyable
                             snow.STATVAR.time_snowfall(i) = [];
                         end
                         snow.STATVAR.waterIce(i+1) = snow.STATVAR.waterIce(i+1) + snow.STATVAR.waterIce(i);
-                        snow.STATVAR.energy (i+1) = snow.STATVAR.energy (i+1) + snow.STATVAR.energy (i);
+                        snow.STATVAR.energy(i+1) = snow.STATVAR.energy(i+1) + snow.STATVAR.energy(i);
                         snow.STATVAR.layerThick(i+1) = snow.STATVAR.layerThick(i+1) + snow.STATVAR.layerThick(i);
                         snow.STATVAR.water(i+1) = snow.STATVAR.water(i+1) + snow.STATVAR.water(i);
                         snow.STATVAR.ice(i+1) = snow.STATVAR.ice(i+1) + snow.STATVAR.ice(i);

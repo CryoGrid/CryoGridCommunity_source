@@ -39,7 +39,7 @@ classdef SNOW_simple_seb_crocus < SNOW_simple_seb
         end
         
         function snow = get_boundary_condition_u(snow, forcing)  
-            snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600); %snowfall is in mm/day
+%             snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600); %snowfall is in mm/day
             snow.TEMP.rainfall = forcing.TEMP.rainfall ./1000 ./(24.*3600);
             snow.TEMP.wind = forcing.TEMP.wind;
             
@@ -55,17 +55,29 @@ classdef SNOW_simple_seb_crocus < SNOW_simple_seb
                 snow.TEMP.d_energy_seb = 0; % No transmission when only fractional snowcover
             end
             
+           
             snow.STATVAR.Sout = snow.TEMP.albedo .*  forcing.TEMP.Sin;
             snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
             snow.STATVAR.Qh = Q_h(snow, forcing);
             snow.STATVAR.Qe = Q_eq_potET(snow, forcing);
-            
+
             snow.TEMP.F_ub = forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Qh - snow.STATVAR.Qe;
             snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);
             snow.TEMP.rain_energy = snow.TEMP.rainfall .* max(0, forcing.TEMP.Tair) .* snow.CONST.c_w;
+                      
+            
             snow.TEMP.d_ice_sublim = -snow.STATVAR.Qe ./ snow.CONST.L_s;
             snow.TEMP.d_E_sublim =  snow.TEMP.d_ice_sublim .* (snow.CONST.c_w .*snow.STATVAR.T(1) - snow.CONST.L_f);
             %snow.TEMP.d_E_sublim = snow.STATVAR.Qe;
+            
+            if isinf(snow.TEMP.d_ice_sublim) == 1
+                disp('d_ice')
+            end
+            
+            if isinf(snow.TEMP.d_E_sublim) == 1
+                disp('d_ice')
+            end
+            
             snow.TEMP.T_rainWater = forcing.TEMP.Tair; % same as below
             snow.TEMP.F_ub_water = snow.TEMP.rainfall; % Needed when using the bucketW water infiltration scheme, change advance_prognostics
         end
@@ -75,8 +87,17 @@ classdef SNOW_simple_seb_crocus < SNOW_simple_seb
             snow = get_boundary_condition_u(snow, forcing); %same function as for normal snow class
                         
             fraction_snow = snow.IA_PARENT.FRACTIONAL_SNOW_COVER; %sublimation must be scaled!
+           
+            if isinf(snow.TEMP.d_ice_sublim) == 1
+                disp('d_ice')
+            end
+            
             snow.TEMP.d_ice_sublim = fraction_snow .* snow.TEMP.d_ice_sublim;
             snow.TEMP.d_E_sublim = fraction_snow .* snow.TEMP.d_E_sublim;
+            
+            if isinf(snow.TEMP.d_ice_sublim) == 1
+                disp('d_ice')
+            end
         end
         
         function snow = get_boundary_condition_u_create_CHILD(snow, forcing) 
@@ -177,12 +198,16 @@ classdef SNOW_simple_seb_crocus < SNOW_simple_seb
         end
         
         function snow = advance_prognostic_CHILD(snow, timestep)
+           
+            if snow.STATVAR.T(1) < -270
+                disp('huh')
+            end 
             
             snow.STATVAR.energy = snow.STATVAR.energy + timestep .* snow.TEMP.d_energy;
             
-%             if snow.STATVAR.waterIce < 0
-%                 test2
-%             end
+            if snow.STATVAR.waterIce < 0
+                test2
+            end
             
             %snow.STATVAR.energy = snow.STATVAR.energy + timestep .*(snow.TEMP.F_ub + snow.TEMP.snow_energy + snow.TEMP.rain_energy + snow.TEMP.d_E_sublim);
             
@@ -194,9 +219,9 @@ classdef SNOW_simple_seb_crocus < SNOW_simple_seb
             snow.STATVAR.gs = max(snow.STATVAR.gs, snow.STATVAR.gs + timestep .*(snow.TEMP.metam_d_gs + snow.TEMP.wind_d_gs));
             snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, max(snow.STATVAR.ice, snow.STATVAR.layerThick + timestep .*(snow.TEMP.compact_d_D + snow.TEMP.wind_d_D)));
             
-%            if snow.STATVAR.waterIce < 0
-%                 test1
-%             end
+           if snow.STATVAR.waterIce < 0
+                test1
+            end
             
             %add dry snow
             if snow.TEMP.snowfall > 0

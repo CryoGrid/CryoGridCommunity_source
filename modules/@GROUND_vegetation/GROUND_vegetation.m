@@ -87,6 +87,9 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
             ground.ForcingV.TEMP.Sin = ground.STATVAR.vegetation.flux.swdn(1,1) + ground.STATVAR.vegetation.flux.swdn(1,2); %ground.STATVAR.vegetation.flux.swsoi(1,1) + ground.STATVAR.vegetation.flux.swsoi(1,2); % vegetation.mlcanopyinst.sw_prof(1,2,1); %Canopy layer absorbed radiation
             ground.ForcingV.TEMP.Lin = ground.STATVAR.vegetation.flux.irdn; %ground.STATVAR.vegetation.flux.irsoi(1); %vegetation.flux.ir_source(2,1); %Longwave radiation emitted by bottom leaf layer (W/m2)
             ground.ForcingV.TEMP.p = forcing.TEMP.p; % air pressure at reference height (Pa)
+            ground.ForcingV.TEMP.snow_reservoir = ground.ForcingV.TEMP.snow_reservoir;
+
+            
             ground.ForcingV.TEMP.snowfall = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_snow .* (24 .*3600); % .* (24*3600); qflx_prec_grnd_snow (mm h2o/s) -> .* (24 .*3600) -> mm h2o/day
             ground.ForcingV.TEMP.rainfall = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain .* (24 .*3600); % .* (24*3600);
             ground.ForcingV.TEMP.q = forcing.TEMP.q; %specific humidity at refernce height (kg/kg)
