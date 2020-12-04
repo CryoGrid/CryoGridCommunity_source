@@ -17,25 +17,8 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
         function  get_boundary_condition_m(ia_heat_ground_vegetation)
             
             % IA class between Vegetation and Ground. 
-            %
-            %               VEGETATION
-            %                   -
-            %                     -  
-            %                       -
-            %                         -                               SNOW -  -  -  - IA_HEAT_GROUND_SNOW_VEGETATION 
-            %                           -                           -                  -
-            %                             -                       -                -
-            %             IA_HEAT_GROUND_VEGETATION       IA_CHILD             -
-            %                       -                         -            -        
-            %                         -                    -           -
-            %                           -                -         - 
-            %                             -           -        -
-            %                                 GROUND -  -  - 
-            
-            
             % Checks for Snow status. If Status = -1 Snow exists and covers the ground. Then this IA class does not do anything, because flux between Ground and Snow 
-            % and Ground/Snow/Vegetation are calculated in the new Ground/Snow IA IA_HEAT_GROUND_SNOW_VEGETATION which is activeated as soon as Snow is -1. 
-            
+            % and Ground/Snow/Vegetation are calculated in the new Ground/Snow IA IA_HEAT_GROUND_SNOW_VEGETATION which is activeated as soon as Snow is -1.             
             
             ground = ia_heat_ground_vegetation.NEXT;
             vegetation = ia_heat_ground_vegetation.PREVIOUS;
@@ -65,7 +48,6 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 vegetation.STATVAR.vegetation.soilvar.thk_topsurfacecell = ground.STATVAR.thermCond(1);
 
                 vegetation.STATVAR.vegetation.soilvar.transp_per_layer = (0.0181528 .* vegetation.STATVAR.vegetation.soilvar.transp_per_layer)./1000;
-                %                 vegetation.STATVAR.vegetation.mlcanopyinst.etsoi = (0.0181528 .* vegetation.STATVAR.vegetation.mlcanopyinst.etsoi)./1000; %evaporation
                 
                 ground.TEMP.F_ub_water = -vegetation.STATVAR.vegetation.soilvar.transp_per_layer(1) + ground.TEMP.F_ub_water;
                 ground.TEMP.F_m_water(2:3) = -vegetation.STATVAR.vegetation.soilvar.transp_per_layer(2)/2;
@@ -140,7 +122,6 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 ground.TEMP.F_ub = (1-fraction_snow) .* ground.TEMP.F_ub + fraction_snow .* flux;
                 
                 vegetation.STATVAR.vegetation.soilvar.transp_per_layer = (0.0181528 .* vegetation.STATVAR.vegetation.soilvar.transp_per_layer)./1000;
-                %                 vegetation.STATVAR.vegetation.mlcanopyinst.etsoi = (0.0181528 .* vegetation.STATVAR.vegetation.mlcanopyinst.etsoi)./1000;
                 
                 vegetation.STATVAR.vegetation.soilvar.t_top_surfacecell = ground.STATVAR.T(1) + 273.15;
                 vegetation.STATVAR.vegetation.soilvar.dz_topsurfacecell = ground.STATVAR.layerThick(1);
@@ -168,25 +149,23 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 vegetation.STATVAR.vegetation.soilvar.thk(2) = interp1(ground.STATVAR.midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
                 vegetation.STATVAR.vegetation.soilvar.thk(3) = interp1(ground.STATVAR.midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
                 
-            elseif  ground.IA_CHILD.STATUS == -1 %snow is a child
+            elseif  ground.IA_CHILD.STATUS == -1 % Child exists -> Ground is snow covered
                 % fluxes are calculated in IA_HEAT
                 ia_heat_ground_snow_vegetation = ground.IA_CHILD;
                 snow = ia_heat_ground_snow_vegetation.IA_CHILD_SNOW;
                 vegetation = ia_heat_ground_snow_vegetation.IA_CHILD_SNOW.PREVIOUS;
                 forcing = vegetation.ForcingV;
-            
-%             if ground.IA_CHILD.STATUS == -1 % Child exists -> Ground is snow covered
-                
-                %%%%%%%%%%%%%% CHANGED HERE: ! %%%%%%%%%%%%%%%
-                forcing.TEMP.rainfall = forcing.TEMP.rainfall + ground.STATVAR.surface_runoff;
-                snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000./(24.*3600); % Simone!! ./(24.*3600); %snowfall is in mm/day 
 
+                forcing.TEMP.rainfall = forcing.TEMP.rainfall + ground.STATVAR.surface_runoff;
+                snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000./(24.*3600); %snowfall is in mm/day 
+
+                % condition to make sure, snowcover is above minimal value 
                 if snow.TEMP.snowfall > 0
                     if forcing.TEMP.snow_reservoir > 1.000e-4 %1.000e-2
                         snow.TEMP.snowfall = snow.TEMP.snowfall + forcing.TEMP.snow_reservoir;
                         forcing.TEMP.snow_reservoir = 0; 
                     end 
-                    if snow.TEMP.snowfall < 1.000e-10
+                    if snow.TEMP.snowfall < 1.000e-4
                         forcing.TEMP.snow_reservoir = forcing.TEMP.snow_reservoir + snow.TEMP.snowfall;
                         snow.TEMP.snowfall = 0;
                     else
@@ -223,7 +202,6 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 vegetation.STATVAR.vegetation.flux.albsoid = [snow.TEMP.albedo,snow.TEMP.albedo]; % Diffuse albedo of ground (soil)
                 
                 vegetation.STATVAR.vegetation.soilvar.transp_per_layer = (0.0181528 .* vegetation.STATVAR.vegetation.soilvar.transp_per_layer)./1000;
-                %                 vegetation.STATVAR.vegetation.mlcanopyinst.etsoi = (0.0181528 .* vegetation.STATVAR.vegetation.mlcanopyinst.etsoi)./1000;
                 
                 % if waterr < F_ub_water, transp = 0
                 ground.TEMP.F_ub_water = -vegetation.STATVAR.vegetation.soilvar.transp_per_layer(1); %+ ground.TEMP.F_ub_water;
@@ -248,7 +226,7 @@ classdef IA_HEAT_GROUND_VEGETATION < matlab.mixin.Copyable
                 vegetation.STATVAR.vegetation.soilvar.thk(3) = interp1(ground.STATVAR.midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
                 
             else
-                forcing.TEMP.rainfall = forcing.TEMP.rainfall + ground.STATVAR.surface_runoff;
+                forcing.TEMP.rainfall = forcing.TEMP.rainfall + ground.STATVAR.surface_runoff; % water reservoir from bucket scheme
 
                 ground = get_boundary_condition_u(ground, forcing); %call the native function for the ground class
                 

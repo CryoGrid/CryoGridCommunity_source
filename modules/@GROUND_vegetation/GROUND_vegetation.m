@@ -71,15 +71,6 @@ classdef GROUND_vegetation < matlab.mixin.Copyable
             
             ground = surface_energy_forest(ground, forcing);
             
-            % write these variables out to plot the vegetation on top of ground and snow
-            ground.STATVAR.T = (ground.STATVAR.vegetation.mlcanopyinst.tair-273.15)';
-            ground.STATVAR.Qe = ground.STATVAR.vegetation.mlcanopyinst.lhsoi; 
-            ground.STATVAR.Qh = ground.STATVAR.vegetation.mlcanopyinst.shsoi; 
-            ground.STATVAR.layerThick = (ground.STATVAR.vegetation.mlcanopyinst.zw./ground.STATVAR.vegetation.mlcanopyinst.ztop)';
-            ground.STATVAR.waterIce = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]';
-            ground.STATVAR.water = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]';
-            ground.STATVAR.ice = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]';
-            
             % Write forcing struct as the input for ground class under vegetation
             ground.ForcingV.TEMP.Tair = ground.STATVAR.vegetation.mlcanopyinst.tveg(1,2)-273.15;
             ground.ForcingV.TEMP.wind = ground.STATVAR.vegetation.mlcanopyinst.wind(1,2);
