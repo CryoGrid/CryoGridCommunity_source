@@ -24,9 +24,9 @@ classdef PPROVIDER_YAML
         
         function pprovider = read_const(pprovider)
             
-            data = yml.ReadYaml(pprovider.PARA.constant_file);
+            data = yaml.ReadYaml(pprovider.PARA.constant_file);
             fnames = fieldnames(data.CONST);
-            for i=1:length(fieldnames)
+            for i=1:length(fnames)
                 if ~isnan(data.CONST.(fnames{i}))
                     pprovider.CONST.(fnames{i}) = data.CONST.(fnames{i});
                 end
@@ -36,14 +36,14 @@ classdef PPROVIDER_YAML
         function pprovider = read_parameters(pprovider)
             
             %read the parameter file
-            data = yml.ReadYaml(pprovider.PARA.parameter_file);
+            data = yaml.ReadYaml(pprovider.PARA.parameter_file);
 
             % get all the CLASS sections defined in the file
             class_sections = fieldnames(data); 
             
             % loop over all sections
             for i = 1:length(class_sections)
-                section = class_sections{1};
+                section = data.(class_sections{i});
                 
                 % loop over definitions in section
                 for k = 1:length(section)
@@ -61,7 +61,7 @@ classdef PPROVIDER_YAML
                             if isfield(pprovider.CONST, fieldnames_CONST{ii,1})
                                 new_class.CONST.(fieldnames_CONST{ii,1}) = pprovider.CONST.(fieldnames_CONST{ii,1});
                             else
-                                disp(['WARNING: constant ' fieldnames_CONST{ii,1} ' in class ' class(new_class) ' not populated.'])
+                                warning(['WARNING: constant ' fieldnames_CONST{ii,1} ' in class ' class(new_class) ' not populated.'])
                             end
                         end
                     end
@@ -75,8 +75,8 @@ classdef PPROVIDER_YAML
                         fieldnames_PARA  = fieldnames(new_class.PARA); %list of field in PARA, find the field and populate it
                         for ii = 1:size(fieldnames_PARA,1)
                             fieldname = fieldnames_PARA{ii};
-                            if ~isfield(pprovider.PARA, fieldname)
-                                disp(['WARNING: parameter ' fieldname ' in class ' class(new_class) ' not populated.'])
+                            if ~isfield(section{k}, fieldname)
+                                warning(['WARNING: parameter ' fieldname ' in class ' class(new_class) ' not populated.'])
                                 continue
                             end
                             
@@ -87,26 +87,45 @@ classdef PPROVIDER_YAML
                                 % which means it is some sort of list or 1D array
                                 if ~isempty(contents) && isnumeric(contents{1})
                                     % it is a number array
-                                    new_class.PARA.(fieldname) = cell2mat(contents);
+                                    new_class.PARA.(fieldname) = cell2mat(contents)';
                                 else
                                     % it is a cell array of strings
-                                    new_class.PARA.(fieldname) = contents;
+                                    new_class.PARA.(fieldname) = contents';
                                 end
                             elseif isstruct(contents)
                                 % it is a structure
-                                % which means it is a table with columnar data
+                                if ~isfield(contents,'type') || ~strcmp(contents.type,'V_MATRIX')
+                                    warning(['WARNING: datatype of ' fieldname ' was not recognized in file ' pprovider.PARA.parameter_file '.\n'
+                                             '         parameter ' fieldname ' in class ' class(new_class) ' not populated.']);
+                                    continue
+                                end
+                                    
+                                % so it is a V_MATRIX, a table with columnar data
+
+                                % If matrix contains any string values,
+                                % it is read as a 1D cell array of 1D cell arrays.
+                                if size(contents.values,1) == 1 && iscell(contents.values{1})                                
+                                    % this matrix contains some text data
+                                    % handle this special case
+                                    contents.values = vertcat(contents.values{:});
+                                    % now it has same format as numeric matrix
+                                end
+                                
                                 for kk = 1:length(contents.names)
                                     cname = contents.names{kk};
+
+                                    % check type, just to be sure
                                     if isnumeric(contents.values{1,kk})
                                         % it is a numeric type, so convert
                                         % to matrix
                                         new_class.PARA.(fieldname).(cname) = cell2mat(contents.values(:,kk));
                                     else
-                                        % it contains text, keep as cell
-                                        % array
+                                        % it contains text, keep as cell array
                                         new_class.PARA.(fieldname).(cname) = contents.values(:,kk);
                                     end
                                 end
+                            elseif isempty(contents)
+                                new_class.PARA.(fieldname) = NaN;
                             else
                                 % It is just a value or string, keep it
                                 new_class.PARA.(fieldname) = contents;
@@ -115,11 +134,12 @@ classdef PPROVIDER_YAML
                     end
                     %mandatory function in all classes compatible with
                     %PPROVIDER_YAML
-                    new_class = initialize_yaml(new_class);
+                    warning('Calling "initialize_excel@new_class". Please reconsider need for this method!')
+                    new_class = initialize_excel(new_class);
 
                     pprovider.CLASSES.(class_name){class_index,1} = new_class;
                     
-                    if strcmp(section, 'RUN_INFO') && class_index == 1
+                    if strcmp(class_sections{i}, 'RUN_INFO') && class_index == 1
                         pprovider.RUN_INFO_CLASS = new_class;
                     end
                 end
