@@ -165,41 +165,7 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& INITI
         function ground = lateral3D_push_heat(ground, lateral)
             ground = lateral3D_push_heat_simple(ground, lateral);
         end
-        
-        
-        %----inherited Tier 1 functions ------------
-        
-        function ground = get_derivative_energy(ground)
-           ground = get_derivative_energy@HEAT_CONDUCTION(ground); 
-        end
-        
-        function ground = conductivity_mixing_squares(ground)
-            ground = conductivity_mixing_squares@HEAT_CONDUCTION(ground);
-        end
-        
-        function flux = Q_h(ground, forcing)
-           flux = Q_h@SEB(ground, forcing);
-        end
-    
-        function flux = Q_eq(ground, forcing)
-            flux = Q_eq@SEB(ground, forcing);
-        end
-        
-        function timestep = get_timestep_heat_coduction(ground)
-            timestep = get_timestep_heat_coduction@HEAT_CONDUCTION(ground);
-        end
-        
-        function ground = L_star(ground, forcing)
-           ground = L_star@SEB(ground, forcing); 
-        end
-        
-        function [ground, S_up] = penetrate_SW_no_transmission(ground, S_down)
-            [ground, S_up] = penetrate_SW_no_transmission@SEB(ground, S_down);
-        end
-        
-        function ground = get_T_water_freeW(ground)
-            ground = get_T_water_freeW@HEAT_CONDUCTION(ground);
-        end
+
     end
     
 end
