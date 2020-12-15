@@ -329,6 +329,8 @@ classdef WATER_FLUXES < BASE
             waterIce_saturation = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
             waterIce_saturation = max(0,min(1,waterIce_saturation));
             water_saturation = (ground.STATVAR.waterIce - ground.PARA.min_waterIce .* ground.STATVAR.layerThick.*ground.STATVAR.area) ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            %test Sebastian
+            %water_saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
             water_saturation = max(0,min(1,water_saturation));
             
             guaranteed_flow = ground.TEMP.d_water_ET;  %add other external fluxes here
@@ -552,8 +554,12 @@ classdef WATER_FLUXES < BASE
         
         function timestep = get_timestep_water(ground)
             %outflow + inflow
-             timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) ./ -ground.TEMP.d_water + ...
-                 double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
+             %timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) ./ -ground.TEMP.d_water + ...
+             %    double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
+             timestep =  double(ground.TEMP.d_water <0) .* ground.STATVAR.water ./ -ground.TEMP.d_water + ...
+                 double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
+            
+             
              timestep(timestep<=0) = ground.PARA.dt_max;
              timestep=nanmin(timestep);
         end

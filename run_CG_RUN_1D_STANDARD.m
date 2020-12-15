@@ -9,12 +9,13 @@ result_path = '../results/';  %with trailing backslash
 forcing_path = fullfile ('./forcing/');
 
 
-pprovider = PPROVIDER_EXCEL(run_name, result_path, constant_file, forcing_path);
-pprovider = read_const(pprovider);
-pprovider = read_parameters(pprovider);
+provider = PROVIDER;
+provider = assign_paths(provider, init_format, run_name, result_path, constant_file, forcing_path);
+provider = read_const(provider);
+provider = read_parameters(provider);
 
 %create the RUN_INFO class
-[run_info, pprovider] = run(pprovider);
+[run_info, provider] = run_model(provider);
 
 %   rest is equivalent to 
 %[run_info, tile] = run(run_info);
@@ -32,6 +33,7 @@ tile = finalize_init(tile);
 %tile = run(tile);
 %   for TILE class TILE_1D_STANDARD
 
+lkdflkjfdwlkj
 
 TOP_CLASS = tile.TOP_CLASS;
 BOTTOM_CLASS = tile.BOTTOM_CLASS;

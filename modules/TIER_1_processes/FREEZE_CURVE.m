@@ -40,7 +40,7 @@ classdef FREEZE_CURVE < BASE
             m=1-1./n;
             porosity = 1-mineral-organic;
             
-            waterPotZero = -1./alpha .*(((waterIce - thetaRes)./(porosity - thetaRes)).^(-1./m)-1).^(1./n);
+            waterPotZero = -1./alpha .*(((waterIce - thetaRes)./(porosity - thetaRes)).^(-1./m) -1).^(1./n);
             waterPotZero = real(waterPotZero);
 
             Tstar =  g .* Tmfw ./ L_sl .* waterPotZero;

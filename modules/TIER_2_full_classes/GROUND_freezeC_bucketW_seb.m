@@ -170,7 +170,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WAT
         
         function timestep = get_timestep(ground, tile) 
            timestep = get_timestep_heat_coduction(ground);
-           timestep = min(timestep, get_timestep_water(ground)); 
+           timestep = min(timestep, get_timestep_water(ground));
         end
         
         function ground = advance_prognostic(ground, tile) 

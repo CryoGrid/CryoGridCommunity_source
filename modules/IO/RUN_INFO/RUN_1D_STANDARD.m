@@ -41,7 +41,7 @@ classdef RUN_1D_STANDARD < matlab.mixin.Copyable
         
         
         
-        function [run_info, tile] = run(run_info)
+        function [run_info, tile] = run_model(run_info)
             
             %run_info = customize(run_info)
             
@@ -52,7 +52,7 @@ classdef RUN_1D_STANDARD < matlab.mixin.Copyable
             
             %do the run(s) 
             tile = finalize_init(tile);
-            tile = run(tile);  %time integration
+            tile = run_model(tile);  %time integration
             
         end
  

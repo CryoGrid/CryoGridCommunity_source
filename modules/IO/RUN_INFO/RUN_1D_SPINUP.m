@@ -43,7 +43,7 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
         
         
         
-        function [run_info, tile] = run(run_info)
+        function [run_info, tile] = run_model(run_info)
             %this could first open spmd and assign run_number depending on
             %worker, then do another round of pprovider
             %it could also do a loop over different tile representing
@@ -62,7 +62,7 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
             tile = finalize_init(tile);
             
             
-            tile = run(tile);  %time integration
+            tile = run_model(tile);  %time integration
             
             for i=2:size(run_info.PARA.tile_class,1)
                 disp(['running tile number ' num2str(i)])
@@ -75,7 +75,7 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
                     tile = new_tile;
                     run_info.TILE = tile;
                     
-                    tile = run(tile);  %time integration
+                    tile = run_model(tile);  %time integration
                 end
             end
             

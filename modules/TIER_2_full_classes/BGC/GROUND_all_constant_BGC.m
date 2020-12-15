@@ -17,9 +17,9 @@ classdef GROUND_all_constant_BGC < GROUND_all_constant
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function self = GROUND_all_constant_BGC(index, pprovider, cprovider, forcing)  
-            self@GROUND_all_constant(index, pprovider, cprovider, forcing);
-        end
+%         function self = GROUND_all_constant_BGC(index, pprovider, cprovider, forcing)  
+%             self@GROUND_all_constant(index, pprovider, cprovider, forcing);
+%         end
         
         function ground = provide_PARA(ground)
             

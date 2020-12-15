@@ -217,7 +217,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
         
         
         
-        function tile = run(tile)
+        function tile = run_model(tile)
             
             TOP_CLASS = tile.TOP_CLASS;
             BOTTOM_CLASS = tile.BOTTOM_CLASS;
