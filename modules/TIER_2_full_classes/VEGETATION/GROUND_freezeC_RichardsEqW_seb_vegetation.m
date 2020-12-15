@@ -130,7 +130,7 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation < GROUND_freezeC_RichardsEqW_
             ground.VEGETATION.PARENT_SURFACE = ground; 
             
             ground.VEGETATION = finalize_init(ground.VEGETATION, tile);
-            ground.STATVAR.acc=[0 0];
+            %ground.STATVAR.acc=[0 0];
         end
         
         %---time integration------

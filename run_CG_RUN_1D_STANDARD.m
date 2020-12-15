@@ -3,7 +3,7 @@ addpath(genpath(modules_path));
 
 
 init_format = 'EXCEL'; %EXCEL or YAML
-run_name = 'test'; %parameter file name and result directory 
+run_name = 'test_vegetation'; %parameter file name and result directory 
 constant_file = 'CONSTANTS_excel'; %file with constants
 result_path = '../results/';  %with trailing backslash
 forcing_path = fullfile ('./forcing/');
@@ -33,7 +33,6 @@ tile = finalize_init(tile);
 %tile = run(tile);
 %   for TILE class TILE_1D_STANDARD
 
-lkdflkjfdwlkj
 
 TOP_CLASS = tile.TOP_CLASS;
 BOTTOM_CLASS = tile.BOTTOM_CLASS;

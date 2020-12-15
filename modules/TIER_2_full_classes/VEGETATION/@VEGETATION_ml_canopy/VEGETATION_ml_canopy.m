@@ -9,6 +9,8 @@ classdef VEGETATION_ml_canopy < BASE
         PARENT_SURFACE
         IA_VEGETATION_GROUND
         IA_VEGETATION_SURFACE
+        
+        
     end
     
     %         PREVIOUS
@@ -54,20 +56,20 @@ classdef VEGETATION_ml_canopy < BASE
         
         function ground = provide_STATVAR(ground)
 
-            ground.STATVAR.upperPos = [];
-            ground.STATVAR.lowerPos = [];
-            ground.STATVAR.layerThick = []; % [m]
-            
-            ground.STATVAR.waterIce = []; % [m]
-            ground.STATVAR.mineral = []; % [m]
-            ground.STATVAR.organic = []; % [m]
-            ground.STATVAR.energy = [];  % [J/m2]
-            
-            ground.STATVAR.T = [];  % [degree C]
-            ground.STATVAR.water = [];  % [m]
-            ground.STATVAR.ice = [];
-            ground.STATVAR.air = [];  % [m]
-            ground.STATVAR.thermCond = [];
+%             ground.STATVAR.upperPos = [];
+%             ground.STATVAR.lowerPos = [];
+%             ground.STATVAR.layerThick = []; % [m]
+%             
+%             ground.STATVAR.waterIce = []; % [m]
+%             ground.STATVAR.mineral = []; % [m]
+%             ground.STATVAR.organic = []; % [m]
+%             ground.STATVAR.energy = [];  % [J/m2]
+%             
+%             ground.STATVAR.T = [];  % [degree C]
+%             ground.STATVAR.water = [];  % [m]
+%             ground.STATVAR.ice = [];
+%             ground.STATVAR.air = [];  % [m]
+%             ground.STATVAR.thermCond = [];
             
             %forcing variables need for snow and ground upper boundary
             ground.ForcingV.TEMP.tair = [];
@@ -121,13 +123,15 @@ classdef VEGETATION_ml_canopy < BASE
             
             % ground.STATVAR.current_t = 0.0;
             
-            %SEBAS: why is this not + 1/24 like later in the code  
-            ground.STATVAR.execution_t = tile.FORCING.PARA.start_time + 0.5;
+            %re-order 
+            ground.STATVAR = ground.STATVAR.vegetation;
             
-           % SEBAS: probably not needed?
-%             ground.STATVAR.Lstar = -100;
-%             ground.STATVAR.Qh = 0;
-%             ground.STATVAR.Qe = 0;
+            %SEBAS: why is this not + 1/24 like later in the code - CHANGED
+            ground.STATVAR.execution_t = tile.FORCING.PARA.start_time + 1./24;
+            
+            ground.STATVAR.PARENT_GROUND = ground.PARENT_GROUND;
+            ground.STATVAR.PARENT_SURFACE = ground.PARENT_SURFACE;
+
             
         end
         
@@ -144,19 +148,24 @@ classdef VEGETATION_ml_canopy < BASE
             
             ground = surface_energy_forest(ground, forcing);
             
+            %CHECK!!!
             % Write forcing struct as the input for ground class under vegetation
-            ground.ForcingV.TEMP.Tair = ground.STATVAR.vegetation.mlcanopyinst.tveg(1,2)-273.15;
-            ground.ForcingV.TEMP.wind = ground.STATVAR.vegetation.mlcanopyinst.wind(1,2);
-            ground.ForcingV.TEMP.wind_top = ground.STATVAR.vegetation.mlcanopyinst.wind(1,12); % wind at top of canopy (used for initial snow density calculation)
-            ground.ForcingV.TEMP.Sin = ground.STATVAR.vegetation.flux.swdn(1,1) + ground.STATVAR.vegetation.flux.swdn(1,2); %ground.STATVAR.vegetation.flux.swsoi(1,1) + ground.STATVAR.vegetation.flux.swsoi(1,2); % vegetation.mlcanopyinst.sw_prof(1,2,1); %Canopy layer absorbed radiation
-            ground.ForcingV.TEMP.Lin = ground.STATVAR.vegetation.flux.irdn; %ground.STATVAR.vegetation.flux.irsoi(1); %vegetation.flux.ir_source(2,1); %Longwave radiation emitted by bottom leaf layer (W/m2)
+            %this should be tair(1,2)!!!
+            ground.ForcingV.TEMP.Tair = ground.STATVAR.mlcanopyinst.tveg(1,2)-273.15;
+            ground.ForcingV.TEMP.wind = ground.STATVAR.mlcanopyinst.wind(1,2);
+            ground.ForcingV.TEMP.wind_top = ground.STATVAR.mlcanopyinst.wind(1,12); % wind at top of canopy (used for initial snow density calculation)
+            ground.ForcingV.TEMP.Sin = ground.STATVAR.flux.swdn(1,1) + ground.STATVAR.flux.swdn(1,2); %ground.STATVAR.vegetation.flux.swsoi(1,1) + ground.STATVAR.vegetation.flux.swsoi(1,2); % vegetation.mlcanopyinst.sw_prof(1,2,1); %Canopy layer absorbed radiation
+            ground.ForcingV.TEMP.Lin = ground.STATVAR.flux.irdn; %ground.STATVAR.vegetation.flux.irsoi(1); %vegetation.flux.ir_source(2,1); %Longwave radiation emitted by bottom leaf layer (W/m2)
             ground.ForcingV.TEMP.p = forcing.TEMP.p; % air pressure at reference height (Pa)
             % is this really needed?
-            ground.ForcingV.TEMP.snow_reservoir = ground.ForcingV.TEMP.snow_reservoir;
+            %ground.ForcingV.TEMP.snow_reservoir = ground.ForcingV.TEMP.snow_reservoir;
 
-            ground.ForcingV.TEMP.snowfall = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_snow .* (24 .*3600); % .* (24*3600); qflx_prec_grnd_snow (mm h2o/s) -> .* (24 .*3600) -> mm h2o/day
-            ground.ForcingV.TEMP.rainfall = ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain .* (24 .*3600); % .* (24*3600);
+            ground.ForcingV.TEMP.snowfall = ground.STATVAR.mlcanopyinst.qflx_prec_grnd_snow .* (24 .*3600); % .* (24*3600); qflx_prec_grnd_snow (mm h2o/s) -> .* (24 .*3600) -> mm h2o/day
+            ground.ForcingV.TEMP.rainfall = ground.STATVAR.mlcanopyinst.qflx_prec_grnd_rain .* (24 .*3600); % .* (24*3600);
             
+            %CHECK!!!
+            %this should be eair(1,2)!!! Will be needed as soon as as we
+            %compute evaporation in the main model
             ground.ForcingV.TEMP.q = forcing.TEMP.q; %specific humidity at refernce height (kg/kg)
             ground.ForcingV.TEMP.t = forcing.TEMP.t; % time_snowfall
 
@@ -212,7 +221,7 @@ classdef VEGETATION_ml_canopy < BASE
                 %SEBAS: would make sense to make this directly
                 %GROUND.STATVAR, since you only have vegetation now?
                 %so vegetation = ground.STATVAR instead?
-                vegetation = ground.STATVAR.vegetation;
+                vegetation = ground.STATVAR;
                 
                 % set parameters from GROUND models
                 vegetation.mlcanopyinst.tg = ground.PARENT_SURFACE.STATVAR.T(1,1) + 273.15; %ground suurface temperature
@@ -257,7 +266,7 @@ classdef VEGETATION_ml_canopy < BASE
 
                 
                 %and ground.STATVAR = vegetation here?
-                ground.STATVAR.vegetation = vegetation;
+                ground.STATVAR = vegetation;
                 
 %                 disp(ground.STATVAR.vegetation.soilvar.transp_per_layer)
                 
@@ -277,12 +286,12 @@ classdef VEGETATION_ml_canopy < BASE
             %kg/mol of water and the density
             %transpiration = (0.0181528 .* vegetation.STATVAR.vegetation.soilvar.transp_per_layer)./1000;
 
-            frac_sun_shade = cat(3, vegetation.STATVAR.vegetation.flux.fracsun, vegetation.STATVAR.vegetation.flux.fracsha);
-            leaf_et = vegetation.STATVAR.vegetation.mlcanopyinst.trleaf .* frac_sun_shade;
+            frac_sun_shade = cat(3, vegetation.STATVAR.flux.fracsun, vegetation.STATVAR.flux.fracsha);
+            leaf_et = vegetation.STATVAR.mlcanopyinst.trleaf .* frac_sun_shade;
             leaf_et = sum(leaf_et,3); %mol water per sec per m2 leaf per m2 ground 
-            leaf_et = leaf_et .* vegetation.STATVAR.vegetation.canopy.dlai; %mol water per sec per m2 ground per canopy layer
+            leaf_et = leaf_et .* vegetation.STATVAR.canopy.dlai; %mol water per sec per m2 ground per canopy layer
             leaf_et = 0.0181528e-3 .* sum(leaf_et); %in m3/m2 water/sec
-            transpiration = leaf_et .* vegetation.STATVAR.vegetation.mlcanopyinst.soil_et_loss; %weight with fraction assigned fro each layer
+            transpiration = leaf_et .* vegetation.STATVAR.mlcanopyinst.soil_et_loss; %weight with fraction assigned fro each layer
 
             transp = transpiration(1) .* ground.STATVAR.area(1,1);
             trans = min(transp, ground.STATVAR.water(1,1) /(3600.*2));
@@ -312,7 +321,7 @@ classdef VEGETATION_ml_canopy < BASE
         function vegetation = get_evaporation(vegetation)
             ground = vegetation.PARENT_GROUND;
             
-            evaporation = (0.0181528 .* vegetation.STATVAR.vegetation.mlcanopyinst.etsoi)./1000;
+            evaporation = (0.0181528 .* vegetation.STATVAR.mlcanopyinst.etsoi)./1000;
             
             evap = evaporation .* ground.STATVAR.area(1,1);
             evap = min(evap, ground.STATVAR.water(1,1)./(3600.*2));
@@ -326,16 +335,17 @@ classdef VEGETATION_ml_canopy < BASE
         function vegetation = map_variables_no_snow(vegetation)
             ground = vegetation.PARENT_SURFACE;
            
-            ground.STATVAR.Qh = vegetation.STATVAR.vegetation.mlcanopyinst.shsoi;
-            ground.STATVAR.Qe = vegetation.STATVAR.vegetation.mlcanopyinst.lhsoi;
+            ground.STATVAR.Qh = vegetation.STATVAR.mlcanopyinst.shsoi;
+            ground.STATVAR.Qe = vegetation.STATVAR.mlcanopyinst.lhsoi;
             
             d_energy_first_cell = vegetation.ForcingV.TEMP.Lin + vegetation.ForcingV.TEMP.Sin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
             ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + d_energy_first_cell .* ground.STATVAR.area(1,1);
             
-            vegetation.STATVAR.vegetation.soilvar.t_top_surfacecell = ground.STATVAR.T(1) + 273.15;
+            vegetation.STATVAR.soilvar.t_top_surfacecell = ground.STATVAR.T(1) + 273.15;
             %vegetation.STATVAR.vegetation.soilvar.dz_topsurfacecell = ground.STATVAR.layerThick(1);
             %vegetation.STATVAR.vegetation.soilvar.thk_topsurfacecell = ground.STATVAR.thermCond(1);
-            vegetation.STATVAR.vegetation.mlcanopyinst.gsoi = d_energy_first_cell;
+            %not necessary, should not be used any further in vegetation
+            vegetation.STATVAR.mlcanopyinst.gsoi = d_energy_first_cell;
             
 %             ground = vegetation.PARENT_GROUND;
 % %             midPoint = cumsum([0; ground.STATVAR.layerThick]);
