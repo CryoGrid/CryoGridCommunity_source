@@ -341,35 +341,11 @@ end
 %   res = vegetation.mlcanopyinst.PrSc(p) / (beta.* vegetation.mlcanopyinst.ustar(p)).* (exp(-zl*beta/lm) - exp(-zu*beta/lm))
 %   res = vegetation.mlcanopyinst.ga_prof(p,1)
 
+%SEBAS: BONAN commented out these lines above and replaced it with the
+%stuff below - might be worth considering to change back? This could be
+%passed on to the GORUND module?
 
-% %attempt SEBAS: consider lowest layer to be split in two, 0.5m at the
-% %surface assuming neutral strat, then above the normal RSL theory
-% zl = 0.05 - vegetation.mlcanopyinst.ztop(p);
-% zu = vegetation.mlcanopyinst.zs(p,2) - vegetation.mlcanopyinst.ztop(p);
-% %      res = vegetation.mlcanopyinst.PrSc(p) / (beta.* vegetation.mlcanopyinst.ustar(p)).* (exp(-zl*beta_over_lm) - exp(-zu*beta_over_lm))
-% res1 = 1  ./ (kc_at_hc.* beta_over_lm).* (exp(-zl*beta_over_lm) - exp(-zu*beta_over_lm));
-% 
-% 
-% z0hg = 0.1 .* vegetation.mlcanopyinst.z0mg(p);
-% zlog_m = log(0.05/vegetation.mlcanopyinst.z0mg(p));
-% zlog_c = log(0.05/z0hg);
-% ustar_g = vegetation.mlcanopyinst.wind(p,2).* vegetation.physcon.vkc / zlog_m;
-% ustar_g = max(ustar_g, 0.01);
-% res2 = zlog_c / (vegetation.physcon.vkc.* ustar_g);
-% vegetation.mlcanopyinst.ga_prof(p,1) = vegetation.mlcanopyinst.rhomol(p) / (res1 + res2); %was p,0
-% %end attempt SEBAS, real code below
-% 
-% z0hg = 0.1 .* vegetation.mlcanopyinst.z0mg(p);
-% zlog_m = log(0.05/vegetati51tiegerl(()on.mlcanopyinst.z0mg(p));
-% zlog_c = log(0.05/z0hg);
-% ustar_g = vegetation.mlcanopyinst.wind(p,2).* vegetation.physcon.vkc / zlog_m;
-% ustar_g = max(ustar_g, 0.01);
-% res = zlog_c / (vegetation.physcon.vkc.* ustar_g);
-% test2 = vegetation.mlcanopyinst.rhomol(p) / res; %was p,0
-% test3 = vegetation.mlcanopyinst.rhomol(p) .* vegetation.physcon.vkc .^2 .* vegetation.mlcanopyinst.wind(p,2).*(zlog_c .* zlog_m).^-1;
-% 
-% disp([vegetation.mlcanopyinst.rhomol(p)])
-
+%this is taken care of in GROUND module now!
 z0hg = 0.1 .* vegetation.mlcanopyinst.z0mg(p);
 zlog_m = log(vegetation.mlcanopyinst.zs(p,2)/vegetation.mlcanopyinst.z0mg(p));
 zlog_c = log(vegetation.mlcanopyinst.zs(p,2)/z0hg);
@@ -394,7 +370,10 @@ end
 
 % Values at ground
 vegetation.mlcanopyinst.wind(p,1) = 0.; %p,0
-vegetation.mlcanopyinst.tair(p,1) = vegetation.mlcanopyinst.tg(p); %p,0
+%CHANGED SEBAS
+%vegetation.mlcanopyinst.tair(p,1) = vegetation.mlcanopyinst.tg(p); %p,0
+vegetation.mlcanopyinst.tair(p,1) = vegetation.mlcanopyinst.tair(p,2);
+%END CHANGE SEBAS!
 %vegetation.mlcanopyinst.eair(p,1) = vegetation.mlcanopyinst.eg(p); %p,0
 
 % Calculate within-canopy scalar profiles for temperature and vapor pressure

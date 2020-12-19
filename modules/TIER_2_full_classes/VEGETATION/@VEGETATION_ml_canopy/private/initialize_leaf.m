@@ -84,7 +84,7 @@ ground.STATVAR.vegetation.leaf.rhos(inir) = 0.39;
 % Plant capacitance (mmol H2O/m2 ground.STATVAR.vegetation.leaf area/MPa)
 ground.STATVAR.vegetation.leaf.capac = 2500;
 % Minimum ground.STATVAR.vegetation.leaf water potential (MPa)
-ground.STATVAR.vegetation.leaf.minlwp = -2;
+ground.STATVAR.vegetation.leaf.minlwp = -1.5; %-2; %CHANGED SEBASTIAN
 % Stem (xylem-to-ground.STATVAR.vegetation.leaf) hydraulic conductance (mmol H2O/m2 ground.STATVAR.vegetation.leaf area/s/Mpa)
 ground.STATVAR.vegetation.leaf.gplant = 4.; %0.0004; %4;
 end

@@ -253,7 +253,7 @@ classdef SNOW < BASE
             
             F = 1.25-0.0042.*(max(50,rho)-50);
             Mo = double(d>0).*(0.34.*(0.75.*d-0.5.*s+0.5)+0.66.*F) + double(d<=0).*(0.34.*(-0.583.*gs.*1000-0.833.*s+0.833)+0.66.*F);
-            Si = (-2.868 .* exp(-0.085.*snow.TEMP.wind)+1+Mo) .* double(snow.STATVAR.energy < -snow.STATVAR.waterIce.*snow.CONST.L_f);
+            Si = (-2.868 .* exp(-0.085.*snow.TEMP.wind_surface)+1+Mo) .* double(snow.STATVAR.energy < -snow.STATVAR.waterIce.*snow.CONST.L_f);
             
             
             zi=Si.*0;  %Problem fixed Sebastian Westermann June 2020!

@@ -145,33 +145,33 @@ isha = vegetation.params.sha; % Array index for shaded leaf
 % T0 = alpha0*T(1) + beta0*q(1) + delta0
 % --------------------------------------------------------------------------
 
-%CHANGED SEBAS - use fixed ground surface temperature = temperature of first GROUND grid
-%cell instead
-%[esat, desat] = Satvap (vegetation.mlcanopyinst.tair_old(p,1)); % Pa
-[esat, desat] = Satvap (vegetation.mlcanopyinst.tg(p)); % Pa
-%This is CLM 4.5, compare Eq. 5.73 in CLM 4.5 manual
-%rhg is fraction of saturation of air in the ground cell 
-vegetation.mlcanopyinst.rhg(p) = exp(vegetation.soilvar.soil_water_matric_potential(c,1) .* 9.81 ./ ((8.3145e+03 ./ 18.016) .*vegetation.mlcanopyinst.tg(p)));
-%added beta factor from CLM 4.5, this is really what seems to supress E -
-%make dependent on field capacity!!
-betaCLM4_5 = 1 +  double(vegetation.soilvar.h2osoi_vol(c,1)<0.5) .* (-1 +  0.25 .* (1-(cos(pi() .* vegetation.soilvar.h2osoi_vol(c,1) ./ 0.5))).^2);
-%this must be multiplied with gs0 to obtain total conductiance
-%end CHANGE SEBAS
-
-vegetation.mlcanopyinst.eg(p) = esat .* vegetation.mlcanopyinst.rhg(p);
-
-% qsat0 = esat / vegetation.mlcanopyinst.pref(p);                               % Pa -> mol/mol
-% dqsat0 = desat / vegetation.mlcanopyinst.pref(p);                             % Pa -> mol/mol
-
-%soilresis is CLM 5, but this needs to depend on water content as
-%described in the manual - seems to be constant here, so E is not regulated
-%down - replaced by CLM 4.5 formulation, although CLM 5 is more physical
-% gsw = 1. / vegetation.mlcanopyinst.soilresis(c);                       %! Soil conductance for water vapor: s/m -> m/s
-% gsw = gsw * vegetation.mlcanopyinst.rhomol(p);                          %! m/s -> mol H2O/m2/s
-% gs0 = vegetation.mlcanopyinst.ga_prof(p,1) * gsw / (vegetation.mlcanopyinst.ga_prof(p,1) + gsw) ; %p,0  %! Total conductance
-
-gs0 = vegetation.mlcanopyinst.ga_prof(p,1) .* betaCLM4_5;
-%gs0 is called gw in SoilFLuxesMultiLayer !!!
+% %CHANGED SEBAS - use fixed ground surface temperature = temperature of first GROUND grid
+% %cell instead
+% %[esat, desat] = Satvap (vegetation.mlcanopyinst.tair_old(p,1)); % Pa
+% [esat, desat] = Satvap (vegetation.mlcanopyinst.tg(p)); % Pa
+% %This is CLM 4.5, compare Eq. 5.73 in CLM 4.5 manual
+% %rhg is fraction of saturation of air in the ground cell 
+% vegetation.mlcanopyinst.rhg(p) = exp(vegetation.soilvar.soil_water_matric_potential(c,1) .* 9.81 ./ ((8.3145e+03 ./ 18.016) .*vegetation.mlcanopyinst.tg(p)));
+% %added beta factor from CLM 4.5, this is really what seems to supress E -
+% %make dependent on field capacity!!
+% betaCLM4_5 = 1 +  double(vegetation.soilvar.h2osoi_vol(c,1)<0.5) .* (-1 +  0.25 .* (1-(cos(pi() .* vegetation.soilvar.h2osoi_vol(c,1) ./ 0.5))).^2);
+% %this must be multiplied with gs0 to obtain total conductiance
+% %end CHANGE SEBAS
+% 
+% vegetation.mlcanopyinst.eg(p) = esat .* vegetation.mlcanopyinst.rhg(p);
+% 
+% % qsat0 = esat / vegetation.mlcanopyinst.pref(p);                               % Pa -> mol/mol
+% % dqsat0 = desat / vegetation.mlcanopyinst.pref(p);                             % Pa -> mol/mol
+% 
+% %soilresis is CLM 5, but this needs to depend on water content as
+% %described in the manual - seems to be constant here, so E is not regulated
+% %down - replaced by CLM 4.5 formulation, although CLM 5 is more physical
+% % gsw = 1. / vegetation.mlcanopyinst.soilresis(c);                       %! Soil conductance for water vapor: s/m -> m/s
+% % gsw = gsw * vegetation.mlcanopyinst.rhomol(p);                          %! m/s -> mol H2O/m2/s
+% % gs0 = vegetation.mlcanopyinst.ga_prof(p,1) * gsw / (vegetation.mlcanopyinst.ga_prof(p,1) + gsw) ; %p,0  %! Total conductance
+% 
+% gs0 = vegetation.mlcanopyinst.ga_prof(p,1) .* betaCLM4_5;
+% %gs0 is called gw in SoilFLuxesMultiLayer !!!
 
 %REMOVED SEBAS
 % % c02 = vegetation.soilvar.thk(c) ./ (vegetation.soilvar.z(c)-vegetation.soilvar.zi(c)); %snl(c))) ; %! Soil heat flux term (W/m2/K
@@ -319,7 +319,9 @@ for ic = vegetation.canopy.nbot(p):vegetation.mlcanopyinst.ncan(p)
 %       b12(ic) = b12(ic) - vegetation.mlcanopyinst.ga_prof(p,ic-1) .* beta0;
 %       d1(ic) = d1(ic) + vegetation.mlcanopyinst.ga_prof(p,ic-1) .* delta0;
     %SEBAS changed!!!
-      d1(ic) = d1(ic) + vegetation.mlcanopyinst.ga_prof(p,ic-1) .* vegetation.mlcanopyinst.tg(p);  %term relating to sensible heat flux
+      b11(ic) = b11(ic) - vegetation.mlcanopyinst.ga_prof(p,ic-1);
+      d1(ic) = d1(ic) + vegetation.PARENT_SURFACE.STATVAR.Qh ./  vegetation.mlcanopyinst.cpair(p);
+      %d1(ic) = d1(ic) + vegetation.mlcanopyinst.ga_prof(p,ic-1) .* vegetation.mlcanopyinst.tg(p);  %term relating to sensible heat flux
    end
 % den = vegetation.mlcanopyinst.cpair(p) .* vegetation.mlcanopyinst.ga_prof(p,1) + lambda .* vegetation.mlcanopyinst.rhg(p) .* gs0 .* dqsat0 + c02; %p,0
 % alpha0 = vegetation.mlcanopyinst.cpair(p) .* vegetation.mlcanopyinst.ga_prof(p,1) ./ den; %p,0
@@ -330,11 +332,11 @@ for ic = vegetation.canopy.nbot(p):vegetation.mlcanopyinst.ncan(p)
    
    % a2,b21,b22,c2,d2 coefficients for water vapor (mole fraction)
 
-   if (ic == 2)
-      ga_prof_ic_minus_one = gs0;
-   else                                                      
-      ga_prof_ic_minus_one = vegetation.mlcanopyinst.ga_prof(p,ic-1);
-   end
+%    if (ic == 2)
+%       ga_prof_ic_minus_one = gs0;
+%    else                                                      
+    ga_prof_ic_minus_one = vegetation.mlcanopyinst.ga_prof(p,ic-1);
+%    end
 
    a2(ic) = -ga_prof_ic_minus_one;
    b21(ic) = -gleaf_et(ic,isun) * dqsat(ic,isun) * alpha(ic,isun) ...
@@ -363,7 +365,9 @@ for ic = vegetation.canopy.nbot(p):vegetation.mlcanopyinst.ncan(p)
 %       b21(ic) = b21(ic) - gs0 * vegetation.mlcanopyinst.rhg(p) * dqsat0 * alpha0;
 %       b22(ic) = b22(ic) - gs0 * vegetation.mlcanopyinst.rhg(p) * dqsat0 * beta0;
 %       d2(ic) = d2(ic) + gs0 * vegetation.mlcanopyinst.rhg(p) * (qsat0 + dqsat0 * (delta0 - vegetation.mlcanopyinst.tair_old(p,1))); %p,0
-      d2(ic) = d2(ic) + ga_prof_ic_minus_one * vegetation.mlcanopyinst.eg(p) / vegetation.mlcanopyinst.pref(p);
+        b22(ic) = b22(ic) - ga_prof_ic_minus_one;
+        d2(ic) = d2(ic) + vegetation.PARENT_SURFACE.STATVAR.Qe./ lambda;
+%       d2(ic) = d2(ic) + ga_prof_ic_minus_one * vegetation.mlcanopyinst.eg(p) / vegetation.mlcanopyinst.pref(p);
    end
   
 end
@@ -468,10 +472,10 @@ end
 
 
 %These should no matter
-vegetation.mlcanopyinst.tveg(p,1,isun) = vegetation.mlcanopyinst.tg(p); %p,0
-vegetation.mlcanopyinst.tveg(p,1,isha) = vegetation.mlcanopyinst.tg(p); %p,0
-vegetation.mlcanopyinst.tair(p,1) = vegetation.mlcanopyinst.tg(p); %p,0
-vegetation.mlcanopyinst.eair(p,1) = vegetation.mlcanopyinst.eg(p);
+vegetation.mlcanopyinst.tveg(p,1,isun) = vegetation.mlcanopyinst.tair(p,2); %p,0
+vegetation.mlcanopyinst.tveg(p,1,isha) = vegetation.mlcanopyinst.tair(p,2); %p,0
+vegetation.mlcanopyinst.tair(p,1) = vegetation.mlcanopyinst.tair(p,2); %p,0
+vegetation.mlcanopyinst.eair(p,1) = vegetation.mlcanopyinst.eair(p,2);
 
 % !---------------------------------------------------------------------
 % ! Convert water vapor from mol/mol to Pa
@@ -486,13 +490,15 @@ vegetation.mlcanopyinst.eair(p,1) = vegetation.mlcanopyinst.eg(p);
 %  !---------------------------------------------------------------------
 
 
-%This now use the new air T and humidity!!
+
 
 %  Sensible heat flux
-vegetation.mlcanopyinst.shsoi(p) = vegetation.mlcanopyinst.cpair(p) * (vegetation.mlcanopyinst.tg(p) - vegetation.mlcanopyinst.tair(p,2)) * vegetation.mlcanopyinst.ga_prof(p,1); %p,1%p,0
+%vegetation.mlcanopyinst.shsoi(p) = vegetation.mlcanopyinst.cpair(p) * (vegetation.mlcanopyinst.tg(p) - vegetation.mlcanopyinst.tair(p,2)) * vegetation.mlcanopyinst.ga_prof(p,1); %p,1%p,0
+vegetation.mlcanopyinst.shsoi(p) = vegetation.PARENT_SURFACE.STATVAR.Qh;
 vegetation.mlcanopyinst.sh0 = vegetation.mlcanopyinst.shsoi(p);
 %  Latent heat flux
-vegetation.mlcanopyinst.lhsoi(p) = lambda ./ vegetation.mlcanopyinst.pref(p) .*(vegetation.mlcanopyinst.eg(p) - vegetation.mlcanopyinst.eair(p,2)) * gs0; %p,1
+%vegetation.mlcanopyinst.lhsoi(p) = lambda ./ vegetation.mlcanopyinst.pref(p) .*(vegetation.mlcanopyinst.eg(p) - vegetation.mlcanopyinst.eair(p,2)) * gs0; %p,1
+vegetation.mlcanopyinst.lhsoi(p) = vegetation.PARENT_SURFACE.STATVAR.Qe;
 vegetation.mlcanopyinst.et0 = vegetation.mlcanopyinst.lhsoi(p) ./ lambda ;
 vegetation.mlcanopyinst.etsoi(p) = vegetation.mlcanopyinst.lhsoi(p) ./ lambda;
 

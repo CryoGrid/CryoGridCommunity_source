@@ -31,6 +31,7 @@ for f = 1:vegetation.canopy.num_exposedvegp
             
             % Leaf specific conductance, soil-to-leaf (mmol H2O/m2/s/MPa)
             
+            %rsoil calculated in SoilResistance
             vegetation.mlcanopyinst.lsc(p,ic) = 1.  ./ (vegetation.mlcanopyinst.rsoil(p) + rplant);
             
         else % non-leaf layer

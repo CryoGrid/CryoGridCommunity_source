@@ -1,5 +1,5 @@
 %========================================================================
-% CryoGrid FORCING class FORCING_seb
+% CryoGrid FORCING class FORCING_slope_seb
 % simple model forcing for GROUND classes computing the surface energy balance 
 % (keyword “seb”). The data must be stored in a Matlab “.mat” file which contains 
 % a struct FORCING with field “data”, which contain the time series of the actual 
@@ -17,6 +17,15 @@
 % than a second off. In this case, it is better to manually compile a new, equally spaced 
 % timestep in Matlab.
 % S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+% Edited (changes for slopes) were made by J. Schmidt, December 2020
+% The forcing data need in addition for the slope:
+%       S_TOA: Short-wave radiation at the top of the atmosphere
+%       albedo_foot: albedo at the foot of the slope (can vary in time for
+%           example with a snow layer
+%   Not-mandatory (just applicable if there is a water body at the foot of
+%   the slope):
+%       seaT: seawater temperature
+%       seaIce: 0 = time steps without sea ice; 1 = time steps with sea ice
 %========================================================================
 
 classdef FORCING_slope_seb < matlab.mixin.Copyable
@@ -43,17 +52,16 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             self.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
             self.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
             self.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)          
-            self.PARA.slope =[];
-            self.PARA.aspect = [];
-            self.PARA.sky_view_factor = [];
+            self.PARA.slope_angle = []; %slope angle in degrees
+            self.PARA.aspect = []; %aspect of the slope in degrees
+            self.PARA.sky_view_factor = []; %sky view factor (0.5 for vertical rock walls)
+            self.PARA.albedo = []; %Albedo of the slope
             self.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             self.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
         end
         
-        
-        
         function self = provide_CONST(self)
-            self.CONST.sigma = [];
+            
         end
         
         function self = provide_STATVAR(self)
@@ -64,15 +72,12 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             
         end
         
-       
-        
-        
         function forcing = finalize_init(forcing, tile)
           
             temp=load(['forcing/' forcing.PARA.filename], 'FORCING');
             
-            forcing.DATA.rainfall=temp.FORCING.data.rainfall.*forcing.PARA.rain_fraction;
-            forcing.DATA.snowfall=temp.FORCING.data.snowfall.*forcing.PARA.snow_fraction;
+            forcing.DATA.rainfall = temp.FORCING.data.rainfall.*forcing.PARA.rain_fraction;
+            forcing.DATA.snowfall = temp.FORCING.data.snowfall.*forcing.PARA.snow_fraction;
             forcing.DATA.Tair = temp.FORCING.data.Tair;
             forcing.DATA.Lin = temp.FORCING.data.Lin;
             forcing.DATA.Sin = temp.FORCING.data.Sin;
@@ -80,18 +85,17 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             forcing.DATA.wind = temp.FORCING.data.wind;
             forcing.DATA.timeForcing = temp.FORCING.data.t_span;
             
-            lat = tile.PARA.latitude;
+            % Additional forcing data for slopes:
+            forcing.DATA.S_TOA = temp.FORCING.data.S_TOA; %short-wave radiation at the top of the atmosphere
+            forcing.DATA.albedo_foot = temp.FORCING.data.albedo_foot; %Albedo at the foot of the slope
             
-            %PUT THE REPREJECTION HERE
-            
-            % Update spacial data if included in forcing file
-%             if isfield(temp.FORCING.data,'z')
-%                 forcing.PARA.altitude = round(temp.FORCING.data.z);
-%             end
-%             if isfield(temp.FORCING.data,'lon') &&isfield(temp.FORCING.data,'lat')
-%                 forcing.PARA.longitude = temp.FORCING.data.lon;
-%                 forcing.PARA.latitude  = temp.FORCING.data.lat;
-%             end
+            % Non-mandatory forcing data for slopes:
+            if isfield(temp.FORCING.data,'seaT') == 1
+                forcing.DATA.seaT = temp.FORCING.data.seaT; %seawater temperature
+            end
+            if isfield(temp.FORCING.data,'seaIce') == 1
+                forcing.DATA.seaIce = temp.FORCING.data.seaIce; %time steps with (1) or without (0) sea ice
+            end
             
             if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1))~=0
                 disp('timestamp of forcing data is not in regular intervals -> check, fix and restart')
@@ -134,8 +138,23 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             forcing.TEMP.wind=0;
             forcing.TEMP.q=0;
             forcing.TEMP.p=0;
+            
+            % Additional forcing data for slopes:
+            forcing.TEMP.S_TOA=0;
+            forcing.TEMP.albedo_foot=0;
+            
+            % Non-mandatory forcing data for slopes:
+            if isfield(temp.FORCING.data,'seaT') == 1
+                forcing.TEMP.seaT=0;
+            end
+            if isfield(temp.FORCING.data,'seaIce') == 1
+                forcing.TEMP.seaIce=0;
+            end
+            
+            forcing = scale_radiation(tile.PARA, forcing);
         end
-        
+            
+
         function forcing = interpolate_forcing(t, forcing)
 
             posit=floor((t-forcing.DATA.timeForcing(1,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1)))+1;
@@ -159,6 +178,7 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
             forcing.TEMP.t = t;
+            
         end
         
 
@@ -169,12 +189,202 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
         end
         
         
-        %non-mandatory functions
+        %% non-mandatory functions
         
-        function forcing = projects_SW(forcing)
+        function forcing = scale_radiation(PARA, forcing)
+            
+            % Projection of the forcing data to the slope
+            % This function includes:
+            % 1. Calculation of direct Sin and projection of direct Sin from a
+            % from a horizontal surface to an inclined slope
+            % 2. Calculation of diffuse Sin and reduction by a sky view factor
+            % 3. Calculation of the reflected Sin on the foot of the slope
+            % 4. Reduction of Lin by a sky view factor
+            % 5. Calculation of long-wave emission of the close environment
+        
+            lat = PARA.latitude;
+            lon = PARA.longitude;
+            alt = PARA.altitude / 1000;
+            aspect = forcing.PARA.aspect;
+            slope_angle = forcing.PARA.slope_angle;
+            albedo = forcing.PARA.albedo;
+            sky_view_factor = forcing.PARA.sky_view_factor;
+            
+            t_span = forcing.DATA.timeForcing;
+            %UTC = datestr(t_span);
+            %i_end = size(UTC); %LOESCHEN??
+            
+            %Diffuse and direct Sin
+            
+            kt = forcing.DATA.Sin ./ forcing.DATA.S_TOA; %clearness index, see Fiddes(2014)
+            kt(isnan(kt))=0;
+            kd = 0.952 - 1.041*exp(-exp(2.300 - 4.702 * kt)); %diffuse fraction, see Fiddes(2014)
+            kd(isnan(kd))=0; kd = max(0,kd);
+            
+            SW_diff_total = kd .* forcing.DATA.Sin; %Amount of total diffuse SW
+            SW_dir_total = (1 - kd) .* forcing.DATA.Sin; %Amount of total direct SW
+            
+            %Calculation of diffuse SW
+
+            SW_diff = SW_diff_total * sky_view_factor; %Reduction of diffuse SW by sky view factor
+
+            % Calculation of reflected SW
+
+            SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) * sky_view_factor;
+            
+            %Calculation of reprojected direct SW
+
+            surf_norm_vec=[0.0,0.0,1.0]; %Unit vector on the horizontal
+            sigma = 5.670373e-08; %Stefan-Boltzman constant
+
+            alpha=aspect*pi/180; %Degree to radians of exposition of the slope
+            beta=(90-slope_angle)*pi/180; %Degree to radians of inclination of the slope
+            face_vec=[sin(alpha)*cos(beta),cos(alpha)*cos(beta),sin(beta)]; %Unit vector of the slope
+
+            % Calculation the solar azimuth and elevation angle relative to
+            % the coordinates of the site (revised after Darin C. Koblick)
+            [Az,El] = SolarAzEl(PARA,forcing); %Calculation of the azimuth and elevation of the sun
+            i_end = size(Az);
+
+            for i = 1 : i_end(1,1)
+                
+            alpha=Az(i,1)*pi/180; %Degree to radians of the azimuth
+            beta=El(i,1)*pi/180; %Degree to radians of elevation
+            sun_vec=[sin(alpha)*cos(beta),cos(alpha)*cos(beta),sin(beta)]; %Unit vector of the radiation
+
+            delta_angle_surf_norm(i,1)=acos(dot(surf_norm_vec,sun_vec))*180/pi; %angle between the radiation and the normal on the horizontal in degrees
+            delta_angle_face(i,1)=acos(dot(face_vec,sun_vec))*180/pi; %angle between the radiation and the normal on the slope in degrees
+
+            Sin_sun_direction(i,1)=SW_dir_total(i)/cos(delta_angle_surf_norm(i,1)*pi/180); %Sin in direction of the sun
+            
+            if delta_angle_surf_norm(i,1)<85 && delta_angle_face(i,1)<85
+            %Sun has to be at least 5 degrees above the horizon and has to shine at
+            %least with 85 degrees on the wall (otherwise values get too high)
+                Sin_face_direction(i,1)=Sin_sun_direction(i,1)*cos(delta_angle_face(i,1)*pi/180); %Sin normal to the slope
+            else %Sun is under the horizon
+                Sin_face_direction(i,1)=0.0; %No short-wave radiation if sun is under the horizon or behind the wall
+            end
+            
+            % Calculation of Lin
+
+            if isfield(forcing.DATA,'seaT') == 1 %water at the foot of the slope
+                if forcing.DATA.seaIce(i,1) == 0 %no sea ice --> take sea temperature
+                Lin(i,1) = sky_view_factor * forcing.DATA.Lin(i,1) + (1 - sky_view_factor) * sigma * (forcing.DATA.seaT(i,1) + 273.15)^4; %T of ocean for calculation
+                elseif forcing.DATA.seaIce(i,1) == 1 %sea ice --> take air temperature
+                Lin(i,1) = sky_view_factor * forcing.DATA.Lin(i,1) + (1 - sky_view_factor) * sigma * (forcing.DATA.Tair(i,1) + 273.15)^4; %Tair for calculation
+                end
+            else %no water at the foot of the slope
+                Lin(i,1) = sky_view_factor * forcing.DATA.Lin(i,1) + (1 - sky_view_factor) * sigma * (forcing.DATA.Tair(i,1) + 273.15)^4; %Tair for calculation
+            end
+         
+            end
+            
+            forcing.DATA.Sin = Sin_face_direction + SW_diff + SW_refl;
+            forcing.DATA.Lin = Lin;
             
         end
- 
+            
+
+        function [Az,El] = SolarAzEl(PARA,forcing)
+            % SolarAzEl will ingest a Universal Time, and specific site location on earth
+            % it will then output the solar Azimuth and Elevation angles relative to
+            % that site.
+            %
+            % Programed by Darin C. Koblick 2/17/2009
+            %              Darin C. Koblick 4/16/2013 Vectorized for Speed
+            %                             Allow for MATLAB Datevec input in
+            %                             addition to a UTC string.
+            %                             Cleaned up comments and code to
+            %                             avoid warnings in MATLAB editor.
+            %              Solar Position obtained from: http://stjarnhimlen.se/comp/tutorial.html#5        
+            Lat = PARA.latitude;
+            Lon = PARA.longitude;
+            Alt = PARA.altitude / 1000;   
+            t_span = forcing.DATA.timeForcing;
+            UTC = datestr(t_span);
+            i_end = size(UTC);
+            
+            %Loop through all timesteps
+            for i = 1 : i_end(1,1)
+    
+                %compute JD from UTC
+                [year month day hour min sec] = datevec(UTC(i,:));
+                idx = (month <= 2);
+                year(idx) = year(idx)-1;
+                month(idx) = month(idx)+12;
+                jd = floor( 365.25*(year + 4716.0)) + floor( 30.6001*( month + 1.0)) + 2.0 - ...
+                floor( year/100.0 ) + floor( floor( year/100.0 )/4.0 ) + day - 1524.5 + ...
+                (hour + min/60 + sec/3600)/24;
+                d = jd-2451543.5;
+
+                % Keplerian Elements for the Sun (geocentric)
+                w = 282.9404+4.70935e-5*d;     %(longitude of perihelion degrees)
+                e = 0.016709-1.151e-9.*d;       %(eccentricity)
+                M = mod(356.0470+0.9856002585.*d,360);   %(mean anomaly degrees)
+                L = w + M;                     %(Sun's mean longitude degrees)
+                oblecl = 23.4393-3.563e-7.*d;  %(Sun's obliquity of the ecliptic)
+
+                %auxiliary angle
+                E = M+(180/pi).*e.*sin(M.*(pi/180)).*(1+e.*cos(M.*(pi/180)));
+
+                %rectangular coordinates in the plane of the ecliptic (x axis toward perhilion)
+                x = cos(E.*(pi/180))-e;
+                y = sin(E.*(pi/180)).*sqrt(1-e.^2);
+
+                %find the distance and true anomaly
+                r = sqrt(x.^2 + y.^2);
+                v = atan2(y,x).*(180/pi);
+
+                %find the longitude of the sun
+                lon = v + w;
+
+                %compute the ecliptic rectangular coordinates
+                xeclip = r.*cos(lon.*(pi/180));
+                yeclip = r.*sin(lon.*(pi/180));
+                zeclip = 0.0;
+
+                %rotate these coordinates to equitorial rectangular coordinates
+                xequat = xeclip;
+                yequat = yeclip.*cos(oblecl.*(pi/180))+zeclip*sin(oblecl.*(pi/180));
+                zequat = yeclip.*sin(23.4406.*(pi/180))+zeclip*cos(oblecl.*(pi/180));
+
+                %convert equatorial rectangular coordinates to RA and Decl:
+                r = sqrt(xequat.^2 + yequat.^2 + zequat.^2)-(Alt./149598000); %roll up the altitude correction
+                RA = atan2(yequat,xequat).*(180/pi);
+                delta = asin(zequat./r).*(180/pi);
+
+                %Following the RA DEC to Az Alt conversion sequence explained here: http://www.stargazing.net/kepler/altaz.html
+
+                %Find the J2000 value
+                J2000 = jd - 2451545.0;
+                hourvec = datevec(UTC(i,:));
+                UTH = hourvec(:,4) + hourvec(:,5)/60 + hourvec(:,6)/3600;
+
+                %Calculate local siderial time
+                GMST0=mod(L+180,360)./15;
+                SIDTIME = GMST0 + UTH + Lon./15;
+
+                %Replace RA with hour angle HA
+                HA = (SIDTIME.*15 - RA);
+
+                %convert to rectangular coordinate system
+                x = cos(HA.*(pi/180)).*cos(delta.*(pi/180));
+                y = sin(HA.*(pi/180)).*cos(delta.*(pi/180));
+                z = sin(delta.*(pi/180));
+
+                %rotate this along an axis going east-west.
+                xhor = x.*cos((90-Lat).*(pi/180))-z.*sin((90-Lat).*(pi/180));
+                yhor = y;
+                zhor = x.*sin((90-Lat).*(pi/180))+z.*cos((90-Lat).*(pi/180));
+
+                %Find the h and AZ 
+                Az(i,1) = atan2(yhor,xhor).*(180/pi) + 180;
+                El(i,1) = asin(zhor).*(180/pi);
+
+                clearvars -except Az El Lat Lon Alt UTC path_out name forcing
+            end
+        end
+
                 
-    end
+        end
 end

@@ -11,7 +11,6 @@ classdef SNOW_crocus_bucketW_seb_vegetation < SNOW_crocus_bucketW_seb
     
     properties
         VEGETATION
-        IA_VEGETATION_SURFACE
     end
     
     
@@ -108,7 +107,18 @@ classdef SNOW_crocus_bucketW_seb_vegetation < SNOW_crocus_bucketW_seb
         %separate functions for CHILD pphase of snow cover
         
         function snow = get_boundary_condition_u(snow, tile) 
-            forcing = tile.FORCING;
+            
+            snow.STATVAR.albedo4vegetation = snow.STATVAR.albedo;
+            snow.STATVAR.emissivity4vegetation = snow.PARA.epsilon; %required for reflection of Lin
+            snow.STATVAR.Lout4vegetation = snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+273.15).^4; %emitted part of Lout, reflected part in the vegetation
+            
+            %calculate SEB for canopy and adjust forcing data
+            snow.VEGETATION = get_boundary_condition_u(snow.VEGETATION, tile);
+                        
+            forcing = snow.VEGETATION.ForcingV;
+            snow.PARA.airT_height = snow.VEGETATION.STATVAR.mlcanopyinst.zs(1,2);
+
+            %forcing = tile.FORCING;
             snow = get_boundary_condition_SNOW_u(snow, forcing);
             snow = get_boundary_condition_u_water_SNOW(snow, forcing);
             
@@ -117,11 +127,13 @@ classdef SNOW_crocus_bucketW_seb_vegetation < SNOW_crocus_bucketW_seb
             snow = surface_energy_balance(snow, forcing);
             snow = get_sublimation(snow, forcing);
             
-            snow.TEMP.wind = forcing.TEMP.wind;
+            snow.TEMP.wind = tile.FORCING.TEMP.wind;
+            snow.TEMP.wind_surface = forcing.TEMP.wind;
         end
         
         function snow = get_boundary_condition_u_CHILD(snow, tile)
-            forcing = tile.FORCING;
+
+            forcing = snow.PARENT.VEGETATION.ForcingV;
             snow = get_boundary_condition_allSNOW_rain_u(snow, forcing); %add full snow, but rain only for snow-covered part
             snow = get_boundary_condition_u_water_SNOW(snow, forcing);
             
@@ -130,11 +142,13 @@ classdef SNOW_crocus_bucketW_seb_vegetation < SNOW_crocus_bucketW_seb
             snow = surface_energy_balance(snow, forcing); %this works including penetration of SW radiation through the CHILD snow
             snow = get_sublimation(snow, forcing);
             
-            snow.TEMP.wind = forcing.TEMP.wind;
+            snow.TEMP.wind = tile.FORCING.TEMP.wind;
+            snow.TEMP.wind_surface = forcing.TEMP.wind;
         end
         
         function snow = get_boundary_condition_u_create_CHILD(snow, tile)
-            forcing = tile.FORCING;
+            
+            forcing = snow.PARENT.VEGETATION.ForcingV;
             snow = get_boundary_condition_allSNOW_u(snow, forcing); %add all snow, no rain
             
             snow = get_snow_properties_crocus(snow,forcing);
@@ -165,7 +179,8 @@ classdef SNOW_crocus_bucketW_seb_vegetation < SNOW_crocus_bucketW_seb
             snow.TEMP.metam_d_gs = 0;
             snow.TEMP.compact_d_D = 0;
             snow.TEMP.wind_d_D = 0;           
-            snow.TEMP.wind = forcing.TEMP.wind;
+            snow.TEMP.wind = tile.FORCING.TEMP.wind;
+            snow.TEMP.wind_surface = forcing.TEMP.wind;
             
             %start with  non-zero values for area and layerThick
             snow.STATVAR.area = 1;
@@ -182,335 +197,236 @@ classdef SNOW_crocus_bucketW_seb_vegetation < SNOW_crocus_bucketW_seb
         end
         
         function snow = get_boundary_condition_l(snow, tile)
-            forcing = tile.FORCING;
-            
-            snow.TEMP.F_lb = forcing.PARA.heatFlux_lb .* snow.STATVAR.area(end);
-            snow.TEMP.d_energy(end) = snow.TEMP.d_energy(end) + snow.TEMP.F_lb;
-            
-            snow.TEMP.F_lb_water = 0;
-            snow.TEMP.F_lb_water_energy = 0;
-            
+            snow.VEGETATION = get_boundary_condition_l(snow.VEGETATION, tile);
+            snow = get_boundary_condition_l@SNOW_crocus_bucketW_seb(snow, tile);
         end
         
         function snow = get_derivatives_prognostic(snow, tile)
-            if size(snow.STATVAR.layerThick,1) > 1
-                snow = get_derivative_energy(snow);
-                snow = get_derivative_water_SNOW(snow);
-                snow = get_T_gradient_snow(snow);
-            else
-                snow = get_T_gradient_snow_single_cell(snow);
-            end
-            snow = prog_metamorphism(snow);
-            snow = prog_wind_drift(snow); % possibly add blowing snow sublimation according to Gordon et al. 2006
-            snow = compaction(snow);
-            
+            snow.VEGETATION = get_derivatives_prognostic(snow.VEGETATION, tile);
+            snow = get_derivatives_prognostic@SNOW_crocus_bucketW_seb(snow, tile);            
         end
         
         function snow = get_derivatives_prognostic_CHILD(snow, tile)
-            
-            snow = get_T_gradient_snow_single_cell(snow);
-            snow = prog_metamorphism(snow);
-            snow = prog_wind_drift(snow); % possibly add blowing snow sublimation according to Gordon et al. 2006
-            snow = compaction(snow);
-            
+            snow = get_derivatives_prognostic_CHILD@SNOW_crocus_bucketW_seb(snow, tile);            
         end
         
         function timestep = get_timestep(snow, tile) 
-            timestep = get_timestep_SNOW(snow);
-            %timestep1 = get_timestep_heat_coduction(snow);
-            %timestep2 = get_timestep_SNOW_mass_balance(snow);
-            timestep2 = get_timestep_SNOW_sublimation(snow);
-            timestep3 = get_timestep_water_SNOW(snow);
-
-            timestep = min(timestep, timestep2);
+            timestep_snow= get_timestep@SNOW_crocus_bucketW_seb(snow, tile);
+            timestep_vegetation = get_timestep(snow.VEGETATION, tile);
             
-            timestep = min(timestep, timestep3);
+            timestep = min(timestep_snow, timestep_vegetation);
         end
         
         function timestep = get_timestep_CHILD(snow, tile)  
-            timestep = get_timestep_SNOW_CHILD(snow);
-            timestep = min(timestep, get_timestep_SNOW_sublimation(snow));
-            %timestep1 = get_timestep_heat_coduction(snow);
-            %timestep2 = get_timestep_SNOW_CHILD(snow);
-            %timestep = min(timestep1, timestep2);
-            
+            timestep = get_timestep_CHILD@SNOW_crocus_bucketW_seb(snow, tile);
         end
         
         function snow = advance_prognostic(snow, tile)
-            timestep = tile.timestep;
-            
-            snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, max(snow.STATVAR.ice ./ snow.STATVAR.area, snow.STATVAR.layerThick + timestep .*(snow.TEMP.compact_d_D + snow.TEMP.wind_d_D)));
-            %energy
-            snow.STATVAR.energy = snow.STATVAR.energy + timestep .* (snow.TEMP.d_energy + snow.TEMP.d_water_energy);
-            snow.STATVAR.energy(1) = snow.STATVAR.energy(1) + timestep .* snow.TEMP.sublimation_energy;  %snowfall energy added below, when new snow layer is merged
-            %mass
-            snow.STATVAR.waterIce = snow.STATVAR.waterIce + timestep .* snow.TEMP.d_water;
-            snow.STATVAR.waterIce(1) = snow.STATVAR.waterIce(1) + timestep .* snow.STATVAR.sublimation;
-            %snow.STATVAR.ice(1) = snow.STATVAR.ice(1) + timestep .* snow.STATVAR.sublimation;
-            snow.STATVAR.layerThick(1) = snow.STATVAR.layerThick(1) + timestep .* snow.STATVAR.sublimation ./snow.STATVAR.area(1,1) ./ (snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1) ./snow.STATVAR.area(1));
-            
-            snow.STATVAR.ice(1) = snow.STATVAR.ice(1) + timestep .* snow.STATVAR.sublimation;
-            %microphysics
-            snow.STATVAR.d = max(snow.STATVAR.d.*0, snow.STATVAR.d + timestep .*(snow.TEMP.metam_d_d + snow.TEMP.wind_d_d));
-            snow.STATVAR.s = max(snow.STATVAR.s.*0, min(snow.STATVAR.s.*0+1, snow.STATVAR.s + timestep .*(snow.TEMP.metam_d_s + snow.TEMP.wind_d_s)));
-            snow.STATVAR.gs = max(snow.STATVAR.gs, snow.STATVAR.gs + timestep .*(snow.TEMP.metam_d_gs + snow.TEMP.wind_d_gs));
-            %snow.STATVAR.layerThick = min(snow.STATVAR.layerThick, max(snow.STATVAR.ice ./ snow.STATVAR.area, snow.STATVAR.layerThick + timestep .*(snow.TEMP.compact_d_D + snow.TEMP.wind_d_D)));
-            
-            %new snow
-            if snow.TEMP.snowfall >0
-                snow = advance_prognostic_new_snow_crocus(snow, timestep);
-                %merge with uppermost layer
-                snow = merge_cells_intensive2(snow, 1, snow.TEMP.newSnow, 1, {'d'; 's'; 'gs'; 'time_snowfall'}, 'ice');
-                snow = merge_cells_extensive2(snow, 1, snow.TEMP.newSnow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'});
-
-            end
-            
-            %store "old" density - ice is updated for new snowfall and sublimation losses
-            snow.STATVAR.target_density = snow.STATVAR.ice ./ snow.STATVAR.layerThick ./ snow.STATVAR.area;
+            snow.VEGETATION = advance_prognostic(snow.VEGETATION, tile);
+            snow = advance_prognostic@SNOW_crocus_bucketW_seb(snow, tile);
         end
         
         
         function snow = advance_prognostic_CHILD(snow, tile)
-            timestep = tile.timestep;
-            %energy
-            snow.STATVAR.energy = snow.STATVAR.energy + timestep .* (snow.TEMP.d_energy  + snow.TEMP.d_water_energy + snow.TEMP.sublimation_energy);
-            %mass
-            snow.STATVAR.waterIce = snow.STATVAR.waterIce + timestep .* (snow.TEMP.d_water + snow.STATVAR.sublimation);
-            %snow.STATVAR.ice = snow.STATVAR.ice + timestep .* snow.STATVAR.sublimation;
-            snow.STATVAR.volume = snow.STATVAR.layerThick .* snow.STATVAR.area;
-            snow.STATVAR.volume = min(snow.STATVAR.volume, max(snow.STATVAR.ice, snow.STATVAR.volume + timestep .* snow.STATVAR.area .* (snow.TEMP.compact_d_D + snow.TEMP.wind_d_D))); %mass is conserved, reduce layerthick
-            %snow.STATVAR.volume = snow.STATVAR.volume + timestep .* snow.STATVAR.sublimation ./ max(50, snow.STATVAR.ice ./ snow.STATVAR.layerThick); 
-            
-            %snow.STATVAR.volume = snow.STATVAR.volume + timestep .* snow.STATVAR.sublimation ./ (snow.STATVAR.ice ./ snow.STATVAR.layerThick./snow.STATVAR.area); 
-            snow.STATVAR.volume = snow.STATVAR.volume + timestep .* snow.STATVAR.sublimation ./ (snow.STATVAR.ice ./ snow.STATVAR.volume); 
-%                         disp('Hallo2')
-%             disp(snow.STATVAR.volume)
-            
-            snow.STATVAR.ice = snow.STATVAR.ice + timestep .* snow.STATVAR.sublimation;
-            
-            %microphysics
-            snow.STATVAR.d = max(snow.STATVAR.d.*0, snow.STATVAR.d + timestep .*(snow.TEMP.metam_d_d + snow.TEMP.wind_d_d));
-            snow.STATVAR.s = max(snow.STATVAR.s.*0, min(snow.STATVAR.s.*0+1, snow.STATVAR.s + timestep .*(snow.TEMP.metam_d_s + snow.TEMP.wind_d_s)));
-            snow.STATVAR.gs = max(snow.STATVAR.gs, snow.STATVAR.gs + timestep .*(snow.TEMP.metam_d_gs + snow.TEMP.wind_d_gs));
-            %snow.STATVAR.volume = min(snow.STATVAR.volume, max(snow.STATVAR.ice, snow.STATVAR.volume + timestep .* snow.STATVAR.area .* (snow.TEMP.compact_d_D + snow.TEMP.wind_d_D))); %mass is conserved, reduce layerthick
-            
-%                         disp('Hallo3')
-%             disp(snow.STATVAR.volume)
-            
-            %new snow and merge
-            if snow.TEMP.snowfall >0
-                snow = advance_prognostic_new_snow_CHILD_crocus(snow, timestep);  %add new snow with the new layerThick
-                %merge with uppermost layer
-                snow = merge_cells_intensive2(snow, 1, snow.TEMP.newSnow, 1, {'d'; 's'; 'gs'; 'time_snowfall'}, 'ice');
-                snow = merge_cells_extensive2(snow, 1, snow.TEMP.newSnow, 1, {'waterIce'; 'energy'; 'volume'; 'ice'});
-            end
-            
-            %store "old" density - ice is updated for new snowfall and sublimation losses
-            snow.STATVAR.target_density = min(1, snow.STATVAR.ice ./ snow.STATVAR.volume);
-
-            
-            %adjust layerThick, so that exactly 0.5 .* snow.PARA.swe_per_cell is contained
-            snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ snow.STATVAR.target_density;
-            snow.STATVAR.area = snow.STATVAR.volume ./ snow.STATVAR.layerThick;
+            snow = advance_prognostic_CHILD@SNOW_crocus_bucketW_seb(snow, tile);
         end
         
         function snow = compute_diagnostic_first_cell(snow, tile)
-            forcing = tile.FORCING;
-            snow = L_star(snow, forcing);
+            snow.VEGETATION = compute_diagnostic_first_cell(snow.VEGETATION, tile);
+            snow = compute_diagnostic_first_cell@SNOW_crocus_bucketW_seb(snow, tile);
         end
        
         function snow = compute_diagnostic(snow, tile)
-            forcing = tile.FORCING;
-            snow = get_T_water_freeW(snow);
-            snow = subtract_water2(snow);
-            
-            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
-            if regridded_yesNo
-                snow = get_T_water_freeW(snow);
-            end
-            
-            snow = conductivity(snow);
-            snow = calculate_hydraulicConductivity_SNOW(snow);
-            
-            snow.STATVAR.upperPos = snow.NEXT.STATVAR.upperPos + sum(snow.STATVAR.layerThick);
-            
-            snow = calculate_albedo_crocus(snow, forcing); %albedo calculation is a diagnostic operation
-                        
-            snow.TEMP.d_energy = snow.STATVAR.energy.*0;
-            snow.TEMP.d_water = snow.STATVAR.energy .*0;
-            snow.TEMP.d_water_energy = snow.STATVAR.energy .*0;
+            snow.VEGETATION = compute_diagnostic(snow.VEGETATION, tile);
+            snow = compute_diagnostic@SNOW_crocus_bucketW_seb(snow, tile);
         end
         
         function snow = compute_diagnostic_CHILD(snow, tile)
-            forcing = tile.FORCING;
-            snow = get_T_water_freeW(snow);
-            snow = subtract_water_CHILD(snow);
-
-            snow = conductivity(snow);
-            snow = calculate_hydraulicConductivity_SNOW(snow);
-            
-            snow.STATVAR.upperPos = snow.PARENT.STATVAR.upperPos + (snow.STATVAR.layerThick .* snow.STATVAR.area ./ snow.PARENT.STATVAR.area(1,1));
-            
-            snow = calculate_albedo_crocus(snow, forcing);
-            
-            snow.TEMP.d_energy = snow.STATVAR.energy.*0;
-            snow.TEMP.d_water = snow.STATVAR.energy .*0;
-            snow.TEMP.d_water_energy = snow.STATVAR.energy .*0;
-            
+            snow = compute_diagnostic_CHILD@SNOW_crocus_bucketW_seb(snow, tile);
         end
         
         function snow = check_trigger(snow, tile)
-            forcing = tile.FORCING;
-            
-            snow = make_SNOW_CHILD(snow); 
+            snow.VEGETATION = check_trigger(snow.VEGETATION, tile);
+        
+            %make SNOW a CHILD again
+            if size(snow.STATVAR.layerThick,1) == 1 && snow.STATVAR.ice(1,1) ./ snow.STATVAR.area(1,1) < 0.5 .* snow.PARA.swe_per_cell
+                
+                ground = snow.NEXT;
+                ground.VEGETATION.PARENT_SURFACE = ground;
+                
+                ground.PREVIOUS = snow.PREVIOUS; %reassign ground
+                ground.PREVIOUS.NEXT = ground;
+                ground.CHILD = snow;
+                snow.PARENT = ground;
+                ground.IA_CHILD = snow.IA_NEXT;
+                ground.IA_CHILD.NEXT = ground;
+                ground.IA_CHILD.PREVIOUS = snow;
+                
+                ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
+                
+                %snow.NEXT =[];  %cut all dependencies, except for snow.NEXT which keeps being pointed to snow.PARENT, so that SW radiation can be transmitted
+                snow.PREVIOUS =[];
+                snow.IA_NEXT =[];
+                snow.IA_PREVIOUS =[];
+                
+                %change to constant layerThick, variable area
+                volume = snow.STATVAR.layerThick .* snow.STATVAR.area;
+                snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ snow.STATVAR.target_density; %[m] constant layerThick
+                snow.STATVAR.area = volume ./ snow.STATVAR.layerThick;
+                
+                snow = ground; %assign snow pointer to ground to return to regular stratigraphy
+            end        
+        
         end
+        
+        
         
         %-----non-mandatory functions-------
         
-        function snow = surface_energy_balance(snow, forcing)
-            snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
-            
-            [snow, S_up] = penetrate_SW(snow, snow.PARA.spectral_ranges .* forcing.TEMP.Sin .* snow.STATVAR.area(1)); %distribute SW radiation
-            snow.STATVAR.Sout = sum(S_up) ./ snow.STATVAR.area(1);
-            
-            snow.STATVAR.Qh = Q_h(snow, forcing);
-            snow.STATVAR.Qe = Q_eq_potET(snow, forcing);
-            
-            snow.TEMP.F_ub = (forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Qh - snow.STATVAR.Qe) .* snow.STATVAR.area(1);
-            snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.F_ub;
-        end
-        
-        
-        
-        function snow = conductivity(snow)
-            snow = conductivity_snow_Yen(snow);
-        end
-        
-        
-        %-----LATERAL-------------------
-        
-        %-----LAT_REMOVE_SURFACE_WATER-----
-        function snow = lateral_push_remove_surfaceWater(snow, lateral)
-            snow = lateral_push_remove_surfaceWater_simple(snow, lateral);
-        end
-        
-        %----LAT_SEEPAGE_FACE----------
-        function snow = lateral_push_remove_water_seepage(snow, lateral)
-            snow = lateral_push_remove_water_seepage_snow(snow, lateral);
-        end
-
-        %----LAT_WATER_RESERVOIR------------        
-        function snow = lateral_push_water_reservoir(snow, lateral)
-            snow = lateral_push_water_reservoir_snow(snow, lateral);
-        end
-        
-        %----LAT3D_WATER_UNCONFINED_AQUIFER------------        
-        function snow = lateral3D_pull_water_unconfined_aquifer(snow, lateral)
-            snow = lateral3D_pull_water_unconfined_aquifer_snow(snow, lateral);
-        end
-        
-        function snow = lateral3D_push_water_unconfined_aquifer(snow, lateral)
-            snow = lateral3D_push_water_unconfined_aquifer_snow(snow, lateral);
-        end
-        
-        function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(snow, lateral)
-            [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_snow(snow, lateral);
-        end
-        
-        %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
-        
-        %----LAT3D_HEAT------------
-        function snow = lateral3D_pull_heat(snow, lateral)
-            snow = lateral3D_pull_heat_simple(snow, lateral);
-        end
-        
-        function snow = lateral3D_push_heat(snow, lateral)
-            snow = lateral3D_push_heat_simple(snow, lateral);
-        end
-        
-        %----LAT3D_SNOW_CROCUS------------
-        function snow = lateral3D_pull_snow(snow, lateral)
-            snow = lateral3D_pull_snow_crocus(snow, lateral);
-        end
-        
-        function snow = lateral3D_push_snow(snow, lateral)
-            snow = lateral3D_push_snow_crocus(snow, lateral);
-        end
-        
-        
-        %----inherited Tier 1 functions ------------
-        
-        function snow = get_derivative_energy(snow)
-           snow = get_derivative_energy@HEAT_CONDUCTION(snow); 
-        end
-        
-        function snow = conductivity_snow_Yen(snow)
-            snow = conductivity_snow_Yen@HEAT_CONDUCTION(snow);
-        end
-        
-        function flux = Q_h(snow, forcing)
-           flux = Q_h@SEB(snow, forcing);
-        end
-    
-        function flux = Q_eq_potET(snow, forcing)
-            flux = Q_eq_potET@SEB(snow, forcing);
-        end
-        
-        function timestep = get_timestep_heat_coduction(snow)
-            timestep = get_timestep_heat_coduction@HEAT_CONDUCTION(snow);
-        end
-        
-        function timestep = get_timestep_SNOW_mass_balance(snow)
-            timestep = get_timestep_SNOW_mass_balance@SNOW(snow);
-        end
-        
-        function timestep = get_timestep_SNOW_CHILD(snow)
-            timestep = get_timestep_SNOW_CHILD@SNOW(snow);
-        end
-        
-        function snow = L_star(snow, forcing)
-           snow = L_star@SEB(snow, forcing); 
-        end
-        
-         function [snow, S_up] = penetrate_SW_transmission_spectral(snow, S_down)
-             [snow, S_up] = penetrate_SW_transmission_spectral@SEB(snow, S_down);
-         end
-        
-        function snow = get_T_water_freeW(snow)
-            snow = get_T_water_freeW@HEAT_CONDUCTION(snow);
-        end
-        
-        function snow = subtract_water(snow)
-            snow = subtract_water@SNOW(snow);
-        end
-        
-        function snow = subtract_water_CHILD(snow)
-            snow = subtract_water_CHILD@SNOW(snow);
-        end
-        
-        function snow = get_boundary_condition_SNOW_u(snow, forcing)
-            snow = get_boundary_condition_SNOW_u@SNOW(snow, forcing);
-        end
-        
-        function snow = get_boundary_condition_allSNOW_rain_u(snow, forcing)
-            snow = get_boundary_condition_allSNOW_rain_u@SNOW(snow, forcing);
-        end
-        
-        function snow = get_boundary_condition_allSNOW_u(snow, forcing) 
-            snow = get_boundary_condition_allSNOW_u@SNOW(snow, forcing);
-        end
-        
-        function snow = initialize_zero_snow_BASE(snow)
-            snow = initialize_zero_snow_BASE@SNOW(snow);
-        end
-        
-        function snow = make_SNOW_CHILD(snow)
-            snow = make_SNOW_CHILD@SNOW(snow);
-        end
-        
-        function [snow, regridded_yesNo] = regrid_snow(snow, extensive_variables, intensive_variables, intensive_scaling_variable)
-            [snow, regridded_yesNo] = regrid_snow@REGRID(snow, extensive_variables, intensive_variables, intensive_scaling_variable);
-        end
+%         function snow = surface_energy_balance(snow, forcing)
+%             snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
+%             
+%             [snow, S_up] = penetrate_SW(snow, snow.PARA.spectral_ranges .* forcing.TEMP.Sin .* snow.STATVAR.area(1)); %distribute SW radiation
+%             snow.STATVAR.Sout = sum(S_up) ./ snow.STATVAR.area(1);
+%             
+%             snow.STATVAR.Qh = Q_h(snow, forcing);
+%             snow.STATVAR.Qe = Q_eq_potET(snow, forcing);
+%             
+%             snow.TEMP.F_ub = (forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Qh - snow.STATVAR.Qe) .* snow.STATVAR.area(1);
+%             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.F_ub;
+%         end
+%         
+%         
+%         
+%         function snow = conductivity(snow)
+%             snow = conductivity_snow_Yen(snow);
+%         end
+%         
+%         
+%         %-----LATERAL-------------------
+%         
+%         %-----LAT_REMOVE_SURFACE_WATER-----
+%         function snow = lateral_push_remove_surfaceWater(snow, lateral)
+%             snow = lateral_push_remove_surfaceWater_simple(snow, lateral);
+%         end
+%         
+%         %----LAT_SEEPAGE_FACE----------
+%         function snow = lateral_push_remove_water_seepage(snow, lateral)
+%             snow = lateral_push_remove_water_seepage_snow(snow, lateral);
+%         end
+%         
+%         %----LAT_WATER_RESERVOIR------------
+%         function snow = lateral_push_water_reservoir(snow, lateral)
+%             snow = lateral_push_water_reservoir_snow(snow, lateral);
+%         end
+%         
+%         %----LAT3D_WATER_UNCONFINED_AQUIFER------------
+%         function snow = lateral3D_pull_water_unconfined_aquifer(snow, lateral)
+%             snow = lateral3D_pull_water_unconfined_aquifer_snow(snow, lateral);
+%         end
+%         
+%         function snow = lateral3D_push_water_unconfined_aquifer(snow, lateral)
+%             snow = lateral3D_push_water_unconfined_aquifer_snow(snow, lateral);
+%         end
+%         
+%         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(snow, lateral)
+%             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_snow(snow, lateral);
+%         end
+%         
+%         %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
+%         
+%         %----LAT3D_HEAT------------
+%         function snow = lateral3D_pull_heat(snow, lateral)
+%             snow = lateral3D_pull_heat_simple(snow, lateral);
+%         end
+%         
+%         function snow = lateral3D_push_heat(snow, lateral)
+%             snow = lateral3D_push_heat_simple(snow, lateral);
+%         end
+%         
+%         %----LAT3D_SNOW_CROCUS------------
+%         function snow = lateral3D_pull_snow(snow, lateral)
+%             snow = lateral3D_pull_snow_crocus(snow, lateral);
+%         end
+%         
+%         function snow = lateral3D_push_snow(snow, lateral)
+%             snow = lateral3D_push_snow_crocus(snow, lateral);
+%         end
+%         
+%         
+%         %----inherited Tier 1 functions ------------
+%         
+%         function snow = get_derivative_energy(snow)
+%             snow = get_derivative_energy@HEAT_CONDUCTION(snow);
+%         end
+%         
+%         function snow = conductivity_snow_Yen(snow)
+%             snow = conductivity_snow_Yen@HEAT_CONDUCTION(snow);
+%         end
+%         
+%         function flux = Q_h(snow, forcing)
+%             flux = Q_h@SEB(snow, forcing);
+%         end
+%         
+%         function flux = Q_eq_potET(snow, forcing)
+%             flux = Q_eq_potET@SEB(snow, forcing);
+%         end
+%         
+%         function timestep = get_timestep_heat_coduction(snow)
+%             timestep = get_timestep_heat_coduction@HEAT_CONDUCTION(snow);
+%         end
+%         
+%         function timestep = get_timestep_SNOW_mass_balance(snow)
+%             timestep = get_timestep_SNOW_mass_balance@SNOW(snow);
+%         end
+%         
+%         function timestep = get_timestep_SNOW_CHILD(snow)
+%             timestep = get_timestep_SNOW_CHILD@SNOW(snow);
+%         end
+%         
+%         function snow = L_star(snow, forcing)
+%             snow = L_star@SEB(snow, forcing);
+%         end
+%         
+%         function [snow, S_up] = penetrate_SW_transmission_spectral(snow, S_down)
+%             [snow, S_up] = penetrate_SW_transmission_spectral@SEB(snow, S_down);
+%         end
+%         
+%         function snow = get_T_water_freeW(snow)
+%             snow = get_T_water_freeW@HEAT_CONDUCTION(snow);
+%         end
+%         
+%         function snow = subtract_water(snow)
+%             snow = subtract_water@SNOW(snow);
+%         end
+%         
+%         function snow = subtract_water_CHILD(snow)
+%             snow = subtract_water_CHILD@SNOW(snow);
+%         end
+%         
+%         function snow = get_boundary_condition_SNOW_u(snow, forcing)
+%             snow = get_boundary_condition_SNOW_u@SNOW(snow, forcing);
+%         end
+%         
+%         function snow = get_boundary_condition_allSNOW_rain_u(snow, forcing)
+%             snow = get_boundary_condition_allSNOW_rain_u@SNOW(snow, forcing);
+%         end
+%         
+%         function snow = get_boundary_condition_allSNOW_u(snow, forcing)
+%             snow = get_boundary_condition_allSNOW_u@SNOW(snow, forcing);
+%         end
+%         
+%         function snow = initialize_zero_snow_BASE(snow)
+%             snow = initialize_zero_snow_BASE@SNOW(snow);
+%         end
+%         
+%         function snow = make_SNOW_CHILD(snow)
+%             snow = make_SNOW_CHILD@SNOW(snow);
+%         end
+%         
+%         function [snow, regridded_yesNo] = regrid_snow(snow, extensive_variables, intensive_variables, intensive_scaling_variable)
+%             [snow, regridded_yesNo] = regrid_snow@REGRID(snow, extensive_variables, intensive_variables, intensive_scaling_variable);
+%         end
     end
     
 end

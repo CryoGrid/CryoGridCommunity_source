@@ -100,6 +100,10 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation < GROUND_freezeC_RichardsEqW_
             ground.CONST.rho_w = []; % water density
             ground.CONST.rho_i = []; %ice density
             
+            ground.CONST.g = [];
+            ground.CONST.molar_mass_w = [];
+            ground.CONST.R = [];
+
             %Mualem Van Genuchten model
             ground.CONST.alpha_water = [];  %alpha parameter for different soil types [m^-1]
             ground.CONST.alpha_sand = [];
@@ -136,24 +140,56 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation < GROUND_freezeC_RichardsEqW_
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile)
-            %calculate SEB for canopy and adjusts the forcing data
+            
+            %could eventually be done in compute_diagnostic
+            %specific for each compatible GROUND class
+            ground.STATVAR.albedo4vegetation = ground.PARA.albedo;
+            ground.STATVAR.emissivity4vegetation = ground.PARA.epsilon; %required for reflection of Lin
+            ground.STATVAR.Lout4vegetation = ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+273.15).^4; %emitted part of Lout, reflected part in the vegetation
+            
+            %calculate SEB for canopy and adjust forcing data
             ground.VEGETATION = get_boundary_condition_u(ground.VEGETATION, tile);
             
             forcing = ground.VEGETATION.ForcingV;
-            
 
-            
-            %radiation balance, Sout and Lout
+%             %radiation balance, Sout and Lout
+%             ground = calculate_radiation(ground, forcing);
+%             
+%             ground.VEGETATION = map_variables_no_snow(ground.VEGETATION);
+%             
+% %             %evaporation should eventually be handled in GROUND class - not possible for current implementation multi-layer canopy
+% %             ground = get_evaporation(ground, forcing);
+%             ground.VEGETATION = get_evaporation(ground.VEGETATION);
+%             
+%             ground.VEGETATION  = get_transpiration(ground.VEGETATION);
+
+            %forcing = tile.FORCING;
             ground = calculate_radiation(ground, forcing);
+            %set reference height to middle of first canopy layer
+            ground.PARA.airT_height = ground.VEGETATION.STATVAR.mlcanopyinst.zs(1,2);
             
-            ground.VEGETATION = map_variables_no_snow(ground.VEGETATION);
+            ground = Q_evap_CLM4_5(ground, forcing);
             
-%             %evaporation should eventually be handled in GROUND class - not possible for current implementation multi-layer canopy
-%             ground = get_evaporation(ground, forcing);
-            ground.VEGETATION = get_evaporation(ground.VEGETATION);
+            ground.STATVAR.Qh = Q_h(ground, forcing);
             
-            ground.VEGETATION  = get_transpiration(ground.VEGETATION);
+            %energy
+            ground.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe) .* ground.STATVAR.area(1);
+            ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
             
+            %water -> evaporation
+            ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) -  ground.STATVAR.evap.* ground.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
+            ground.TEMP.d_water_ET_energy(1,1) = ground.TEMP.d_water_ET_energy(1,1) -  ground.STATVAR.evap_energy.* ground.STATVAR.area(1,1);
+            %mass balance of sublimation not considered!
+            
+            %transpiration
+            range = [1:size(ground.VEGETATION.STATVAR.mlcanopyinst.transpiration,2)]';
+            transpiration = ground.VEGETATION.STATVAR.mlcanopyinst.transpiration' .* ground.STATVAR.area(range);
+            
+            transpiration = min(transpiration, ground.STATVAR.water(range) /(3600.*2)); %hard limitation to prevent crashs: only half of available water can evaporate per 1h timestep
+            ground.TEMP.d_water_ET(range) = ground.TEMP.d_water_ET(range) - transpiration;
+            ground.TEMP.d_water_ET_energy(range) =  ground.TEMP.d_water_ET_energy(range) - transpiration  .* (double(ground.STATVAR.T(range)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(range) + ...
+                double(ground.STATVAR.T(range)<0) .* ground.CONST.c_i .* ground.STATVAR.T(range));           
+
             %upper BC water (rainfall)
             ground = get_boundary_condition_u_RichardsEq(ground, forcing); %checked that this flux can be taken up!!
         end

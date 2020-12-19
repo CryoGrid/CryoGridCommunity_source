@@ -49,12 +49,16 @@ for f = 1:vegetation.canopy.num_exposedvegp
     vegetation.mlcanopyinst.rsoil(p) = 0.;
     for j = 1:vegetation.soilvar.nsoi
         
-        % Hydraulic conductivity and matric potential for each layer
+        %get variables from GROUND module 
+        hk = vegetation.PARENT_GROUND.STATVAR.hydraulicConductivity(j,1) .*1000;
+        smp_mpa(j) = vegetation.PARENT_GROUND.STATVAR.waterPotential(j,1) .* vegetation.physcon.head;
+        vegetation.soilvar.dz(c,j) = vegetation.PARENT_GROUND.STATVAR.layerThick(j,1);
+        vegetation.soilvar.h2osoi_ice(c,j) = vegetation.PARENT_GROUND.STATVAR.ice(j,1) ./ vegetation.PARENT_GROUND.STATVAR.layerThick(j,1) ./ vegetation.PARENT_GROUND.STATVAR.area(j,1);
         
         %SEBAS:remove + add
        %  s = max(min(vegetation.soilvar.h2osoi_vol(c,j)/vegetation.soilvar.watsat(c,j), 1.), 0.01);
        % hk = vegetation.soilvar.hksat(c,j) .* s^(2  .* vegetation.soilvar.bsw(c,j) + 3.);           % mm/s
-        hk = vegetation.soilvar.hk(c,j) .* 1000;  %read from GROUND in m/sec
+        %hk = vegetation.soilvar.hk(c,j) .* 1000;  %read from GROUND in m/sec
         %end SEBAS:remove + add
         
         hk = hk .* 1.e-03  ./ vegetation.physcon.head;                                % mm/s -> m/s -> m2/s/MPa
@@ -62,8 +66,8 @@ for f = 1:vegetation.canopy.num_exposedvegp
 
         %für smp_l van genuchten formel benutzen n, m, parameter p.119
         
-        vegetation.soilvar.smp_l = vegetation.soilvar.soil_water_matric_potential*1000.;
-        smp_mpa(j) = vegetation.soilvar.smp_l(c,j) .* 1.e-03  .* vegetation.physcon.head;                % mm -> m -> MPa
+%         vegetation.soilvar.smp_l = vegetation.soilvar.soil_water_matric_potential*1000.;
+%         smp_mpa(j) = vegetation.soilvar.smp_l(c,j) .* 1.e-03  .* vegetation.physcon.head;                % mm -> m -> MPa
         
         % Root biomass density: g biomass / m3 soil
                 

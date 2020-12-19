@@ -193,13 +193,13 @@ if (abs(err) > 0.01)
     disp ('ERROR: CanopyFluxesSum: energy conservation error (2)');
 end
 
-avail = radin - radout - vegetation.mlcanopyinst.gsoi(p);
-flux = vegetation.mlcanopyinst.shflx(p) + vegetation.mlcanopyinst.lhflx(p) + vegetation.mlcanopyinst.stflx(p);
-err = avail - flux;
-if (abs(err) > 0.01)
-    disp ('ERROR: CanopyFluxesSum: energy conservation error (3)');
-    disp (err);
-end
+% avail = radin - radout - vegetation.mlcanopyinst.gsoi(p);
+% flux = vegetation.mlcanopyinst.shflx(p) + vegetation.mlcanopyinst.lhflx(p) + vegetation.mlcanopyinst.stflx(p);
+% err = avail - flux;
+% if (abs(err) > 0.01)
+%     disp ('ERROR: CanopyFluxesSum: energy conservation error (3)');
+%     disp (err);
+% end
 
 % Sunlit and shaded canopy fluxes
 

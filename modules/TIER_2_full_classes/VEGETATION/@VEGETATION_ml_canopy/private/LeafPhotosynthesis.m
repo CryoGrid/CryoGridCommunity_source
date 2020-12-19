@@ -138,18 +138,23 @@ if (vegetation.canopy.dpai(p,ic) > 0)
     
     % btran nicht festsetzen sondern btran skalieren: p.210 or 211, besser p.210
     
-    vegetation.mlcanopyinst.btran = 0;
+    %SEBAS: use constant value of 0.8 set in initialize_mlcanopyinst.m again,
+    %probably not used at all, as gstyp is set to 2
     
-    if vegetation.soilvar.h2osoi_vol >= 0.35
-        vegetation.mlcanopyinst.btran(p) = 1;
-    elseif vegetation.soilvar.h2osoi_vol <= 0.1 %wilting point
-        vegetation.mlcanopyinst.btran(p) = 0;
-    else
-        vegetation.mlcanopyinst.btran(p) = (vegetation.soilvar.h2osoi_vol(1)-0.1)/(0.35-0.1);
-    end
-        
-    vegetation.mlcanopyinst.btran(p) = max(vegetation.mlcanopyinst.btran(p),1.e-02); %kleiner 1e-02 geht nicht
-   
+%     vegetation.mlcanopyinst.btran = 0;
+%     
+%     if vegetation.soilvar.h2osoi_vol >= 0.35
+%         vegetation.mlcanopyinst.btran(p) = 1;
+%     elseif vegetation.soilvar.h2osoi_vol <= 0.1 %wilting point
+%         vegetation.mlcanopyinst.btran(p) = 0;
+%     else
+%         vegetation.mlcanopyinst.btran(p) = (vegetation.soilvar.h2osoi_vol(1)-0.1)/(0.35-0.1);
+%     end
+%         
+%     vegetation.mlcanopyinst.btran(p) = max(vegetation.mlcanopyinst.btran(p),1.e-02); %kleiner 1e-02 geht nicht
+
+   %END CHANGE SEBAS
+    
     if (vegetation.params.gstyp == 1)
         vegetation.leaf.vcmax = vegetation.leaf.vcmax .* vegetation.mlcanopyinst.btran(p);
         vegetation.mlcanopyinst.g0 = max(vegetation.pftcon.g0opt(p) .* vegetation.mlcanopyinst.btran(p), 1.e-06);

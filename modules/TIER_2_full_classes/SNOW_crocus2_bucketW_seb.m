@@ -132,6 +132,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow = get_sublimation(snow, forcing);
             
             snow.TEMP.wind = forcing.TEMP.wind;
+            snow.TEMP.wind_surface = forcing.TEMP.wind;
         end
         
         function snow = get_boundary_condition_u_CHILD(snow, tile)
@@ -145,6 +146,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow = get_sublimation(snow, forcing);
             
             snow.TEMP.wind = forcing.TEMP.wind;
+            snow.TEMP.wind_surface = forcing.TEMP.wind;
         end
         
         function snow = get_boundary_condition_u_create_CHILD(snow, tile)
@@ -180,6 +182,8 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow.TEMP.compact_d_D = 0;
             snow.TEMP.wind_d_D = 0;           
             snow.TEMP.wind = forcing.TEMP.wind;
+            snow.TEMP.wind_surface = forcing.TEMP.wind;
+            
             %start with some non-zero values for area and layerThick
             snow.STATVAR.area = 1;
             snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ (snow.TEMP.newSnow.STATVAR.density ./1000); %[m] layerThick adjusted so that always 0.5 .* snow.PARA.swe_per_cell is contained

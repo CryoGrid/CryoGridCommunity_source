@@ -48,6 +48,7 @@ num_sub_steps = vegetation.params.dtime/vegetation.params.dtime_sub; %int(dtime 
 % should only get data from soil module: Cryo Grid
 %     call SoilResistance (vegetation.physcon.num_exposedvegp, vegetation.physcon.filter_exposedvegp, soilstate_inst, waterstate_inst, mlcanopy_inst)
 % if counter < 3
+    %from here could eventually be moved in inner loop 
     [vegetation] = SoilResistance(vegetation);
 % end
 

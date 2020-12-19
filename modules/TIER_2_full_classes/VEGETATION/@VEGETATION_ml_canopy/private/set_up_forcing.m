@@ -25,10 +25,11 @@ for f = 1:vegetation.canopy.num_exposedvegp
     vegetation.mlcanopyinst.zref(p) = vegetation.mlcanopyinst.zref;  %forc_hgt(g);
     vegetation.mlcanopyinst.uref(p) = forcing.TEMP.wind; %ground.STATVAR.vegetation.mlcanopyinst.uref;  %max (1.0 , sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)));
     
-    vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin_dir;            % Direct beam solar radiation for visible waveband (W/m2)
-    vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin_dif;            % Diffuse solar radiation for visible waveband (W/m2)
-    vegetation.atmos.swskyb(p,inir) = forcing.TEMP.Sin_dir;            % Direct beam solar radiation for near-infrared waveband (W/m2)
-    vegetation.atmos.swskyd(p,inir) = forcing.TEMP.Sin_dif;            % Diffuse solar radiation for near-infrared waveband (W/m2)   
+    %SEBAS: shouldn't this be distributed, like below?
+    vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin_dir .* 0.7;            % Direct beam solar radiation for visible waveband (W/m2)
+    vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin_dif .* 0.7;            % Diffuse solar radiation for visible waveband (W/m2)
+    vegetation.atmos.swskyb(p,inir) = forcing.TEMP.Sin_dir .* 0.3;            % Direct beam solar radiation for near-infrared waveband (W/m2)
+    vegetation.atmos.swskyd(p,inir) = forcing.TEMP.Sin_dif .* 0.3;            % Diffuse solar radiation for near-infrared waveband (W/m2)   
     
 %        vegetation.atmos.swskyb(p,ivis) = forcing.TEMP.Sin*0.9;            % Direct beam solar radiation for visible waveband (W/m2)
 %        vegetation.atmos.swskyd(p,ivis) = forcing.TEMP.Sin*0.1;            % Diffuse solar radiation for visible waveband (W/m2)
@@ -38,7 +39,7 @@ for f = 1:vegetation.canopy.num_exposedvegp
     % Atmospheric forcing: CLM column (c) variables -> patch (p) variables
     
     vegetation.mlcanopyinst.tref(p) = forcing.TEMP.Tair+273.15; %ground.STATVAR.vegetation.mlcanopyinst.tref; %forc_t(c);
-    vegetation.mlcanopyinst.qref(p) = forcing.TEMP.q; %ground.STATVAR.vegetation.mlcanopyinst.qref; %forc_q(c);
+    vegetation.mlcanopyinst.qref(p) = forcing.TEMP.q; %ground.STATVAR.vegetation.mlcanopyinst.qref; %forc_q(c); in kg/kg according to Bonan
     vegetation.mlcanopyinst.pref(p) = forcing.TEMP.p; % 101325.0; %  ground.STATVAR.vegetation.mlcanopyinst.pref; %forc_pbot(c);
     vegetation.mlcanopyinst.irsky(p) = forcing.TEMP.Lin; %ground.STATVAR.vegetation.mlcanopyinst.irsky; %forc_lwrad(c);
     vegetation.mlcanopyinst.qflx_rain(p) = forcing.TEMP.rainfall ./ (24*3600); %ground.STATVAR.vegetation.mlcanopyinst.qflx_rain; %forc_rain(c);

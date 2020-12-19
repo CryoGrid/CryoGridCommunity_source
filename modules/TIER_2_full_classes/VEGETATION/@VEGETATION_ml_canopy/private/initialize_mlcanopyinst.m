@@ -20,7 +20,7 @@ ground.STATVAR.vegetation.mlcanopyinst.f = 1;                                  %
 % ground.STATVAR.vegetation.mlcanopyinst.lwp = zeros(1,ncan);
 
 ground.STATVAR.vegetation.mlcanopyinst.soilresis = 3361.509423807650; % soilvar.resis(p) = 3361.509423807650;       % Soil evaporative resistance (s/m) --> before 600, why??
-ground.STATVAR.vegetation.mlcanopyinst.root_biomass = 500.0;            % (Bonan et al. (2014) Geosci. Model Dev., 7, 2193–2222)                 %Fine root biomass (g biomass / m2)                                ground.STATVAR.vegetation input variables
+ground.STATVAR.vegetation.mlcanopyinst.root_biomass = 250; %500.0;            % (Bonan et al. (2014) Geosci. Model Dev., 7, 2193–2222)                 %Fine root biomass (g biomass / m2)                                ground.STATVAR.vegetation input variables
 ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_rain = 0;
 ground.STATVAR.vegetation.mlcanopyinst.qflx_prec_grnd_snow = 0;
 
@@ -210,9 +210,11 @@ ground.STATVAR.vegetation.mlcanopyinst.tg_snow = ground.STATVAR.vegetation.mlcan
 ground.STATVAR.vegetation.mlcanopyinst.snow = 0;
 
 
+%SEBAS: implemented again, compare Lines 141:151 in LeafPhotosynthesis.m
+ ground.STATVAR.vegetation.mlcanopyinst.btran = 0.8; %10; %1; %0.1; %0.6;     %soil water transpiration factor (0 to 1) %Ball-Berry soil wetness factor (-)                                     Soil moisture variables    %http://www.cesm.ucar.edu/models/cesm1.0/cesm/cesmBbrowser/html_code/clm/CanopyFluxesMod.F90.html#SHR_CONST_MOD_23
+%end change SEBAS
 
-% ground.STATVAR.vegetation.mlcanopyinst.btran = 0.8; %10; %1; %0.1; %0.6;     %soil water transpiration factor (0 to 1) %Ball-Berry soil wetness factor (-)                                     Soil moisture variables    %http://www.cesm.ucar.edu/models/cesm1.0/cesm/cesmBbrowser/html_code/clm/CanopyFluxesMod.F90.html#SHR_CONST_MOD_23
-ground.STATVAR.vegetation.mlcanopyinst.psis = zeros(1);                                     %Weighted soil water potential (MPa)                                    Soil moisture variables
+ ground.STATVAR.vegetation.mlcanopyinst.psis = zeros(1);                                     %Weighted soil water potential (MPa)                                    Soil moisture variables
 ground.STATVAR.vegetation.mlcanopyinst.rsoil = zeros(1);                                    %Soil hydraulic resistance (MPa.s.m2/mmol H2O)                          Soil moisture variables
 ground.STATVAR.vegetation.mlcanopyinst.soil_et_loss = zeros(1,nlevgrnd);                    %Fraction of total transpiration from each soil layer (-)               Soil moisture variables
 

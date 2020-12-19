@@ -49,7 +49,9 @@ for f = 1:num_exposedvegp
     
     % Ground (soil) emissivity
     
-    emg = 0.96;
+    %CHANGE SEBASTIAN
+    %emg = 0.96; %SET AVERAGE EMISSIVITY of the GROUND 
+    emg = vegetation.flux.emissivity_ground;
     
     %------------------------------------------------------------------
     % Leaf scattering coefficient and terms for longwave radiation reflected
@@ -94,7 +96,8 @@ for f = 1:num_exposedvegp
     atri(m) = 0.;
     btri(m) = 1.;
     ctri(m) = -(1. - emg);
-    dtri(m) = emg * sb * vegetation.mlcanopyinst.tg(p)^4;
+    %dtri(m) = emg * sb * vegetation.mlcanopyinst.tg(p)^4;  %SET outgoing radiation here, but only emitted part!
+    dtri(m) = vegetation.flux.Lout_ground;
     
     % Soil: downward flux
     

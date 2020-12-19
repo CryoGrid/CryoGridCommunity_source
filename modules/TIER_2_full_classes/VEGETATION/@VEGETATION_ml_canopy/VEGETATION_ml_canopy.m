@@ -33,8 +33,8 @@ classdef VEGETATION_ml_canopy < BASE
             ground.PARA.zref_old = [];
             ground.PARA.hksat = [];
             
-            ground.PARA.dt_max = [] ; %[sec]
-            ground.PARA.dE_max = []; %[J/m3]
+            %ground.PARA.dt_max = [] ; %[sec]
+            %ground.PARA.dE_max = []; %[J/m3]
         end
         
         function ground = provide_CONST(ground)
@@ -72,7 +72,7 @@ classdef VEGETATION_ml_canopy < BASE
 %             ground.STATVAR.thermCond = [];
             
             %forcing variables need for snow and ground upper boundary
-            ground.ForcingV.TEMP.tair = [];
+            %ground.ForcingV.TEMP.tair = [];
             ground.ForcingV.TEMP.wind = [];
             ground.ForcingV.TEMP.Qh = []; % [m]
             
@@ -81,7 +81,7 @@ classdef VEGETATION_ml_canopy < BASE
             ground.ForcingV.TEMP.Lin = []; % [m]
             ground.ForcingV.TEMP.p = [];  % [J/m2]
             
-            ground.ForcingV.TEMP.snow_reservoir = 0;
+            %ground.ForcingV.TEMP.snow_reservoir = 0;
             ground.ForcingV.TEMP.snowfall = [];  % [degree C]
             ground.ForcingV.TEMP.rainfall = [];  % [m]
             ground.ForcingV.TEMP.q = [];
@@ -151,7 +151,7 @@ classdef VEGETATION_ml_canopy < BASE
             %CHECK!!!
             % Write forcing struct as the input for ground class under vegetation
             %this should be tair(1,2)!!!
-            ground.ForcingV.TEMP.Tair = ground.STATVAR.mlcanopyinst.tveg(1,2)-273.15;
+            ground.ForcingV.TEMP.Tair = ground.STATVAR.mlcanopyinst.tair(1,2)-273.15;
             ground.ForcingV.TEMP.wind = ground.STATVAR.mlcanopyinst.wind(1,2);
             ground.ForcingV.TEMP.wind_top = ground.STATVAR.mlcanopyinst.wind(1,12); % wind at top of canopy (used for initial snow density calculation)
             ground.ForcingV.TEMP.Sin = ground.STATVAR.flux.swdn(1,1) + ground.STATVAR.flux.swdn(1,2); %ground.STATVAR.vegetation.flux.swsoi(1,1) + ground.STATVAR.vegetation.flux.swsoi(1,2); % vegetation.mlcanopyinst.sw_prof(1,2,1); %Canopy layer absorbed radiation
@@ -166,7 +166,7 @@ classdef VEGETATION_ml_canopy < BASE
             %CHECK!!!
             %this should be eair(1,2)!!! Will be needed as soon as as we
             %compute evaporation in the main model
-            ground.ForcingV.TEMP.q = forcing.TEMP.q; %specific humidity at refernce height (kg/kg)
+            ground.ForcingV.TEMP.q = 0.622 .* ground.STATVAR.mlcanopyinst.eair(1,2)./forcing.TEMP.p; %specific humidity  (kg/kg) - 0.622 is the conversion from mol/mol to kg/kg!!!
             ground.ForcingV.TEMP.t = forcing.TEMP.t; % time_snowfall
 
         end
@@ -201,7 +201,7 @@ classdef VEGETATION_ml_canopy < BASE
         end
         
         function ground = check_trigger(ground, tile)
-            
+            %SIMONE: Add change between summer and winter properties here!!!
         end
         
         
@@ -214,56 +214,56 @@ classdef VEGETATION_ml_canopy < BASE
         function ground = surface_energy_forest(ground, forcing)
             
             if forcing.TEMP.t >= ground.STATVAR.execution_t || forcing.TEMP.t == forcing.PARA.start_time
-                datestr(forcing.TEMP.t)
+                disp(datestr(forcing.TEMP.t))
 
-%                 disp(ground.STATVAR.vegetation.soilvar.transp_per_layer)
                 
-                %SEBAS: would make sense to make this directly
-                %GROUND.STATVAR, since you only have vegetation now?
-                %so vegetation = ground.STATVAR instead?
                 vegetation = ground.STATVAR;
+                vegetation.PARENT_SURFACE = ground.PARENT_SURFACE;
+                vegetation.PARENT_GROUND = ground.PARENT_GROUND;
+                
+                %all could eventually become accumulated /time-averaged quantity
+
                 
                 % set parameters from GROUND models
-                vegetation.mlcanopyinst.tg = ground.PARENT_SURFACE.STATVAR.T(1,1) + 273.15; %ground suurface temperature
-                vegetation.soilvar.t_top_surfacecell = ground.PARENT_SURFACE.STATVAR.T(1,1) + 273.15; % kind of the same
-                vegetation.flux.albsoib = [ground.PARENT_SURFACE.PARA.albedo ground.PARENT_SURFACE.PARA.albedo];
-                vegetation.flux.albsoid = [ground.PARENT_SURFACE.PARA.albedo ground.PARENT_SURFACE.PARA.albedo];
-                                
-                
-                range_cell_1 = 1;
-                range_cell_2 = 2:3;
-                range_cell_3 = 4:9;
-                %vegetation.soilvar.rootfr = [0.05 0.5 0.45];
-                vegetation.soilvar.hk = [mean(ground.PARENT_GROUND.STATVAR.hydraulicConductivity(range_cell_1,1)) ...
-                    mean(ground.PARENT_GROUND.STATVAR.hydraulicConductivity(range_cell_2,1)) mean(ground.PARENT_GROUND.STATVAR.hydraulicConductivity(range_cell_3,1))];
-                vegetation.soilvar.soil_water_matric_potential = [mean(ground.PARENT_GROUND.STATVAR.waterPotential(range_cell_1,1)) ...
-                    mean(ground.PARENT_GROUND.STATVAR.waterPotential(range_cell_2,1)) mean(ground.PARENT_GROUND.STATVAR.waterPotential(range_cell_3,1))];
+%                 vegetation.mlcanopyinst.tg = ground.PARENT_SURFACE.STATVAR.T(1,1) + 273.15; %ground suurface temperature
+%                 vegetation.soilvar.t_top_surfacecell = ground.PARENT_SURFACE.STATVAR.T(1,1) + 273.15; % kind of the same
 
-                vegetation.soilvar.h2osoi_vol(1) = sum(ground.PARENT_GROUND.STATVAR.water(range_cell_1))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_1) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_1));
-                vegetation.soilvar.h2osoi_vol(2) = sum(ground.PARENT_GROUND.STATVAR.water(range_cell_2))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_2) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_2));
-                vegetation.soilvar.h2osoi_vol(3) = sum(ground.PARENT_GROUND.STATVAR.water(range_cell_3))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_3) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_3));
+%                 range_cell_1 = 1;
+%                 range_cell_2 = 2:3;
+%                 range_cell_3 = 4:9;
+%                 %vegetation.soilvar.rootfr = [0.05 0.5 0.45];
+%                 vegetation.soilvar.hk = [mean(ground.PARENT_GROUND.STATVAR.hydraulicConductivity(range_cell_1,1)) ...
+%                     mean(ground.PARENT_GROUND.STATVAR.hydraulicConductivity(range_cell_2,1)) mean(ground.PARENT_GROUND.STATVAR.hydraulicConductivity(range_cell_3,1))];
+%                 vegetation.soilvar.soil_water_matric_potential = [mean(ground.PARENT_GROUND.STATVAR.waterPotential(range_cell_1,1)) ...
+%                     mean(ground.PARENT_GROUND.STATVAR.waterPotential(range_cell_2,1)) mean(ground.PARENT_GROUND.STATVAR.waterPotential(range_cell_3,1))];
+% 
+%                 vegetation.soilvar.h2osoi_vol(1) = sum(ground.PARENT_GROUND.STATVAR.water(range_cell_1))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_1) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_1));
+%                 vegetation.soilvar.h2osoi_vol(2) = sum(ground.PARENT_GROUND.STATVAR.water(range_cell_2))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_2) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_2));
+%                 vegetation.soilvar.h2osoi_vol(3) = sum(ground.PARENT_GROUND.STATVAR.water(range_cell_3))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_3) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_3));
+%                 
+% %                 vegetation.soilvar.soil_water_matric_potential = vegetation.soilvar.soil_water_matric_potential .* (double(vegetation.soilvar.h2osoi_vol < 0.1) .* (vegetation.soilvar.h2osoi_vol ./ 0.1).^-6 + ...
+% %                     double(vegetation.soilvar.h2osoi_vol >= 0.1));
+%                 
+%                 vegetation.soilvar.h2osoi_ice(1) = sum(ground.PARENT_GROUND.STATVAR.ice(range_cell_1))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_1) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_1));
+%                 vegetation.soilvar.h2osoi_ice(2) = sum(ground.PARENT_GROUND.STATVAR.ice(range_cell_2))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_2) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_2));
+%                 vegetation.soilvar.h2osoi_ice(3) = sum(ground.PARENT_GROUND.STATVAR.ice(range_cell_3))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_3) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_3));
+%                 
+%                 vegetation.soilvar.t_soisno(1) = mean(ground.PARENT_GROUND.STATVAR.T(range_cell_1))+273.15;
+%                 vegetation.soilvar.t_soisno(2) = mean(ground.PARENT_GROUND.STATVAR.T(range_cell_2))+273.15;
+%                 vegetation.soilvar.t_soisno(3) = mean(ground.PARENT_GROUND.STATVAR.T(range_cell_3))+273.15;
+%                 
+%                 vegetation.soilvar.thk(1) = mean(ground.PARENT_GROUND.STATVAR.thermCond(range_cell_1));
+%                 vegetation.soilvar.thk(2) = mean(ground.PARENT_GROUND.STATVAR.thermCond(range_cell_2));
+%                 vegetation.soilvar.thk(3) = mean(ground.PARENT_GROUND.STATVAR.thermCond(range_cell_3));
                 
-%                 vegetation.soilvar.soil_water_matric_potential = vegetation.soilvar.soil_water_matric_potential .* (double(vegetation.soilvar.h2osoi_vol < 0.1) .* (vegetation.soilvar.h2osoi_vol ./ 0.1).^-6 + ...
-%                     double(vegetation.soilvar.h2osoi_vol >= 0.1));
                 
-                vegetation.soilvar.h2osoi_ice(1) = sum(ground.PARENT_GROUND.STATVAR.ice(range_cell_1))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_1) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_1));
-                vegetation.soilvar.h2osoi_ice(2) = sum(ground.PARENT_GROUND.STATVAR.ice(range_cell_2))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_2) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_2));
-                vegetation.soilvar.h2osoi_ice(3) = sum(ground.PARENT_GROUND.STATVAR.ice(range_cell_3))./ sum(ground.PARENT_GROUND.STATVAR.area(range_cell_3) .* ground.PARENT_GROUND.STATVAR.layerThick(range_cell_3));
+                vegetation = set_up_forcing(vegetation, forcing);
                 
-                vegetation.soilvar.t_soisno(1) = mean(ground.PARENT_GROUND.STATVAR.T(range_cell_1))+273.15;
-                vegetation.soilvar.t_soisno(2) = mean(ground.PARENT_GROUND.STATVAR.T(range_cell_2))+273.15;
-                vegetation.soilvar.t_soisno(3) = mean(ground.PARENT_GROUND.STATVAR.T(range_cell_3))+273.15;
-                
-                vegetation.soilvar.thk(1) = mean(ground.PARENT_GROUND.STATVAR.thermCond(range_cell_1));
-                vegetation.soilvar.thk(2) = mean(ground.PARENT_GROUND.STATVAR.thermCond(range_cell_2));
-                vegetation.soilvar.thk(3) = mean(ground.PARENT_GROUND.STATVAR.thermCond(range_cell_3));
-                
-                
-                [vegetation] = set_up_forcing(vegetation, forcing);
+                vegetation = assign_GROUND_fluxes(ground, vegetation);
 
                 [vegetation] = canopy_fluxes_multilayer(vegetation);
                                 
-
+                vegetation = get_transpiration(ground, vegetation);
                 
                 %and ground.STATVAR = vegetation here?
                 ground.STATVAR = vegetation;
@@ -275,117 +275,132 @@ classdef VEGETATION_ml_canopy < BASE
             end
         end
         
+        function vegetation = assign_GROUND_fluxes(ground, vegetation)
+            
+            vegetation.flux.albsoib = [vegetation.PARENT_SURFACE.STATVAR.albedo4vegetation ground.PARENT_SURFACE.STATVAR.albedo4vegetation];
+            vegetation.flux.albsoid = [vegetation.PARENT_SURFACE.STATVAR.albedo4vegetation ground.PARENT_SURFACE.STATVAR.albedo4vegetation];
+            vegetation.flux.emissivity_ground = vegetation.PARENT_SURFACE.STATVAR.emissivity4vegetation;
+            vegetation.flux.Qe_ground = vegetation.PARENT_SURFACE.STATVAR.Qe;
+            vegetation.flux.Qh_ground = vegetation.PARENT_SURFACE.STATVAR.Qh;
+            vegetation.flux.Lout_ground = vegetation.PARENT_SURFACE.STATVAR.Lout4vegetation;
+            
+        end
+
+        
+        
         %called by GROUND, could be moved to IA class, but I guess these
         %functions could well be needed for any combination of GROUND and
         %vegetation classes
         
-        function vegetation = get_transpiration(vegetation)
-            ground = vegetation.PARENT_GROUND;
+        
+        
+        function vegetation = get_transpiration(ground, vegetation)
+            
             
             %convert from mol/sec to me3 per sec using molar mass 0.018
             %kg/mol of water and the density
             %transpiration = (0.0181528 .* vegetation.STATVAR.vegetation.soilvar.transp_per_layer)./1000;
 
-            frac_sun_shade = cat(3, vegetation.STATVAR.flux.fracsun, vegetation.STATVAR.flux.fracsha);
-            leaf_et = vegetation.STATVAR.mlcanopyinst.trleaf .* frac_sun_shade;
+            frac_sun_shade = cat(3, vegetation.flux.fracsun, vegetation.flux.fracsha);
+            leaf_et = vegetation.mlcanopyinst.trleaf .* frac_sun_shade;
             leaf_et = sum(leaf_et,3); %mol water per sec per m2 leaf per m2 ground 
-            leaf_et = leaf_et .* vegetation.STATVAR.canopy.dlai; %mol water per sec per m2 ground per canopy layer
+            leaf_et = leaf_et .* vegetation.canopy.dlai; %mol water per sec per m2 ground per canopy layer
             leaf_et = 0.0181528e-3 .* sum(leaf_et); %in m3/m2 water/sec
-            transpiration = leaf_et .* vegetation.STATVAR.mlcanopyinst.soil_et_loss; %weight with fraction assigned fro each layer
+            vegetation.mlcanopyinst.transpiration = leaf_et .* vegetation.mlcanopyinst.soil_et_loss; %weight with fraction assigned for each layer
+            
 
-            transp = transpiration(1) .* ground.STATVAR.area(1,1);
-            trans = min(transp, ground.STATVAR.water(1,1) /(3600.*2));
-            ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) - transp;
-            ground.TEMP.d_water_ET_energy(1,1) =  ground.TEMP.d_water_ET_energy(1,1) - transp  .* (double(ground.STATVAR.T(1,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(1,1) + ...
-                double(ground.STATVAR.T(1,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(1,1));
-                        
-            
-            weighting = ground.STATVAR.water(2:3) ./ sum(ground.STATVAR.water(2:3));
-            transp = transpiration(2).* weighting .* ground.STATVAR.area(2:3,1);
-            transp = min(transp, sum(ground.STATVAR.water(2:3)) ./(3600.*2));
-            ground.TEMP.d_water_ET(2:3,1) = ground.TEMP.d_water_ET(2:3,1) - transp;
-            ground.TEMP.d_water_ET_energy(2:3,1) =  ground.TEMP.d_water_ET_energy(2:3,1) - transp  .* (double(ground.STATVAR.T(2:3,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(2:3,1) + ...
-                double(ground.STATVAR.T(2:3,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(2:3,1));
-            
-            weighting = ground.STATVAR.water(4:9) ./ sum(ground.STATVAR.water(4:9));
-            transp = transpiration(3).* weighting .* ground.STATVAR.area(4:9,1);
-            transp = min(transp, sum(ground.STATVAR.water(4:9)) ./(3600.*2));
-            ground.TEMP.d_water_ET(4:9,1) = ground.TEMP.d_water_ET(4:9,1) - transp;
-            ground.TEMP.d_water_ET_energy(4:9,1) =  ground.TEMP.d_water_ET_energy(4:9,1) - transp  .* (double(ground.STATVAR.T(4:9,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(4:9,1) + ...
-                double(ground.STATVAR.T(4:9,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(4:9,1));            
+%             transp = transpiration(1) .* ground.STATVAR.area(1,1);
+%             trans = min(transp, ground.STATVAR.water(1,1) /(3600.*2));
+%             ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) - transp;
+%             ground.TEMP.d_water_ET_energy(1,1) =  ground.TEMP.d_water_ET_energy(1,1) - transp  .* (double(ground.STATVAR.T(1,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(1,1) + ...
+%                 double(ground.STATVAR.T(1,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(1,1));
+%                         
+%             
+%             weighting = ground.STATVAR.water(2:3) ./ sum(ground.STATVAR.water(2:3));
+%             transp = transpiration(2).* weighting .* ground.STATVAR.area(2:3,1);
+%             transp = min(transp, sum(ground.STATVAR.water(2:3)) ./(3600.*2));
+%             ground.TEMP.d_water_ET(2:3,1) = ground.TEMP.d_water_ET(2:3,1) - transp;
+%             ground.TEMP.d_water_ET_energy(2:3,1) =  ground.TEMP.d_water_ET_energy(2:3,1) - transp  .* (double(ground.STATVAR.T(2:3,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(2:3,1) + ...
+%                 double(ground.STATVAR.T(2:3,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(2:3,1));
+%             
+%             weighting = ground.STATVAR.water(4:9) ./ sum(ground.STATVAR.water(4:9));
+%             transp = transpiration(3).* weighting .* ground.STATVAR.area(4:9,1);
+%             transp = min(transp, sum(ground.STATVAR.water(4:9)) ./(3600.*2));
+%             ground.TEMP.d_water_ET(4:9,1) = ground.TEMP.d_water_ET(4:9,1) - transp;
+%             ground.TEMP.d_water_ET_energy(4:9,1) =  ground.TEMP.d_water_ET_energy(4:9,1) - transp  .* (double(ground.STATVAR.T(4:9,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(4:9,1) + ...
+%                 double(ground.STATVAR.T(4:9,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(4:9,1));            
 
-            
-            
+
         end
 
-        function vegetation = get_evaporation(vegetation)
-            ground = vegetation.PARENT_GROUND;
-            
-            evaporation = (0.0181528 .* vegetation.STATVAR.mlcanopyinst.etsoi)./1000;
-            
-            evap = evaporation .* ground.STATVAR.area(1,1);
-            evap = min(evap, ground.STATVAR.water(1,1)./(3600.*2));
-            ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) - evap;
-            ground.TEMP.d_water_ET_energy(1,1) =  ground.TEMP.d_water_ET_energy(1,1) - evap .* (double(ground.STATVAR.T(1,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(1,1) + ...
-                double(ground.STATVAR.T(1,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(1,1));
-        end
+%         function vegetation = get_evaporation(vegetation)
+%             ground = vegetation.PARENT_GROUND;
+%             
+%             evaporation = (0.0181528 .* vegetation.STATVAR.mlcanopyinst.etsoi)./1000;
+%             
+%             evap = evaporation .* ground.STATVAR.area(1,1);
+%             evap = min(evap, ground.STATVAR.water(1,1)./(3600.*2));
+%             ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) - evap;
+%             ground.TEMP.d_water_ET_energy(1,1) =  ground.TEMP.d_water_ET_energy(1,1) - evap .* (double(ground.STATVAR.T(1,1)>=0) .* ground.CONST.c_w .* ground.STATVAR.T(1,1) + ...
+%                 double(ground.STATVAR.T(1,1)<0) .* ground.CONST.c_i .* ground.STATVAR.T(1,1));
+%         end
         
         %----this function is only needed for this particular vegegtation
         %scheme
-        function vegetation = map_variables_no_snow(vegetation)
-            ground = vegetation.PARENT_SURFACE;
-           
-            ground.STATVAR.Qh = vegetation.STATVAR.mlcanopyinst.shsoi;
-            ground.STATVAR.Qe = vegetation.STATVAR.mlcanopyinst.lhsoi;
-            
-            d_energy_first_cell = vegetation.ForcingV.TEMP.Lin + vegetation.ForcingV.TEMP.Sin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
-            ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + d_energy_first_cell .* ground.STATVAR.area(1,1);
-            
-            vegetation.STATVAR.soilvar.t_top_surfacecell = ground.STATVAR.T(1) + 273.15;
-            %vegetation.STATVAR.vegetation.soilvar.dz_topsurfacecell = ground.STATVAR.layerThick(1);
-            %vegetation.STATVAR.vegetation.soilvar.thk_topsurfacecell = ground.STATVAR.thermCond(1);
-            %not necessary, should not be used any further in vegetation
-            vegetation.STATVAR.mlcanopyinst.gsoi = d_energy_first_cell;
-            
-%             ground = vegetation.PARENT_GROUND;
-% %             midPoint = cumsum([0; ground.STATVAR.layerThick]);
-% %             midPoint = (midPoint(2:end,1) + midPoint(1:end-1,1))./2;
-% %             water = ground.STATVAR.water./ ground.STATVAR.area ./ ground.STATVAR.layerThick;
-% %             ice = ground.STATVAR.ice./ ground.STATVAR.area ./ ground.STATVAR.layerThick;
-% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(1) = interp1(midPoint,water,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(2) = interp1(midPoint,water,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(3) = interp1(midPoint,water,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(1) = interp1(midPoint,ice,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(2) = interp1(midPoint,ice,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(3) = interp1(midPoint,ice,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
+%         function vegetation = map_variables_no_snow(vegetation)
+%             ground = vegetation.PARENT_SURFACE;
+%            
+%             ground.STATVAR.Qh = vegetation.STATVAR.mlcanopyinst.shsoi;
+%             ground.STATVAR.Qe = vegetation.STATVAR.mlcanopyinst.lhsoi;
+%             
+%             d_energy_first_cell = vegetation.ForcingV.TEMP.Lin + vegetation.ForcingV.TEMP.Sin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe;
+%             ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + d_energy_first_cell .* ground.STATVAR.area(1,1);
+%             
+%             vegetation.STATVAR.soilvar.t_top_surfacecell = ground.STATVAR.T(1) + 273.15;
+%             %vegetation.STATVAR.vegetation.soilvar.dz_topsurfacecell = ground.STATVAR.layerThick(1);
+%             %vegetation.STATVAR.vegetation.soilvar.thk_topsurfacecell = ground.STATVAR.thermCond(1);
+%             %not necessary, should not be used any further in vegetation
+%             vegetation.STATVAR.mlcanopyinst.gsoi = d_energy_first_cell;
+%             
+% %             ground = vegetation.PARENT_GROUND;
+% % %             midPoint = cumsum([0; ground.STATVAR.layerThick]);
+% % %             midPoint = (midPoint(2:end,1) + midPoint(1:end-1,1))./2;
+% % %             water = ground.STATVAR.water./ ground.STATVAR.area ./ ground.STATVAR.layerThick;
+% % %             ice = ground.STATVAR.ice./ ground.STATVAR.area ./ ground.STATVAR.layerThick;
+% % %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(1) = interp1(midPoint,water,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(2) = interp1(midPoint,water,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(3) = interp1(midPoint,water,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(1) = interp1(midPoint,ice,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(2) = interp1(midPoint,ice,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(3) = interp1(midPoint,ice,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
+% % %             
+% % %             vegetation.STATVAR.vegetation.soilvar.t_soisno(1) = interp1(midPoint,ground.STATVAR.T+273.15,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.t_soisno(2) = interp1(midPoint,ground.STATVAR.T+273.15,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.t_soisno(3) = interp1(midPoint,ground.STATVAR.T+273.15,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
+% % %             
+% % %             vegetation.STATVAR.vegetation.soilvar.thk(1) = interp1(midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.thk(2) = interp1(midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
+% % %             vegetation.STATVAR.vegetation.soilvar.thk(3) = interp1(midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
+% % 
+% %             range_cell_1 = 1;
+% %             range_cell_2 = 2:3;
+% %             range_cell_3 = 4:9;
+% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(1) = sum(ground.STATVAR.water(range_cell_1))./ sum(ground.STATVAR.area(range_cell_1) .* ground.STATVAR.layerThick(range_cell_1));
+% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(2) = sum(ground.STATVAR.water(range_cell_2))./ sum(ground.STATVAR.area(range_cell_2) .* ground.STATVAR.layerThick(range_cell_2));
+% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(3) = sum(ground.STATVAR.water(range_cell_3))./ sum(ground.STATVAR.area(range_cell_3) .* ground.STATVAR.layerThick(range_cell_3));
+% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(1) = sum(ground.STATVAR.ice(range_cell_1))./ sum(ground.STATVAR.area(range_cell_1) .* ground.STATVAR.layerThick(range_cell_1));
+% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(2) = sum(ground.STATVAR.ice(range_cell_2))./ sum(ground.STATVAR.area(range_cell_2) .* ground.STATVAR.layerThick(range_cell_2));
+% %             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(3) = sum(ground.STATVAR.ice(range_cell_3))./ sum(ground.STATVAR.area(range_cell_3) .* ground.STATVAR.layerThick(range_cell_3));
 % %             
-% %             vegetation.STATVAR.vegetation.soilvar.t_soisno(1) = interp1(midPoint,ground.STATVAR.T+273.15,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.t_soisno(2) = interp1(midPoint,ground.STATVAR.T+273.15,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.t_soisno(3) = interp1(midPoint,ground.STATVAR.T+273.15,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
+% %             vegetation.STATVAR.vegetation.soilvar.t_soisno(1) = mean(ground.STATVAR.T(range_cell_1))+273.15;
+% %             vegetation.STATVAR.vegetation.soilvar.t_soisno(2) = mean(ground.STATVAR.T(range_cell_2))+273.15;
+% %             vegetation.STATVAR.vegetation.soilvar.t_soisno(3) = mean(ground.STATVAR.T(range_cell_3))+273.15;
 % %             
-% %             vegetation.STATVAR.vegetation.soilvar.thk(1) = interp1(midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(1),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.thk(2) = interp1(midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(2),'nearest');
-% %             vegetation.STATVAR.vegetation.soilvar.thk(3) = interp1(midPoint,ground.STATVAR.thermCond,vegetation.STATVAR.vegetation.soilvar.zi(3),'nearest');
-% 
-%             range_cell_1 = 1;
-%             range_cell_2 = 2:3;
-%             range_cell_3 = 4:9;
-%             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(1) = sum(ground.STATVAR.water(range_cell_1))./ sum(ground.STATVAR.area(range_cell_1) .* ground.STATVAR.layerThick(range_cell_1));
-%             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(2) = sum(ground.STATVAR.water(range_cell_2))./ sum(ground.STATVAR.area(range_cell_2) .* ground.STATVAR.layerThick(range_cell_2));
-%             vegetation.STATVAR.vegetation.soilvar.h2osoi_vol(3) = sum(ground.STATVAR.water(range_cell_3))./ sum(ground.STATVAR.area(range_cell_3) .* ground.STATVAR.layerThick(range_cell_3));
-%             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(1) = sum(ground.STATVAR.ice(range_cell_1))./ sum(ground.STATVAR.area(range_cell_1) .* ground.STATVAR.layerThick(range_cell_1));
-%             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(2) = sum(ground.STATVAR.ice(range_cell_2))./ sum(ground.STATVAR.area(range_cell_2) .* ground.STATVAR.layerThick(range_cell_2));
-%             vegetation.STATVAR.vegetation.soilvar.h2osoi_ice(3) = sum(ground.STATVAR.ice(range_cell_3))./ sum(ground.STATVAR.area(range_cell_3) .* ground.STATVAR.layerThick(range_cell_3));
-%             
-%             vegetation.STATVAR.vegetation.soilvar.t_soisno(1) = mean(ground.STATVAR.T(range_cell_1))+273.15;
-%             vegetation.STATVAR.vegetation.soilvar.t_soisno(2) = mean(ground.STATVAR.T(range_cell_2))+273.15;
-%             vegetation.STATVAR.vegetation.soilvar.t_soisno(3) = mean(ground.STATVAR.T(range_cell_3))+273.15;
-%             
-%             vegetation.STATVAR.vegetation.soilvar.thk(1) = mean(ground.STATVAR.thermCond(range_cell_1));
-%             vegetation.STATVAR.vegetation.soilvar.thk(2) = mean(ground.STATVAR.thermCond(range_cell_2));
-%             vegetation.STATVAR.vegetation.soilvar.thk(3) = mean(ground.STATVAR.thermCond(range_cell_3));
-%             
-        end
+% %             vegetation.STATVAR.vegetation.soilvar.thk(1) = mean(ground.STATVAR.thermCond(range_cell_1));
+% %             vegetation.STATVAR.vegetation.soilvar.thk(2) = mean(ground.STATVAR.thermCond(range_cell_2));
+% %             vegetation.STATVAR.vegetation.soilvar.thk(3) = mean(ground.STATVAR.thermCond(range_cell_3));
+% %             
+%         end
         
     end  
 end

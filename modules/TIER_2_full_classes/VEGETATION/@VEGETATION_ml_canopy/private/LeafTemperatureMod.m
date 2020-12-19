@@ -110,7 +110,10 @@ if (vegetation.canopy.dpai(p,ic) > 0) % >0  leaf layer
 else % non-leaf layer
     
     vegetation.mlcanopyinst.tleaf(p,ic,il) = vegetation.mlcanopyinst.tair(p,ic);
-    vegetation.mlcanopyinst.tleaf(p,1,il) = NaN; %vegetation.mlcanopyinst.tg(p);  %SS: tleaf(p,1) würde eigentlich gar nicht existieren.. 
+    %CHANGE SEBAS
+    %vegetation.mlcanopyinst.tleaf(p,1,il) = NaN; %vegetation.mlcanopyinst.tg(p);  %SS: tleaf(p,1) würde eigentlich gar nicht existieren.. 
+    vegetation.mlcanopyinst.tleaf(p,1,il) = vegetation.mlcanopyinst.tair(p,1);
+    %end change SEBAS
     vegetation.mlcanopyinst.stleaf(p,ic,il) = 0.;
     vegetation.mlcanopyinst.shleaf(p,ic,il) = 0.;
     vegetation.mlcanopyinst.lhleaf(p,ic,il) = 0.;
