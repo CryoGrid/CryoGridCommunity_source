@@ -204,7 +204,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
         
 
         function tile = interpolate_forcing_tile(tile)
-             tile.FORCING = interpolate_forcing(tile.t, tile.FORCING);
+             tile.FORCING = interpolate_forcing(tile.FORCING, tile);
         end
 
         function tile = interact_lateral(tile)

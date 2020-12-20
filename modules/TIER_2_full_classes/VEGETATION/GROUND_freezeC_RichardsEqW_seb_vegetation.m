@@ -228,7 +228,9 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation < GROUND_freezeC_RichardsEqW_
        
         function ground = compute_diagnostic(ground, tile)
             ground.VEGETATION = compute_diagnostic(ground.VEGETATION, tile);
+            
             ground = compute_diagnostic@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+            
         end
         
         function ground = check_trigger(ground, tile)

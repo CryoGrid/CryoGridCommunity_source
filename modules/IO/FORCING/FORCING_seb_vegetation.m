@@ -110,8 +110,9 @@ classdef FORCING_seb_vegetation < matlab.mixin.Copyable
             forcing.TEMP.Sin_dir = 0;
         end
         
-        function forcing = interpolate_forcing(t, forcing)
-
+        function forcing = interpolate_forcing(forcing, tile)
+            t = tile.t;
+            
             posit=floor((t-forcing.DATA.timeForcing(1,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1)))+1;
             
             forcing.TEMP.snowfall=forcing.DATA.snowfall(posit,1)+(forcing.DATA.snowfall(posit+1,1)-forcing.DATA.snowfall(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));

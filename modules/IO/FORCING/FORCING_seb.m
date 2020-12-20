@@ -133,7 +133,8 @@ classdef FORCING_seb < matlab.mixin.Copyable
             forcing.TEMP.p=0;
         end
         
-        function forcing = interpolate_forcing(t, forcing)
+        function forcing = interpolate_forcing(forcing, tile)
+            t = tile.t;
 
             posit=floor((t-forcing.DATA.timeForcing(1,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1)))+1;
             

@@ -147,38 +147,38 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation_snow < GROUND_freezeC_Richard
         end
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
-            [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_seb(ground, S_down);
+            [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, S_down);
         end
         
         function ground = get_boundary_condition_l(ground, tile)
-              ground = get_boundary_condition_l@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+              ground = get_boundary_condition_l@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile);
         end
         
         function ground = get_derivatives_prognostic(ground, tile)
             if ground.CHILD == 0  
-                ground = get_derivatives_prognostic@GROUND_freezeC_RichardsEqW_seb(ground, tile); %call normal function
+                ground = get_derivatives_prognostic@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile); %call normal function
             else
                 ground.CHILD = get_derivatives_prognostic_CHILD(ground.CHILD, tile);
-                ground = get_derivatives_prognostic@GROUND_freezeC_RichardsEqW_seb(ground, tile); 
+                ground = get_derivatives_prognostic@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile); 
             end
         end
         
         function timestep = get_timestep(ground, tile) 
             if ground.CHILD == 0
-                timestep = get_timestep@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+                timestep = get_timestep@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile);
             else 
                 timestep_snow = get_timestep_CHILD(ground.CHILD, tile);
-                timestep_ground =  get_timestep@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+                timestep_ground =  get_timestep@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile);
                 timestep = timestep_ground + double(timestep_snow > 0 && timestep_snow < timestep_ground) .* (timestep_snow - timestep_ground);
             end
         end
         
         function ground = advance_prognostic(ground, tile) 
             if ground.CHILD == 0
-                ground =  advance_prognostic@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+                ground =  advance_prognostic@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile);
             else                
                 ground.CHILD = advance_prognostic_CHILD(ground.CHILD, tile);
-                ground =  advance_prognostic@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+                ground =  advance_prognostic@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile);
             end
         end
         
@@ -189,9 +189,21 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation_snow < GROUND_freezeC_Richard
         
         function ground = compute_diagnostic(ground, tile)
             if ground.CHILD == 0
-                ground = compute_diagnostic@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+                ground = compute_diagnostic@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile);
             else
-                ground = compute_diagnostic@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+                            %test with bypass flow
+
+                i=1;
+                while ground.CHILD.STATVAR.excessWater > 0
+                    water_deficit = ground.STATVAR.layerThick(i,1).* ground.STATVAR.area(i,1) - ground.STATVAR.mineral(i,1) - ground.STATVAR.organic(i,1) - ground.STATVAR.waterIce(i,1);
+                    infiltrate = min(water_deficit, ground.CHILD.STATVAR.excessWater);
+                    ground.STATVAR.waterIce(i,1) = ground.STATVAR.waterIce(i,1) + infiltrate;
+                    ground.CHILD.STATVAR.excessWater = ground.CHILD.STATVAR.excessWater - infiltrate;
+                    i=i+1;
+                end
+
+                
+                ground = compute_diagnostic@GROUND_freezeC_RichardsEqW_seb_vegetation(ground, tile);
                 ground.CHILD = compute_diagnostic_CHILD(ground.CHILD, tile);
                 
             end

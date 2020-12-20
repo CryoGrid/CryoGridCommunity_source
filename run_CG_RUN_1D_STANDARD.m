@@ -3,7 +3,7 @@ addpath(genpath(modules_path));
 
 
 init_format = 'EXCEL'; %EXCEL or YAML
-run_name = 'test_vegetation_snow'; %parameter file name and result directory 
+run_name = 'test_vegetation_snow_bypass'; %parameter file name and result directory 
 constant_file = 'CONSTANTS_excel'; %file with constants
 result_path = '../results/';  %with trailing backslash
 forcing_path = fullfile ('./forcing/');
