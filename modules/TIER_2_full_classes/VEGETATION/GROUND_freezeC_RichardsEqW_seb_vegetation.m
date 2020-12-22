@@ -231,6 +231,9 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation < GROUND_freezeC_RichardsEqW_
             
             ground = compute_diagnostic@GROUND_freezeC_RichardsEqW_seb(ground, tile);
             
+            %SEBASTIAN: no water fluxes when frozen
+            ground.STATVAR.hydraulicConductivity(ground.STATVAR.T<0) = 0;
+            
         end
         
         function ground = check_trigger(ground, tile)

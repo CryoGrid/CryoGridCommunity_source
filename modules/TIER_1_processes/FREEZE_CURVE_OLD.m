@@ -18,7 +18,7 @@ classdef FREEZE_CURVE < BASE
         %----diagnostic functions---------
         function ground = get_T_water_freezeC(ground)
             
-            L_sl = ground.CONST.L_f ./ ground.CONST.rho_w; %---------------
+            L_sl = ground.CONST.L_f ./ ground.CONST.rho_w;
             c_w = ground.CONST.c_w;
             c_i = ground.CONST.c_i;
             c_o = ground.CONST.c_o;
@@ -256,7 +256,7 @@ classdef FREEZE_CURVE < BASE
         
         function ground = get_E_freezeC(ground) %required for initialization
         
-            L_sl = ground.CONST.L_f ./ ground.CONST.rho_w ;%--------------;
+            L_sl = ground.CONST.L_f ./ ground.CONST.rho_w;
             c_w = ground.CONST.c_w;
             c_i = ground.CONST.c_i;
             c_o = ground.CONST.c_o;
@@ -368,7 +368,7 @@ classdef FREEZE_CURVE < BASE
             
             disp('creating look-up tables')
             
-            L_sl = ground.CONST.L_f ./ ground.CONST.rho_w ; %---------------
+            L_sl = ground.CONST.L_f ./ ground.CONST.rho_w;
             c_w = ground.CONST.c_w;
             c_i = ground.CONST.c_i;
             c_o = ground.CONST.c_o;

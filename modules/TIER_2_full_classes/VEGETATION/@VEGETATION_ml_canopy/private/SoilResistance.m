@@ -103,7 +103,10 @@ for f = 1:vegetation.canopy.num_exposedvegp
         % for each soil layer and then convert back to a resistance after the
         % summation.
         
-        vegetation.mlcanopyinst.rsoil(p) = vegetation.mlcanopyinst.rsoil(p) + 1. ./ soilr;
+        %SEBAS CHANGE: set to zero of there is ice in a layer, just as below!!
+        %vegetation.mlcanopyinst.rsoil(p) = vegetation.mlcanopyinst.rsoil(p) + 1. ./ soilr;
+        vegetation.mlcanopyinst.rsoil(p) = vegetation.mlcanopyinst.rsoil(p) + double(vegetation.soilvar.h2osoi_ice(c,j) == 0) ./ soilr;
+        %END CHANGE
         
         % Maximum transpiration for each layer (mmol H2O/m2/s). No negative
         % transpiration and no transpiration from frozen soil.
@@ -120,6 +123,11 @@ for f = 1:vegetation.canopy.num_exposedvegp
     % Belowground resistance: resistance = 1 / conductance
     
     vegetation.mlcanopyinst.rsoil(p) = vegetation.canopy.lai(p) ./ vegetation.mlcanopyinst.rsoil(p);
+    %SEBAST CHANGE: set to some high value of entire soil is frozen
+    if vegetation.mlcanopyinst.rsoil(p) == Inf
+        vegetation.mlcanopyinst.rsoil(p) = 1e20;
+    end
+    % END CHNAGE
     
     % Weighted soil water potential (MPa) and fractional uptake from soil layers
     
@@ -132,7 +140,10 @@ for f = 1:vegetation.canopy.num_exposedvegp
         if (totevap > 0.)
             vegetation.mlcanopyinst.soil_et_loss(p,j) = evap(j) ./ totevap;
         else
-            vegetation.mlcanopyinst.soil_et_loss(p,j) = 1. ./ vegetation.mlcanopyinst.nlevgrnd;
+            %SEBAS CHANGED
+            %vegetation.mlcanopyinst.soil_et_loss(p,j) = 1. ./ vegetation.mlcanopyinst.nlevgrnd;  %SEBAS: THIS IS 1, WHY?
+            vegetation.mlcanopyinst.soil_et_loss(p,j) = 0; %1. ./ vegetation.mlcanopyinst.nlevgrnd;  %SEBAS: THIS IS 1, WHY?
+            %END CHANGE
         end
     end
     

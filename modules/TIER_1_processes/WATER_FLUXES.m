@@ -655,6 +655,9 @@ classdef WATER_FLUXES < BASE
             ice_saturation = max(0,min(1,ice_saturation));
             n = ground.STATVAR.n;
             ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
+        
+            %SEBAS CHANGED
+           % ground.STATVAR.hydraulicConductivity(ground.STATVAR.T<0) = 0;
         end
         
         function ground = calculate_hydraulicConductivity_RichardsEq_Xice(ground) %hydraulic conductivity of the matrix part of the cell

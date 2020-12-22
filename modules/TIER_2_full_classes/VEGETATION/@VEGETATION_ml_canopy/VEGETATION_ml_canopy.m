@@ -283,7 +283,9 @@ classdef VEGETATION_ml_canopy < BASE
             vegetation.flux.Qe_ground = vegetation.PARENT_SURFACE.STATVAR.Qe;
             vegetation.flux.Qh_ground = vegetation.PARENT_SURFACE.STATVAR.Qh;
             vegetation.flux.Lout_ground = vegetation.PARENT_SURFACE.STATVAR.Lout4vegetation;
-            
+            range = [1:vegetation.soilvar.nsoi]';
+            vegetation.soilvar.h2osoi_ice = ground.PARENT_GROUND.STATVAR.ice(range)' ./ (ground.PARENT_GROUND.STATVAR.area(range)' .* ground.PARENT_GROUND.STATVAR.layerThick(range)');
+            vegetation.soilvar.h2osoi_vol = ground.PARENT_GROUND.STATVAR.water(range)' ./ (ground.PARENT_GROUND.STATVAR.area(range)' .* ground.PARENT_GROUND.STATVAR.layerThick(range)');
         end
 
         

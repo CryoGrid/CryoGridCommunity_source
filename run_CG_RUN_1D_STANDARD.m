@@ -4,6 +4,7 @@ addpath(genpath(modules_path));
 
 init_format = 'EXCEL'; %EXCEL or YAML
 run_name = 'test_vegetation_snow_bypass'; %parameter file name and result directory 
+run_name = 'ExperimentHansen2004';
 constant_file = 'CONSTANTS_excel'; %file with constants
 result_path = '../results/';  %with trailing backslash
 forcing_path = fullfile ('./forcing/');
@@ -39,6 +40,7 @@ BOTTOM_CLASS = tile.BOTTOM_CLASS;
 TOP = tile.TOP;
 BOTTOM = tile.BOTTOM;
 TOP.LATERAL = tile.LATERAL;
+
 
 
 %=========================================================================
@@ -106,11 +108,14 @@ while tile.t < tile.FORCING.PARA.end_time
     %set TOP_CLASS and BOTTOM_CLASS for convenient access
     TOP_CLASS = TOP.NEXT; 
     BOTTOM_CLASS = BOTTOM.PREVIOUS;
+    
+    
 
     %update time variable t
     tile.t = tile.t + tile.timestep./tile.CONST.day_sec;
     
     %model 
     tile = store_OUT_tile(tile);
+   
 end
 
