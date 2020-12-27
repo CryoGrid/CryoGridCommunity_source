@@ -4,7 +4,7 @@ addpath(genpath(modules_path));
 
 init_format = 'EXCEL'; %EXCEL or YAML
 run_name = 'test_vegetation_snow_bypass'; %parameter file name and result directory 
-run_name = 'ExperimentHansen2004';
+%run_name = 'ExperimentHansen2004';
 constant_file = 'CONSTANTS_excel'; %file with constants
 result_path = '../results/';  %with trailing backslash
 forcing_path = fullfile ('./forcing/');
@@ -78,6 +78,7 @@ while tile.t < tile.FORCING.PARA.end_time
         tile.timestep = min(tile.timestep, get_timestep(CURRENT, tile));
         CURRENT = CURRENT.NEXT;
     end
+    %tile.timestep = min(4, tile.timestep);
     tile.next_break_time = min(tile.LATERAL.IA_TIME, tile.OUT.OUTPUT_TIME);
     tile.timestep = min(tile.timestep, (tile.next_break_time - tile.t).*tile.CONST.day_sec);
     
@@ -87,6 +88,8 @@ while tile.t < tile.FORCING.PARA.end_time
         CURRENT = advance_prognostic(CURRENT, tile);
         CURRENT = CURRENT.NEXT;
     end
+%     disp(TOP_CLASS.TEMP.d_water(1,1))
+%test=[test; [TOP_CLASS.STATVAR.T(1,1) TOP_CLASS.STATVAR.waterIce(1,1) TOP_CLASS.STATVAR.waterPotential(1,1) TOP_CLASS.TEMP.d_water(1,1)] tile.timestep];
            
     %diagnostic step - compute diagnostic variables
     TOP.NEXT = compute_diagnostic_first_cell(TOP.NEXT, tile); %calculate Lstar, only uppermost class

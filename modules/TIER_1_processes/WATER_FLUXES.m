@@ -651,11 +651,17 @@ classdef WATER_FLUXES < BASE
         function ground = calculate_hydraulicConductivity_RichardsEq(ground) 
             saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
             saturation = max(0,min(1,saturation));
-            ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            %ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            ice_saturation = ground.STATVAR.ice ./ ground.STATVAR.waterIce; %Changed Sebastian Hansen et al., 2004
             ice_saturation = max(0,min(1,ice_saturation));
             n = ground.STATVAR.n;
-            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
-        
+            %ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
+
+            ground = calculate_viscosity_water(ground);
+            hydr_cond = ground.PARA.permeability ./ ground.STATVAR.viscosity_water .* ground.CONST.rho_w .* ground.CONST.g; 
+            ground.STATVAR.hydraulicConductivity = hydr_cond .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
+
+            
             %SEBAS CHANGED
            % ground.STATVAR.hydraulicConductivity(ground.STATVAR.T<0) = 0;
         end
@@ -674,6 +680,19 @@ classdef WATER_FLUXES < BASE
             ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* ground.STATVAR.water./ground.STATVAR.layerThick./ground.STATVAR.area;   
         end
         
+        %viscosity
+        function ground = calculate_viscosity_water(ground)
+            
+            T = max(0,ground.STATVAR.T)+273.15;
+            
+            %from Wikepedia
+            A = 1.856e-14;
+            B = 4209;
+            C = 0.04527;
+            D = -3.376e-5;
+
+            ground.STATVAR.viscosity_water = A.*exp(B./T + C.* T + D.* T.^2);
+        end
     end
 end
 

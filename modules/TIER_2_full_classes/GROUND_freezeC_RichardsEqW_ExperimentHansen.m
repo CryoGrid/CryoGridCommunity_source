@@ -5,9 +5,9 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE
+classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Painter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE
 
-    
+    %FREEZE_CURVE_DallAmico
     methods
         
         %----mandatory functions---------------
@@ -152,7 +152,10 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
         
         function ground = get_boundary_condition_u(ground, tile)
             %Experiment Hanssen et al., 2004
-            ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - 28.*(ground.STATVAR.T(1)+6)  ;
+            if tile.t>=tile.FORCING.PARA.start_time+3
+                %ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - 28.*(ground.STATVAR.T(1)+6)  ;
+                ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - (40 - 30/16 .* max(-4, min(0, ground.STATVAR.T(1))).^2).*(ground.STATVAR.T(1)+6) ;
+            end
         end
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
@@ -162,7 +165,11 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
+            
             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
+            
+            %ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) - 6.*(ground.STATVAR.T(1) - 6.7); %modification by Painter Marsflo
+            
             ground = get_boundary_condition_l_water2(ground);  %if flux not zero, check that the water flowing out is available! Not implemented here.
         end
         

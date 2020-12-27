@@ -63,7 +63,8 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation < GROUND_freezeC_RichardsEqW_
             ground.STATVAR.ice = [];  %total volume of ice [m3]
             ground.STATVAR.air = [];  % total volume of air [m3] - NOT USED
             ground.STATVAR.thermCond = []; %thermal conductivity [W/mK]
-            ground.STATVAR.hydraulicConductivity = []; % hydraulic conductivity [m/sec]
+            ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
+            %ground.STATVAR.hydraulicConductivity = []; % hydraulic conductivity [m/sec]
             
             ground.STATVAR.Lstar = [];  %Obukhov length [m]
             ground.STATVAR.Qh = [];     %sensible heat flux [W/m2]
@@ -232,7 +233,7 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation < GROUND_freezeC_RichardsEqW_
             ground = compute_diagnostic@GROUND_freezeC_RichardsEqW_seb(ground, tile);
             
             %SEBASTIAN: no water fluxes when frozen
-            ground.STATVAR.hydraulicConductivity(ground.STATVAR.T<0) = 0;
+            %ground.STATVAR.hydraulicConductivity(ground.STATVAR.T<0) = 0;
             
         end
         

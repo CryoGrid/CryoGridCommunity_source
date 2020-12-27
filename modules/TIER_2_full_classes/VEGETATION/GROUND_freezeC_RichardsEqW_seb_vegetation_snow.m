@@ -210,6 +210,8 @@ classdef GROUND_freezeC_RichardsEqW_seb_vegetation_snow < GROUND_freezeC_Richard
         end
         
         function ground = check_trigger(ground, tile)
+            
+            
             if ground.CHILD ~= 0
                 %delete CHILD
                 if ground.CHILD.STATVAR.area ./ ground.STATVAR.area(1,1) < 1e-6 %cutoff to get rid of remaining snow
