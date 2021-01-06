@@ -35,9 +35,9 @@ classdef FORCING_seb_vegetation < matlab.mixin.Copyable
             
         end
         
-        function forcing = initialize_excel(forcing)
-            
-        end
+%         function forcing = initialize_excel(forcing)
+%             
+%         end
 
         function forcing = finalize_init(forcing, tile)
           

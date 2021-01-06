@@ -33,9 +33,6 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
 
         end
         
-        function run_info = initialize_excel(run_info)
-            
-        end
         
         function run_info = finalize_init(run_info)
  
@@ -50,21 +47,21 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
             %different sections of the run, e.g. initial inial init, spin-up, actual run 
             
             
-            run_info = customize(run_info);
+%             run_info = customize(run_info);
+%             
+%             tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{1,1}){run_info.PARA.tile_class_index(1,1),1});
+% 
+%             tile.RUN_INFO = run_info;
+%             run_info.TILE = tile;
+%             
+%             %do the run(s) - this is blanked out, and the code is handled in the main run file - for more complicated or opertaional runs, it should be handled here. 
+%             %assemble the stratigraphy, etc.
+%             tile = finalize_init(tile);
+%             
+%             
+%             tile = run_model(tile);  %time integration
             
-            tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{1,1}){run_info.PARA.tile_class_index(1,1),1});
-
-            tile.RUN_INFO = run_info;
-            run_info.TILE = tile;
-            
-            %do the run(s) - this is blanked out, and the code is handled in the main run file - for more complicated or opertaional runs, it should be handled here. 
-            %assemble the stratigraphy, etc.
-            tile = finalize_init(tile);
-            
-            
-            tile = run_model(tile);  %time integration
-            
-            for i=2:size(run_info.PARA.tile_class,1)
+            for i=1:size(run_info.PARA.tile_class,1)
                 disp(['running tile number ' num2str(i)])
                 for j=1:run_info.PARA.number_of_runs_per_tile(i,1)
                     disp(['running round ' num2str(j)])

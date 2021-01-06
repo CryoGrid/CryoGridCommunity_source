@@ -10,7 +10,6 @@ classdef GRID_user_defined < matlab.mixin.Copyable
 
 		PARA
         CONST
-        GRID
         STATVAR
 
     end
@@ -63,25 +62,33 @@ classdef GRID_user_defined < matlab.mixin.Copyable
         end
         
         %called before TILE exists        
-        function self = initialize_excel(self)
-            self.GRID = [];
-            for i=1:size(self.PARA.grid.upper,1)-1
-                self.GRID = [self.GRID; [self.PARA.grid.upper(i,1):self.PARA.grid.spacing(i,1):self.PARA.grid.upper(i+1,1)-self.PARA.grid.spacing(i,1)]'];
-            end
-            self.GRID = [self.GRID; [self.PARA.grid.upper(end,1):self.PARA.grid.spacing(end,1):self.PARA.grid.lower(end,1)]'];
-            
-
-        end
+%         function self = initialize_excel(self)
+%             self.STATVAR.GRID = [];
+%             for i=1:size(self.PARA.grid.upper,1)-1
+%                 self.STATVAR.GRID = [self.STATVAR.GRID; [self.PARA.grid.upper(i,1):self.PARA.grid.spacing(i,1):self.PARA.grid.upper(i+1,1)-self.PARA.grid.spacing(i,1)]'];
+%             end
+%             self.STATVAR.GRID = [self.STATVAR.GRID; [self.PARA.grid.upper(end,1):self.PARA.grid.spacing(end,1):self.PARA.grid.lower(end,1)]'];
+%             
+%         end
         
        
         %called when TILE exists
         function self = finalize_init(self, tile)
             
-            %delete grid points below domain_depth
-            self.GRID(self.GRID > tile.PARA.domain_depth)=[];
+            self.STATVAR.GRID = [];
+            for i=1:size(self.PARA.grid.upper,1)-1
+                self.STATVAR.GRID = [self.STATVAR.GRID; [self.PARA.grid.upper(i,1):self.PARA.grid.spacing(i,1):self.PARA.grid.upper(i+1,1)-self.PARA.grid.spacing(i,1)]'];
+            end
+            self.STATVAR.GRID = [self.STATVAR.GRID; [self.PARA.grid.upper(end,1):self.PARA.grid.spacing(end,1):self.PARA.grid.lower(end,1)]'];
             
-            self.STATVAR.MIDPOINTS = (self.GRID(2:end,1) + self.GRID(1:end-1,1))./2;
-            self.STATVAR.layerThick = (self.GRID(2:end,1) - self.GRID(1:end-1,1));
+            %---
+            
+            %delete grid points below domain_depth
+            self.STATVAR.GRID(self.STATVAR.GRID > tile.PARA.domain_depth)=[];
+            
+            self.STATVAR.MIDPOINTS = (self.STATVAR.GRID(2:end,1) + self.STATVAR.GRID(1:end-1,1))./2;
+            self.STATVAR.layerThick = (self.STATVAR.GRID(2:end,1) - self.STATVAR.GRID(1:end-1,1));
+            self.STATVAR.layerDistance = (self.STATVAR.MIDPOINTS(2:end,1) - self.STATVAR.MIDPOINTS(1:end-1,1))./2;
         end
         
         

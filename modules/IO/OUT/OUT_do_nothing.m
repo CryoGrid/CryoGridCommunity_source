@@ -31,9 +31,9 @@ classdef OUT_do_nothing < matlab.mixin.Copyable
 		
         %initialization
         
-        function out = initialize_excel(out)
-            
-        end
+%         function out = initialize_excel(out)
+%             
+%         end
         
         
         function out = provide_PARA(out)         

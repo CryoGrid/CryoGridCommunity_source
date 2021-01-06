@@ -7,7 +7,7 @@
 % S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
 %========================================================================
 
-classdef STRAT_layers < matlab.mixin.Copyable
+classdef STRAT_layers2 < matlab.mixin.Copyable
     
     properties
 		strat_layers_index
@@ -24,15 +24,7 @@ classdef STRAT_layers < matlab.mixin.Copyable
 		
 
 
-        function self = initialize(self)
-            % INITIALIZE  Initializes all properties needed by the class.
 
-            self.depth = [];
-			self.variable_names = {};
-			self.variable_values = [];
-			self.variable_gridded = [];
-			self = self.initialize_PARA();
-        end
 		
 		function self = provide_PARA(self)  %this is problematic, these fields must be completely arbitray, it changes accoriding to the requirements of the classes
             %this information must be derived from the STATVAR field of the
@@ -50,9 +42,6 @@ classdef STRAT_layers < matlab.mixin.Copyable
 
         end 
         
-%         function self = initialize_excel(self)
-%             
-%         end
         
         function strat = finalize_init(strat, tile)
 			
@@ -61,23 +50,20 @@ classdef STRAT_layers < matlab.mixin.Copyable
             depth = [depth; Inf];
             for i=1:size(variables,1)
                 if ~strcmp(variables{i,1}, 'depth')
-                    tile.GRID.STATVAR.(variables{i,1}) = tile.GRID.STATVAR.MIDPOINTS .* 0;
+                    if ~isfield(tile.GRID.STATVAR, variables{i,1})
+                        tile.GRID.STATVAR.(variables{i,1}) = tile.GRID.STATVAR.layerThick .* 0;
+                    end
+                    store_var = tile.GRID.STATVAR.GRID(1:end-1,1) .*0;
                     for j=1:size(depth,1)-1
                         range = tile.GRID.STATVAR.MIDPOINTS > depth(j,1) & tile.GRID.STATVAR.MIDPOINTS <= depth(j+1,1);
-                        tile.GRID.STATVAR.(variables{i,1})(range) = strat.PARA.layers.(variables{i,1})(j,1);
+                        store_var(range,1) = strat.PARA.layers.(variables{i,1})(j,1);
                     end
+                    ind = find(tile.PARA.stratigraphy >= strat.PARA.class_number);
+                    store_var = repmat(store_var, 1, tile.PARA.number_of_realizations);
+                    tile.GRID.STATVAR.(variables{i,1})(:,ind) = store_var(:,ind);
                 end
             end
             
-            %conversion of variables, make this a dedicated class??
-%             for i=1:size(variables,1)
-%                 if strcmp(variables{i,1}, 'waterIce') || strcmp(variables{i,1}, 'mineral') || strcmp(variables{i,1}, 'organic')
-%                     tile.GRID.STATVAR.(variables{i,1}) = tile.GRID.STATVAR.(variables{i,1}) .* tile.GRID.STATVAR.layerThick .* tile.PARA.area;
-%                  %ADD CONVERSION OF OTHER VARIABLES HERE
-%                 elseif strcmp(variables{i,1}, 'Xice')
-%                     
-%                 end
-%             end
         end
         
             

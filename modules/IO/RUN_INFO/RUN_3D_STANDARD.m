@@ -41,9 +41,9 @@ classdef RUN_3D_STANDARD < matlab.mixin.Copyable
 
         end
         
-        function run_info = initialize_excel(run_info)
-            
-        end
+%         function run_info = initialize_excel(run_info)
+%             
+%         end
         
         function run_info = finalize_init(run_info)
  

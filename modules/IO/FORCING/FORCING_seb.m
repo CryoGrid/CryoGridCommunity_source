@@ -61,9 +61,9 @@ classdef FORCING_seb < matlab.mixin.Copyable
             
         end
         
-        function forcing = initialize_excel(forcing)
-            
-        end
+%         function forcing = initialize_excel(forcing)
+%             
+%         end
         
        
         

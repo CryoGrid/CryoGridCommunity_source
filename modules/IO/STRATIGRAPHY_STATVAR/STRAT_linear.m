@@ -20,36 +20,7 @@ classdef STRAT_linear < matlab.mixin.Copyable
     
     methods
         
-        %constructor
-% 		function self = STRAT_linear(varargin)               % Temporary definition, to allow old code to run
-%         %function self = STRAT_linear(index, pprovider, grid)      % Definition to be used when old code is no longer supported
-%             % CONSTRUCTOR for STRAT_linear
-%             %   Reads in variable profile from the specified file.
-%             %
-%             %   ARGUMENTS:
-%             %   index:      user defined class index
-%             %   pprovider:  instance of PARAMETER_PROVIDER class
-% 			%	grid:		instance of GRID class
-%             
-%             % The following is only needed to allow legacy code to run
-%             % May be removed when deprecated functions are removed
-%             if nargin==3
-%                 index = varargin{1};
-%                 pprovider = varargin{2};
-% 				grid = varargin{3};
-%             else
-%                 st = dbstack;
-%                 warning(['DEPRECATION WARNING: Instantiating ' st.name '() with no arguments is deprecated.' newline,...
-%                          'You should update your code to take advantage of new IO interface.']);
-%                 return
-%             end
-%             % End allow legacy code
-%             
-%             self.strat_linear_index = index;
-%             self = self.initialize();
-% 			self = self.populate_variables(pprovider);
-%             self = self.finalize_setup(grid);
-%         end
+
 		
 		function self = initialize(self)
             % INITIALIZE  Initializes all properties needed by the class.
@@ -76,9 +47,9 @@ classdef STRAT_linear < matlab.mixin.Copyable
 
         end 
         
-        function self = initialize_excel(self)
-            
-        end
+%         function self = initialize_excel(self)
+%             
+%         end
         
         function strat = finalize_init(strat, tile)
 			% FINALIZE_SETUP  Performs all additional property

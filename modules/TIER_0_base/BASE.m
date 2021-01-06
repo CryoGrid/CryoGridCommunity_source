@@ -19,9 +19,9 @@ classdef BASE < matlab.mixin.Copyable
     
     methods 
         
-        function base = initialize_excel(base)
-        
-        end
+%         function base = initialize_excel(base)
+%         
+%         end
         
         %----LATERAL----------
         

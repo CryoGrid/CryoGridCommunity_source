@@ -30,55 +30,11 @@ classdef OUT_all_lateral_vegetation < matlab.mixin.Copyable
     
     methods
 		
-%         %constructor
-% 		function out = OUT_all_lateral(varargin)               % Temporary definition, to allow old code to run
-%         %function out = OUT_all(index, pprovider, forcing)      % Definition to be used when old code is no longer supported
-%             % CONSTRUCTOR for OUT_all
-%             %   Reads in out data from the specified file.
-%             %
-%             %   ARGUMENTS:
-%             %   index:      user defined class index
-%             %   pprovider:  instance of PARAMETER_PROVIDER class
-% 			%	forcing:	instance of FORCING class
-%             
-%             % The following is only needed to allow legacy code to run
-%             % May be removed when deprecated functions are removed
-%             if nargin==3
-%                 index = varargin{1};
-%                 pprovider = varargin{2};
-% 				forcing = varargin{3};
-%             else
-%                 st = dbstack;
-%                 warning(['DEPRECATION WARNING: Instantiating ' st.name '() with no arguments is deprecated.' newline,...
-%                          'You should update your code to take advantage of new IO interface.']);
-%                 return
-%             end
-%             % End allow legacy code
-%             
-%             out.out_index = index;
-%             out = out.initialize();
-%             out = out.populate_PARA(pprovider);
-%             out = out.finalize_setup(forcing);
-%         end
-		
-        %-------initialization--------------
-        
-% 		function out = initialize(out)
-%             % INITIALIZE  Initializes all properties needed by the class.
-% 			
-% 			out.STRATIGRAPHY = [];
-%             out.LATERAL=[];
-% 			out.TIMESTAMP = [];
-% 			out.MISC = [];
-% 			out.OUTPUT_TIME = [];
-% 			out.SAVE_TIME = [];
-%             out = out.initialize_PARA();
-%             out = out.initialize_TEMP();
-%         end
 
-        function out = initialize_excel(out)
-            
-        end
+% 
+%         function out = initialize_excel(out)
+%             
+%         end
         
         function out = provide_PARA(out)         
             % INITIALIZE_PARA  Initializes PARA structure.

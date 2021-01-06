@@ -4,6 +4,7 @@ classdef BASE_PROVIDER
         PARA
         CONST
         CLASSES %struct of all classes
+        STORAGE
         RUN_INFO_CLASS %RUN_INFO class to start
     end
     

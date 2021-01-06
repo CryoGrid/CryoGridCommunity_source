@@ -149,8 +149,8 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                         
                     end
                     %mandatory function in all classes compatible with
-                    %PROVIDER_EXCEL
-                    new_class = initialize_excel(new_class);
+                    %PROVIDER_EXCEL - REMOVED!!! - no longer necessary
+                    %new_class = initialize_excel(new_class);
                     
                     provider.CLASSES.(class_name){class_index,1} = new_class;
                     if strcmp(functional_group, 'RUN_INFO') && class_index == 1

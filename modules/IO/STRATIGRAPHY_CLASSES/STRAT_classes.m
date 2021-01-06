@@ -63,9 +63,9 @@ classdef STRAT_classes < matlab.mixin.Copyable
 %             self = self.finalize_setup(grid);
 %         end
 
-        function self = initialize_excel(self)
-            
-        end
+%         function self = initialize_excel(self)
+%             
+%         end
 		
 		function self = initialize(self)
             % INITIALIZE  Initializes all properties needed by the class.

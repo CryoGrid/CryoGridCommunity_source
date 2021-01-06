@@ -30,14 +30,10 @@ classdef OUT_all < matlab.mixin.Copyable
     methods
 		
         %initialization
-        
-        function out = initialize_excel(out)
-            
-        end
+
         
         
         function out = provide_PARA(out)         
-            % INITIALIZE_PARA  Initializes PARA structure.
 
             out.PARA.output_timestep = [];
             out.PARA.save_date = [];
@@ -90,7 +86,7 @@ classdef OUT_all < matlab.mixin.Copyable
 
             
             
-            if t==out.OUTPUT_TIME
+            if t>=out.OUTPUT_TIME
                 %if id == 1
                 disp([datestr(t)])
                 %end
@@ -127,8 +123,8 @@ classdef OUT_all < matlab.mixin.Copyable
                 end
                 out.STRATIGRAPHY{1,size(out.STRATIGRAPHY,2)+1} = result;
                 
-                out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
-                if t==out.SAVE_TIME 
+                out.OUTPUT_TIME = min(out.SAVE_TIME, out.OUTPUT_TIME + out.PARA.output_timestep);
+                if t>=out.SAVE_TIME                     
                    if ~(exist([result_path run_name])==7)
                        mkdir([result_path run_name])
                    end
