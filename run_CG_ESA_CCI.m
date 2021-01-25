@@ -21,11 +21,51 @@ provider = read_parameters(provider);
 run_info = finalize_init(run_info);
 
 %[run_info, tile] = run_preproc(run_info);
-[run_info, tile] = run_model(run_info);
 
 
-dsfsg
-tile = run_model(tile);
+
+%[run_info, tile] = run_model(run_info);
+
+  number_of_tiles = ceil(run_info.PARA.total_number_of_cells ./ run_info.PARA.number_of_cells_per_tile);
+            
+  for run_index = 1:number_of_tiles
+      
+      disp(['running range index ' num2str(run_index)])
+      
+      range = [(run_index-1).*run_info.PARA.number_of_cells_per_tile+1:min(run_index.*run_info.PARA.number_of_cells_per_tile, run_info.PARA.total_number_of_cells)]';
+      
+      for i=1:size(run_info.PARA.tile_class,1)
+          disp(['running tile number ' num2str(i)])
+          for j=1:run_info.PARA.number_of_runs(i,1)
+              disp(['running round ' num2str(j)])
+              
+              %load the next tile from the PROVIDER
+              tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{i,1}){run_info.PARA.tile_class_index(i,1),1});
+              tile.PARA.number_of_realizations = size(range,1);
+              tile.PARA.range = range;
+              
+              tile.PARA.geothermal = run_info.STATVAR.geothermal(range,1);
+              
+              
+              %REMOVE
+              %                         [~, pos] = max(run_info.STATVAR.landcover(range,1),[], 2);
+              %                         tile.PARA.stratigraphy = pos(1,1) .*0 +1;
+              %REMOVE
+              
+              %tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class){run_info.PARA.tile_class_index,1});
+              tile.RUN_INFO = run_info;
+              
+              tile = finalize_init(tile); %here, tile can still access a potentially existing tile through til.RUN_INFO.TILE
+              
+              tile = run_model(tile);
+
+
+          end
+      end
+  end
+
+
+
 
 %   rest is equivalent to 
 

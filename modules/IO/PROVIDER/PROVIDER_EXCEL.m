@@ -31,6 +31,7 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
             
             %read the parameter file
             data = read_excel2cell(provider, provider.PARA.parameter_file);
+            disp(provider.PARA.parameter_file)
             i=1;
             while i<=size(data,1)
                 if strcmp(data{i,2}, 'index') %class detected

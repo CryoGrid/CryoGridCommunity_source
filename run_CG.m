@@ -3,9 +3,9 @@ addpath(genpath(modules_path));
 
 %-----------------------------
 % modified by user
-init_format = 'EXCEL'; %EXCEL or YAML
-run_name = 'test2'; %parameter file name and result directory 
-%run_name = 'Herschell_test';
+init_format = 'EXCEL3D'; %EXCEL or YAML
+%run_name = 'Paiku'; %parameter file name and result directory 
+run_name = 'Herschell_test';
 constant_file = 'CONSTANTS_excel'; %file with constants
 result_path = '../results/';  %with trailing backslash
 forcing_path = fullfile ('./forcing/');

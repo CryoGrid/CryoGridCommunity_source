@@ -1,5 +1,5 @@
-classdef OUT_ESA_CCI < matlab.mixin.Copyable
-
+classdef OUT_ESA_CCI_netcdf < matlab.mixin.Copyable
+    %only works for yearly output
 
     properties
         
@@ -35,12 +35,21 @@ classdef OUT_ESA_CCI < matlab.mixin.Copyable
             if ~(exist([out.PARA.out_folder tile.RUN_INFO.PARA.run_name])==7)
                 mkdir([out.PARA.out_folder tile.RUN_INFO.PARA.run_name]);
             end
-            %files saved as 
-            %[out.PARA.out_folder tile.RUN_INFO.PARA.run_name '/' variable_name '_' num2str(tile.PARA.range(1,1)) '_' num2str(tile.PARA.range(end,1)) '.mat']
+            out.PARA.out_folder = [out.PARA.out_folder tile.RUN_INFO.PARA.run_name '/'];
             
             out = set2zero(out);
-            out = reset_STATVAR(out);
+            out = reset_STATVAR(out); %initializes STATVAR
             
+            variable_names = fieldnames(out.STATVAR);
+            number_of_years = str2num(datestr(tile.FORCING.PARA.end_time, 'yyyy')) - str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy'))+1;
+            if tile.RUN_INFO.PARA.my_rank ==1
+                for i=1:size(variable_names,1)
+                    if ~(exist([out.PARA.out_folder variable_names{i,1} '.nc'])==2)
+                        nccreate([out.PARA.out_folder variable_names{i,1} '.nc'], variable_names{i,1}, 'datatype', 'single', 'Dimensions', ...
+                            {'x',size(tile.RUN_INFO.STATVAR.key,1) ,'y', number_of_years, 'z', tile.ENSEMBLE.PARA.ensemble_size}, 'FillValue', -9999);
+                    end
+                end
+            end
 
             if isempty(out.PARA.save_interval) || isnan(out.PARA.save_interval) 
                 out.SAVE_TIME = tile.FORCING.PARA.end_time;
@@ -58,6 +67,7 @@ classdef OUT_ESA_CCI < matlab.mixin.Copyable
                 out.OUTPUT_TIME = tile.FORCING.PARA.start_time + out.PARA.output_timestep;
             end
             
+            out.TEMP.year_count = 1;
 
 
         end
@@ -126,12 +136,25 @@ classdef OUT_ESA_CCI < matlab.mixin.Copyable
                  
                  
                  if tile.t>=out.SAVE_TIME
-                     
+                                          
                      variable_names = fieldnames(out.STATVAR);
+                     for i=1:size(variable_names,1)
+                         datapackage = single(out.STATVAR.(variable_names{i,1}));
+                         datapackage = reshape(datapackage, size(datapackage, 2) ./ tile.ENSEMBLE.PARA.ensemble_size, 1, tile.ENSEMBLE.PARA.ensemble_size);
+                         done = 0;
+                         while done==0
+                             try
+                                 ncwrite([out.PARA.out_folder  variable_names{i,1} '.nc'], variable_names{i,1}, datapackage, [tile.PARA.range(1,1) out.TEMP.year_count 1], [1 1 1]);
+                                 done = 1;
+                             end
+                         end
+                     end
                      
-                     filename =  [out.PARA.out_folder tile.RUN_INFO.PARA.run_name '/'  'out_' datestr(tile.t-1, 'yyyy') '_' num2str(tile.PARA.range(1,1)) '_' num2str(tile.PARA.range(end,1)) '.mat'];
-                     var = out.STATVAR;
-                     save(filename, 'var');
+                     out.TEMP.year_count = out.TEMP.year_count + 1;
+                     
+%                      filename =  [out.PARA.out_folder tile.RUN_INFO.PARA.run_name '/'  'out_' datestr(tile.t-1, 'yyyy') '_' num2str(tile.PARA.range(1,1)) '_' num2str(tile.PARA.range(end,1)) '.mat'];
+%                      var = out.STATVAR;
+%                      save(filename, 'var');
                      
 
                      out = reset_STATVAR(out);

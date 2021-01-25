@@ -39,13 +39,14 @@ classdef FORCING_GROUND_ESA_CCI < matlab.mixin.Copyable
         
         function forcing = finalize_init(forcing, tile)
             if ~forcing.PARA.preprocessed
-                variables = {'ERA_melt_T_index'; 'ERA_snowfall_downscaled'; 'ERA_T_downscaled'; 'final_av_T'; 'final_MODIS_weight'};
+                variables = {'ERA_melt_bare'; 'ERA_melt_forest'; 'ERA_snowfall_downscaled'; 'ERA_T_downscaled'; 'final_av_T'; 'final_MODIS_weight'};
                 for i=1:size(variables,1)
-                    file_info = dir([forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '_' variables{i,1} '*.nc']);
+                    [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' variables{i,1} '*.nc']
+                    file_info = dir([forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' variables{i,1} '*.nc']);
                     file_info = struct2cell(file_info);
                     file_info = file_info(1,:)';
                     file_info = cell2mat(file_info);
-                    start_time = file_info(:,end-19:end-12);
+                    start_time = file_info(:,end-10:end-3); %file_info(:,end-19:end-12);
                     start_time = datenum(start_time, 'yyyymmdd');
                     [start_time, pos]= sort(start_time, 'ascend');
                     
@@ -55,7 +56,7 @@ classdef FORCING_GROUND_ESA_CCI < matlab.mixin.Copyable
 
                         filename = file_info(pos(j),:);
 
-                        data = ncread([forcing.PARA.forcing_ground_folder filename], variables{i,1}, [tile.PARA.range(1) 1], [tile.PARA.range(end)-tile.PARA.range(1)+1 Inf], [1 1]);
+                        data = ncread([forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' filename], variables{i,1}, [tile.PARA.range(1) 1], [tile.PARA.range(end)-tile.PARA.range(1)+1 Inf], [1 1]);
                         forcing.DATA.(variables{i,1}) = [ forcing.DATA.(variables{i,1}) data];
                         %make the 8 dependent on the forcing
                         forcing.DATA.timestamp = [forcing.DATA.timestamp start_time(pos(j),1) + 3.5 + [0:8:8.*(size(data,2)-1)]];
@@ -67,11 +68,11 @@ classdef FORCING_GROUND_ESA_CCI < matlab.mixin.Copyable
                 start_index = find(year_list(:,1)==forcing.PARA.start_overlap, 1);
                 end_index = find(year_list(:,1)==forcing.PARA.end_overlap, 1);
                 
-                sum_xy = zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
-                sum_xx = zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
-                sum_x = zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
-                sum_y = zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
-                n = zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
+                sum_xy = zeros(size(tile.PARA.range,1), 46); %zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);  %here!!! size(tile.PARA.range,1)
+                sum_xx = zeros(size(tile.PARA.range,1), 46); %zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
+                sum_x = zeros(size(tile.PARA.range,1), 46); %zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
+                sum_y = zeros(size(tile.PARA.range,1), 46); %zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
+                n = zeros(size(tile.PARA.range,1), 46); %zeros(tile.RUN_INFO.PARA.number_of_cells_per_tile,46);
                 fit_window = 5; % 5*8 = 40 days
                 
                 for ii=start_index:46:end_index
@@ -111,7 +112,8 @@ classdef FORCING_GROUND_ESA_CCI < matlab.mixin.Copyable
             
             %add last value, otherwise it chrashes when reaching the very
             %last timestamp
-            forcing.DATA.ERA_melt_T_index = [forcing.DATA.ERA_melt_T_index forcing.DATA.ERA_melt_T_index(:,end)];
+            forcing.DATA.ERA_melt_bare = [forcing.DATA.ERA_melt_bare forcing.DATA.ERA_melt_bare(:,end)];
+            forcing.DATA.ERA_melt_forest = [forcing.DATA.ERA_melt_forest forcing.DATA.ERA_melt_forest(:,end)];            
             forcing.DATA.ERA_snowfall_downscaled = [forcing.DATA.ERA_snowfall_downscaled forcing.DATA.ERA_snowfall_downscaled(:,end)];
             forcing.DATA.final_av_T = [forcing.DATA.final_av_T forcing.DATA.final_av_T(:,end)];
             forcing.DATA.final_MODIS_weight = [forcing.DATA.final_MODIS_weight forcing.DATA.final_MODIS_weight(:,end)];
@@ -120,10 +122,10 @@ classdef FORCING_GROUND_ESA_CCI < matlab.mixin.Copyable
             
             forcing.TEMP.index = 1;
             forcing.TEMP.fraction = 0;
-            while forcing.DATA.timestamp(1, forcing.TEMP.index) < forcing.PARA.start_time
+            while forcing.DATA.timestamp(1, forcing.TEMP.index) <= forcing.PARA.start_time
                 forcing.TEMP.index = forcing.TEMP.index + 1;
             end
-            forcing.TEMP.index = forcing.TEMP.index - 1;
+            forcing.TEMP.index = max(1, forcing.TEMP.index - 1);
             forcing.TEMP.number_of_substeps  =  round((forcing.DATA.timestamp(1, forcing.TEMP.index+1) - forcing.DATA.timestamp(1, forcing.TEMP.index)) .* forcing.CONST.day_sec ./ tile.timestep) ;
             forcing.TEMP.fraction = round((forcing.PARA.start_time - forcing.DATA.timestamp(1, forcing.TEMP.index)) ./ ...
                 (forcing.DATA.timestamp(1, forcing.TEMP.index+1) - forcing.DATA.timestamp(1, forcing.TEMP.index)) .* forcing.TEMP.number_of_substeps);
@@ -137,8 +139,10 @@ classdef FORCING_GROUND_ESA_CCI < matlab.mixin.Copyable
                 (forcing.DATA.final_av_T(:, forcing.TEMP.index+1) - forcing.DATA.final_av_T(:, forcing.TEMP.index)))';
             forcing.TEMP.snowfall = (forcing.DATA.ERA_snowfall_downscaled(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
                 (forcing.DATA.ERA_snowfall_downscaled(:, forcing.TEMP.index+1) - forcing.DATA.ERA_snowfall_downscaled(:, forcing.TEMP.index)))';
-            forcing.TEMP.melt = (forcing.DATA.ERA_melt_T_index(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
-                (forcing.DATA.ERA_melt_T_index(:, forcing.TEMP.index+1) - forcing.DATA.ERA_melt_T_index(:, forcing.TEMP.index)))';
+            forcing.TEMP.melt_bare = (forcing.DATA.ERA_melt_bare(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
+                (forcing.DATA.ERA_melt_bare(:, forcing.TEMP.index+1) - forcing.DATA.ERA_melt_bare(:, forcing.TEMP.index)))';
+            forcing.TEMP.melt_forest = (forcing.DATA.ERA_melt_forest(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
+                (forcing.DATA.ERA_melt_forest(:, forcing.TEMP.index+1) - forcing.DATA.ERA_melt_forest(:, forcing.TEMP.index)))';
             
             forcing.TEMP.fraction =  forcing.TEMP.fraction + 1;
             

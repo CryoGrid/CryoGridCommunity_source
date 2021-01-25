@@ -27,7 +27,7 @@ classdef ENSEMBLE_ESA_CCI < matlab.mixin.Copyable
         
         function ensemble = finalize_init(ensemble, tile)
             
-            landcover_list = tile.RUN_INFO.STATVAR.landcover;
+            landcover_list = tile.RUN_INFO.STATVAR.landcover(tile.PARA.range,:);
             %assume landcoverlist = ensemble list of base_classes, this
             %could be change din future updates
             landcover_list(sum(landcover_list,2)==0,1) = 1; %cells with 100% lake assigned the open class
@@ -49,7 +49,8 @@ classdef ENSEMBLE_ESA_CCI < matlab.mixin.Copyable
             ensemble.STATVAR.wind_compaction_timescale = ensemble.STATVAR.snowfall_factor;
             ensemble.STATVAR.water_table_depth = ensemble.STATVAR.snowfall_factor;
             ensemble.STATVAR.wind_speed_class = ensemble.STATVAR.snowfall_factor;
-            
+            ensemble.STATVAR.melt_fraction = ensemble.STATVAR.snowfall_factor;
+            ensemble.STATVAR.rk_init = ensemble.STATVAR.snowfall_factor;
             
             CV_list = ensemble.PARA.ensemble_information.CV';
             stratigraphy_slope = ensemble.PARA.ensemble_information.stratigraphy_slope';
@@ -58,6 +59,8 @@ classdef ENSEMBLE_ESA_CCI < matlab.mixin.Copyable
             water_table_intercept = ensemble.PARA.ensemble_information.water_table_intercept';
             wind_compaction_timescale = ensemble.PARA.ensemble_information.wind_compaction_timescale' .*24.*3600; %[in seconds];
             wind_speed_per_class = ensemble.PARA.ensemble_information.wind_speed_per_class';
+            melt_fraction  = ensemble.PARA.ensemble_information.melt_fraction';
+            rk_init = ensemble.PARA.ensemble_information.rk_init';
             
             for i=1:size(ensemble_size_per_class,1) %loop over cells
                 index=0;
@@ -87,7 +90,8 @@ classdef ENSEMBLE_ESA_CCI < matlab.mixin.Copyable
                         ensemble.STATVAR.snowfall_factor(i,index+k) = get_snowfall_factor(ensemble, k./(ensemble_size_per_class(i,j)+1) , CV_list(1,j));
                         ensemble.STATVAR.wind_compaction_timescale(i, index+k) = wind_compaction_timescale(1,j);
                         ensemble.STATVAR.wind_speed_class(i, index+k) = wind_speed_per_class(1,j);
-                        
+                        ensemble.STATVAR.melt_fraction(i, index+k) = melt_fraction(1,j);
+                        ensemble.STATVAR.rk_init(i, index+k) = rk_init(1,j);
                     end
                     index = index + ensemble_size_per_class(i,j);
                 end
@@ -97,6 +101,8 @@ classdef ENSEMBLE_ESA_CCI < matlab.mixin.Copyable
             ensemble.STATVAR.wind_compaction_timescale = ensemble.STATVAR.wind_compaction_timescale(:)';
             ensemble.STATVAR.water_table_depth = ensemble.STATVAR.water_table_depth(:)';
             ensemble.STATVAR.wind_speed_class = ensemble.STATVAR.wind_speed_class(:)';
+            ensemble.STATVAR.melt_fraction = ensemble.STATVAR.melt_fraction(:)';
+            ensemble.STATVAR.rk_init = ensemble.STATVAR.rk_init(:)';
             
             ensemble.STATVAR.stratigraphy_ID_list = [];
             for i=1:size(tile.STRATIGRAPHY,2)

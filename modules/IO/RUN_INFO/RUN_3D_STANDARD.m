@@ -62,9 +62,10 @@ classdef RUN_3D_STANDARD < matlab.mixin.Copyable
                 %update the worker-specific name of the parameter file and the run
                 run_info.PPROVIDER = update_parameter_file(run_info.PPROVIDER, run_info.PARA.param_file_number(run_info.PARA.worker_number,1));
                 run_info.PPROVIDER = update_run_name(run_info.PPROVIDER, run_info.PARA.worker_number);
+                                
                 %read worker-specific parameter file
                 run_info.PPROVIDER = read_parameters(run_info.PPROVIDER);
-                
+                                
                 run_info = customize(run_info);
                 
                 %tile = run_info.PPROVIDER.FUNCTIONAL_CLASSES.TILE{run_info.PARA.tile_number,1};

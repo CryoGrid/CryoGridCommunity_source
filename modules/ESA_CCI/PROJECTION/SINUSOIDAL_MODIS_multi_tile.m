@@ -99,18 +99,94 @@ classdef SINUSOIDAL_MODIS_multi_tile < matlab.mixin.Copyable
             
         end
         
+%         function proj = get_data(proj, start_time, number_of_days)
+%             
+%             key = proj.RUN_INFO.STATVAR.key;
+%             
+%             proj.STATVAR.timestamp = [];
+%             proj.STATVAR.LST = [];
+%             for index= 1:size(proj.RUN_INFO.STATVAR.list_of_MODIS_tiles,1)
+%                 
+%                 timestamp =[];
+%                 LST=[];
+%                 
+%                 for time = start_time:start_time + number_of_days-1
+%                     
+%                     %computes the day f year
+%                     f=zeros(size(time));
+%                     [y,m,d,~,~,~]=datevec(time);
+%                     doy = datenum(y,m,d,f,f,f)-datenum(y,f,f,f,f,f);
+%                     doy_str=doy+1000;
+%                     doy_str=num2str(doy_str);
+%                     doy_str=doy_str(2:4);
+% 
+%                     range = [proj.RUN_INFO.STATVAR.list_of_MODIS_tiles(index,3):proj.RUN_INFO.STATVAR.list_of_MODIS_tiles(index,4)]';
+%                     key = proj.RUN_INFO.STATVAR.key(range,1);
+%                     
+%                     ID = dir([proj.PARA.MODIS_path proj.PARA.hv_string(index,:) '/M*11A1.A'  datestr(time,'yyyy') doy_str '.' proj.PARA.hv_string(index,:) '*.hdf']);
+%                     ID = struct2cell(ID);
+%                     ID = ID';
+%                     ID = ID(:,1);
+%                     ID = cell2mat(ID);
+%                     %ID = find(proj.TEMP.year_list(:,1) == str2num(datestr(time,'yyyy')) & proj.TEMP.doy_list(:,1) == doy );
+%                     if ~isempty(ID)
+%                         for j=1:size(ID,1)  %loops over Terra and Aqua
+%                             %try
+%                             Day_time = hdfread([proj.PARA.MODIS_path  proj.PARA.hv_string(index,:) '/' ID(j,:)], 'MODIS_Grid_Daily_1km_LST', 'Fields', 'Day_view_time');
+%                             Day_time = double(Day_time(key));
+%                             
+%                             Day_time(Day_time==255)=NaN;
+%                             Day_time = time + Day_time.*0.1./24; %MODIS time in local solar noon
+%                             Day_time = SolarTime2LocalTime(proj, Day_time, doy, proj.RUN_INFO.STATVAR.longitude(range), 0); %convert to UTC using longitudes; IMPORTANT: use last argument 0 to convert to UTC
+%                             timestamp = [timestamp Day_time(:)];
+%                             
+%                             LST_Day = hdfread([proj.PARA.MODIS_path proj.PARA.hv_string(index,:) '/' ID(j,:)], 'MODIS_Grid_Daily_1km_LST', 'Fields', 'LST_Day_1km');
+%                             LST_Day = LST_Day(key);
+%                             LST=[LST double(LST_Day(:)).*0.02];
+%                             
+%                             
+%                             Night_time = hdfread([proj.PARA.MODIS_path  proj.PARA.hv_string(index,:) '/' ID(j,:)], 'MODIS_Grid_Daily_1km_LST', 'Fields', 'Night_view_time');
+%                             Night_time = double(Night_time(key));
+%                             Night_time(Night_time==255)=NaN;
+%                             Night_time = time + Night_time.*0.1./24; %MODIS time in local solar noon
+%                             Night_time = SolarTime2LocalTime(proj, Night_time, doy, proj.RUN_INFO.STATVAR.longitude(range), 0); %convert to UTC using longitudes; IMPORTANT: use last argument 0 to convert to UTC
+%                             timestamp=[timestamp Night_time(:)];
+%                             %timestamp_LST=[timestamp_LST i];
+%                             
+%                             LST_Night = hdfread([proj.PARA.MODIS_path  proj.PARA.hv_string(index,:) '/' ID(j,:)], 'MODIS_Grid_Daily_1km_LST', 'Fields', 'LST_Night_1km');
+%                             LST_Night = LST_Night(key);
+%                             LST=[LST double(LST_Night(:)).*0.02];
+%                             %end
+%                         end
+%                     end
+%                 end
+%                 proj.STATVAR.timestamp = [proj.STATVAR.timestamp; timestamp];
+%                 proj.STATVAR.LST = [proj.STATVAR.LST; LST];
+%             end
+%             proj.STATVAR.LST = single(proj.STATVAR.LST);
+%             
+%             if size(proj.STATVAR.timestamp,1) == 0
+%                 proj.STATVAR.timestamp = key.*NaN;
+%             end
+%             
+%             if size(proj.STATVAR.LST,1) == 0
+%                 proj.STATVAR.LST = key.*NaN;
+%             end
+%             
+%         end
+%         
         function proj = get_data(proj, start_time, number_of_days)
             
             key = proj.RUN_INFO.STATVAR.key;
             
-            proj.STATVAR.timestamp = [];
-            proj.STATVAR.LST = [];
+            proj.STATVAR.timestamp = zeros(size(key,1), number_of_days.*4) .* NaN ;
+            proj.STATVAR.LST = zeros(size(key,1), number_of_days.*4) ;
+
             for index= 1:size(proj.RUN_INFO.STATVAR.list_of_MODIS_tiles,1)
-                
-                timestamp =[];
-                LST=[];
-                
+
+                i= 1;
                 for time = start_time:start_time + number_of_days-1
+
                     
                     %computes the day f year
                     f=zeros(size(time));
@@ -138,31 +214,36 @@ classdef SINUSOIDAL_MODIS_multi_tile < matlab.mixin.Copyable
                             Day_time(Day_time==255)=NaN;
                             Day_time = time + Day_time.*0.1./24; %MODIS time in local solar noon
                             Day_time = SolarTime2LocalTime(proj, Day_time, doy, proj.RUN_INFO.STATVAR.longitude(range), 0); %convert to UTC using longitudes; IMPORTANT: use last argument 0 to convert to UTC
-                            timestamp = [timestamp Day_time(:)];
+                            %timestamp = [timestamp Day_time(:)];
+                            proj.STATVAR.timestamp(range,i) = Day_time(:);
                             
                             LST_Day = hdfread([proj.PARA.MODIS_path proj.PARA.hv_string(index,:) '/' ID(j,:)], 'MODIS_Grid_Daily_1km_LST', 'Fields', 'LST_Day_1km');
                             LST_Day = LST_Day(key);
-                            LST=[LST double(LST_Day(:)).*0.02];
-                            
+                            %LST=[LST double(LST_Day(:)).*0.02];
+                            proj.STATVAR.LST(range,i) = single(LST_Day(:)).*0.02;
                             
                             Night_time = hdfread([proj.PARA.MODIS_path  proj.PARA.hv_string(index,:) '/' ID(j,:)], 'MODIS_Grid_Daily_1km_LST', 'Fields', 'Night_view_time');
                             Night_time = double(Night_time(key));
                             Night_time(Night_time==255)=NaN;
                             Night_time = time + Night_time.*0.1./24; %MODIS time in local solar noon
                             Night_time = SolarTime2LocalTime(proj, Night_time, doy, proj.RUN_INFO.STATVAR.longitude(range), 0); %convert to UTC using longitudes; IMPORTANT: use last argument 0 to convert to UTC
-                            timestamp=[timestamp Night_time(:)];
-                            %timestamp_LST=[timestamp_LST i];
+                            %timestamp=[timestamp Night_time(:)];
+                            proj.STATVAR.timestamp(range,i+1) = Night_time(:);
                             
                             LST_Night = hdfread([proj.PARA.MODIS_path  proj.PARA.hv_string(index,:) '/' ID(j,:)], 'MODIS_Grid_Daily_1km_LST', 'Fields', 'LST_Night_1km');
                             LST_Night = LST_Night(key);
-                            LST=[LST double(LST_Night(:)).*0.02];
-                            %end
+                            %LST=[LST double(LST_Night(:)).*0.02];
+                            proj.STATVAR.LST(range,i+1) = single(LST_Night(:)).*0.02;
+                            
+                            i=i+2;
+                            
                         end
                     end
                 end
-                proj.STATVAR.timestamp = [proj.STATVAR.timestamp; timestamp];
-                proj.STATVAR.LST = [proj.STATVAR.LST; LST];
+%                 proj.STATVAR.timestamp = [proj.STATVAR.timestamp; timestamp];
+%                 proj.STATVAR.LST = [proj.STATVAR.LST; LST];
             end
+            
             proj.STATVAR.LST = single(proj.STATVAR.LST);
             
             if size(proj.STATVAR.timestamp,1) == 0
@@ -175,7 +256,7 @@ classdef SINUSOIDAL_MODIS_multi_tile < matlab.mixin.Copyable
             
         end
         
-        
+    
         
         function plot_MODIS_multi_tile(proj, variable)
             worldmap([min(proj.RUN_INFO.STATVAR.latitude) max(proj.RUN_INFO.STATVAR.latitude)], [min(proj.RUN_INFO.STATVAR.longitude) max(proj.RUN_INFO.STATVAR.longitude)])
@@ -199,6 +280,8 @@ classdef SINUSOIDAL_MODIS_multi_tile < matlab.mixin.Copyable
             proj.PARA = PARA2;
             
         end
+        
+        
         
         function proj = sin2llMOD(proj)
             % number_of_pixels: number of pixels in east direction

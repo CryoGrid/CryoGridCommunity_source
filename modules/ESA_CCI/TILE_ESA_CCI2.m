@@ -141,11 +141,7 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             tile.GRID = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.grid_class){tile.PARA.grid_class_index,1});
             tile.GRID = finalize_init(tile.GRID, tile);
             
-%             tile.GRID.STATVAR.depth = repmat(tile.GRID.STATVAR.GRID, 1, tile.PARA.number_of_realizations);         
-%             tile.GRID.STATVAR.midPoints = repmat(tile.GRID.STATVAR.MIDPOINTS, 1, tile.PARA.number_of_realizations);         
-%             tile.GRID.STATVAR.layerThick = repmat(tile.GRID.STATVAR.layerThick, 1, tile.PARA.number_of_realizations);
-%             tile.GRID.STATVAR.layerDistance = repmat(tile.GRID.STATVAR.layerDistance, 1, tile.PARA.number_of_realizations);
-            
+
             %3. map statvar to grid, using STRATIGRAPHY_STATVAR classes 
             for i=1:size(tile.PARA.strat_statvar_class,1)
                 for j = tile.PARA.strat_statvar_class_index_start(i,1):tile.PARA.strat_statvar_class_index_end(i,1)
@@ -172,17 +168,7 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
                     tile.SUBSURFACE_CLASS.STATVAR.(variables{j,1}) = tile.GRID.STATVAR.(variables{j,1});
                 end
             end
-%             
-%             %--------------------------
-%             %CREATE ENSEMBLE HERE!! INHERIT TO A NEW TLE!!
-%             %ground.stratigraphy = repmat(domain.stratigraphy', 1, domain.ensemble_size); %replace this by a function that also makes snowfall factors
-%  %             ground = generate_ensemble(ground, tile); % get snow_fall_factor and stratigraphy            
-%              %PROFILE = get_snowfall_factors(PROFILE, domain);  % get rid of this one
-%             %PROFILE = get_wind_speed(PROFILE, domain);
-%          %   tile.SUBSURFACE_CLASS.PARA.F_lb = repmat(tile.FORCING.PARA.heatFlux_lb, 1, tile.PARA.tile_size);
-%          %   tile.SUBSURFACE_CLASS.TEMP.snowfall_factor = repmat(1, 1, tile.PARA.tile_size);
-%             %-------------------------
-%           
+       
             tile.SUBSURFACE_CLASS = finalize_init(tile.SUBSURFACE_CLASS, tile);
             
             %set this for being able to use existing OUT classes
@@ -217,6 +203,85 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
         
         
 
+        function tile = build_tile_new_init_TTOP_GlobPermafrost(tile)
+            
+                       
+            tile.PARA.run_name =  tile.RUN_INFO.PPROVIDER.PARA.run_name;
+            tile.PARA.result_path =  tile.RUN_INFO.PPROVIDER.PARA.result_path;
+
+            %3. grid -> existing GRID class should do, possibly some add-ons for snow required
+            tile.GRID = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.grid_class){tile.PARA.grid_class_index,1});
+            tile.GRID = finalize_init(tile.GRID, tile);
+
+            %3. map statvar to grid, using STRATIGRAPHY_STATVAR classes 
+            for i=1:size(tile.PARA.strat_statvar_class,1)
+                for j = tile.PARA.strat_statvar_class_index_start(i,1):tile.PARA.strat_statvar_class_index_end(i,1)
+                    tile.STRATIGRAPHY{i,j} = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_statvar_class{i,1}){j,1});
+                    tile.STRATIGRAPHY{i,j} = finalize_init(tile.STRATIGRAPHY{i,j}, tile); 
+                end
+            end
+            
+            tile.ENSEMBLE = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.ensemble_class){tile.PARA.ensemble_class_index,1});
+            tile.ENSEMBLE = finalize_init(tile.ENSEMBLE, tile);
+            
+            tile.PARA.tile_size = tile.PARA.number_of_realizations .* tile.ENSEMBLE.PARA.ensemble_size;
+            
+            tile.GRID.STATVAR.depth = repmat(tile.GRID.STATVAR.GRID, 1, tile.PARA.tile_size);
+            tile.GRID.STATVAR.midPoints = repmat(tile.GRID.STATVAR.MIDPOINTS, 1, tile.PARA.tile_size);
+            tile.GRID.STATVAR.layerThick = repmat(tile.GRID.STATVAR.layerThick, 1, tile.PARA.tile_size);
+            tile.GRID.STATVAR.layerDistance = repmat(tile.GRID.STATVAR.layerDistance, 1, tile.PARA.tile_size);
+            
+            
+            tile.timestep = 1; %random value, so that data can be loaded
+            tile.FORCING = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.forcing_class){tile.PARA.forcing_class_index,1});
+            tile.FORCING = finalize_init(tile.FORCING, tile);
+            
+            TTOP_Globpermafrost = copy(tile.RUN_INFO.PPROVIDER.CLASSES.TTOP_Globpermafrost_ESA_CCI{1,1});
+            tile.GRID.STATVAR.T = get_TTOP_from_forcing(TTOP_Globpermafrost, tile);      
+            tile.PARA.TTOP = TTOP_Globpermafrost;
+            
+            %1. build stratigraphy
+            tile.SUBSURFACE_CLASS = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.subsurface_class){tile.PARA.subsurface_class_index,1});
+            variables = fieldnames(tile.SUBSURFACE_CLASS.STATVAR);
+            for j=1:size(variables,1)
+                if isfield(tile.GRID.STATVAR, variables{j,1})
+                    tile.SUBSURFACE_CLASS.STATVAR.(variables{j,1}) = tile.GRID.STATVAR.(variables{j,1});
+                end
+            end
+
+            tile.SUBSURFACE_CLASS = finalize_init(tile.SUBSURFACE_CLASS, tile);
+            
+            %set this for being able to use existing OUT classes
+            tile.TOP = Top();
+            tile.BOTTOM = Bottom();
+            tile.TOP.NEXT = tile.SUBSURFACE_CLASS;
+            tile.TOP.NEXT.PREVIOUS = tile.TOP;
+            tile.SUBSURFACE_CLASS.NEXT = tile.BOTTOM();
+            tile.BOTTOM.PREVIOUS = tile.SUBSURFACE_CLASS;            
+            
+
+            %set fixed timestep!
+            tile.timestep = tile.SUBSURFACE_CLASS.PARA.timestep;
+            
+            %2. forcing -> special forcing class required
+            tile.FORCING = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.forcing_class){tile.PARA.forcing_class_index,1});
+            tile.FORCING.PARA.preprocessed = 1;
+            tile.FORCING = finalize_init(tile.FORCING, tile);
+
+             %10. assign time, etc.
+            tile.t = tile.FORCING.PARA.start_time;
+            %this is not solved in a good way
+            tile.SUBSURFACE_CLASS.TEMP.adjust_stratigraphy_date = datenum([tile.SUBSURFACE_CLASS.PARA.adjust_stratigraphy_date datestr(tile.t, 'yyyy')], 'dd.mm.yyyy');
+
+            %12. assign OUT classes
+            tile.OUT = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.out_class){tile.PARA.out_class_index,1});
+            tile.OUT = finalize_init(tile.OUT, tile);
+            
+            tile.RUN_INFO.TILE = tile;
+            
+        end
+        
+        
         
         
         
@@ -230,6 +295,7 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             
             %use old tile
             tile.GRID = tile.RUN_INFO.TILE.GRID;   
+            tile.ENSEMBLE = tile.RUN_INFO.TILE.ENSEMBLE;
             tile.SUBSURFACE_CLASS = tile.RUN_INFO.TILE.SUBSURFACE_CLASS;
             tile.BOTTOM = tile.RUN_INFO.TILE.BOTTOM;
             tile.TOP = tile.RUN_INFO.TILE.TOP;
@@ -252,6 +318,75 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             tile.RUN_INFO.TILE = tile;
             
         end
+        
+        function tile = build_tile_update_forcing_out_TTOP(tile)
+
+            rk = mean(tile.RUN_INFO.TILE.SUBSURFACE_CLASS.STATVAR.k_thawed(1:10,:),1)./ mean(tile.RUN_INFO.TILE.SUBSURFACE_CLASS.STATVAR.k_frozen(1:10,:),1); %uppermost meter as proxy for AL/seasonal frost layer
+            TTOP_Globpermafrost = copy(tile.RUN_INFO.PPROVIDER.CLASSES.TTOP_Globpermafrost_ESA_CCI{1,1});
+            TTOP = get_TTOP(TTOP_Globpermafrost, tile.RUN_INFO.TILE.OUT.TEMP.FDD, tile.RUN_INFO.TILE.OUT.TEMP.TDD, rk, tile.RUN_INFO.TILE.OUT.TEMP.N);
+      
+            %2. forcing -> special forcing class required
+            tile.FORCING = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.forcing_class){tile.PARA.forcing_class_index,1});
+
+            %12. assign OUT classes
+            tile.OUT = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.out_class){tile.PARA.out_class_index,1});
+            
+            %use old tile
+            tile.GRID = tile.RUN_INFO.TILE.GRID;
+            tile.GRID.STATVAR.T = TTOP; %assign new TTOP
+            tile.ENSEMBLE = tile.RUN_INFO.TILE.ENSEMBLE;
+            tile.timestep = tile.RUN_INFO.TILE.timestep;
+            
+            %use old PARA, but overwrite all newly set values
+            PARA_new = tile.PARA;
+            tile.PARA = tile.RUN_INFO.TILE.PARA;
+            fn = fieldnames(PARA_new);
+            for i=1:size(fn,2)
+                tile.PARA.(fn{i,1}) = PARA_new.(fn{i,1});
+            end
+            
+            
+            %1. build stratigraphy
+            tile.SUBSURFACE_CLASS = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.subsurface_class){tile.PARA.subsurface_class_index,1});
+            variables = fieldnames(tile.SUBSURFACE_CLASS.STATVAR);
+            for j=1:size(variables,1)
+                if isfield(tile.GRID.STATVAR, variables{j,1})
+                    tile.SUBSURFACE_CLASS.STATVAR.(variables{j,1}) = tile.GRID.STATVAR.(variables{j,1});
+                end
+            end
+            %use water contents from previous run 
+            tile.SUBSURFACE_CLASS.STATVAR.waterIce = tile.RUN_INFO.TILE.SUBSURFACE_CLASS.STATVAR.waterIce ./ tile.RUN_INFO.TILE.SUBSURFACE_CLASS.STATVAR.layerThick(5:end,:);
+
+            tile.SUBSURFACE_CLASS = finalize_init(tile.SUBSURFACE_CLASS, tile);
+            
+            %set this for being able to use existing OUT classes
+            tile.TOP = Top();
+            tile.BOTTOM = Bottom();
+            tile.TOP.NEXT = tile.SUBSURFACE_CLASS;
+            tile.TOP.NEXT.PREVIOUS = tile.TOP;
+            tile.SUBSURFACE_CLASS.NEXT = tile.BOTTOM();
+            tile.BOTTOM.PREVIOUS = tile.SUBSURFACE_CLASS;            
+            
+
+            %set fixed timestep!
+            tile.timestep = tile.SUBSURFACE_CLASS.PARA.timestep;
+            
+            %2. forcing -> special forcing class required
+            tile.FORCING = finalize_init(tile.FORCING, tile);
+
+             %10. assign time, etc.
+            tile.t = tile.FORCING.PARA.start_time;
+            %this is not solved in a good way
+            tile.SUBSURFACE_CLASS.TEMP.adjust_stratigraphy_date = datenum([tile.SUBSURFACE_CLASS.PARA.adjust_stratigraphy_date datestr(tile.t, 'yyyy')], 'dd.mm.yyyy');
+
+            %12. assign OUT classes
+            tile.OUT = finalize_init(tile.OUT, tile);
+            
+            tile.RUN_INFO.TILE = tile;
+            
+        end
+        
+        
 
     end
 end

@@ -46,7 +46,7 @@ classdef PREPROC_ESA_CCI < BASE
         function preproc = get_derivatives_prognostic(preproc, tile)  %calculate snowfall and melt
                         
             preproc.STATVAR.ERA_snowfall_downscaled = tile.FORCING.TEMP.ERA_precip_downcaled(:,1:end-4) .*double(tile.FORCING.TEMP.ERA_T_downscaled(:,1:end-4)-273.15 <= preproc.PARA.threshold_T_snowfall) .* double(tile.FORCING.TEMP.ERA_T_downscaled(:,1:end-4)~=0);
-            preproc.STATVAR.ERA_snowfall_downscaled = sum(preproc.STATVAR.ERA_snowfall_downscaled,2);
+            preproc.STATVAR.ERA_snowfall_downscaled = sum(preproc.STATVAR.ERA_snowfall_downscaled,2) ./ 8; %in mm/day
             
             %preproc.STATVAR.ERA_snowfall_downscaled = preproc.STATVAR.ERA_snowfall_downscaled(:,1:end-4); %remove ninth day
             
@@ -57,7 +57,7 @@ classdef PREPROC_ESA_CCI < BASE
             %average T for the 8d period
             preproc.STATVAR.ERA_melt_degree_days = sum(tile.FORCING.TEMP.ERA_T_downscaled(:,1:end-4) - 273.15,2) ./ sum(double(tile.FORCING.TEMP.ERA_T_downscaled(:,1:end-4) > 0),2); %average T removing all NaN values
             preproc.STATVAR.ERA_melt_degree_days = 8 .* ( preproc.STATVAR.ERA_melt_degree_days - preproc.PARA.threshold_T_snowmelt) .* double(preproc.STATVAR.ERA_melt_degree_days >= preproc.PARA.threshold_T_snowmelt);
-            preproc.STATVAR.ERA_melt_T_index = preproc.STATVAR.ERA_melt_degree_days .*preproc.STATVAR.degreeDayFactor; %in mm
+            preproc.STATVAR.ERA_melt_T_index = preproc.STATVAR.ERA_melt_degree_days .*preproc.STATVAR.degreeDayFactor ./ 8; %in mm/day
             
             preproc.STATVAR.ERA_T_downscaled = nanmean(tile.FORCING.TEMP.ERA_T_downscaled(:,1:end-4) - 273.15, 2);
             
