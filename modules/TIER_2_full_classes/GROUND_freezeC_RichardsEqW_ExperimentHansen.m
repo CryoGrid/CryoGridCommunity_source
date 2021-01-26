@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Painter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE
+classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE
 
     %FREEZE_CURVE_DallAmico
     methods
@@ -27,7 +27,7 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
             ground.PARA.rootDepth = []; %e-folding constant of transpiration reduction with depth [1/m]
             ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
-            ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
+            ground.PARA.permeability = [];  %saturated hydraulic conductivity [m/sec]
             
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -152,10 +152,10 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
         
         function ground = get_boundary_condition_u(ground, tile)
             %Experiment Hanssen et al., 2004
-            if tile.t>=tile.FORCING.PARA.start_time+3
+            %if tile.t>=tile.FORCING.PARA.start_time+3
                 %ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - 28.*(ground.STATVAR.T(1)+6)  ;
                 ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - (40 - 30/16 .* max(-4, min(0, ground.STATVAR.T(1))).^2).*(ground.STATVAR.T(1)+6) ;
-            end
+            %end
         end
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
