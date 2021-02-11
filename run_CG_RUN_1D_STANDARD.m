@@ -3,8 +3,9 @@ addpath(genpath(modules_path));
 
 
 init_format = 'EXCEL'; %EXCEL or YAML
-run_name = 'test_vegetation_snow_bypass'; %parameter file name and result directory 
+%run_name = 'test_vegetation_snow_bypass'; %parameter file name and result directory 
 %run_name = 'ExperimentHansen2004';
+run_name = 'test';
 constant_file = 'CONSTANTS_excel'; %file with constants
 result_path = '../results/';  %with trailing backslash
 forcing_path = fullfile ('./forcing/');
@@ -19,7 +20,7 @@ provider = read_parameters(provider);
 [run_info, provider] = run_model(provider);
 
 %   rest is equivalent to 
-%[run_info, tile] = run(run_info);
+%[run_info, tile] = run_model(run_info);
 %   for RUN_INFO class RUN_1D_STANDARD
 
 %create the TILE
