@@ -79,9 +79,9 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
         end
         
         
-        function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+        function snow = finalize_init(snow, tile)
+            snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
             
             snow = initialize_zero_snow_BASE(snow); 
             snow.STATVAR.excessWater = 0;
