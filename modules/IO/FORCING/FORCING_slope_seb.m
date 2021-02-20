@@ -119,15 +119,17 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
                 forcing.DATA.p = temp.FORCING.data.p;
             end
             
-            if isempty(forcing.PARA.start_time) || ~ischar(forcing.PARA.start_time)
+            if isempty(forcing.PARA.start_time) || isnan(forcing.PARA.start_time(1,1)) % || ~ischar(forcing.PARA.start_time)
                 forcing.PARA.start_time = forcing.DATA.timeForcing(1,1);
             else
-                forcing.PARA.start_time = datenum(forcing.PARA.start_time, 'dd.mm.yyyy');
+                ¨%forcing.PARA.start_time = datenum(forcing.PARA.start_time, 'dd.mm.yyyy');
+                forcing.PARA.start_time = datenum(forcing.PARA.start_time(1,1), forcing.PARA.start_time(2,1), forcing.PARA.start_time(3,1));
             end
-            if isempty(forcing.PARA.end_time) || ~ischar(forcing.PARA.end_time)
+            if isempty(forcing.PARA.end_time) || isnan(forcing.PARA.end_time(1,1)) %|| ~ischar(forcing.PARA.end_time)
                 forcing.PARA.end_time = floor(forcing.DATA.timeForcing(end,1));
             else
-                forcing.PARA.end_time = datenum(forcing.PARA.end_time, 'dd.mm.yyyy');
+                %forcing.PARA.end_time = datenum(forcing.PARA.end_time, 'dd.mm.yyyy');
+                forcing.PARA.end_time = datenum(forcing.PARA.end_time(1,1), forcing.PARA.end_time(2,1),forcing.PARA.end_time(3,1));
             end
             
             %initialize TEMP

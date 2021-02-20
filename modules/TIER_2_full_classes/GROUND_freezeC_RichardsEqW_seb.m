@@ -24,9 +24,9 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
 
-            ground.PARA.rootDepth = []; %e-folding constant of transpiration reduction with depth [1/m]
-            ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
-            ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
+            %ground.PARA.rootDepth = []; %e-folding constant of transpiration reduction with depth [1/m]
+            %ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
+            %ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
             ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
             %ground.STATVAR.hydraulicConductivity = []; % hydraulic conductivity [m/sec]
             
@@ -94,6 +94,9 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             
             ground.CONST.cp = [];  %specific heat capacity at constant pressure of air
             ground.CONST.g = [];   % gravitational acceleration Earth surface
+            
+            ground.CONST.R = [];
+            ground.CONST.molar_mass_w = [];
             
             ground.CONST.rho_w = []; % water density
             ground.CONST.rho_i = []; %ice density
@@ -217,16 +220,31 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         
         
         %-----non-mandatory functions-------
+%         function ground = surface_energy_balance(ground, forcing)
+%             ground.STATVAR.Lout = (1-ground.PARA.epsilon) .* forcing.TEMP.Lin + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ 273.15).^4;
+%             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
+%             ground.STATVAR.Qh = Q_h(ground, forcing);
+%             ground.STATVAR.Qe_pot = Q_eq_potET(ground, forcing);
+% 
+%             ground = calculateET(ground);
+%             
+%             ground.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe) .* ground.STATVAR.area(1);
+%             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
+%         end
+        
         function ground = surface_energy_balance(ground, forcing)
             ground.STATVAR.Lout = (1-ground.PARA.epsilon) .* forcing.TEMP.Lin + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ 273.15).^4;
             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
             ground.STATVAR.Qh = Q_h(ground, forcing);
-            ground.STATVAR.Qe_pot = Q_eq_potET(ground, forcing);
-
-            ground = calculateET(ground);
+            ground = Q_evap_CLM4_5(ground, forcing);
             
             ground.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe) .* ground.STATVAR.area(1);
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
+            
+            %water -> evaporation
+            ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) -  ground.STATVAR.evap.* ground.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
+            ground.TEMP.d_water_ET_energy(1,1) = ground.TEMP.d_water_ET_energy(1,1) -  ground.STATVAR.evap_energy.* ground.STATVAR.area(1,1);
+
         end
         
         function ground = conductivity(ground)
