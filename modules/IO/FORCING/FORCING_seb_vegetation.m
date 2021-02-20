@@ -13,25 +13,26 @@ classdef FORCING_seb_vegetation < matlab.mixin.Copyable
     
     
     methods
-        function self = provide_PARA(self)
+        function forcing = provide_PARA(forcing)
             % INITIALIZE_PARA  Initializes PARA structure, setting the variables in PARA.
             
-            self.PARA.filename = [];   %filename of Matlab file containing forcing data
-            self.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
-            self.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
-            self.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
-            self.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
-            self.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
-            self.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
+            forcing.PARA.filename = [];   %filename of Matlab file containing forcing data
+            forcing.PARA.forcing_path = [];
+            forcing.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
+            forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
+            forcing.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
+            forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
+            forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
+            forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
         end
         
         
         
-        function self = provide_CONST(self)
+        function forcing = provide_CONST(forcing)
             
         end
         
-        function self = provide_STATVAR(self)
+        function forcing = provide_STATVAR(forcing)
             
         end
         
@@ -41,7 +42,7 @@ classdef FORCING_seb_vegetation < matlab.mixin.Copyable
 
         function forcing = finalize_init(forcing, tile)
           
-            temp=load(['forcing/' forcing.PARA.filename], 'FORCING');
+            temp=load([forcing.PARA.forcing_path forcing.PARA.filename], 'FORCING');
             
             forcing.DATA.rainfall=temp.FORCING.data.rainfall.*forcing.PARA.rain_fraction;
             forcing.DATA.snowfall=temp.FORCING.data.snowfall.*forcing.PARA.snow_fraction;

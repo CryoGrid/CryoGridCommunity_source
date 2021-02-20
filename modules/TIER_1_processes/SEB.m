@@ -326,7 +326,7 @@ classdef SEB < BASE
                 seb.TEMP.d_water_ET = seb.TEMP.d_water_ET - seb.STATVAR.Qe ./ (L_v.*seb.CONST.rho_w) .* fraction_ET .* seb.STATVAR.area;    %in m3 water per sec
                 
             else  %condensation
-                seb.STATVAR.Qe = seb.STATVAR.Qe_pot;
+                seb.STATVAR.Qe = seb.STATVAR.Qe_pot .*double(seb.STATVAR.T(1)>0);
                 seb.TEMP.d_water_ET(1,1) = seb.TEMP.d_water_ET(1,1) - seb.STATVAR.Qe ./ (L_v.*seb.CONST.rho_w) .* seb.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
             end
             seb.TEMP.d_water_ET_energy = seb.TEMP.d_water_ET_energy + seb.TEMP.d_water_ET .* (double(seb.STATVAR.T>=0) .* seb.CONST.c_w + double(seb.STATVAR.T<0) .* seb.CONST.c_i) .* seb.STATVAR.T; %[J/sec]
@@ -357,7 +357,7 @@ classdef SEB < BASE
                 seb.TEMP.d_water_ET = seb.TEMP.d_water_ET - seb.STATVAR.Qe ./ (L_v.*seb.CONST.rho_w) .* fraction_ET .* seb.STATVAR.area;    %in m3 water per sec
                 
             else  %condensation
-                seb.STATVAR.Qe = seb.STATVAR.Qe_pot;
+                seb.STATVAR.Qe = seb.STATVAR.Qe_pot.*double(seb.STATVAR.T(1)>0);
                 seb.TEMP.d_water_ET(1,1) = seb.TEMP.d_water_ET(1,1) - seb.STATVAR.Qe ./ (L_v.*seb.CONST.rho_w) .* seb.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
             end
             seb.TEMP.d_water_ET_energy = seb.TEMP.d_water_ET_energy + seb.TEMP.d_water_ET .* (double(seb.STATVAR.T>=0) .* seb.CONST.c_w + double(seb.STATVAR.T<0) .* seb.CONST.c_i) .* seb.STATVAR.T; %[J/sec]
@@ -369,7 +369,7 @@ classdef SEB < BASE
             %waterC = seb.STATVAR.waterIce ./ seb.STATVAR.layerThick ./ max(1e-20, seb.STATVAR.area); %area can get zero if the area of SNOW CHILD is 100%
             waterC = seb.STATVAR.waterIce ./ seb.STATVAR.layerThick ./ seb.STATVAR.area;
             waterC(isnan(waterC)) = 0;
-            fraction=double(seb.STATVAR.T>=0).*double(seb.STATVAR.T(1)>=0).*(double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
+            fraction=double(seb.STATVAR.T>0).*double(seb.STATVAR.T(1)>0).*(double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
 
         end
 

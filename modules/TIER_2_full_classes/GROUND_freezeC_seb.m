@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_DallAmico & HEAT_FLUXES_LATERAL %& INITIALIZE
+classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & HEAT_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_DallAmico 
     
     methods
         

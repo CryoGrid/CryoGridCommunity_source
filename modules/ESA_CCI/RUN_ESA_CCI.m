@@ -22,6 +22,9 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
             
             run_info.PARA.tile_preproc_class = [];
             run_info.PARA.tile_preproc_class_index = [];
+            
+            run_info.PARA.tile_rearrange_files_class = [];
+            run_info.PARA.tile_rearrange_files_class_index = [];
 
             run_info.PARA.number_of_cells_per_tile = [];
             
@@ -114,21 +117,7 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
         function [run_info, tile] = run_preproc(run_info)
             
             run_info = parallelize_preproc(run_info);
-            
-            
-%             while ~terminate_check(run_info, 'section1_done', run_info.PARA.num_ranks)
-%                 for i=1:size(run_info.PARA.tile_preproc_class,1)
-%                     if run_info.PARA.tile_active(i,1) ==1
-%                         tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_preproc_class{i,1}){run_info.PARA.tile_preproc_class_index(i,1),1});
-%                         tile.RUN_INFO = run_info;
-%                         tile = finalize_init(tile);
-%                         tile = run_model(tile);
-%                     end
-%                 end
-%                 
-%                 success = write_check(run_info, 'section1_done', run_info.PARA.my_rank);
-%                 %replaces %NMPI_Barrier();
-
+           
 
             for i=1:size(run_info.PARA.tile_preproc_class,1)
                 if run_info.PARA.tile_active(i,1) ==1
@@ -143,13 +132,29 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
             while ~terminate_check(run_info, 'section1_done', run_info.PARA.num_ranks)
             
             end
+
                 %replaces %NMPI_Barrier();
                 
-            
+            %rearrange forcing files so that entire time series is
+            %comprised in a single nc-file
+            for i=1:size(run_info.PARA.tile_rearrange_files_class, 1)
+                disp(i)
+                tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_rearrange_files_class{i,1}){run_info.PARA.tile_rearrange_files_class_index(i,1),1});
+                tile.RUN_INFO = run_info;
+                tile = finalize_init(tile);
+                tile = run_model(tile);
+                disp('done')
+                success = write_check(run_info, ['rearrange_files' num2str(i) '_done'], run_info.PARA.my_rank);
+                while ~terminate_check(run_info, ['rearrange_files' num2str(i) '_done'], run_info.PARA.num_ranks)
+                end
+            end
+                
         end
         
         
         function [run_info, tile] = run_model(run_info)
+            
+
             
             number_of_tiles = ceil(run_info.PARA.total_number_of_cells ./ run_info.PARA.number_of_cells_per_tile);
             domains_per_worker = max(1, floor(number_of_tiles ./ run_info.PARA.num_ranks - 1e-12));

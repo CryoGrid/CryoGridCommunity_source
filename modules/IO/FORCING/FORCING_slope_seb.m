@@ -44,27 +44,28 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
         
         %mandatory functions
         
-        function self = provide_PARA(self)         
+        function forcing = provide_PARA(forcing)         
             % INITIALIZE_PARA  Initializes PARA structure, setting the variables in PARA.  
 
-            self.PARA.filename = [];   %filename of Matlab file containing forcing data
-            self.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
-            self.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
-            self.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
-            self.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)          
-            self.PARA.slope_angle = []; %slope angle in degrees
-            self.PARA.aspect = []; %aspect of the slope in degrees
-            self.PARA.sky_view_factor = []; %sky view factor (0.5 for vertical rock walls)
-            self.PARA.albedo = []; %Albedo of the slope
-            self.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
-            self.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
+            forcing.PARA.filename = [];   %filename of Matlab file containing forcing data
+            forcing.PARA.forcing_path = [];
+            forcing.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
+            forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
+            forcing.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
+            forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)          
+            forcing.PARA.slope_angle = []; %slope angle in degrees
+            forcing.PARA.aspect = []; %aspect of the slope in degrees
+            forcing.PARA.sky_view_factor = []; %sky view factor (0.5 for vertical rock walls)
+            forcing.PARA.albedo = []; %Albedo of the slope
+            forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
+            forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
         end
         
-        function self = provide_CONST(self)
+        function forcing = provide_CONST(forcing)
             
         end
         
-        function self = provide_STATVAR(self)
+        function forcing = provide_STATVAR(forcing)
             
         end
         
@@ -74,7 +75,7 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
         
         function forcing = finalize_init(forcing, tile)
           
-            temp=load(['forcing/' forcing.PARA.filename], 'FORCING');
+            temp=load([forcing.PARA.forcing_path forcing.PARA.filename], 'FORCING');
             
             forcing.DATA.rainfall = temp.FORCING.data.rainfall.*forcing.PARA.rain_fraction;
             forcing.DATA.snowfall = temp.FORCING.data.snowfall.*forcing.PARA.snow_fraction;
@@ -183,7 +184,7 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
         end
         
 
-        function xls_out = write_excel(self)
+        function xls_out = write_excel(forcing)
 			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
 			
             xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};

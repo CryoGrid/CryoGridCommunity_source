@@ -16,100 +16,7 @@ classdef FREEZE_CURVE_KarraPainter < BASE
         
         
         %----diagnostic functions---------
-%         function ground = get_T_water_freezeC(ground)
-%             
-%             sat_waterIce_min = 0.005;
-%             LUT_size_gamma = 2.^9;
-%             LUT_size_T = 2.^10;
-%             porosity_max = 0.95;
-%             porosity_min = 0.05;
-%             
-%             beta_interface = 1./3;  %make this a constant!
-%             
-%             L_sl = ground.CONST.L_f;
-%             c_w = ground.CONST.c_w;
-%             c_i = ground.CONST.c_i;
-%             c_o = ground.CONST.c_o;
-%             c_m = ground.CONST.c_m;
-%             rho_w = ground.CONST.rho_w;
-%             g = ground.CONST.g;
-%             T0 = ground.CONST.Tmfw;
-%             
-%             energy = ground.STATVAR.energy ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
-%             mineral = ground.STATVAR.mineral ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
-%             organic = ground.STATVAR.organic ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
-%             waterIce = ground.STATVAR.waterIce./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
-%             soil_type = ground.STATVAR.soil_type;
-%             
-%             n = ground.STATVAR.n;
-%             alpha = ground.STATVAR.alpha ./ rho_w ./ g;
-%             
-%             m=1-1./n;
-%             porosity = 1-mineral-organic;
-%             sat_waterIce = waterIce ./ porosity;
-% 
-%             linear_range = energy >= 0;
-%             
-%             %matric potential (Pa)
-%             mwp0 = 1./alpha .* ((sat_waterIce.^(-1./m)-1)).^(1./n);
-%             
-%             %linear range 
-%             ground.STATVAR.waterPotential(linear_range)  = -mwp0(linear_range) ./ rho_w ./ g;
-%             ground.STATVAR.water(linear_range) = waterIce(linear_range);
-%             ground.STATVAR.T(linear_range) = energy(linear_range) ./ (waterIce(linear_range) .* c_w + mineral(linear_range) .* c_m + organic(linear_range) .* c_o);
-%             %done!
-%             
-%             %non-linear range
-%             alpha = alpha(~linear_range);
-%             mwp0 = mwp0(~linear_range);
-%             porosity = porosity(~linear_range);
-%             sat_waterIce = sat_waterIce(~linear_range);
-%             
-%             C0 = mineral(~linear_range) .* c_m + organic(~linear_range) .* c_o + porosity .* sat_waterIce .* c_i; %vector
-%             X = -L_sl./ T0 .* beta_interface;
-%             L0 = porosity.* L_sl; %vector
-%             gamma = C0 ./ alpha ./ X ./ L0 ; %vector
-%             
-%             soil_type = ground.STATVAR.soil_type(~linear_range); %-1;
-%             
-%             E_prime = energy(~linear_range) ./ L0 + sat_waterIce + C0 .* mwp0 ./ X./ L0; %takes soil type into account, alpha is assigned correctly 
-%             T_prime = E_prime.*0; 
-%             gamma_list = ground.LUT.gamma;
-% 
-%             T_nonlinear = E_prime.*0;
-%             satWater_nonlinear = E_prime.*0;
-%             matric_pot_nonlinear = E_prime.*0;
-%             
-% %             depth_gamma_LUT = log(LUT_size_gamma)./log(2);
-% %             gamma_right = T_nonlinear.* 0 + 1 + depth_gamma_LUT.^(depth_gamma_LUT-1);
-%             
-%             
-%             for i=1:size(T_prime,1)
-%                 LUT_E_prime = ground.LUT.lut_E_prime((soil_type(i,1)-1).*LUT_size_T +(1:LUT_size_T),:);
-%                 LUT_T_prime = ground.LUT.lut_T_prime((soil_type(i,1)-1).*LUT_size_T +(1:LUT_size_T),:);
-%                 
-%                 left_gamma_index = find(gamma(i,1) - gamma_list(soil_type(i,1),:) >= 0, 1, 'last');
-%                 scale_factor_gamma = (gamma(i,1) - gamma_list(soil_type(i,1), left_gamma_index) ) ./ (gamma_list(soil_type(i,1), left_gamma_index+1) - gamma_list(soil_type(i,1), left_gamma_index));
-% 
-%                 T_prime_left = interp1(LUT_E_prime(:,left_gamma_index), LUT_T_prime(:,left_gamma_index), E_prime(i,1), 'linear');
-%                 T_prime_right = interp1(LUT_E_prime(:,left_gamma_index+1), LUT_T_prime(:,left_gamma_index+1), E_prime(i,1), 'linear');
-%                 T_prime_final = T_prime_left + scale_factor_gamma .*( T_prime_right - T_prime_left);
-%                 T_nonlinear(i,1) = (T_prime_final ./ alpha(i,1) - mwp0(i,1)) ./ X;
-%                 satWater_nonlinear(i,1) = E_prime(i,1) - gamma(i,1) .* T_prime_final;
-%                 matric_pot_nonlinear(i,1) = T_prime_final ./ alpha(i,1);
-%             end
-%   
-%             
-%             ground.STATVAR.waterPotential(~linear_range)  = -matric_pot_nonlinear ./ rho_w ./ g;
-%             ground.STATVAR.water(~linear_range) = satWater_nonlinear .* porosity;
-%             ground.STATVAR.T(~linear_range) = T_nonlinear;
-%             
-%             ground.STATVAR.water(ground.STATVAR.water > waterIce) = waterIce(ground.STATVAR.water > waterIce); %elminates small rounding errors and avoids negative ice contents
-%             
-%             ground.STATVAR.water = ground.STATVAR.water .* ground.STATVAR.layerThick .* ground.STATVAR.area;
-%             ground.STATVAR.ice = ground.STATVAR.waterIce - ground.STATVAR.water;
-% 
-%         end
+
         
         function ground = get_T_water_freezeC(ground)
             
@@ -276,6 +183,152 @@ classdef FREEZE_CURVE_KarraPainter < BASE
 
         end
         
+        function ground = get_T_water_freezeC_Xice(ground)
+            
+            sat_waterIce_min = 0.005;
+            LUT_size_gamma = 2.^9;
+            LUT_size_T = 2.^10;
+            porosity_max = 0.95;
+            porosity_min = 0.05;
+            
+            beta_interface = 2.2;  %make this a constant!
+            
+            L_sl = ground.CONST.L_f;
+            c_w = ground.CONST.c_w;
+            c_i = ground.CONST.c_i;
+            c_o = ground.CONST.c_o;
+            c_m = ground.CONST.c_m;
+            rho_w = ground.CONST.rho_w;
+            g = ground.CONST.g;
+            T0 = ground.CONST.Tmfw;
+            
+            energy = ground.STATVAR.energy ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
+            mineral = ground.STATVAR.mineral ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
+            organic = ground.STATVAR.organic ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
+            waterIce = ground.STATVAR.waterIce./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
+            XwaterIce = ground.STATVAR.XwaterIce./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
+            soil_type = ground.STATVAR.soil_type;
+            
+            n = ground.STATVAR.n;
+            alpha = ground.STATVAR.alpha ./ rho_w ./ g;
+            
+            m=1-1./n;
+            porosity = 1 - mineral - organic - XwaterIce;
+            sat_waterIce = waterIce ./ porosity;
+          %  porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic) ./(ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+          %  sat_waterIce = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce) ./ porosity;
+            
+            %matric potential (Pa)
+            mwp0 = real(1./alpha .* ((sat_waterIce.^(-1./m)-1)).^(1./n));
+            
+            linear_range = energy >= 0;
+            
+            %1. linear range
+            ground.STATVAR.waterPotential(linear_range)  = -mwp0(linear_range) ./ rho_w ./ g;
+            ground.STATVAR.water(linear_range) = waterIce(linear_range);
+            ground.STATVAR.Xwater(linear_range) = XwaterIce(linear_range);
+            ground.STATVAR.T(linear_range) = energy(linear_range) ./ ((waterIce(linear_range) + XwaterIce(linear_range)).* c_w + mineral(linear_range) .* c_m + organic(linear_range) .* c_o);
+            %done!
+            
+            %2. Xice melt regime, T=0, calculate Xice and Xwater, "normal soil" unfrozen
+            Xice_melt = (energy <0 & energy >= - ground.CONST.L_f .* XwaterIce);
+            ground.STATVAR.waterPotential(Xice_melt)  = -mwp0(Xice_melt) ./ rho_w ./ g;
+            ground.STATVAR.water(Xice_melt) = waterIce(Xice_melt);
+            ground.STATVAR.Xwater(Xice_melt) = XwaterIce(Xice_melt) .*(1 + energy(Xice_melt)./ (ground.CONST.L_f .* XwaterIce(Xice_melt)));
+            ground.STATVAR.T(Xice_melt) = 0;
+
+            %3. freeze curve regime
+            nonlinear_range = energy < - ground.CONST.L_f .* XwaterIce;
+            
+            energy = energy + ground.CONST.L_f .* XwaterIce; %subtract the latent part of the Xice energy (-Lf * XwaterIce) from energy
+            %and treat the Xice part in exactly the same fashion as mineral and organic
+            
+            if sum(double(nonlinear_range)) > 0
+                %non-linear range
+                alpha = alpha(nonlinear_range);
+                n= n(nonlinear_range);
+                m=m(nonlinear_range);
+                mwp0 = mwp0(nonlinear_range);
+                porosity = porosity(nonlinear_range);
+                sat_waterIce = sat_waterIce(nonlinear_range);
+                
+                C0 = mineral(nonlinear_range) .* c_m + organic(nonlinear_range) .* c_o + porosity .* sat_waterIce .* c_i + XwaterIce(nonlinear_range) .* c_i; %vector
+                %C0 = mineral(nonlinear_range) .* c_m + organic(nonlinear_range) .* c_o + waterIce(nonlinear_range) .* c_i + XwaterIce(nonlinear_range) .* c_i; %vector
+                X = -L_sl./ T0 .* beta_interface;
+                L0 = porosity.* L_sl; %vector
+                gamma = C0 ./ alpha ./ X ./ L0 ; %vector
+                
+                soil_type = ground.STATVAR.soil_type(nonlinear_range); %-1;
+                
+                E_prime = energy(nonlinear_range) ./ L0 + sat_waterIce + C0 .* mwp0 ./ X./ L0; %takes soil type into account, alpha is assigned correctly
+                
+                T_nonlinear = E_prime.*0;
+                satWater_nonlinear = E_prime.*0;
+                matric_pot_nonlinear = E_prime.*0;
+                
+                %find correct gamma
+                depth_gamma_LUT = log(LUT_size_gamma)./log(2);
+                gamma_left_index = (soil_type-1) .* (LUT_size_gamma+1) + 1 ; %start with first index that belongs to correct soil code
+                for i = depth_gamma_LUT-1:-1:0
+                    gamma_left_index = gamma_left_index + 2.^i .* double(gamma >= ground.LUT.gamma(gamma_left_index + 2.^i,1));
+                end
+                scale_factor_gamma = (gamma - ground.LUT.gamma(gamma_left_index, 1)) ./ (ground.LUT.gamma(gamma_left_index+1, 1) - ground.LUT.gamma(gamma_left_index, 1));
+                
+                %left side fit E_prime
+                depth_T_LUT = log(LUT_size_T)./log(2);
+                %T_left_index = (soil_type-1) .* (LUT_size_gamma+1) .* (LUT_size_T+1) + (gamma_left_index-1) .* (LUT_size_T+1) + 1; %soil_type offset + gamma offset
+                T_left_index = (gamma_left_index-1) .* (LUT_size_T+1) + 1; %soil_type offset already contained in gamma offset
+                for i = depth_T_LUT-1:-1:0
+                    T_left_index = T_left_index + 2.^i .* double(E_prime >= ground.LUT.lut_E_prime(T_left_index + 2.^i,1));
+                end
+                scale_factor_T = (E_prime - ground.LUT.lut_E_prime(T_left_index, 1)) ./ (ground.LUT.lut_E_prime(T_left_index+1, 1) - ground.LUT.lut_E_prime(T_left_index, 1));
+                T_prime_left = ground.LUT.lut_T_prime(T_left_index, 1) + scale_factor_T .* (ground.LUT.lut_T_prime(T_left_index+1, 1) - ground.LUT.lut_T_prime(T_left_index, 1));
+                
+                %right side fit E_prime
+                %T_right_index = (soil_type-1) .* (LUT_size_gamma+1) .* (LUT_size_T+1) + (gamma_left_index+1-1) .* (LUT_size_T+1) + 1; %soil_type offset + gamma offset for gamma right side
+                T_right_index = (gamma_left_index + 1 - 1) .* (LUT_size_T+1) + 1; %soil_type offset already contained in gamma offset
+                for i = depth_T_LUT-1:-1:0
+                    T_right_index = T_right_index + 2.^i .* double(E_prime >= ground.LUT.lut_E_prime(T_right_index + 2.^i,1));
+                end
+                scale_factor_T = (E_prime - ground.LUT.lut_E_prime(T_right_index, 1)) ./ (ground.LUT.lut_E_prime(T_right_index+1, 1) - ground.LUT.lut_E_prime(T_right_index, 1));
+                T_prime_right = ground.LUT.lut_T_prime(T_right_index, 1) + scale_factor_T .* (ground.LUT.lut_T_prime(T_right_index+1, 1) - ground.LUT.lut_T_prime(T_right_index, 1));
+                
+                
+                T_prime = T_prime_left + scale_factor_gamma .* (T_prime_right - T_prime_left);
+                
+                %special fit for low water/high matric water potential grid cells, this is accomplished
+                %by linearizing the dimensionless equation in T_prime around the
+                %matric water potential intercept and then solving for
+                %T_prime
+                low_water_range = real(log(mwp0 .* alpha)) > -0.364.* real(log(-gamma))+6.65;
+                %[real(log(mwp0 .* alpha)) -0.34.* real(log(-gamma))+7.0 -0.364.* real(log(-gamma))+6.65]
+                %                 low_water_range = gamma<0
+                T_prime0 = alpha(low_water_range) .*mwp0(low_water_range);
+                T_prime(low_water_range) = (E_prime(low_water_range) - (1 + T_prime0.^n(low_water_range)).^(-m(low_water_range)) - T_prime0 .* (n(low_water_range).*m(low_water_range)).* T_prime0.^(n(low_water_range)-1) ...
+                    .* (1+T_prime0.^n(low_water_range)).^(-m(low_water_range)-1)) ./ (gamma(low_water_range) -  n(low_water_range).*m(low_water_range).* T_prime0.^(n(low_water_range)-1) .* (1+T_prime0.^n(low_water_range)).^(-m(low_water_range)-1));
+                
+                
+                T_nonlinear = (T_prime ./ alpha - mwp0) ./ X;
+                satWater_nonlinear = E_prime - gamma .* T_prime;
+                matric_pot_nonlinear = T_prime ./ alpha;
+                
+                
+                %ground.STATVAR.waterPotential(nonlinear_range)  = -matric_pot_nonlinear ./ rho_w ./ g;
+                ground.STATVAR.waterPotential(nonlinear_range) = (L_sl .* T_nonlinear ./ T0 - mwp0) ./ rho_w ./ g;
+                ground.STATVAR.water(nonlinear_range) = satWater_nonlinear .* porosity;
+                ground.STATVAR.Xwater(nonlinear_range) = 0;
+                ground.STATVAR.T(nonlinear_range) = T_nonlinear;
+                
+            end
+            
+            ground.STATVAR.water(ground.STATVAR.water > waterIce) = waterIce(ground.STATVAR.water > waterIce); %elminates small rounding errors and avoids negative ice contents
+            
+            ground.STATVAR.water = ground.STATVAR.water .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            ground.STATVAR.Xwater = ground.STATVAR.Xwater .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            ground.STATVAR.ice = ground.STATVAR.waterIce - ground.STATVAR.water;
+            ground.STATVAR.Xice = ground.STATVAR.XwaterIce - ground.STATVAR.Xwater;
+             
+         end
         
         %         function ground = get_T_water_freezeC_Xice(ground)
         %
@@ -454,6 +507,65 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             ground.STATVAR.waterPotential = (L_sl .* T ./ T0 .* double(T<0) - mwp0) ./ rho_w ./ g;
         end
         
+        
+        function ground = get_E_freezeC_Xice(ground) %required for initialization
+            
+            L_sl = ground.CONST.L_f;
+            c_w = ground.CONST.c_w;
+            c_i = ground.CONST.c_i;
+            c_o = ground.CONST.c_o;
+            c_m = ground.CONST.c_m;
+            rho_w = ground.CONST.rho_w;
+            g = ground.CONST.g;
+            T0 = ground.CONST.Tmfw;
+            
+            T = ground.STATVAR.T;
+            mineral= ground.STATVAR.mineral;
+            organic = ground.STATVAR.organic;
+            waterIce = ground.STATVAR.waterIce;
+            layerThick = ground.STATVAR.layerThick;
+            area = ground.STATVAR.area;
+            soil_type = ground.STATVAR.soil_type;
+            
+            Xice = ground.STATVAR.Xice .* double(T <= 0); % Xice initially only possible when frozen, provided in multiples of the "matrix", 1 means 50 vol% Xice, 50 % normal soil
+            
+            n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2) + double(soil_type == 3) .* ground.CONST.vanGen_n(3) + double(soil_type == 4) .* ground.CONST.vanGen_n(4) + double(soil_type == 5) .* ground.CONST.vanGen_n(5);
+            ground.STATVAR.n = n;
+            alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2) + double(soil_type == 3) .* ground.CONST.vanGen_alpha(3) + double(soil_type == 4) .* ground.CONST.vanGen_alpha(4) + + double(soil_type == 5) .* ground.CONST.vanGen_alpha(5);
+            ground.STATVAR.alpha = alpha;
+            
+            porosity = 1-mineral-organic;
+            sat_waterIce = waterIce ./ porosity;
+            alpha = alpha ./ g ./ rho_w; %convert to Pa^-1;
+            beta_interface = 2.2;  %make this a constant!
+            m=1-1./n;
+            
+            mwp0 = real(1./alpha .* ((sat_waterIce.^(-1./m)-1)).^(1./n)); 
+            mwp = -L_sl .* T ./ T0 .* beta_interface .* double(T<0) + mwp0;
+            sat_water = double(mwp > 0) .* (1+(alpha.*mwp).^n).^(-m) + double(mwp <= 0);
+            sat_ice = sat_waterIce - sat_water;
+            energy = T.* (mineral .* c_m + organic .* c_o + porosity .* sat_waterIce .* (c_w .* double(T > 0)+ c_i.* double(T <= 0))); %add XwaterIce here!!!
+            energy = energy - double(T <= 0) .* L_sl .* porosity .* (sat_waterIce - sat_water);
+            
+            ground.STATVAR.water = sat_water .* porosity .* layerThick ./ (1 + Xice) .* area;  % [m3]
+            ground.STATVAR.ice = sat_ice .* porosity .*  layerThick ./ (1 + Xice) .* area; %[m3]
+            
+            ground.STATVAR.waterIce = waterIce .* layerThick ./ (1 + Xice) .* area; % [m3]
+            ground.STATVAR.mineral = mineral .* layerThick ./ (1 + Xice) .* area; % [m3]
+            ground.STATVAR.organic = organic .* layerThick ./ (1 + Xice) .* area; % [m3]
+            %ground.STATVAR.energy = energy .* layerThick ./ (1 + Xice) .* area;  % [J]
+            ground.STATVAR.energy = (energy + Xice .* (ground.STATVAR.T .* ground.CONST.c_i - ground.CONST.L_f)) ./ (1 + Xice) .* layerThick .* area;  % [J]
+            ground.STATVAR.XwaterIce = Xice ./ (1 + Xice) .* layerThick .* area;
+            ground.STATVAR.Xice = ground.STATVAR.XwaterIce .*double(T<=0);
+            ground.STATVAR.Xwater = ground.STATVAR.XwaterIce .* double(T>0);
+            
+            ground.STATVAR.air = (1-mineral-organic-waterIce) .* layerThick ./ (1 + Xice).* area;  % [m3]
+            
+            %ground.STATVAR.waterPotential = -mwp ./ rho_w ./ g;
+            ground.STATVAR.waterPotential = (L_sl .* T ./ T0 .* double(T<0) - mwp0) ./ rho_w ./ g;
+            
+            
+        end
         
         
         %         function ground = get_E_freezeC_Xice(ground) %required for initialization

@@ -33,12 +33,9 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
 
         function tile = provide_PARA(tile)
 
-            tile.PARA.coordinates = [];
-            tile.PARA.crs = [];
-            tile.PARA.height_system = [];
-            
             tile.PARA.builder = [];
             
+            %new_init
             tile.PARA.latitude = [];
             tile.PARA.longitude = [];
             tile.PARA.altitude = [];
@@ -59,6 +56,10 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             tile.PARA.lateral_class_index = [];
             tile.PARA.lateral_IA_classes = [];
             tile.PARA.lateral_IA_classes_index = [];
+            
+            %restart_OUT_last_timestep
+            tile.PARA.restart_file_path = [];
+            tile.PARA.restart_file_name = [];
             
         end
         
@@ -101,8 +102,8 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
         
         function tile = run_model(tile)
             
-            TOP_CLASS = tile.TOP_CLASS;
-            BOTTOM_CLASS = tile.BOTTOM_CLASS;
+%             TOP_CLASS = tile.TOP_CLASS;
+%             BOTTOM_CLASS = tile.BOTTOM_CLASS;
             TOP = tile.TOP;
             BOTTOM = tile.BOTTOM;
             TOP.LATERAL = tile.LATERAL;
@@ -170,8 +171,8 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                 tile = interact_lateral(tile);
                 
                 %set TOP_CLASS and BOTTOM_CLASS for convenient access
-                TOP_CLASS = TOP.NEXT;
-                BOTTOM_CLASS = BOTTOM.PREVIOUS;
+                tile.TOP_CLASS = TOP.NEXT;
+                tile.BOTTOM_CLASS = BOTTOM.PREVIOUS;
                 
                 %update time variable t
                 tile.t = tile.t + tile.timestep./tile.CONST.day_sec;
@@ -370,6 +371,14 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             tile.PARA.result_path =  tile.RUN_INFO.PPROVIDER.PARA.result_path;
         end
         
+        
+        function tile = build_tile_restart_OUT_last_timestep(tile)
+            temp=load([tile.PARA.restart_file_path tile.PARA.restart_file_name]);
+            variables = fieldnames(temp.out.STRATIGRAPHY);
+            for i=1:size(variables,1)
+                tile.(variables{i,1}) = temp.out.STRATIGRAPHY.(variables{i,1});
+            end
+        end
         
         
 
