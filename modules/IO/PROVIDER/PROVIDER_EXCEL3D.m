@@ -4,8 +4,8 @@ classdef PROVIDER_EXCEL3D < PROVIDER_EXCEL
     methods
         
 
-        function provider = assign_paths_excel3d(provider, run_name, result_path, constant_file, forcing_path)
-            provider = assign_paths_excel(provider, run_name, result_path, constant_file, forcing_path);
+        function provider = assign_paths_excel3d(provider, run_name, result_path, constant_file)
+            provider = assign_paths_excel(provider, run_name, result_path, constant_file);
         end
        
         

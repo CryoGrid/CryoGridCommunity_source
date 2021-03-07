@@ -32,6 +32,9 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
             run_info.PARA.tile_class_index = [];
             run_info.PARA.number_of_runs = [];
             
+            run_info.PARA.tile_postproc_class = [];
+            run_info.PARA.tile_postproc_class_index = [];
+            
             run_info.PARA.base_projection_class = [];
             run_info.PARA.base_projection_class_index = [];
             
@@ -83,7 +86,7 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
                 run_info.PARA.checkfolder = [run_info.PARA.checkfolder run_info.PARA.run_name '/'];
             end
 
-
+            disp('get spatial reference')
             %provided by coordinate system MODIS LST classes
             run_info.STATVAR.spatial = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.base_projection_class){run_info.PARA.base_projection_class_index,1});
             run_info.STATVAR.spatial.RUN_INFO = run_info;
@@ -94,15 +97,19 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
             run_info.STATVAR.key = run_info.STATVAR.spatial.STATVAR.key;
             run_info.STATVAR.list_of_MODIS_tiles = run_info.STATVAR.spatial.STATVAR.list_of_MODIS_tiles; %use to loop over several tiles
             run_info.PARA.total_number_of_cells = size(run_info.STATVAR.key,1);
+            run_info.STATVAR.properties = run_info.STATVAR.spatial.STATVAR.properties;
             
+            disp('get altitudes')
             run_info.PARA.dem = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.DEM_class){run_info.PARA.DEM_class_index,1});
             run_info.PARA.dem = finalize_init(run_info.PARA.dem);
             run_info.STATVAR.altitude = get_altitudes(run_info.PARA.dem, run_info);
 
+            disp('get geothermal')
             run_info.PARA.geothermal = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.geothermal_class){run_info.PARA.geothermal_class_index,1});
             run_info.PARA.geothermal = finalize_init(run_info.PARA.geothermal);
             run_info.STATVAR.geothermal = get_geothermal_heatflux(run_info.PARA.geothermal, run_info);
             
+            disp('get landcover')
             run_info.PARA.landcover = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.landcover_class){run_info.PARA.landcover_class_index,1});
             run_info.PARA.landcover = finalize_init(run_info.PARA.landcover);
             run_info.STATVAR.landcover = get_landcover(run_info.PARA.landcover, run_info);
@@ -196,6 +203,31 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
                 end
             end
             
+
+        end
+        
+        
+        function [run_info, tile] = run_postproc(run_info)
+            
+            number_of_tiles = ceil(run_info.PARA.total_number_of_cells ./ run_info.PARA.number_of_cells_per_tile);
+            %domains_per_worker = max(1, floor(number_of_tiles ./ run_info.PARA.num_ranks - 1e-12))
+            %domains_per_worker = max(1, ceil(number_of_tiles ./ run_info.PARA.num_ranks));
+            domains_per_worker_breaks = round([0:number_of_tiles./run_info.PARA.num_ranks:number_of_tiles]');
+            
+            for i=1:size(run_info.PARA.tile_postproc_class,1)
+                tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_postproc_class{i,1}){run_info.PARA.tile_postproc_class_index(i,1),1});
+                
+                %tile.PARA.run_index = [(run_info.PARA.my_rank-1).*domains_per_worker+1:min(run_info.PARA.my_rank.*domains_per_worker, number_of_tiles)]';
+                tile.PARA.run_index = [domains_per_worker_breaks(run_info.PARA.my_rank)+1:domains_per_worker_breaks(run_info.PARA.my_rank + 1)]';
+
+                tile.RUN_INFO = run_info;
+                
+                tile = finalize_init(tile); %here, tile can still access a potentially existing tile through til.RUN_INFO.TILE
+                
+                tile = run_model(tile);
+            end
+       
+            %terminate parallel environment 
             if run_info.PARA.parallelized == 1
                 NMPI_Finalize(); % End the MPI communication
             end

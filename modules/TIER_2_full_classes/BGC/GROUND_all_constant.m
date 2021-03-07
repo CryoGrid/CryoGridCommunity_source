@@ -4,18 +4,14 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_all_constant < SEB & HEAT_CONDUCTION & WATER_FLUXES & INITIALIZE
+classdef GROUND_all_constant < SEB & HEAT_CONDUCTION & WATER_FLUXES
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-        function self = GROUND_all_constant(index, pprovider, cprovider, forcing)  
-            self@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
-        
+
         function ground = provide_PARA(ground)
             
             ground.PARA.albedo = [];  %surface albedo [-]
@@ -83,10 +79,10 @@ classdef GROUND_all_constant < SEB & HEAT_CONDUCTION & WATER_FLUXES & INITIALIZE
             ground.CONST.rho_i = []; %ice density
         end
         
-        function ground = finalize_init(ground, forcing) 
-            ground.PARA.heatFlux_lb = forcing.PARA.heatFlux_lb;
-            ground.PARA.airT_height = forcing.PARA.airT_height;
-            ground.STATVAR.area = forcing.PARA.area + ground.STATVAR.T .* 0;
+        function ground = finalize_init(ground, tile) 
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
             ground = calculate_hydraulicConductivity(ground);
@@ -138,13 +134,11 @@ classdef GROUND_all_constant < SEB & HEAT_CONDUCTION & WATER_FLUXES & INITIALIZE
         function ground = check_trigger(ground, tile)
            %do nothing 
         end
-        
-        
+
         
         function ground = conductivity(ground)
             ground = conductivity_mixing_squares(ground);
         end
-        
 
     end
     

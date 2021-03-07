@@ -281,11 +281,13 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             snow_class_name = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_classes_class){tile.PARA.strat_classes_class_index,1}.PARA.snow_class_name;
             snow_class_index = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_classes_class){tile.PARA.strat_classes_class_index,1}.PARA.snow_class_index;
             
-            snow_class =  tile.RUN_INFO.PPROVIDER.CLASSES.(snow_class_name);
-            snow_class = snow_class{snow_class_index,1}; 
-           
-            tile.TOP.STORE.SNOW = copy(snow_class);
-            tile.TOP.STORE.SNOW = finalize_init(tile.TOP.STORE.SNOW, tile); %make this dependent on TILE!
+            if ~isempty(snow_class_name) && sum(isnan(snow_class_name))==0
+                snow_class =  tile.RUN_INFO.PPROVIDER.CLASSES.(snow_class_name);
+                snow_class = snow_class{snow_class_index,1};
+                
+                tile.TOP.STORE.SNOW = copy(snow_class);
+                tile.TOP.STORE.SNOW = finalize_init(tile.TOP.STORE.SNOW, tile); %make this dependent on TILE!
+            end
             
             %9. assign sleeping classes
             sleeping_classes = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_classes_class){tile.PARA.strat_classes_class_index,1}.PARA.sleeping_classes_name;

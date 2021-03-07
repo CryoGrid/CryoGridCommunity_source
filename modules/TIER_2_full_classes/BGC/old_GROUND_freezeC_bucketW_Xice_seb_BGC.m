@@ -6,7 +6,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_bucketW_Xice_seb_BGC < SEB & HEAT_CONDUCTION & FREEZE_CURVE_DallAmico & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL %& INITIALIZE
+classdef GROUND_freezeC_bucketW_Xice_seb_BGC < SEB & HEAT_CONDUCTION & FREEZE_CURVE & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL
 
     properties
        BGC 
@@ -17,9 +17,6 @@ classdef GROUND_freezeC_bucketW_Xice_seb_BGC < SEB & HEAT_CONDUCTION & FREEZE_CU
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function ground = GROUND_freezeC_bucketW_Xice_seb_BGC(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
          function ground = provide_PARA(ground)
             

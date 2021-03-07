@@ -12,7 +12,12 @@
 function ia_class = get_IA_class(above_class, below_class)
 
 
-
+if strcmp(above_class, 'GROUND_freezeC_bucketW_Xice_seb_snow_BGC')
+    above_class = 'GROUND_freezeC_bucketW_Xice_seb_snow';
+end
+if strcmp(below_class, 'GROUND_freezeC_bucketW_Xice_seb_snow_BGC')
+    below_class = 'GROUND_freezeC_bucketW_Xice_seb_snow';
+end
 
 %list of all CryoGrid GROUND classes
 classes = [ {'GROUND_freeW_seb'};

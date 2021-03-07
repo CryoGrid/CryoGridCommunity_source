@@ -16,10 +16,7 @@ classdef GROUND_all_constant_BGC < GROUND_all_constant
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function self = GROUND_all_constant_BGC(index, pprovider, cprovider, forcing)  
-%             self@GROUND_all_constant(index, pprovider, cprovider, forcing);
-%         end
+
         
         function ground = provide_PARA(ground)
             
@@ -90,18 +87,19 @@ classdef GROUND_all_constant_BGC < GROUND_all_constant
             ground.CONST.rho_i = []; %ice density
         end
         
-        function ground = finalize_init(ground, forcing) 
+        function ground = finalize_init(ground, tile) 
 
-            ground = finalize_init@GROUND_all_constant(ground, forcing);
+            ground = finalize_init@GROUND_all_constant(ground, tile);
 
             class_handle = str2func(ground.PARA.BGC_CLASS);
-            ground.BGC = class_handle(-1,0,0,0); 
+            %ground.BGC = class_handle(-1,0,0,0); 
+            ground.BGC = class_handle(); 
             ground.BGC.PARENT = ground;
             %remove this in the end
             ground.BGC = provide_PARA(ground.BGC);
             ground.BGC = provide_STATVAR(ground.BGC);
             ground.BGC = provide_CONST(ground.BGC);
-            ground.BGC = finalize_init(ground.BGC, forcing);
+            ground.BGC = finalize_init(ground.BGC, tile);
             
             ground.IA_BGC = IA_BGC_simple();
             ground.IA_BGC.BGC = ground.BGC;
@@ -156,13 +154,7 @@ classdef GROUND_all_constant_BGC < GROUND_all_constant
             ground.BGC = check_trigger(ground.BGC, tile);
         end
         
-        
-        %------------------------
-        
-        function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
-        end
-        
+
 
     end
     

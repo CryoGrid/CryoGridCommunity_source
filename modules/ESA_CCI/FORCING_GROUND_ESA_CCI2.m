@@ -40,7 +40,7 @@ classdef FORCING_GROUND_ESA_CCI2 < matlab.mixin.Copyable
             if ~forcing.PARA.preprocessed
                 
                 forcing.DATA.timestamp = ncread([forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' ...
-                    tile.RUN_INFO.PARA.run_name '_1.nc'], 'timestamp');
+                    tile.RUN_INFO.PARA.run_name '_timestamp_1.nc'], 'timestamp');
                 forcing.DATA.timestamp = forcing.DATA.timestamp';
                 
                 variables = {'ERA_melt_bare'; 'ERA_melt_forest'; 'ERA_snowfall_downscaled'; 'ERA_T_downscaled'; 'final_av_T'; 'final_MODIS_weight'};
@@ -56,16 +56,16 @@ classdef FORCING_GROUND_ESA_CCI2 < matlab.mixin.Copyable
                 
                 for i=1:size(variables,1)
                     if start_file_number==end_file_number
-                        file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' num2str(start_file_number) '.nc'];
+                        file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' variables{i,1} '_' num2str(start_file_number) '.nc'];
                         forcing.DATA.(variables{i,1}) = ncread(file_name, variables{i,1}, [start_pos 1], [end_pos-start_pos+1 Inf], [1 1]);
                     else
-                        file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' num2str(start_file_number) '.nc'];
+                        file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' variables{i,1} '_' num2str(start_file_number) '.nc'];
                         forcing.DATA.(variables{i,1}) = ncread(file_name, variables{i,1}, [start_pos 1], [Inf Inf], [1 1]);
                         for jj=start_file_number+1:end_file_number-1
-                            file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' num2str(jj) '.nc'];
+                            file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' variables{i,1} '_' num2str(jj) '.nc'];
                             forcing.DATA.(variables{i,1}) = [forcing.DATA.(variables{i,1}); ncread(file_name, variables{i,1}, [1 1], [Inf Inf], [1 1])];
                         end
-                        file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' num2str(end_file_number) '.nc'];
+                        file_name = [forcing.PARA.forcing_ground_folder tile.RUN_INFO.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' variables{i,1} '_' num2str(end_file_number) '.nc'];
                         forcing.DATA.(variables{i,1}) = [forcing.DATA.(variables{i,1}); ncread(file_name, variables{i,1}, [1 1], [end_pos Inf], [1 1])];
                     end
                 end

@@ -3,7 +3,7 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
     
     methods
         
-        function provider = assign_paths_excel(provider, run_name, result_path, constant_file, forcing_path)
+        function provider = assign_paths_excel(provider, run_name, result_path, constant_file)
 
             
             constant_file = [result_path run_name '/' constant_file '.xlsx'];
@@ -13,7 +13,7 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
             provider.PARA.result_path = result_path;
             provider.PARA.parameter_file = parameter_file;
             provider.PARA.constant_file = constant_file;
-            provider.PARA.forcing_path = forcing_path;
+            %provider.PARA.forcing_path = forcing_path;
         end
        
         

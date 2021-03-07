@@ -3,12 +3,12 @@ classdef PROVIDER < PROVIDER_EXCEL & PROVIDER_EXCEL3D & PROVIDER_MAT
     methods
         
         %possibly work with varargin to allow for different initialization paramters for other PROVIDER classes
-        function provider = assign_paths(provider, init_format, run_name, result_path, constant_file, forcing_path)
+        function provider = assign_paths(provider, init_format, run_name, result_path, constant_file)
             provider.PARA.init_format = init_format;
             if strcmp(init_format, 'EXCEL')
-                provider = assign_paths_excel(provider, run_name, result_path, constant_file, forcing_path);
+                provider = assign_paths_excel(provider, run_name, result_path, constant_file);
             elseif strcmp(init_format, 'EXCEL3D')
-                provider = assign_paths_excel3d(provider, run_name, result_path, constant_file, forcing_path);
+                provider = assign_paths_excel3d(provider, run_name, result_path, constant_file);
             elseif strcmp(init_format, 'MAT')
                 provider = assign_paths_mat(provider, run_name, result_path);
             end
