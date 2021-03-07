@@ -50,21 +50,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
 
         end
 		
-% 	    function out = initialize_TEMP(out)
-%             % INITIALIZE_TEMP  Initializes TEMP structure.
-%             
-%             out.TEMP = struct();
-%         end	
 	
-% 		function out = populate_PARA(out, pprovider)
-%             % POPULATE_PARA  Updates the PARA structure with values from pprovider.
-%             %
-%             %   ARGUMENTS:
-%             %   pprovider:  instance of PARAMETER_PROVIDER class
-%             
-%             out.PARA = pprovider.populate_struct(out.PARA, 'OUT', mfilename('class'), out.out_index);
-%         end
-		
 		function out = finalize_init(out, tile)
 			% FINALIZE_SETUP  Performs all additional property
             %   initializations and modifications. Checks for some (but not

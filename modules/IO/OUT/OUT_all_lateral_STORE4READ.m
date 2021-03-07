@@ -10,7 +10,7 @@
 %========================================================================
 
 
-classdef OUT_all_lateral_STORE4READ
+classdef OUT_all_lateral_STORE4READ < matlab.mixin.Copyable
 
     properties
 		out_index
@@ -21,95 +21,55 @@ classdef OUT_all_lateral_STORE4READ
         PARA
         OUTPUT_TIME
         SAVE_TIME
+        CONST
 		
 	end
     
     
     methods
 		
-        %constructor
-		function out = OUT_all_lateral_STORE4READ(varargin)               % Temporary definition, to allow old code to run
-        %function out = OUT_all(index, pprovider, forcing)      % Definition to be used when old code is no longer supported
-            % CONSTRUCTOR for OUT_all
-            %   Reads in out data from the specified file.
-            %
-            %   ARGUMENTS:
-            %   index:      user defined class index
-            %   pprovider:  instance of PARAMETER_PROVIDER class
-			%	forcing:	instance of FORCING class
-            
-            % The following is only needed to allow legacy code to run
-            % May be removed when deprecated functions are removed
-            if nargin==3
-                index = varargin{1};
-                pprovider = varargin{2};
-				forcing = varargin{3};
-            else
-                st = dbstack;
-                warning(['DEPRECATION WARNING: Instantiating ' st.name '() with no arguments is deprecated.' newline,...
-                         'You should update your code to take advantage of new IO interface.']);
-                return
-            end
-            % End allow legacy code
-            
-            out.out_index = index;
-            out = out.initialize();
-            out = out.populate_PARA(pprovider);
-            out = out.finalize_setup(forcing);
-        end
-		
+
         %-------initialization--------------
         
-		function out = initialize(out)
-            % INITIALIZE  Initializes all properties needed by the class.
-			
-			out.STRATIGRAPHY = [];
-            out.LATERAL=[];
-			out.TIMESTAMP = [];
-			out.OUTPUT_TIME = [];
-			out.SAVE_TIME = [];
-            out = out.initialize_PARA();
-            out = out.initialize_TEMP();
-        end
+% 		function out = initialize(out)
+%             % INITIALIZE  Initializes all properties needed by the class.
+% 			
+% 			out.STRATIGRAPHY = [];
+%             out.LATERAL=[];
+% 			out.TIMESTAMP = [];
+% 			out.OUTPUT_TIME = [];
+% 			out.SAVE_TIME = [];
+%             out = out.initialize_PARA();
+%             out = out.initialize_TEMP();
+%         end
         
-        function out = initialize_PARA(out)         
-            % INITIALIZE_PARA  Initializes PARA structure.
+        function out = provide_PARA(out)         
 
             out.PARA.output_timestep = [];
             out.PARA.save_date = [];
             out.PARA.save_interval = [];
             out.PARA.number_of_skipped_classes = 1;
         end
-		
-	    function out = initialize_TEMP(out)
-            % INITIALIZE_TEMP  Initializes TEMP structure.
-            
-            out.TEMP = struct();
-        end	
-		
-		function out = populate_PARA(out, pprovider)
-            % POPULATE_PARA  Updates the PARA structure with values from pprovider.
-            %
-            %   ARGUMENTS:
-            %   pprovider:  instance of PARAMETER_PROVIDER class
-            
-            out.PARA = pprovider.populate_struct(out.PARA, 'OUT', mfilename('class'), out.out_index);
+        
+        function out = provide_CONST(out)
+
         end
-		
-		function out = finalize_setup(out, forcing)
-			% FINALIZE_SETUP  Performs all additional property
-            %   initializations and modifications. Checks for some (but not
-            %   all) data validity.
-			
-			%	ARGUMENTS:
-			%	forcing:	instance of FORCING class
-			
+        
+        function out = provide_STATVAR(out)
+
+        end
+
+		function  out = finalize_init(out, tile)
+
+            forcing = tile.FORCING;
+
 			out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.output_timestep;
             if isempty(out.PARA.save_interval) || isnan(out.PARA.save_interval) 
-                out.SAVE_TIME = forcing.PARA.end_time;
+                out.SAVE_TIME = tile.FORCING.PARA.end_time;
             else
-                out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
+                out.SAVE_TIME = min(tile.FORCING.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
             end
+            out.TEMP = struct();
         end
         
         %-------time integration----------------
@@ -120,9 +80,10 @@ classdef OUT_all_lateral_STORE4READ
              TOP = tile.TOP; 
              BOTTOM = tile.BOTTOM;
              forcing = tile.FORCING;
-             run_number = tile.RUN_NUMBER;
+             run_name = tile.PARA.run_name;
+             result_path = tile.PARA.result_path;
              timestep = tile.timestep;
-             result_path = tile.RESULT_PATH;
+
             
             if t==out.OUTPUT_TIME
 
@@ -140,7 +101,7 @@ classdef OUT_all_lateral_STORE4READ
                         new_CURRENT.PREVIOUS.NEXT = new_CURRENT;
                         new_CURRENT = new_CURRENT.PREVIOUS;
                         if isprop(new_CURRENT, 'LUT')
-                            res.LUT =[];  %remove look-up tables, runs out of memory otherwise
+                            new_CURRENT.LUT =[];  %remove look-up tables, runs out of memory otherwise
                         end
                         new_CURRENT.PREVIOUS = [];
                         new_CURRENT.IA_PREVIOUS =[];
@@ -176,10 +137,10 @@ classdef OUT_all_lateral_STORE4READ
                 
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
                 if t==out.SAVE_TIME 
-                   if ~(exist([result_path run_number])==7)
-                       mkdir([result_path run_number])
+                   if ~(exist([result_path run_name])==7)
+                       mkdir([result_path run_name])
                    end
-                   save([result_path run_number '/' run_number '_' datestr(t,'yyyymmdd') '.mat'], 'out')
+                   save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
                    out.STRATIGRAPHY=[];
                    out.LATERAL=[];
                    out.TIMESTAMP=[];
@@ -188,12 +149,5 @@ classdef OUT_all_lateral_STORE4READ
             end
         end
 
-        function xls_out = write_excel(out)
-			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
-			
-            xls_out = {'OUT','index',NaN,NaN;'OUT_all',1,NaN,NaN;'output_timestep',0.250000000000000,'[days]',NaN;'save_date','01.09.','provide in format dd.mm.',NaN;'save_interval',1,'[y]','if left empty, the entire output will be written out at the end';'OUT_END',NaN,NaN,NaN};
-        end
-         
-        
     end
 end

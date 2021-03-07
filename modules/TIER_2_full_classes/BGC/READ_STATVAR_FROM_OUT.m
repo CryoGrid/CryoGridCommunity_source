@@ -4,12 +4,12 @@
 % S. Westermann, November 2020
 %========================================================================
 
-classdef READ_STATVAR_FROM_OUT < INITIALIZE
+classdef READ_STATVAR_FROM_OUT < BASE
 
     properties
-        READ_OUT
         RUN_PARA
         RUN_CONST
+        READ_OUT
     end
     
     methods
@@ -17,14 +17,13 @@ classdef READ_STATVAR_FROM_OUT < INITIALIZE
         %----mandatory functions---------------
         %----initialization--------------------
         
-        function ground = READ_STATVAR_FROM_OUT(index, pprovider, cprovider, forcing)  
-            ground@INITIALIZE(index, pprovider, cprovider, forcing);
-        end
+
         
          function ground = provide_PARA(ground)
             
             ground.PARA.start_year = [];
             ground.PARA.end_year = [];
+            
             ground.PARA.timestep = []; %must  be multiple of output timestep
             ground.PARA.run_number = []; %run _number to read - if empty, use own run number (only works if this run 
             ground.PARA.result_path = [];
@@ -47,19 +46,19 @@ classdef READ_STATVAR_FROM_OUT < INITIALIZE
             ground.CONST.day_sec = [];
         end
         
-        function ground = finalize_init(ground, forcing) 
+        function ground = finalize_init(ground, tile) 
             ground.PARA.year_list = [ground.PARA.start_year:ground.PARA.out_save_interval:ground.PARA.end_year];
             ground.PARA.year_index = 1; 
             
             filename = [ground.PARA.run_number '_' datestr(datenum([ground.PARA.out_save_date num2str(ground.PARA.year_list(ground.PARA.year_index))], 'dd.mm.yyyy'), 'yyyymmdd') '.mat'];
-            load([ground.PARA.result_path '/' ground.PARA.run_number '/' filename]);
+            load([ground.PARA.result_path ground.PARA.run_number '/' filename]);
             ground.READ_OUT = out;  %load the first file
 
             %ground.PARA.time_offset = datenum([ground.PARA.out_save_date '2002'], 'dd.mm.yyyy')-datenum(2002,1,1);
             ground.PARA.time_offset = datenum([ground.PARA.out_save_date num2str(ground.PARA.year_list(ground.PARA.year_index))], 'dd.mm.yyyy') - datenum(ground.PARA.year_list(ground.PARA.year_index),1,1);
             ground.RUN_PARA = ground.PARA;
             ground.RUN_CONST = ground.CONST;
-            ground.RUN_PARA.next_read_time = forcing.PARA.start_time + ground.RUN_PARA.timestep; 
+            ground.RUN_PARA.next_read_time = tile.FORCING.PARA.start_time + ground.RUN_PARA.timestep; 
             ground.RUN_PARA.active = 1;
             
             %assign the first stratigraphy
@@ -147,7 +146,7 @@ classdef READ_STATVAR_FROM_OUT < INITIALIZE
             
             while ~isequal(class(CURRENT.PREVIOUS), 'Top')
                 CURRENT = CURRENT.PREVIOUS;
-                new_GROUND = READ_STATVAR_FROM_OUT(-1,0,0,0);
+                new_GROUND = READ_STATVAR_FROM_OUT();
                 new_GROUND.STATVAR = CURRENT.STATVAR;
                 new_GROUND.PARA = CURRENT.PARA;
                 new_GROUND.TEMP = CURRENT.TEMP;
