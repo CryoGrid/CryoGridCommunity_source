@@ -32,7 +32,7 @@ classdef IA_BGC_simple <  IA_BGC
             ia_BGC.BGC.STATVAR.field_capacity = ia_BGC.BGC.STATVAR.layerThick .*0;
             vol_water_ground = ia_BGC.GROUND.STATVAR.water ./ ia_BGC.GROUND.STATVAR.layerThick ./ ia_BGC.GROUND.STATVAR.area;
             vol_mineral_ground = ia_BGC.GROUND.STATVAR.mineral ./ ia_BGC.GROUND.STATVAR.layerThick ./ ia_BGC.GROUND.STATVAR.area;    
-            porosity_ground = 1- (ia_BGC.GROUND.STATVAR.mineral - ia_BGC.GROUND.STATVAR.organic) ./ ia_BGC.GROUND.STATVAR.layerThick ./ ia_BGC.GROUND.STATVAR.area;    
+            porosity_ground = 1- (ia_BGC.GROUND.STATVAR.mineral + ia_BGC.GROUND.STATVAR.organic) ./ ia_BGC.GROUND.STATVAR.layerThick ./ ia_BGC.GROUND.STATVAR.area;    
             
             
             overlap = get_overlap_cells(ia_BGC, depths_BGC, depths_ground);
