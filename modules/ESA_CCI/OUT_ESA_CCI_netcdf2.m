@@ -68,7 +68,7 @@ classdef OUT_ESA_CCI_netcdf2 < matlab.mixin.Copyable
             
             out.TEMP.year_count = 1;
 
-
+            tic
         end
         
         function out = store_OUT(out, tile) 
@@ -158,7 +158,8 @@ classdef OUT_ESA_CCI_netcdf2 < matlab.mixin.Copyable
                      out.SAVE_TIME = min(tile.FORCING.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
                     
                      out = set2zero(out);
-                     
+                     toc
+                     tic
                  end
 
                      

@@ -160,7 +160,7 @@ classdef FORCING_GROUND_ESA_CCI2 < matlab.mixin.Copyable
                 forcing.TEMP.fraction = 0;
                 forcing.TEMP.index = forcing.TEMP.index + 1;
                 forcing.TEMP.number_of_substeps  =  round((forcing.DATA.timestamp(1, forcing.TEMP.index+1) - forcing.DATA.timestamp(1, forcing.TEMP.index)) .* forcing.CONST.day_sec ./ tile.timestep) ;
-                disp(datestr(forcing.DATA.timestamp(1, forcing.TEMP.index)))
+                %disp(datestr(forcing.DATA.timestamp(1, forcing.TEMP.index)))
             end
             
 %             posit=floor((t-forcing.DATA.timeForcing(1,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1)))+1;

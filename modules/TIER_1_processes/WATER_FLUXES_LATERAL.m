@@ -525,13 +525,13 @@ classdef WATER_FLUXES_LATERAL < BASE
                         
                         %add/subtract flux bottom-up or top-down 
                         flux = flux .* lateral.PARENT.IA_TIME_INCREMENT .* lateral.CONST.day_sec;
-                        flux = max(min(flux, mobile_water_saturated_zone), -pore_space_below_reservoir); %limit the fluxes to accounto for water or pore space limitation
+                        flux = max(min(flux, mobile_water_saturated_zone), -pore_space_below_reservoir); %limit the fluxes to account for water or pore space limitation
                         
                         lateral.STATVAR.subsurface_run_off = lateral.STATVAR.subsurface_run_off + flux;
                         
                         j= water_table_cell;
                         if flux > 0
-                            while flux>0
+                            while flux>0 && j <= size(ground.STATVAR.water,1)
                                 water_removed = min(max(0,ground.STATVAR.water(j,1) - ground.PARA.field_capacity .* porosity(j,1) .* ground.STATVAR.layerThick(j,1) .* ground.STATVAR.area(j,1)), ...
                                 flux);
                                 flux = flux - water_removed;
@@ -544,7 +544,7 @@ classdef WATER_FLUXES_LATERAL < BASE
                                 j=j+1;
                             end
                         elseif flux <0
-                            while flux<0
+                            while flux<0 && j>=1
                                 water_added = min(max(0,ground.STATVAR.layerThick(j,1) .* ground.STATVAR.area(j,1)) - ground.STATVAR.waterIce(j,1) - ground.STATVAR.mineral(j,1) - ground.STATVAR.organic(j,1), ...
                                     -flux);
                                 flux = flux + water_added; %flux negative

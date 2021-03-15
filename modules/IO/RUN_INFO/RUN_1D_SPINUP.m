@@ -65,7 +65,9 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
                 disp(['running tile number ' num2str(i)])
                 for j=1:run_info.PARA.number_of_runs_per_tile(i,1)
                     disp(['running round ' num2str(j)])
-
+                    
+%                     run_info = customize(run_info);
+                    
                     new_tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{i,1}){run_info.PARA.tile_class_index(i,1),1});
                     new_tile.RUN_INFO = run_info;
                     new_tile = finalize_init(new_tile);

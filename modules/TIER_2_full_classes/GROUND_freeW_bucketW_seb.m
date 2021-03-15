@@ -185,7 +185,8 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         end
         
         function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
+            ground = thermalConductivity_CLM4_5(ground);
+            %ground = conductivity_mixing_squares(ground);
         end
         
         %-----LATERAL-------------------
