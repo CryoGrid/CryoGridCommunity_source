@@ -486,8 +486,8 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             beta_interface = 2.2;  %make this a constant!
             m=1-1./n;
             
-            mwp0 = real(1./alpha .* ((sat_waterIce.^(-1./m)-1)).^(1./n)); 
-            mwp = -L_sl .* T ./ T0 .* beta_interface .* double(T<0) + mwp0;
+            mwp0 = real(1./alpha .* ((sat_waterIce.^(-1./m)-1)).^(1./n)); %Van genuchten
+            mwp = -L_sl .* T ./ T0 .* beta_interface .* double(T<0) + mwp0; %universal step to get mwp from mwp0
             sat_water = double(mwp > 0) .* (1+(alpha.*mwp).^n).^(-m) + double(mwp <= 0);
             sat_ice = sat_waterIce - sat_water;
             energy = T.* (mineral .* c_m + organic .* c_o + porosity .* sat_waterIce .* (c_w .* double(T >= 0)+ c_i.* double(T < 0)));
