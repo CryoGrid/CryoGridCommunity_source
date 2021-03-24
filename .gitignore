@@ -3,6 +3,16 @@
 ## We have git for backups!
 ##---------------------------------------------------
 
+# default forcing directory
+./forcing/*
+
+# default output directory
+./results/*
+
+# compliled UML diagrams
+./UMLs/*.puml
+./UMLs/*.svg
+
 # Windows default autosave extension
 *.asv
 
