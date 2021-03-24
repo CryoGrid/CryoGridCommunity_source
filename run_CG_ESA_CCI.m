@@ -1,5 +1,5 @@
-modules_path = 'modules';
-addpath(genpath(modules_path));
+source_path = 'source';
+addpath(genpath(source_path));
 
 
 init_format = 'EXCEL'; %EXCEL or YAML
