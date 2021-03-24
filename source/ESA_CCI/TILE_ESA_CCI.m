@@ -1,0 +1,193 @@
+
+classdef TILE_ESA_CCI < matlab.mixin.Copyable
+    
+    properties
+        PARA
+        RUN_INFO
+        BUILDER
+        FORCING
+        CONST
+        GRID
+        OUT        
+        SUBSURFACE_CLASS
+        
+        t        
+        timestep
+        
+        TOP
+        BOTTOM
+    end
+    
+    
+    methods
+        
+       
+
+        function tile = provide_PARA(tile)
+
+            tile.PARA.ensemble_size = [];
+            tile.PARA.domain_depth = [];
+            tile.PARA.area = [];
+            tile.PARA.altitude = [];
+            
+            tile.PARA.subsurface_class =[];
+            tile.PARA.subsurface_class_index =[];
+            tile.PARA.forcing_class = [];
+            tile.PARA.forcing_class_index = [];
+            tile.PARA.strat_statvar_class = [];
+            tile.PARA.strat_statvar_class_index_start = [];
+            tile.PARA.strat_statvar_class_index_end = [];
+
+            tile.PARA.grid_class = [];
+            tile.PARA.grid_class_index = [];
+            tile.PARA.out_class = [];
+            tile.PARA.out_class_index = [];
+            
+        end
+        
+        function tile = provide_CONST(tile)
+
+            tile.CONST.day_sec = [];
+
+        end
+        
+        function tile = provide_STATVAR(tile)
+
+        end
+        
+
+       
+        
+        %assemble the stratigraphy
+        function tile = finalize_init(tile)
+            
+            tile.PARA.tile_size = tile.PARA.number_of_realizations .* tile.PARA.ensemble_size;
+                        
+            tile.PARA.run_name =  tile.RUN_INFO.PPROVIDER.PARA.run_name;
+            tile.PARA.result_path =  tile.RUN_INFO.PPROVIDER.PARA.result_path;
+
+            %2. forcing -> special forcing class required
+            tile.FORCING = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.forcing_class){tile.PARA.forcing_class_index,1});
+            tile.FORCING = finalize_init(tile.FORCING, tile);
+            
+            %3. grid -> existing GRID class should do, possibly some
+            %add-ons for snow required
+            tile.GRID = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.grid_class){tile.PARA.grid_class_index,1});
+            tile.GRID = finalize_init(tile.GRID, tile);
+            
+            tile.GRID.STATVAR.depth = repmat(tile.GRID.STATVAR.GRID, 1, tile.PARA.number_of_realizations);         
+            tile.GRID.STATVAR.midPoints = repmat(tile.GRID.STATVAR.MIDPOINTS, 1, tile.PARA.number_of_realizations);         
+            tile.GRID.STATVAR.layerThick = repmat(tile.GRID.STATVAR.layerThick, 1, tile.PARA.number_of_realizations);
+            tile.GRID.STATVAR.layerDistance = repmat(tile.GRID.STATVAR.layerDistance, 1, tile.PARA.number_of_realizations);
+            
+                        
+            %3. map statvar to grid, using STRATIGRAPHY_STATVAR classes 
+            for i=1:size(tile.PARA.strat_statvar_class,1)
+                for j = tile.PARA.strat_statvar_class_index_start(i,1):tile.PARA.strat_statvar_class_index_end(i,1)
+                    strat_statvar_class = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_statvar_class{i,1}){j,1});
+                    strat_statvar_class.PARA.class_number = j;
+                    strat_statvar_class = finalize_init(strat_statvar_class, tile); %assigns the variables to GRID
+                end
+            end
+            
+
+            %1. build stratigraphy
+            tile.SUBSURFACE_CLASS = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.subsurface_class){tile.PARA.subsurface_class_index,1});
+            variables = fieldnames(tile.SUBSURFACE_CLASS.STATVAR);
+            for j=1:size(variables,1)
+                if isfield(tile.GRID.STATVAR, variables{j,1})
+                    tile.SUBSURFACE_CLASS.STATVAR.(variables{j,1}) = tile.GRID.STATVAR.(variables{j,1});
+                end
+            end
+            
+            %--------------------------
+            %CREATE ENSEMBLE HERE!! INHERIT TO A NEW TLE!!
+            %ground.stratigraphy = repmat(domain.stratigraphy', 1, domain.ensemble_size); %replace this by a function that also makes snowfall factors
+ %             ground = generate_ensemble(ground, tile); % get snow_fall_factor and stratigraphy            
+             %PROFILE = get_snowfall_factors(PROFILE, domain);  % get rid of this one
+            %PROFILE = get_wind_speed(PROFILE, domain);
+            tile.SUBSURFACE_CLASS.PARA.F_lb = repmat(tile.FORCING.PARA.heatFlux_lb, 1, tile.PARA.tile_size);
+            tile.SUBSURFACE_CLASS.TEMP.snowfall_factor = repmat(1, 1, tile.PARA.tile_size);
+            %-------------------------
+            
+            tile.SUBSURFACE_CLASS = finalize_init(tile.SUBSURFACE_CLASS, tile);
+            %set this for being able to use existing OUT classes
+            tile.TOP = Top();
+            tile.BOTTOM = Bottom();
+            tile.TOP.NEXT = tile.SUBSURFACE_CLASS;
+            tile.TOP.NEXT.PREVIOUS = tile.TOP;
+            tile.SUBSURFACE_CLASS.NEXT = tile.BOTTOM();
+            tile.BOTTOM.PREVIOUS = tile.SUBSURFACE_CLASS;            
+            
+            %10. assign time, etc.
+            tile.t = tile.FORCING.PARA.start_time;
+            %set fixed timestep!
+            tile.timestep = tile.SUBSURFACE_CLASS.PARA.timestep;
+
+ 
+            %12. assign OUT classes
+            tile.OUT = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.out_class){tile.PARA.out_class_index,1});
+            tile.OUT = finalize_init(tile.OUT, tile);
+           
+        end
+        
+
+        function tile = interpolate_forcing_tile(tile)
+             tile.FORCING = interpolate_forcing(tile.FORCING, tile);
+        end
+
+        function tile = interact_lateral(tile)
+            tile.LATERAL = interact(tile.LATERAL, tile);
+        end
+        
+        function tile = store_OUT_tile(tile)
+            tile.OUT = store_OUT(tile.OUT, tile);
+        end        
+        
+        
+        
+        function tile = run_model(tile)
+            
+            %=========================================================================
+            %TIME INTEGRATION
+            %=========================================================================
+            while tile.t < tile.FORCING.PARA.end_time
+                
+                CURRENT = tile.SUBSURFACE_CLASS;
+                
+                %interpolate focing data to time t
+                tile = interpolate_forcing_tile(tile);
+                
+                %upper boundar condition (uppermost class only)
+                CURRENT = get_boundary_condition_u(CURRENT, tile);
+                
+                %lower boundary condition (lowermost class)
+                CURRENT = get_boundary_condition_l(CURRENT,  tile);
+                
+                %calculate spatial derivatives
+                CURRENT = get_derivatives_prognostic(CURRENT, tile);
+
+                %prognostic step - integrate prognostic variables in time
+                CURRENT = advance_prognostic(CURRENT, tile);
+                
+                %diagnostic step - compute diagnostic variables
+                CURRENT = compute_diagnostic(CURRENT, tile);
+
+                %triggers
+                CURRENT = check_trigger(CURRENT, tile);
+
+                %update time variable t
+                tile.t = tile.t + tile.timestep./tile.CONST.day_sec;
+                
+                %model output
+                tile = store_OUT_tile(tile);
+            end
+            
+        end
+        
+
+    end
+end
+
+
+
