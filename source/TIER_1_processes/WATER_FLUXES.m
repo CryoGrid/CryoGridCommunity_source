@@ -220,9 +220,10 @@ classdef WATER_FLUXES < BASE
             saturation = (ground.STATVAR.waterIce  - ground.STATVAR.field_capacity .* volume_matrix)./...
                 (volume_matrix - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.field_capacity .* volume_matrix);
             saturation = max(0,min(1,saturation)); % 0 water at field capacity, 1: water at saturation
-            
             guaranteed_flow = ground.TEMP.d_water_ET;  %add other external fluxes here
             guaranteed_flow_energy = ground.TEMP.d_water_ET_energy;
+            
+            %saturation(10)-1
             
             %outflow
             d_water_out = ground.STATVAR.hydraulicConductivity .* ground.STATVAR.area; % area cancels out; make this depended on both involved cells? 
@@ -231,17 +232,21 @@ classdef WATER_FLUXES < BASE
                  (guaranteed_inflow + (d_water_out - guaranteed_inflow) .* reduction_factor_out(saturation, ground)); %this is positive when flowing out
             d_water_out(end,1) = 0; % lower boundary handled elsewhere
              %d_water_out(end,1) = -ground.TEMP.F_lb_water; %positive
-            
+             
             %inflow
             d_water_in = d_water_out .*0;
             d_water_in(2:end) = d_water_out(1:end-1);
             guaranteed_outflow = guaranteed_flow.* double(guaranteed_flow < 0);
+            %d_water_in(10)
+            %test= reduction_factor_in(saturation, ground);
+            %test(10)
             d_water_in = double(-guaranteed_outflow >= d_water_in) .* d_water_in + double(-guaranteed_outflow < d_water_in) .* ...
                 (-guaranteed_outflow + (d_water_in + guaranteed_outflow).* reduction_factor_in(saturation, ground));
             %d_water_in(1) = ground.TEMP.F_ub_water; %already checked in UB, that space is available
-            
+            %d_water_in(10)
             %readjust outflow
             d_water_out(1:end-1) = d_water_in(2:end); %reduce outflow if inflow is impossible
+            
             
             %energy advection
             d_water_out_energy = d_water_out .* (double(ground.STATVAR.T>=0) .* ground.CONST.c_w + double(ground.STATVAR.T<0) .* ground.CONST.c_i) .* ground.STATVAR.T;
@@ -542,12 +547,14 @@ classdef WATER_FLUXES < BASE
         
         
         function rf = reduction_factor_out(saturation, ground)  %part of get_derivative_water2(ground)
-            smoothness = 3e-2;
+            %smoothness = 3e-2;
+            smoothness = 3e-1;
             rf = (1-exp(-saturation./smoothness));
         end
         
         function rf = reduction_factor_in(saturation, ground)   %part of get_derivative_water2(ground)
-            smoothness = 3e-2;
+            %smoothness = 3e-2;
+            smoothness = 3e-1;
             rf = (1- exp((saturation-1)./smoothness));
         end
         
@@ -571,7 +578,9 @@ classdef WATER_FLUXES < BASE
                  (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) ./ -ground.TEMP.d_water + ...
                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce - ground.STATVAR.XwaterIce) ...
                  ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
+             
              timestep(timestep<=0) = ground.PARA.dt_max;
+             %[mini,pos] = nanmin(timestep)
              timestep=nanmin(timestep);
         end
         
