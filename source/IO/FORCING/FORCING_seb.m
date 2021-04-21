@@ -92,7 +92,7 @@ classdef FORCING_seb < matlab.mixin.Copyable
 %                 forcing.PARA.latitude  = temp.FORCING.data.lat;
 %             end
             
-            if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1))~=0
+            if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1)) >= 1e-10 %~=0
                 disp('timestamp of forcing data is not in regular intervals -> check, fix and restart')
                 forcing.STATUS=0;
                 return

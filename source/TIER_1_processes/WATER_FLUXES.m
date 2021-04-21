@@ -220,6 +220,9 @@ classdef WATER_FLUXES < BASE
             saturation = (ground.STATVAR.waterIce  - ground.STATVAR.field_capacity .* volume_matrix)./...
                 (volume_matrix - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.field_capacity .* volume_matrix);
             saturation = max(0,min(1,saturation)); % 0 water at field capacity, 1: water at saturation
+            %test to avoid problems with too small timesteps
+            saturation(saturation >= (1 - 1e-9)) = 1;
+            
             guaranteed_flow = ground.TEMP.d_water_ET;  %add other external fluxes here
             guaranteed_flow_energy = ground.TEMP.d_water_ET_energy;
             
