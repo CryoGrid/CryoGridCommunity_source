@@ -242,7 +242,9 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         
         function timestep = get_timestep_CHILD(snow, tile)  
             timestep = get_timestep_SNOW_CHILD(snow);
+            
             timestep = min(timestep, get_timestep_SNOW_sublimation(snow));
+            timestep = min(timestep, get_timestep_water_SNOW(snow));
             %timestep1 = get_timestep_heat_coduction(snow);
             %timestep2 = get_timestep_SNOW_CHILD(snow);
             %timestep = min(timestep1, timestep2);

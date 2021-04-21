@@ -325,8 +325,8 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             
             ground.STATVAR.water = ground.STATVAR.water .* ground.STATVAR.layerThick .* ground.STATVAR.area;
             ground.STATVAR.Xwater = ground.STATVAR.Xwater .* ground.STATVAR.layerThick .* ground.STATVAR.area;
-            ground.STATVAR.ice = ground.STATVAR.waterIce - ground.STATVAR.water;
-            ground.STATVAR.Xice = ground.STATVAR.XwaterIce - ground.STATVAR.Xwater;
+            ground.STATVAR.ice = max(0, ground.STATVAR.waterIce - ground.STATVAR.water);
+            ground.STATVAR.Xice = max(0, ground.STATVAR.XwaterIce - ground.STATVAR.Xwater);
              
          end
         

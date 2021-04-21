@@ -13,6 +13,9 @@
 ./UMLs/*.puml
 ./UMLs/*.svg
 
+# ESA_CCI
+./source/ESA_CCI/*
+
 # Windows default autosave extension
 *.asv
 

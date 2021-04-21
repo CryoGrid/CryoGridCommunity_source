@@ -367,7 +367,14 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             %10. assign time, etc.
             tile.t = tile.FORCING.PARA.start_time;
             
+            %reset IA time
+            tile.LATERAL.IA_TIME = tile.t + tile.LATERAL.IA_TIME_INCREMENT;
+            
+%             tile.LATERAL = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.lateral_class){tile.PARA.lateral_class_index,1});
+%             tile.LATERAL = finalize_init(tile.LATERAL, tile);
+            
             tile.RUN_INFO.TILE = tile;
+
             
             tile.PARA.run_name =  tile.RUN_INFO.PPROVIDER.PARA.run_name;
             tile.PARA.result_path =  tile.RUN_INFO.PPROVIDER.PARA.result_path;
