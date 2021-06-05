@@ -85,11 +85,11 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
              timestep = tile.timestep;
              
             
-            if t==out.OUTPUT_TIME
-                %if id == 1
+            if t>=out.OUTPUT_TIME
+				% It is time to collect output
+                % Store the current state of the model in the out structure.
+                
                 disp([datestr(t)])
-                %end
-                %labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 CURRENT =TOP.NEXT;
@@ -138,17 +138,28 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 out.LATERAL{1,size(out.LATERAL, 2)+1} = result;
                 %---
                 
+				% Set the next OUTPUT_TIME
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
-                if t==out.SAVE_TIME 
-                   if ~(exist([result_path run_name])==7)
-                       mkdir([result_path run_name])
-                   end
-                   save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
-                   out.STRATIGRAPHY=[];
-                   out.LATERAL=[];
-                   out.TIMESTAMP=[];
-                   out.MISC=[];
-                   out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
+				
+                if t>=out.SAVE_TIME
+					% It is time to save all the collected model output to disk
+					
+				    if ~(exist([result_path run_name])==7)
+				    	mkdir([result_path run_name])
+				    end
+				    save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
+				    
+					% Clear the out structure
+					out.STRATIGRAPHY=[];
+				    out.LATERAL=[];
+				    out.TIMESTAMP=[];
+				    out.MISC=[];
+					if ~isnan(out.PARA.save_interval)
+                        % If save_interval is defined, uptate SAVE_TIME for next save opertion 
+                        out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
+                        % If save_interval is not defined, we will save at the very end of the model run
+                        % and thus do not need to update SAVE_TIME (update would fail because save_interval is nan)
+					end
                 end
             end
         end
@@ -158,84 +169,6 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
 			
             xls_out = {'OUT','index',NaN,NaN;'OUT_all',1,NaN,NaN;'output_timestep',0.250000000000000,'[days]',NaN;'save_date','01.09.','provide in format dd.mm.',NaN;'save_interval',1,'[y]','if left empty, the entire output will be written out at the end';'OUT_END',NaN,NaN,NaN};
         end
-         
-        
-% 		% ==========================================
-%         % DEPRECATED METHODS
-%         % to be deleted when new implementation
-%         % is validated for backwards compatibility
-%         % ==========================================
-% 		
-% 
-% 		
-%         function out = provide_variables(out)
-% 			st = dbstack;
-%             warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-%                      'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-%             out.PARA.output_timestep = [];
-%             out.PARA.save_date = [];
-%             out.PARA.save_interval = [];
-%         end
-%         
-%         function out = initalize_from_file(out, section)
-% 			st = dbstack;
-% 			warning(['DEPRECATION WARNING: Method ' st.name '() is deprecated and will be removed.' newline,...
-%                      'Use PARAMETER_PROVIDER class to obtain parameter values.']);
-% 					 
-% 			variables = fieldnames(out.PARA);
-% 			for i=1:size(variables,1)
-% 				for j=1:size(section,1)
-% 					if strcmp(variables{i,1}, section{j,1})
-% 						out.PARA.(variables{i,1}) = section{j,2};
-% 					end
-% 				end
-% 			end
-% 		end
-% 
-% 		function out = initialize_from_ini(out, ini)
-% 			% INITIALIZE_FROM_INI  Initializes the variables from output structure of the ini parser, and compares the
-% 			%	names of the variables from the class to the ini structure.
-% 			% 	If the variables from the class mismatch the variables from
-% 			% 	the ini file, an error message is displayed.
-% 			
-% 			%	ARGUMENTS:
-% 			%	ini:	output structure from the ini parser
-% 					
-% 			st = dbstack;
-%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-%                      'Code should be moved to new PARAMETER_PROVIDER class ',...
-%                      'to streamline file access and the population of parameters.']);
-% 					 
-% 			ini_variables = fields(ini.OUT_all);
-% 			out_variables = fieldnames(out.PARA);
-% 			ismatch_class_ini_variables(ini_variables, out_variables) 
-% 			for i=1:length(out_variables)
-% 				for j=1:length(ini_variables)
-% 					if strcmp(out_variables{i,1},ini_variables{i,1})
-% 						out.PARA.(out_variables{i,1}) = ini.out_all.(ini_variables{i,1})
-% 					end
-% 				end
-% 			end
-% 		end
-% 			
-% 		% 
-%         function out = complete_init_out(out, forcing)
-% 			% COMPLETE_INIT_OUT  Completes the initialization of the member variables of the class by creating them based on out.PARA and forcing.PARA.
-% 			
-% 			%	ARGUMENTS:
-% 			%	forcing:	instance of FORCING class
-% 			
-% 			st = dbstack;
-%             warning(['DEPRECATION: Method ' st.name '() is deprecated and will be removed.' newline,...
-%             'Parameter initialization should be finalized in the ' mfilename('class') '.finalize_setup() ']);
-%             
-%             out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.output_timestep;
-%             if isempty(out.PARA.save_interval) || isnan(out.PARA.save_interval) 
-%                 out.SAVE_TIME = forcing.PARA.end_time;
-%             else
-%                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
-%             end
-%         end 
         
     end
 end

@@ -6,7 +6,7 @@
 % The user can specify the save date and the save interval (e.g. yearly
 % files), as well as the output timestep (e.g. 6 hourly). The output files
 % are in Matlab (".mat") format.
-% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+% S. Westermann, T. Ingeman-Nielsen, J. Scheer, June 2021
 %========================================================================
 
 
@@ -86,9 +86,10 @@ classdef OUT_all_lateral_STORE4READ < matlab.mixin.Copyable
 
             
             if t==out.OUTPUT_TIME
+                % It is time to collect output
+                % Store the current state of the model in the out structure.
 
                 disp([datestr(t)])
-
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 new_BOTTOM = Bottom();
@@ -135,16 +136,26 @@ classdef OUT_all_lateral_STORE4READ < matlab.mixin.Copyable
                 out.LATERAL{1,size(out.LATERAL, 2)+1} = result;
                 %---
                 
+				% Set the next OUTPUT_TIME
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
-                if t==out.SAVE_TIME 
-                   if ~(exist([result_path run_name])==7)
-                       mkdir([result_path run_name])
-                   end
-                   save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
-                   out.STRATIGRAPHY=[];
-                   out.LATERAL=[];
-                   out.TIMESTAMP=[];
-                   out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
+				
+                if t>=out.SAVE_TIME 
+					% It is time to save all the collected model output to disk
+                    if ~(exist([result_path run_name])==7)
+                        mkdir([result_path run_name])
+                    end
+                    save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
+					
+					% Clear the out structure
+                    out.STRATIGRAPHY=[];
+                    out.LATERAL=[];
+                    out.TIMESTAMP=[];
+                    if ~isnan(out.PARA.save_interval)
+                         % If save_interval is defined, uptate SAVE_TIME for next save opertion 
+                         out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
+                         % If save_interval is not defined, we will save at the very end of the model run
+                         % and thus do not need to update SAVE_TIME (update would fail because save_interval is nan)
+					end
                 end
             end
         end
