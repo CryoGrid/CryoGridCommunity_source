@@ -15,6 +15,7 @@ classdef WATER_FLUXES < BASE
             %considering ET losses and potentially external fluxes
             saturation_first_cell = (ground.STATVAR.waterIce(1) - ground.STATVAR.field_capacity(1) .* ground.STATVAR.layerThick(1).* ground.STATVAR.area(1))./ (ground.STATVAR.layerThick(1).*ground.STATVAR.area(1) - ground.STATVAR.mineral(1) - ground.STATVAR.organic(1) - ground.STATVAR.field_capacity(1).*ground.STATVAR.layerThick(1).*ground.STATVAR.area(1));
             saturation_first_cell = max(0,min(1,saturation_first_cell)); % 0 water at field capacity, 1: water at saturation
+            saturation_first_cell(saturation_first_cell >= (1 - 1e-9)) = 1;
             
             evap = double(ground.TEMP.d_water_ET(1)<0).*ground.TEMP.d_water_ET(1);
             condensation = double(ground.TEMP.d_water_ET(1)>0).*ground.TEMP.d_water_ET(1);
@@ -43,6 +44,7 @@ classdef WATER_FLUXES < BASE
             %considering ET losses and potentially external fluxes
             saturation_first_cell = ground.STATVAR.waterIce(1)./ (ground.STATVAR.layerThick(1).*ground.STATVAR.area(1) - ground.STATVAR.mineral(1) - ground.STATVAR.organic(1));
             saturation_first_cell = max(0,min(1,saturation_first_cell)); % 0 water at field capacity, 1: water at saturation
+            saturation_first_cell(saturation_first_cell >= (1 - 1e-9)) = 1;
             
             evap = double(ground.TEMP.d_water_ET(1)<0).*ground.TEMP.d_water_ET(1);
             condensation = double(ground.TEMP.d_water_ET(1)>0).*ground.TEMP.d_water_ET(1);
@@ -73,6 +75,8 @@ classdef WATER_FLUXES < BASE
             saturation_first_cell = (ground.STATVAR.waterIce(1)  - ground.STATVAR.field_capacity(1) .* volume_matrix)./...
                 (volume_matrix - ground.STATVAR.mineral(1) - ground.STATVAR.organic(1) - ground.STATVAR.field_capacity(1) .* volume_matrix);
             saturation_first_cell = max(0,min(1,saturation_first_cell)); % 0 water at field capacity, 1: water at saturation
+            %NEW SW
+            saturation_first_cell(saturation_first_cell >= (1 - 1e-9)) = 1;
             
             evap = double(ground.TEMP.d_water_ET(1)<0).*ground.TEMP.d_water_ET(1); %negative
             condensation = double(ground.TEMP.d_water_ET(1)>0).*ground.TEMP.d_water_ET(1);
@@ -92,6 +96,19 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_energy(1) = ground.TEMP.d_water_energy(1) + ground.TEMP.F_ub_water_energy;
             ground.TEMP.d_Xwater(1) = ground.TEMP.d_Xwater(1) + ground.TEMP.F_ub_Xwater;
             ground.TEMP.d_Xwater_energy(1) = ground.TEMP.d_Xwater_energy(1) + ground.TEMP.F_ub_Xwater_energy;
+            
+            
+%             timestep = double(ground.TEMP.d_water(1) > 0) .* (ground.STATVAR.layerThick(1) .* ground.STATVAR.area(1) - ground.STATVAR.mineral(1) - ground.STATVAR.organic(1) - ground.STATVAR.waterIce(1) - ground.STATVAR.XwaterIce(1)) ...
+%                  ./ ground.TEMP.d_water(1);
+%              if timestep>0 && timestep<1e-13
+%                  disp(saturation_first_cell)
+%                  disp(ground.TEMP.F_ub_water)
+%                  disp(double(rainfall <= -evap) .* rainfall)
+%                  disp(double(rainfall > -evap) .* (-evap + (rainfall + evap) .* reduction_factor_in(saturation_first_cell, ground)))
+%                  disp(reduction_factor_in(saturation_first_cell, ground))
+%                  disp('next')
+%                  
+%              end
         end
         
         function ground = get_boundary_condition_u_water_RichardsEq_Xice(ground, forcing)  %simply add the water to first grid cell, excess taken up by Xwater, no checks needed
@@ -122,6 +139,8 @@ classdef WATER_FLUXES < BASE
             saturation_first_cell = (ground.STATVAR.waterIce(1) - ground.PARA.field_capacity .* remaining_pore_space) ./ ...
                 (ground.STATVAR.layerThick(1).*ground.STATVAR.area(1) - remaining_pore_space); 
             saturation_first_cell = max(0,min(1,saturation_first_cell)); % 0 water at field capacity, 1: water at saturation
+            %NEW SW
+            saturation_first_cell(saturation_first_cell >= (1 - 1e-9)) = 1;
             
             ground.TEMP.F_ub_water = rainfall .* reduction_factor_in(saturation_first_cell, ground);
             ground.TEMP.surface_runoff = rainfall - ground.TEMP.F_ub_water;  %route this to surface pool
@@ -172,6 +191,7 @@ classdef WATER_FLUXES < BASE
         function ground = get_derivative_water2(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable 
             saturation = (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick.*ground.STATVAR.area)./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.field_capacity.*ground.STATVAR.layerThick.*ground.STATVAR.area);
             saturation = max(0,min(1,saturation)); % 0 water at field capacity, 1: water at saturation
+            saturation(saturation >= (1 - 1e-9)) = 1;
             
             guaranteed_flow = ground.TEMP.d_water_ET;  %add other external fluxes here
             guaranteed_flow_energy = ground.TEMP.d_water_ET_energy;
@@ -264,6 +284,18 @@ classdef WATER_FLUXES < BASE
             
             ground.TEMP.d_water_in = d_water_in; % at this stage nice-to-have variables, good for troubleshooting, later necessary to route solutes
             ground.TEMP.d_water_out = d_water_out;
+            
+            
+%             timestep = double(ground.TEMP.d_water(1) > 0) .* (ground.STATVAR.layerThick(1) .* ground.STATVAR.area(1) - ground.STATVAR.mineral(1) - ground.STATVAR.organic(1) - ground.STATVAR.waterIce(1) - ground.STATVAR.XwaterIce(1)) ...
+%                 ./ ground.TEMP.d_water(1);
+%             if timestep>0 && timestep<1e-13
+% %                 disp(saturation_first_cell)
+%                 disp(ground.TEMP.F_ub_water)
+% %                 disp(double(rainfall <= -evap) .* rainfall)
+% %                 disp(double(rainfall > -evap) .* (-evap + (rainfall + evap) .* reduction_factor_in(saturation_first_cell, ground)))
+% %                 disp(reduction_factor_in(saturation_first_cell, ground))
+%                 disp('next2')
+%             end
         end
         
         %upward fluxes of excess water in Xice classes
@@ -299,7 +331,8 @@ classdef WATER_FLUXES < BASE
                 (remaining_pore_space - ground.PARA.field_capacity .* remaining_pore_space); 
             
             saturation = max(0,min(1,saturation)); % 0 water at field capacity, 1: water at saturation
-              
+            saturation(saturation >= (1 - 1e-9)) = 1;
+            
             %outflow
             d_water_out = ground.STATVAR.hydraulicConductivity .* ground.STATVAR.area; % area cancels out; make this depended on both involved cells?
             d_water_out = d_water_out .* reduction_factor_out(saturation, ground); %this is positive when flowing out
@@ -566,25 +599,64 @@ classdef WATER_FLUXES < BASE
             %outflow + inflow
              %timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) ./ -ground.TEMP.d_water + ...
              %    double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
-             timestep =  double(ground.TEMP.d_water <0) .* ground.STATVAR.water ./ -ground.TEMP.d_water + ...
+             timestep =  double(ground.TEMP.d_water <0) .* ground.STATVAR.water ./ -ground.TEMP.d_water ./10 + ...
                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
-            
-             
+%            rand_factor = 1e-9 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
+%              timestep = (double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce + 1e-9 .* rand_factor > ground.STATVAR.field_capacity .* ...
+%                  ground.STATVAR.layerThick .* ground.STATVAR.area) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) ./ -ground.TEMP.d_water + ...
+%                  (double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce + 1e-9 .* rand_factor <= ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) .* ground.STATVAR.water ./ -ground.TEMP.d_water./10 + ...
+%                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
+
              timestep(timestep<=0) = ground.PARA.dt_max;
              timestep=nanmin(timestep);
         end
         
         function timestep = get_timestep_water_Xice(ground)
             %outflow + inflow
-             timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ...
+%              timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ...
+%                  (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) .* ...
+%                  (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) ./ -ground.TEMP.d_water + ...
+%                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce - ground.STATVAR.XwaterIce) ...
+%                  ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
+             
+             timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce + 1e-9 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1) > ground.STATVAR.field_capacity .* ...
                  (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) .* ...
                  (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) ./ -ground.TEMP.d_water + ...
                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce - ground.STATVAR.XwaterIce) ...
                  ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
              
+%              ts = double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ...
+%                  (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) ./ -ground.TEMP.d_water;
+%              ts(1)
+%              ts(2)
+             
              timestep(timestep<=0) = ground.PARA.dt_max;
              %[mini,pos] = nanmin(timestep)
-             timestep=nanmin(timestep);
+             %[timestep,posi] = nanmin(timestep);
+             timestep = nanmin(timestep);
+           
+             
+             %if timestep < 1e-12
+%                  volume_matrix = ground.STATVAR.layerThick(posi) .* ground.STATVAR.area(posi) - ground.STATVAR.XwaterIce(posi);
+%                  saturation = (ground.STATVAR.waterIce(posi)  - ground.STATVAR.field_capacity(posi) .* volume_matrix)./...
+%                      (volume_matrix - ground.STATVAR.mineral(posi) - ground.STATVAR.organic(posi) - ground.STATVAR.field_capacity(posi) .* volume_matrix);
+%                 saturation(saturation >= (1 - 1e-9)) = 1;
+%                 disp(timestep)
+%                 disp(posi)
+%                 disp(ground.TEMP.d_water(posi))
+%                 disp(ground.STATVAR.layerThick(posi) .* ground.STATVAR.area(posi) - ground.STATVAR.mineral(posi) - ground.STATVAR.organic(posi) - ground.STATVAR.waterIce(posi) - ground.STATVAR.XwaterIce(posi))
+%                 disp(1-saturation)
+%                 disp(reduction_factor_in(saturation, ground))
+%                 disp(ground.TEMP.F_ub_water)
+%                 
+%                 volume_matrix = ground.STATVAR.layerThick(1) .* ground.STATVAR.area(1) - ground.STATVAR.XwaterIce(1);
+%                 saturation_first_cell = (ground.STATVAR.waterIce(1)  - ground.STATVAR.field_capacity(1) .* volume_matrix)./...
+%                     (volume_matrix - ground.STATVAR.mineral(1) - ground.STATVAR.organic(1) - ground.STATVAR.field_capacity(1) .* volume_matrix);
+%                 saturation_first_cell(saturation_first_cell >= (1 - 1e-9)) = 1;
+%                 disp(1-saturation_first_cell)
+%                 disp('next')
+             %end
+             
         end
         
         function timestep = get_timestep_water_RichardsEq(ground)

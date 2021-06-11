@@ -33,6 +33,8 @@ classdef PREPROC_ESA_CCI_snow_SEB < BASE
             
             preproc.PARA.ar=0.2/1e2; % Restricted degree day factor (m*degC/day , value from Burbaker et al. 1996)
             
+            preproc.PARA.canopy_transmissivity = 0.3;
+            preproc.PARA.emissivity_canopy = 0.96;
             
         end
         
@@ -223,8 +225,7 @@ classdef PREPROC_ESA_CCI_snow_SEB < BASE
 
         end
         
-                
-        function preproc = get_melt_SEB(preproc, tile)
+         function preproc = get_melt_SEB(preproc, tile)
             
             % Time loop.
             melt_depth_bare = 0;
@@ -235,15 +236,18 @@ classdef PREPROC_ESA_CCI_snow_SEB < BASE
                 for n=1:4
                     
                     % Ablation term
-                    Ldnet = preproc.PARA.emissivity_snow.*tile.FORCING.TEMP.ERA_Lin_downscaled(:, (i-1).*4+n) - preproc.PARA.Lupwelling; % Net downwelling longwave
+                    Ldnet_bare = preproc.PARA.emissivity_snow.*tile.FORCING.TEMP.ERA_Lin_downscaled(:, (i-1).*4+n) - preproc.PARA.Lupwelling; % Net downwelling longwave
+                    Ldnet_forest = preproc.PARA.emissivity_snow.*tile.FORCING.TEMP.ERA_Lin_downscaled(:, (i-1).*4+n) .* preproc.PARA.canopy_transmissivity + ...
+                        (1-preproc.PARA.canopy_transmissivity) .* preproc.PARA.emissivity_canopy .* preproc.CONST.sigma .* (tile.FORCING.TEMP.ERA_T_downscaled(:, (i-1).*4+n)) .^4 ...
+                        - preproc.PARA.Lupwelling;
                     
                     Sdnet_bare = (1-preproc.STATVAR.albedo_bare).*tile.FORCING.TEMP.ERA_Sin_downscaled(:, (i-1).*4+n); % Net downwelling shortwave
-                    Sdnet_forest = (1-preproc.STATVAR.albedo_forest).*tile.FORCING.TEMP.ERA_Sin_downscaled(:, (i-1).*4+n); % Net downwelling shortwave
+                    Sdnet_forest = (1-preproc.STATVAR.albedo_forest).*tile.FORCING.TEMP.ERA_Sin_downscaled(:, (i-1).*4+n) .* preproc.PARA.canopy_transmissivity; % Net downwelling shortwave
 
                     Tnet=preproc.PARA.ar.*(tile.FORCING.TEMP.ERA_T_downscaled(:, (i-1).*4+n) - preproc.CONST.Tmfw); % Warming through turbulent heat fluxes, parametrized using a restricted degree day approach.
                     
-                    daily_melt_depth_bare = daily_melt_depth_bare + Sdnet_bare + Ldnet + Tnet; % Melt depth over the time step.
-                    daily_melt_depth_forest = daily_melt_depth_forest + Sdnet_forest + Ldnet + Tnet; % Melt depth over the time step.
+                    daily_melt_depth_bare = daily_melt_depth_bare + Sdnet_bare + Ldnet_bare + Tnet; % Melt depth over the time step.
+                    daily_melt_depth_forest = daily_melt_depth_forest + Sdnet_forest + Ldnet_forest + Tnet; % Melt depth over the time step.
                     
                     % The above can be negative if -Rad>Tnet, it's important to count this
                     % in diurnal accumulated melt depths, since this implicitly accounts for cold
@@ -291,6 +295,74 @@ classdef PREPROC_ESA_CCI_snow_SEB < BASE
             preproc.STATVAR.ERA_melt_forest = single(max(0, melt_depth_forest ./ 8)); %in mm/day
 
         end
+                
+%         function preproc = get_melt_SEB(preproc, tile)
+%             
+%             % Time loop.
+%             melt_depth_bare = 0;
+%             melt_depth_forest = 0;
+%             for i= 1:8
+%                 daily_melt_depth_bare =0;
+%                 daily_melt_depth_forest =0;
+%                 for n=1:4
+%                     
+%                     % Ablation term
+%                     Ldnet = preproc.PARA.emissivity_snow.*tile.FORCING.TEMP.ERA_Lin_downscaled(:, (i-1).*4+n) - preproc.PARA.Lupwelling; % Net downwelling longwave
+%                     
+%                     Sdnet_bare = (1-preproc.STATVAR.albedo_bare).*tile.FORCING.TEMP.ERA_Sin_downscaled(:, (i-1).*4+n); % Net downwelling shortwave
+%                     Sdnet_forest = (1-preproc.STATVAR.albedo_forest).*tile.FORCING.TEMP.ERA_Sin_downscaled(:, (i-1).*4+n); % Net downwelling shortwave
+% 
+%                     Tnet=preproc.PARA.ar.*(tile.FORCING.TEMP.ERA_T_downscaled(:, (i-1).*4+n) - preproc.CONST.Tmfw); % Warming through turbulent heat fluxes, parametrized using a restricted degree day approach.
+%                     
+%                     daily_melt_depth_bare = daily_melt_depth_bare + Sdnet_bare + Ldnet + Tnet; % Melt depth over the time step.
+%                     daily_melt_depth_forest = daily_melt_depth_forest + Sdnet_forest + Ldnet + Tnet; % Melt depth over the time step.
+%                     
+%                     % The above can be negative if -Rad>Tnet, it's important to count this
+%                     % in diurnal accumulated melt depths, since this implicitly accounts for cold
+%                     % content on the subdaily time-scale.
+% 
+%                 end
+%                 daily_melt_depth_bare = daily_melt_depth_bare ./ 4 .* preproc.CONST.day_sec ./ preproc.CONST.L_f .* 1000;  %in mm/day
+%                 daily_melt_depth_forest = daily_melt_depth_forest ./ 4 .* preproc.CONST.day_sec ./ preproc.CONST.L_f .* 1000;  %in mm/day
+%                 
+%                 melt_depth_bare = melt_depth_bare + daily_melt_depth_bare;
+%                 melt_depth_forest = melt_depth_forest + daily_melt_depth_forest;
+%                 
+%                 % Update snow albedo for next step.
+%                 % Latest ECMWF "continuous reset" snow albedo scheme (Dutra et al. 2010)
+%                 new_snow = mean(preproc.STATVAR.ERA_snowfall_downscaled(:, (i-1)*4+1:i*4), 2); %in mm/day
+%                 
+%                 %bare
+%                 net_acc = new_snow - daily_melt_depth_bare; % Net accumulation for one day time-step.
+%                 accumulation = net_acc>0;
+%                 preproc.STATVAR.albedo_bare(accumulation,1) = preproc.STATVAR.albedo_bare(accumulation,1) + min(1,net_acc(accumulation,1)./preproc.PARA.taus) .* ...
+%                     (preproc.PARA.albsmax_bare - preproc.STATVAR.albedo_bare(accumulation,1));
+% 
+%                 no_melting = (net_acc==0); % "Steady" case (linear decay)
+%                 preproc.STATVAR.albedo_bare(no_melting,1) = preproc.STATVAR.albedo_bare(no_melting,1) - preproc.PARA.taua;
+%                 
+%                 melting = net_acc<0; % Ablating case (exponential decay)
+%                 preproc.STATVAR.albedo_bare(melting,1) = (preproc.STATVAR.albedo_bare(melting,1) - preproc.PARA.albsmin_bare) .* exp(-preproc.PARA.tauf) + preproc.PARA.albsmin_bare;
+%                 preproc.STATVAR.albedo_bare(preproc.STATVAR.albedo_bare < preproc.PARA.albsmin_bare) = preproc.PARA.albsmin_bare;
+%                 
+%                 %forest
+%                 net_acc = new_snow - daily_melt_depth_forest; % Net accumulation for one day time-step.
+%                 accumulation = net_acc>0;
+%                 preproc.STATVAR.albedo_forest(accumulation,1) = preproc.STATVAR.albedo_forest(accumulation,1) + min(1,net_acc(accumulation,1)./preproc.PARA.taus) .* ...
+%                     (preproc.PARA.albsmax_forest - preproc.STATVAR.albedo_forest(accumulation,1));
+%                 
+%                 no_melting = (net_acc==0); % "Steady" case (linear decay)
+%                 preproc.STATVAR.albedo_forest(no_melting,1) = preproc.STATVAR.albedo_forest(no_melting,1) - preproc.PARA.taua;
+%                 
+%                 melting = net_acc<0; % Ablating case (exponential decay)
+%                 preproc.STATVAR.albedo_forest(melting,1) = (preproc.STATVAR.albedo_forest(melting,1) - preproc.PARA.albsmin_forest) .* exp(-preproc.PARA.tauf) + preproc.PARA.albsmin_forest;
+%                 preproc.STATVAR.albedo_forest(preproc.STATVAR.albedo_forest < preproc.PARA.albsmin_forest) = preproc.PARA.albsmin_forest;
+%                 
+%             end
+%             preproc.STATVAR.ERA_melt_bare = single(max(0, melt_depth_bare ./ 8)); %in mm/day
+%             preproc.STATVAR.ERA_melt_forest = single(max(0, melt_depth_forest ./ 8)); %in mm/day
+% 
+%         end
         
         
         

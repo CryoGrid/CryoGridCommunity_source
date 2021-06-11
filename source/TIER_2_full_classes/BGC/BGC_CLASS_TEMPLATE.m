@@ -304,26 +304,26 @@ classdef BGC_CLASS_TEMPLATE < PEAT_ACCUMULATION & PEAT_DECOMPOSE
         end
         
         
-        function ground = update_timeVar(ground,t)
-            
-            if (rem(t,1) == 0)
-                ground.PARA.year = ground.PARA.year +1;
-                ground.PARA.lastyear = ground.PARA.lastyear+1;
-                ground.PARA.flag4 = 0;
-                
-%                 if (mod(ground.PARA.year,3) == 0 && ground.PARA.year > 1)
-%                     ground = plot_bars(ground);
-%                 end
-            end
-            
-            if (ground.PARA.year == 10)
-                test =1;
-            end
-            
-            
-%             ground.PARA.dayofyear =t;
-            
-        end
+%         function ground = update_timeVar(ground,t)
+%             
+%             if (rem(t,1) == 0)
+%                 ground.PARA.year = ground.PARA.year +1;
+%                 ground.PARA.lastyear = ground.PARA.lastyear+1;
+%                 ground.PARA.flag4 = 0;
+%                 
+% %                 if (mod(ground.PARA.year,3) == 0 && ground.PARA.year > 1)
+% %                     ground = plot_bars(ground);
+% %                 end
+%             end
+%             
+%             if (ground.PARA.year == 10)
+%                 test =1;
+%             end
+%             
+%             
+% %             ground.PARA.dayofyear =t;
+%             
+%         end
 
     end
     

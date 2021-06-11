@@ -51,11 +51,16 @@ classdef FORCING_ERA_preproc_apply_anomaly_SEB < FORCING_ERA_preproc_SEB
             
             jj = (tile.t - datenum(str2num(datestr(tile.t, 'yyyy')), 1,1)) ./ tile.timestep + 1;
             
-            load([forcing.PARA.anomaly_file_path forcing.PARA.anomaly_file])
-            
-            anomaly_airT_interp=squeeze(anomaly_airT_interp(:,:,jj));
-            anomaly_precip_interp=squeeze(anomaly_precip_interp(:,:,jj));
-            
+            load([forcing.PARA.anomaly_file_path forcing.PARA.anomaly_file], 'anomaly_airT_interp')
+            anomaly_airT_interp=squeeze(double(anomaly_airT_interp(:,:,jj)));
+            load([forcing.PARA.anomaly_file_path forcing.PARA.anomaly_file], 'anomaly_precip_interp')
+            anomaly_precip_interp=squeeze(double(anomaly_precip_interp(:,:,jj)));
+            load([forcing.PARA.anomaly_file_path forcing.PARA.anomaly_file], 'anomaly_LW_interp')
+            anomaly_LW_interp=squeeze(double(anomaly_LW_interp(:,:,jj)));
+            load([forcing.PARA.anomaly_file_path forcing.PARA.anomaly_file], 'anomaly_SW_interp')
+            anomaly_SW_interp=squeeze(double(anomaly_SW_interp(:,:,jj)));
+            load([forcing.PARA.anomaly_file_path forcing.PARA.anomaly_file], 'ERA_lat')
+            load([forcing.PARA.anomaly_file_path forcing.PARA.anomaly_file], 'ERA_lon')
             
             max_target_lat = min(round(max(target_lat) /2) *2 + 2, 90) ;  %ERA5 in 0.25 degree resolution
             min_target_lat= max(round(min(target_lat)/2) *2 - 2, -90);
@@ -76,11 +81,15 @@ classdef FORCING_ERA_preproc_apply_anomaly_SEB < FORCING_ERA_preproc_SEB
             
             anomaly_temperature = interp2(ERA_lon_mesh ,ERA_lat_mesh, anomaly_airT_interp(lon_index_start:lon_index_end, lat_index_start:lat_index_end)', target_lon, target_lat, 'cubic');
             anomaly_precip = interp2(ERA_lon_mesh ,ERA_lat_mesh, anomaly_precip_interp(lon_index_start:lon_index_end, lat_index_start:lat_index_end)', target_lon, target_lat, 'cubic');
+            anomaly_LW = interp2(ERA_lon_mesh ,ERA_lat_mesh, anomaly_LW_interp(lon_index_start:lon_index_end, lat_index_start:lat_index_end)', target_lon, target_lat, 'cubic');
+            anomaly_SW = interp2(ERA_lon_mesh ,ERA_lat_mesh, anomaly_SW_interp(lon_index_start:lon_index_end, lat_index_start:lat_index_end)', target_lon, target_lat, 'cubic');
             
 
             forcing.TEMP.ERA_T_downscaled = forcing.TEMP.ERA_T_downscaled + anomaly_temperature;
             forcing.TEMP.ERA_precip_downcaled = forcing.TEMP.ERA_precip_downcaled .* anomaly_precip;
             
+            forcing.TEMP.ERA_Lin_downscaled = forcing.TEMP.ERA_Lin_downscaled + anomaly_LW;
+            forcing.TEMP.ERA_Sin_downscaled = forcing.TEMP.ERA_Sin_downscaled .* anomaly_SW;
         end
         
         

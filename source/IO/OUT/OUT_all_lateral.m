@@ -79,17 +79,15 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
              TOP = tile.TOP; 
              BOTTOM = tile.BOTTOM;
              forcing = tile.FORCING;
-             %run_number = tile.RUN_NUMBER;
              run_name = tile.PARA.run_name;
              result_path = tile.PARA.result_path;
              timestep = tile.timestep;
              
             
-            if t==out.OUTPUT_TIME
+            if t==out.OUTPUT_TIME %|| (tile.timestep <1e-12 && t>datenum(2014,4,1))
                 %if id == 1
                 disp([datestr(t)])
                 %end
-                %labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 CURRENT =TOP.NEXT;
@@ -139,7 +137,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 %---
                 
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
-                if t==out.SAVE_TIME 
+                if t==out.SAVE_TIME  %|| (tile.timestep <1e-12 && t>datenum(2014,4,1))
                    if ~(exist([result_path run_name])==7)
                        mkdir([result_path run_name])
                    end

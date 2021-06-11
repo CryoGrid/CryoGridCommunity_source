@@ -145,6 +145,14 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                 end
                 tile.next_break_time = min(tile.LATERAL.IA_TIME, tile.OUT.OUTPUT_TIME);
                 tile.timestep = min(tile.timestep, (tile.next_break_time - tile.t).*tile.CONST.day_sec);
+%                 
+%                 if tile.t>datenum(1980,9,8,18,0,0) && tile.timestep < 1e-13 && tile.timestep > 0
+%                     disp(tile.timestep)
+%                     tile.t=tile.FORCING.PARA.end_time;
+%                     %run_info = tile.RUN_INFO;
+%                     %save('save_all.mat', 'run_info')
+%                    % hljlkgf
+%                 end
                 
                 %prognostic step - integrate prognostic variables in time
                 CURRENT = TOP.NEXT;
@@ -387,6 +395,11 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             for i=1:size(variables,1)
                 tile.(variables{i,1}) = temp.out.STRATIGRAPHY.(variables{i,1});
             end
+%             tile.LATERAL.IA_CLASSES = {};
+%             tile.LATERAL.PARA.num_realizations = 1;
+%             tile.LATERAL.PARA.worker_number = 1;
+%             tile.OUT.OUTPUT_TIME = tile.OUT.OUTPUT_TIME+100;
+            %tile.LATERAL.IA_TIME = tile.FORCING.PARA.end_time;
         end
         
         

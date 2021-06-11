@@ -152,6 +152,8 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             
             tile.ENSEMBLE = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.ensemble_class){tile.PARA.ensemble_class_index,1});
             tile.ENSEMBLE = finalize_init(tile.ENSEMBLE, tile);
+            ensemble = tile.ENSEMBLE.STATVAR;
+            save([tile.RUN_INFO.PPROVIDER.PARA.result_path tile.RUN_INFO.PPROVIDER.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_ensemble.mat'], 'ensemble');
             
             tile.PARA.tile_size = tile.PARA.number_of_realizations .* tile.ENSEMBLE.PARA.ensemble_size;
             
@@ -223,6 +225,9 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             
             tile.ENSEMBLE = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.ensemble_class){tile.PARA.ensemble_class_index,1});
             tile.ENSEMBLE = finalize_init(tile.ENSEMBLE, tile);
+            ensemble = tile.ENSEMBLE.STATVAR;
+            ensemble.range = tile.PARA.range;
+            save([tile.RUN_INFO.PPROVIDER.PARA.result_path tile.RUN_INFO.PPROVIDER.PARA.run_name '/' tile.RUN_INFO.PARA.run_name '_' num2str(tile.RUN_INFO.PARA.my_rank) '_ensemble.mat'], 'ensemble');
             
             tile.PARA.tile_size = tile.PARA.number_of_realizations .* tile.ENSEMBLE.PARA.ensemble_size;
             

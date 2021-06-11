@@ -55,36 +55,32 @@ classdef TILE_ESA_CCI_postproc < matlab.mixin.Copyable
         
         function tile = run_model(tile) 
 
-            %variable_start_index = ceil((tile.RUN_INFO.PARA.my_rank-1) ./ tile.RUN_INFO.PARA.num_ranks .* size(tile.PARA.variable_names,1))+1;
-            
-%             %variable_start_index = floor((tile.RUN_INFO.PARA.my_rank-1) ./ tile.RUN_INFO.PARA.num_ranks .* size(tile.PARA.variable_names,1)) + 1;
-%             if tile.RUN_INFO.PARA.my_rank==1
-%                 variable_start_index = 1;
-%             end
-            %core_list = ceil([1:tile.RUN_INFO.PARA.num_ranks]'./tile.RUN_INFO.PARA.num_ranks.*size(tile.PARA.variable_names,1));
+
             core_list = ceil([0:size(tile.PARA.variable_names,1)./tile.RUN_INFO.PARA.num_ranks:size(tile.PARA.variable_names,1)])';
-            %core_list = max(1, core_list_raw);
+
             core_list = core_list(2:end,1);
             variable_start_index = core_list(tile.RUN_INFO.PARA.my_rank,1);
             permission_list = zeros(size(tile.PARA.variable_names,1),1);
             dummy = [0; core_list];
             if dummy(tile.RUN_INFO.PARA.my_rank+1,1) ~= dummy(tile.RUN_INFO.PARA.my_rank,1)
                 permission_list(variable_start_index,1)=1;
-                if tile.RUN_INFO.PARA.my_rank == tile.RUN_INFO.PARA.num_ranks
-                    permission_list(variable_start_index:size(tile.PARA.variable_names,1),1) = 1;
-                    permission_list(1:core_list(1,1)-1,1) = 1;
+%                 if tile.RUN_INFO.PARA.my_rank == tile.RUN_INFO.PARA.num_ranks
+%                     permission_list(variable_start_index:size(tile.PARA.variable_names,1),1) = 1;
+%                     permission_list(1:core_list(1,1)-1,1) = 1;
+%                 else
+%                     permission_list(variable_start_index:core_list(tile.RUN_INFO.PARA.my_rank+1,1)-1,1) = 1;
+%                 end
+                if tile.RUN_INFO.PARA.my_rank == 1
+                    permission_list(1:variable_start_index,1) = 1;
+                    permission_list(core_list(end,1)+1:end,1) = 1;
                 else
-                    permission_list(variable_start_index:core_list(tile.RUN_INFO.PARA.my_rank+1,1)-1,1) = 1;
+                    permission_list(core_list(tile.RUN_INFO.PARA.my_rank-1,1)+1:variable_start_index,1) = 1;
                 end
             end
 
-            %number_of_years = str2num(datestr(tile.FORCING.PARA.end_time, 'yyyy')) - str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy'))+1;
-            %for i = [[variable_start_index:size(tile.PARA.variable_names, 1)] [1:variable_start_index-1]] %start this differently for each core
+
              for i = [[variable_start_index:-1:1] [size(tile.PARA.variable_names, 1):-1:variable_start_index+1]]
-%                 start_permission = find(core_list(:,1) >= i, 1) == tile.RUN_INFO.PARA.my_rank;
-%                 if isempty(start_permission)
-%                     start_permission=0;
-%                 end
+
                 start_permission = permission_list(i,1);
                 [i start_permission]
 
@@ -96,9 +92,7 @@ classdef TILE_ESA_CCI_postproc < matlab.mixin.Copyable
                         tile.PARA.start_range = start_range;
                     end
                     end_range = min(tile.PARA.run_index(j,1).*tile.RUN_INFO.PARA.number_of_cells_per_tile, tile.RUN_INFO.PARA.total_number_of_cells);
-%                     if j==size(variable_names,1)
-%                         tile.PARA.end_range = end_range;
-%                     end
+
                     file_name = [tile.PARA.input_folder tile.RUN_INFO.PARA.run_name '/' tile.PARA.input_file_name '_' num2str(start_range) '_' num2str(end_range) '.nc'];
                     
                     datapackage = cat(1, datapackage, ncread(file_name, tile.PARA.variable_names{i,1}));
@@ -108,10 +102,7 @@ classdef TILE_ESA_CCI_postproc < matlab.mixin.Copyable
 
                 
                 tag = ['read_' tile.PARA.variable_names{i,1} '_'];
-%                 next = tile.RUN_INFO.PARA.my_rank + 1;
-%                 if next == tile.RUN_INFO.PARA.num_ranks+1
-%                     next = 1;
-%                 end
+
                 prev = tile.RUN_INFO.PARA.my_rank - 1;
                 if prev == 0
                     prev = tile.RUN_INFO.PARA.num_ranks;

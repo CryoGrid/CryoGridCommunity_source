@@ -96,6 +96,7 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
             run_info.STATVAR.longitude = run_info.STATVAR.spatial.STATVAR.longitude;
             run_info.STATVAR.key = run_info.STATVAR.spatial.STATVAR.key;
             run_info.STATVAR.list_of_MODIS_tiles = run_info.STATVAR.spatial.STATVAR.list_of_MODIS_tiles; %use to loop over several tiles
+            %run_info.STATVAR.mask = run_info.STATVAR.spatial.STATVAR.mask;
             run_info.PARA.total_number_of_cells = size(run_info.STATVAR.key,1);
             run_info.STATVAR.properties = run_info.STATVAR.spatial.STATVAR.properties;
             
@@ -112,7 +113,7 @@ classdef RUN_ESA_CCI < matlab.mixin.Copyable
             disp('get landcover')
             run_info.PARA.landcover = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.landcover_class){run_info.PARA.landcover_class_index,1});
             run_info.PARA.landcover = finalize_init(run_info.PARA.landcover);
-            run_info.STATVAR.landcover = get_landcover(run_info.PARA.landcover, run_info);
+            [run_info.STATVAR.landcover, run_info.STATVAR.urban] = get_landcover(run_info.PARA.landcover, run_info);
             
             data_package = run_info.STATVAR;
             data_package.spatial = [];

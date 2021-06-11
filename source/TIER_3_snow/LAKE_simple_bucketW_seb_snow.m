@@ -139,8 +139,12 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
                 ground = compute_diagnostic@LAKE_simple_bucketW_seb(ground, tile);
             else
                 ground = compute_diagnostic@LAKE_simple_bucketW_seb(ground, tile);
+                %CHANGED SW in response to problem with polygon,
+                %remove_excessWater_CHILD in compute_diagnostic_CHILD
+                %changes the variables of the LAKE class, so the diagnostic
+                %calculation should come after
                 ground.CHILD = compute_diagnostic_CHILD(ground.CHILD, tile);
-                
+                ground = compute_diagnostic@LAKE_simple_bucketW_seb(ground, tile);
             end
         end
         

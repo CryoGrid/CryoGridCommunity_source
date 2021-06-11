@@ -43,9 +43,10 @@ classdef LANDCOVER_CCI < matlab.mixin.Copyable
         end
 
         
-        function landcover_list = get_landcover(lc, run_info)
+        function [landcover_list, urban] = get_landcover(lc, run_info) %landcover_list = get_landcover(lc, run_info)
            
-            landcover_list = [];        
+            landcover_list = [];     
+            urban = []; %CHANGED
            
             for index = 1:size(run_info.STATVAR.list_of_MODIS_tiles,1)
                 
@@ -73,6 +74,11 @@ classdef LANDCOVER_CCI < matlab.mixin.Copyable
                         
                         classes=[classes; i];
                         final = [final subcellstat(run_info.STATVAR.key(range))];
+                        
+                        %CHANGED
+                        if i==190
+                            urban = [urban; subcellstat(run_info.STATVAR.key(range))];
+                        end
                     end
                 end
                 

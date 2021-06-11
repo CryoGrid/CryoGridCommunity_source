@@ -1,5 +1,5 @@
 
-classdef GROUND_ESA_CCI < BASE
+classdef GROUND_ESA_CCI_compiled < BASE
     
 
     methods
@@ -28,6 +28,7 @@ classdef GROUND_ESA_CCI < BASE
             ground.PARA.virtual_gridCellSize = [];
             ground.PARA.timestep = [];
             ground.PARA.adjust_stratigraphy_date = [];
+            ground.PARA.speedup_size = 2100;
         end
         
         function ground = provide_STATVAR(ground)
@@ -47,7 +48,10 @@ classdef GROUND_ESA_CCI < BASE
         end
         
         function ground = finalize_init(ground, tile)
-
+            
+            %uses mex functions if true
+            ground.TEMP.speedup = (size(ground.STATVAR.T, 2) == 350);
+            
             %multiply STATVARs with layerThick?
             ground.STATVAR.waterIce = ground.STATVAR.waterIce .* ground.STATVAR.layerThick;
             ground.STATVAR.mineral = ground.STATVAR.mineral .* ground.STATVAR.layerThick;
@@ -117,6 +121,8 @@ classdef GROUND_ESA_CCI < BASE
             
             ground.TEMP.d_energy = ground.STATVAR.energy .* 0;
             
+            
+            
 %             ground.TEMP.T_store = [];
 %             ground.TEMP.E_store = [];
 %             ground.TEMP.lt_store =[];
@@ -147,8 +153,8 @@ classdef GROUND_ESA_CCI < BASE
             for i=1:4 %assign boundary condition T to correct cell and all cells above
                 ground.STATVAR.T(i, :) =  ground.STATVAR.T(i, :) + double(i<=ground.STATVAR.upper_cell) .* (ground.STATVAR.surf_T - ground.STATVAR.T(i, :));
             end
-%             
-%             %CHANGE THIS!
+            
+            %CHANGE THIS!
 %             upper_cell_T = ground.STATVAR.upper_cell;
 %             upper_cell_T = double(upper_cell_T <= 3) .* (upper_cell_T+1) + double(upper_cell_T == 4) .* (upper_cell_T);
 %             for i=1:4 %assign boundary condition T to correct cell and all cells above
@@ -195,11 +201,15 @@ classdef GROUND_ESA_CCI < BASE
 %             ground.TEMP.d_energy = ground.TEMP.d_energy + (ground.STATVAR.thermCond_eff(2:end,:).*(ground.STATVAR.T(3:end,:)-ground.STATVAR.T(2:end-1,:))./ground.STATVAR.layerDistance(2:end,:) -...
 %                 ground.STATVAR.thermCond_eff(1:end-1,:).*(ground.STATVAR.T(2:end-1,:)-ground.STATVAR.T(1:end-2,:))./ground.STATVAR.layerDistance(1:end-1,:));
             
-            %downwards flux
-            ground.TEMP.d_energy = ground.TEMP.d_energy - ground.STATVAR.thermCond_eff.*(ground.STATVAR.T(2:end,:)-ground.STATVAR.T(1:end-1,:))./ground.STATVAR.layerDistance;
-            %upwards flux, lower boundary already added
-            ground.TEMP.d_energy(1:end-1,:) = ground.TEMP.d_energy(1:end-1,:) + ground.STATVAR.thermCond_eff(2:end,:).*(ground.STATVAR.T(3:end,:)-ground.STATVAR.T(2:end-1,:))./ground.STATVAR.layerDistance(2:end,:);
-            
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.TEMP.d_energy = dE_dt_compiled_mex(ground.TEMP.d_energy, ground.STATVAR.thermCond_eff, ground.STATVAR.T, ground.STATVAR.layerDistance);
+                %ground.TEMP.d_energy = double(dE_dt_compiled_mex(single(ground.TEMP.d_energy), single(ground.STATVAR.thermCond_eff), single(ground.STATVAR.T), single(ground.STATVAR.layerDistance)));
+            else
+                %downwards flux
+                ground.TEMP.d_energy = ground.TEMP.d_energy - ground.STATVAR.thermCond_eff.*(ground.STATVAR.T(2:end,:)-ground.STATVAR.T(1:end-1,:))./ground.STATVAR.layerDistance;
+                %upwards flux, lower boundary already added
+                ground.TEMP.d_energy(1:end-1,:) = ground.TEMP.d_energy(1:end-1,:) + ground.STATVAR.thermCond_eff(2:end,:).*(ground.STATVAR.T(3:end,:)-ground.STATVAR.T(2:end-1,:))./ground.STATVAR.layerDistance(2:end,:);
+            end
             ground.TEMP.d_energy(1:3,:) = ground.TEMP.d_energy(1:3,:) .*  ground.TEMP.snow_mat2(1:3,:);
 
             ground.TEMP.dLayerThick_compaction = compact_windDrift(ground, tile); 
@@ -222,8 +232,14 @@ classdef GROUND_ESA_CCI < BASE
             
             ground.STATVAR.layerThick_snow = ground.STATVAR.layerThick_snow + ground.TEMP.dLayerThick_compaction.*tile.timestep;
             ground.STATVAR.layerThick_snow(ground.STATVAR.layerThick_snow<0) = 0;
-
-            ground.STATVAR.energy = ground.STATVAR.energy + ground.TEMP.d_energy .* tile.timestep;
+            
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.STATVAR.energy = advance_E_compiled_mex(ground.STATVAR.energy, ground.TEMP.d_energy, tile.timestep);
+                %ground.STATVAR.energy = double(advance_E_compiled_mex(single(ground.STATVAR.energy), single(ground.TEMP.d_energy), single(tile.timestep)));
+                
+            else
+                ground.STATVAR.energy = ground.STATVAR.energy + ground.TEMP.d_energy .* tile.timestep;
+            end
             
             for i=1:3 %set energy to 0 for unused cells
                 ground.STATVAR.energy(i,:) = double(i >= ground.STATVAR.upper_cell) .* ground.STATVAR.energy(i,:);
@@ -310,11 +326,18 @@ classdef GROUND_ESA_CCI < BASE
         
         function ground = get_T(ground) 
             
-            %1. ground without first cell
-		    ground.STATVAR.T(6:end,:) = double(ground.STATVAR.energy(5:end,:)>=0) .* ground.STATVAR.energy(5:end,:) ./ ground.STATVAR.c_thawed(2:end,:) + ...
-                double(ground.STATVAR.energy(5:end,:) <= ground.STATVAR.E_frozen(2:end,:)) .* ((ground.STATVAR.energy(5:end,:) - ground.STATVAR.E_frozen(2:end,:)) ./ ground.STATVAR.c_frozen(2:end,:) + ground.STATVAR.T_end_freezing(2:end,:)) + ...
-                double(ground.STATVAR.energy(5:end,:) < 0 & ground.STATVAR.energy(5:end,:) > ground.STATVAR.E_frozen(2:end,:)) .* ground.STATVAR.energy(5:end,:)./ground.STATVAR.E_frozen(2:end,:) .*(ground.STATVAR.T_end_freezing(2:end,:));
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.STATVAR.T(6:end,:) = get_Tground_compiled_mex(ground.STATVAR.energy, ground.STATVAR.c_thawed, ground.STATVAR.c_frozen, ground.STATVAR.E_frozen, ground.STATVAR.T_end_freezing);
+                %ground.STATVAR.T(6:end,:) = double(get_Tground_compiled_mex(single(ground.STATVAR.energy), single(ground.STATVAR.c_thawed), single(ground.STATVAR.c_frozen), single(ground.STATVAR.E_frozen), single(ground.STATVAR.T_end_freezing)));
 
+            else
+            
+                %1. ground without first cell
+                ground.STATVAR.T(6:end,:) = double(ground.STATVAR.energy(5:end,:)>=0) .* ground.STATVAR.energy(5:end,:) ./ ground.STATVAR.c_thawed(2:end,:) + ...
+                    double(ground.STATVAR.energy(5:end,:) <= ground.STATVAR.E_frozen(2:end,:)) .* ((ground.STATVAR.energy(5:end,:) - ground.STATVAR.E_frozen(2:end,:)) ./ ground.STATVAR.c_frozen(2:end,:) + ground.STATVAR.T_end_freezing(2:end,:)) + ...
+                    double(ground.STATVAR.energy(5:end,:) < 0 & ground.STATVAR.energy(5:end,:) > ground.STATVAR.E_frozen(2:end,:)) .* ground.STATVAR.energy(5:end,:)./ground.STATVAR.E_frozen(2:end,:) .*(ground.STATVAR.T_end_freezing(2:end,:));
+            end
+            
             %2. first ground cell including initial snow - free water
             %freeze curve here, makes things much easier with the snow
 
@@ -336,16 +359,29 @@ classdef GROUND_ESA_CCI < BASE
         
         
         function ground = conductivity(ground)
-            ground.STATVAR.thermCond(5:end,:) = double(ground.STATVAR.T(5:end,:) < ground.STATVAR.T_end_freezing) .* ground.STATVAR.k_frozen + double(ground.STATVAR.T(5:end,:) > 0) .* ground.STATVAR.k_thawed + ...
-                double(ground.STATVAR.T(5:end,:) >= ground.STATVAR.T_end_freezing & ground.STATVAR.T(5:end,:) <= 0) .* ground.STATVAR.k_freezing; % ground
             
-            ground.STATVAR.thermCond_eff(5:end,:) = ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.thermCond(6:end,:).*...
-                (ground.STATVAR.layerThick(5:end-1,:)./2 + ground.STATVAR.layerThick(6:end,:)./2) ./ (ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.layerThick(6:end,:)./2 + ...
-                ground.STATVAR.thermCond(6:end,:).*ground.STATVAR.layerThick(5:end-1,:)./2 ); %size N
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.STATVAR.thermCond(5:end,:) = thermCond_compiled_mex(ground.STATVAR.T, ground.STATVAR.T_end_freezing, ground.STATVAR.k_frozen, ground.STATVAR.k_freezing, ground.STATVAR.k_thawed);
+                ground.STATVAR.thermCond_eff(5:end,:) = thermCond_eff_compiled_mex(ground.STATVAR.thermCond, ground.STATVAR.layerThick);
+                
+                %ground.STATVAR.thermCond(5:end,:) = double(thermCond_compiled_mex(single(ground.STATVAR.T), single(ground.STATVAR.T_end_freezing), single(ground.STATVAR.k_frozen), single(ground.STATVAR.k_freezing), single(ground.STATVAR.k_thawed)));
+                %ground.STATVAR.thermCond_eff(5:end,:) = double(thermCond_eff_compiled_mex(single(ground.STATVAR.thermCond), single(ground.STATVAR.layerThick)));
+                
+                ground.STATVAR.thermCond_snow = thermCond_snow_compiled_mex(ground.STATVAR.ice_snow, ground.STATVAR.layerThick_snow);
+            else
+                ground.STATVAR.thermCond(5:end,:) = double(ground.STATVAR.T(5:end,:) < ground.STATVAR.T_end_freezing) .* ground.STATVAR.k_frozen + double(ground.STATVAR.T(5:end,:) > 0) .* ground.STATVAR.k_thawed + ...
+                    double(ground.STATVAR.T(5:end,:) >= ground.STATVAR.T_end_freezing & ground.STATVAR.T(5:end,:) <= 0) .* ground.STATVAR.k_freezing; % ground
+                
+                ground.STATVAR.thermCond_eff(5:end,:) = ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.thermCond(6:end,:).*...
+                    (ground.STATVAR.layerThick(5:end-1,:)./2 + ground.STATVAR.layerThick(6:end,:)./2) ./ (ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.layerThick(6:end,:)./2 + ...
+                    ground.STATVAR.thermCond(6:end,:).*ground.STATVAR.layerThick(5:end-1,:)./2 ); %size N
             
-            %Thermal conductivity snow
-            snow_density = ground.STATVAR.ice_snow ./ max(1e-20, ground.STATVAR.layerThick_snow) .*920;
-            ground.STATVAR.thermCond_snow = max(5e-3, 2.3.*(snow_density./1000).^1.88);
+            
+                %Thermal conductivity snow
+                snow_density = ground.STATVAR.ice_snow ./ max(1e-20, ground.STATVAR.layerThick_snow) .*920;
+                ground.STATVAR.thermCond_snow = max(5e-3, 2.3.*(snow_density./1000).^1.88);
+            end
+            
             ground.STATVAR.thermCond(2:4,:) = ground.STATVAR.thermCond_snow(1:3,:); %snow
             
             %replace conductivities above upper boundary by some high
@@ -366,13 +402,12 @@ classdef GROUND_ESA_CCI < BASE
             
             ground.STATVAR.thermCond_eff(1:4,:) = ground.STATVAR.thermCond(1:4,:).*ground.STATVAR.thermCond(2:5,:).*(ground.STATVAR.layerThick(1:4,:)./2 + ground.STATVAR.layerThick(2:5,:)./2) ./ ...
                 (ground.STATVAR.thermCond(1:4,:).*ground.STATVAR.layerThick(2:5,:)./2 + ground.STATVAR.thermCond(2:5,:).*ground.STATVAR.layerThick(1:4,:)./2 ); %size N
-            
-            
+                    
             %NEW
             for i=1:3 %set higher thermal conductivity for influx in foiirst snow cell 
                 ground.STATVAR.thermCond_eff(i, :) =  ground.STATVAR.thermCond_eff(i, :) + double(i<=ground.STATVAR.upper_cell) .* (2 - ground.STATVAR.thermCond_eff(i, :));
             end
-            
+        
         end
         
         

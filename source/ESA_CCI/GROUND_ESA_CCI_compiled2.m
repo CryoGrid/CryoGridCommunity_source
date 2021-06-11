@@ -1,5 +1,5 @@
 
-classdef GROUND_ESA_CCI < BASE
+classdef GROUND_ESA_CCI_compiled2 < BASE
     
 
     methods
@@ -28,6 +28,7 @@ classdef GROUND_ESA_CCI < BASE
             ground.PARA.virtual_gridCellSize = [];
             ground.PARA.timestep = [];
             ground.PARA.adjust_stratigraphy_date = [];
+            ground.PARA.speedup_size = 2100;
         end
         
         function ground = provide_STATVAR(ground)
@@ -47,7 +48,10 @@ classdef GROUND_ESA_CCI < BASE
         end
         
         function ground = finalize_init(ground, tile)
-
+            
+            %uses mex functions if true
+            ground.TEMP.speedup = (size(ground.STATVAR.layerThick, 2) == 350);
+            
             %multiply STATVARs with layerThick?
             ground.STATVAR.waterIce = ground.STATVAR.waterIce .* ground.STATVAR.layerThick;
             ground.STATVAR.mineral = ground.STATVAR.mineral .* ground.STATVAR.layerThick;
@@ -81,12 +85,14 @@ classdef GROUND_ESA_CCI < BASE
             %ground.STATVAR.k_mineral = repmat(ground.CONST.k_m, 1, tile.PARA.number_of_realizations);
             
 
+
             
             ground = calculate_E_frozen(ground);
             ground = T2E(ground);
             
             ground.STATVAR.T = [zeros(4, size(ground.STATVAR.layerThick,2)); ground.STATVAR.T];
                         
+            
 
             
             %snow
@@ -117,6 +123,8 @@ classdef GROUND_ESA_CCI < BASE
             
             ground.TEMP.d_energy = ground.STATVAR.energy .* 0;
             
+            
+            
 %             ground.TEMP.T_store = [];
 %             ground.TEMP.E_store = [];
 %             ground.TEMP.lt_store =[];
@@ -126,62 +134,70 @@ classdef GROUND_ESA_CCI < BASE
         %-----mandatory functions------------------------
         function ground = get_boundary_condition_u(ground, tile)
             
-            %has to be distributed correctly as soon as ensemble is
-            %available
-            ground.STATVAR.surf_T = repmat(tile.FORCING.TEMP.surfT, 1, tile.ENSEMBLE.PARA.ensemble_size);
-
-            ground.STATVAR.melt = repmat(tile.FORCING.TEMP.melt_bare, 1, tile.ENSEMBLE.PARA.ensemble_size) .* (1 - tile.ENSEMBLE.STATVAR.melt_fraction) + ...
-                repmat(tile.FORCING.TEMP.melt_forest, 1, tile.ENSEMBLE.PARA.ensemble_size) .* tile.ENSEMBLE.STATVAR.melt_fraction;
-            ground.STATVAR.melt = ground.STATVAR.melt ./ 1000 ./ground.CONST.day_sec .* tile.timestep;  %in [m], constant timestep
             
-            
-            ground.STATVAR.snowfall = repmat(tile.FORCING.TEMP.snowfall, 1, tile.ENSEMBLE.PARA.ensemble_size) ...
-                ./1000 ./ ground.CONST.day_sec .* tile.ENSEMBLE.STATVAR.snowfall_factor .* tile.timestep;
-            
-%             ground.STATVAR.melt = min(ground.STATVAR.melt, ground.STATVAR.snowfall + sum(ground.STATVAR.ice_snow,1)); %limit the melt, so that it doesn't exceed the existing snow
-%             ground.STATVAR.surf_T = double ((ground.STATVAR.snowfall - ground.STATVAR.melt + sum(ground.STATVAR.ice_snow, 1)) <=0 | (ground.STATVAR.surf_T <0)) .* ground.STATVAR.surf_T; %set to zero if there is snow and T is positive
-            
-            ground.STATVAR.melt = min(ground.STATVAR.melt, sum(ground.STATVAR.ice_snow,1)+ ground.STATVAR.snowfall); %limit the melt, so that it doesn't exceed the existing snow
-            ground.STATVAR.surf_T = double ((ground.STATVAR.snowfall - ground.STATVAR.melt + sum(ground.STATVAR.ice_snow, 1)) <=0 | (ground.STATVAR.surf_T <0)) .* ground.STATVAR.surf_T; %set to zero if there is snow and T is positive
-            
-            for i=1:4 %assign boundary condition T to correct cell and all cells above
-                ground.STATVAR.T(i, :) =  ground.STATVAR.T(i, :) + double(i<=ground.STATVAR.upper_cell) .* (ground.STATVAR.surf_T - ground.STATVAR.T(i, :));
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                [ground.STATVAR.surf_T, ground.STATVAR.melt, ground.STATVAR.snowfall, ground.STATVAR.T, ground.TEMP.d_energy, ground.TEMP.d_new_snow_layerThick, ground.TEMP.d_new_melt_layerThick] = ...
+                    get_boundary_condition_u_compiled_mex(ground.STATVAR.T, tile.FORCING.TEMP.surfT, tile.ENSEMBLE.PARA.ensemble_size, tile.FORCING.TEMP.melt_bare, tile.ENSEMBLE.STATVAR.melt_fraction, ...
+                    tile.FORCING.TEMP.melt_forest, ground.CONST.day_sec, tile.timestep, tile.FORCING.TEMP.snowfall, tile.ENSEMBLE.STATVAR.snowfall_factor, ground.STATVAR.ice_snow, ...
+                    ground.STATVAR.upper_cell, ground.TEMP.d_energy,ground.TEMP.snow_mat1, ground.CONST.L_f, ground.CONST.c_i, ground.STATVAR.layerThick_snow, tile.ENSEMBLE.STATVAR.wind_speed_class);
+            else
+                
+                %has to be distributed correctly as soon as ensemble is
+                %available
+                ground.STATVAR.surf_T = repmat(tile.FORCING.TEMP.surfT, 1, tile.ENSEMBLE.PARA.ensemble_size);
+                
+                ground.STATVAR.melt = repmat(tile.FORCING.TEMP.melt_bare, 1, tile.ENSEMBLE.PARA.ensemble_size) .* (1 - tile.ENSEMBLE.STATVAR.melt_fraction) + ...
+                    repmat(tile.FORCING.TEMP.melt_forest, 1, tile.ENSEMBLE.PARA.ensemble_size) .* tile.ENSEMBLE.STATVAR.melt_fraction;
+                ground.STATVAR.melt = ground.STATVAR.melt ./ 1000 ./ground.CONST.day_sec .* tile.timestep;  %in [m], constant timestep
+                
+                
+                ground.STATVAR.snowfall = repmat(tile.FORCING.TEMP.snowfall, 1, tile.ENSEMBLE.PARA.ensemble_size) ...
+                    ./1000 ./ ground.CONST.day_sec .* tile.ENSEMBLE.STATVAR.snowfall_factor .* tile.timestep;
+                
+                %             ground.STATVAR.melt = min(ground.STATVAR.melt, ground.STATVAR.snowfall + sum(ground.STATVAR.ice_snow,1)); %limit the melt, so that it doesn't exceed the existing snow
+                %             ground.STATVAR.surf_T = double ((ground.STATVAR.snowfall - ground.STATVAR.melt + sum(ground.STATVAR.ice_snow, 1)) <=0 | (ground.STATVAR.surf_T <0)) .* ground.STATVAR.surf_T; %set to zero if there is snow and T is positive
+                
+                ground.STATVAR.melt = min(ground.STATVAR.melt, sum(ground.STATVAR.ice_snow,1)+ ground.STATVAR.snowfall); %limit the melt, so that it doesn't exceed the existing snow
+                ground.STATVAR.surf_T = double ((ground.STATVAR.snowfall - ground.STATVAR.melt + sum(ground.STATVAR.ice_snow, 1)) <=0 | (ground.STATVAR.surf_T <0)) .* ground.STATVAR.surf_T; %set to zero if there is snow and T is positive
+                
+                for i=1:4 %assign boundary condition T to correct cell and all cells above
+                    ground.STATVAR.T(i, :) =  ground.STATVAR.T(i, :) + double(i<=ground.STATVAR.upper_cell) .* (ground.STATVAR.surf_T - ground.STATVAR.T(i, :));
+                end
+                
+                %CHANGE THIS!
+                %             upper_cell_T = ground.STATVAR.upper_cell;
+                %             upper_cell_T = double(upper_cell_T <= 3) .* (upper_cell_T+1) + double(upper_cell_T == 4) .* (upper_cell_T);
+                %             for i=1:4 %assign boundary condition T to correct cell and all cells above
+                %                 ground.STATVAR.T(i, :) =  ground.STATVAR.T(i, :) + double(i<=upper_cell_T) .* (ground.STATVAR.surf_T - ground.STATVAR.T(i, :));
+                %             end
+                
+                ground.TEMP.d_energy(1:4,:) = ground.TEMP.d_energy(1:4,:) + ground.TEMP.snow_mat1 .*(repmat(ground.STATVAR.snowfall./tile.timestep .* ...
+                    (-ground.CONST.L_f + ground.STATVAR.surf_T .* ground.CONST.c_i), 4, 1)  - repmat(ground.STATVAR.melt./tile.timestep, 4, 1) ...
+                    .* (-ground.CONST.L_f + ground.STATVAR.T(2:5,:) .* ground.CONST.c_i));
+                
+                
+                new_snow_density = get_snow_density(ground, tile);
+                
+                %melt > snowfall: no increase with new snow density (all new snow melts), decrease with existing snow density
+                %melt < snowfall: no net melt,
+                
+                ground.TEMP.d_new_snow_layerThick = repmat(double(ground.STATVAR.melt < ground.STATVAR.snowfall) .* (ground.STATVAR.snowfall - ground.STATVAR.melt) .* 920 ./ new_snow_density , 4, 1) .* ground.TEMP.snow_mat1;
+                ground.TEMP.d_new_melt_layerThick = repmat(double(ground.STATVAR.melt > ground.STATVAR.snowfall) .* (ground.STATVAR.melt - ground.STATVAR.snowfall), 4, 1) .* ground.TEMP.snow_mat1 .* ground.STATVAR.layerThick_snow ./ max(1e-10, ground.STATVAR.ice_snow);
+                
+                %ground.TEMP.dLayerThick_massBalance = ground.STATVAR.snowfall .* rho_snow ./ 917 - melt .* ground.STATVAR.ice_snow(1,:) ./ ground.STATVAR.layerThick_snow(1,:);
+                
+                %flux is assigned in get_derivatives_prognostic
+                
+                %             melt = repmat(melt, 1, PROFILE.ensemble_size)./1000; %in mm
+                %             snowfall = repmat(snowfall, 1, PROFILE.ensemble_size)./1000 .* PROFILE.snowfall_factor;
+                %
+                %             melt = min(melt, snowfall + sum(PROFILE.D_ice_snow,1)); %limit the melt, so that it doesn't exceed the existing snow
+                %             surf_T = double (snowfall-melt + sum(PROFILE.D_ice_snow,1)<=0 | surf_T <0) .* surf_T; %set to zero if there is snow and T is positive
+                
+                %energy flux due to snowfall and melt - CHECK if this needs to
+                %be converted to snowfall per time! - should be fine!
+                %ground.TEMP.d_energy(1:4,:) = ground.TEMP.d_energy(1:4,:) + ground.TEMP.snow_mat1 .*(repmat(snowfall .* (-ground.CONST.L_f + surf_T .* ground.CONST.c_i), 4, 1)  - repmat(melt,4,1) .* (-ground.CONST.L_f + ground.STATVAR.T(2:5,:) .* ground.CONST.c_i));
             end
-%             
-%             %CHANGE THIS!
-%             upper_cell_T = ground.STATVAR.upper_cell;
-%             upper_cell_T = double(upper_cell_T <= 3) .* (upper_cell_T+1) + double(upper_cell_T == 4) .* (upper_cell_T);
-%             for i=1:4 %assign boundary condition T to correct cell and all cells above
-%                 ground.STATVAR.T(i, :) =  ground.STATVAR.T(i, :) + double(i<=upper_cell_T) .* (ground.STATVAR.surf_T - ground.STATVAR.T(i, :));
-%             end
-            
-            ground.TEMP.d_energy(1:4,:) = ground.TEMP.d_energy(1:4,:) + ground.TEMP.snow_mat1 .*(repmat(ground.STATVAR.snowfall./tile.timestep .* ...
-                (-ground.CONST.L_f + ground.STATVAR.surf_T .* ground.CONST.c_i), 4, 1)  - repmat(ground.STATVAR.melt./tile.timestep, 4, 1) ...
-                .* (-ground.CONST.L_f + ground.STATVAR.T(2:5,:) .* ground.CONST.c_i));
-                    
-            
-            new_snow_density = get_snow_density(ground, tile);
-            
-            %melt > snowfall: no increase with new snow density (all new snow melts), decrease with existing snow density
-            %melt < snowfall: no net melt, 
-            
-            ground.TEMP.d_new_snow_layerThick = repmat(double(ground.STATVAR.melt < ground.STATVAR.snowfall) .* (ground.STATVAR.snowfall - ground.STATVAR.melt) .* 920 ./ new_snow_density , 4, 1) .* ground.TEMP.snow_mat1;
-            ground.TEMP.d_new_melt_layerThick = repmat(double(ground.STATVAR.melt > ground.STATVAR.snowfall) .* (ground.STATVAR.melt - ground.STATVAR.snowfall), 4, 1) .* ground.TEMP.snow_mat1 .* ground.STATVAR.layerThick_snow ./ max(1e-10, ground.STATVAR.ice_snow);
-            
-            %ground.TEMP.dLayerThick_massBalance = ground.STATVAR.snowfall .* rho_snow ./ 917 - melt .* ground.STATVAR.ice_snow(1,:) ./ ground.STATVAR.layerThick_snow(1,:);
-
-            %flux is assigned in get_derivatives_prognostic
-
-%             melt = repmat(melt, 1, PROFILE.ensemble_size)./1000; %in mm
-%             snowfall = repmat(snowfall, 1, PROFILE.ensemble_size)./1000 .* PROFILE.snowfall_factor;
-%  
-%             melt = min(melt, snowfall + sum(PROFILE.D_ice_snow,1)); %limit the melt, so that it doesn't exceed the existing snow 
-%             surf_T = double (snowfall-melt + sum(PROFILE.D_ice_snow,1)<=0 | surf_T <0) .* surf_T; %set to zero if there is snow and T is positive
-            
-            %energy flux due to snowfall and melt - CHECK if this needs to
-            %be converted to snowfall per time! - should be fine!
-            %ground.TEMP.d_energy(1:4,:) = ground.TEMP.d_energy(1:4,:) + ground.TEMP.snow_mat1 .*(repmat(snowfall .* (-ground.CONST.L_f + surf_T .* ground.CONST.c_i), 4, 1)  - repmat(melt,4,1) .* (-ground.CONST.L_f + ground.STATVAR.T(2:5,:) .* ground.CONST.c_i));
-            
         end
                 
         function ground = get_boundary_condition_l(ground,  tile)
@@ -195,14 +211,20 @@ classdef GROUND_ESA_CCI < BASE
 %             ground.TEMP.d_energy = ground.TEMP.d_energy + (ground.STATVAR.thermCond_eff(2:end,:).*(ground.STATVAR.T(3:end,:)-ground.STATVAR.T(2:end-1,:))./ground.STATVAR.layerDistance(2:end,:) -...
 %                 ground.STATVAR.thermCond_eff(1:end-1,:).*(ground.STATVAR.T(2:end-1,:)-ground.STATVAR.T(1:end-2,:))./ground.STATVAR.layerDistance(1:end-1,:));
             
-            %downwards flux
-            ground.TEMP.d_energy = ground.TEMP.d_energy - ground.STATVAR.thermCond_eff.*(ground.STATVAR.T(2:end,:)-ground.STATVAR.T(1:end-1,:))./ground.STATVAR.layerDistance;
-            %upwards flux, lower boundary already added
-            ground.TEMP.d_energy(1:end-1,:) = ground.TEMP.d_energy(1:end-1,:) + ground.STATVAR.thermCond_eff(2:end,:).*(ground.STATVAR.T(3:end,:)-ground.STATVAR.T(2:end-1,:))./ground.STATVAR.layerDistance(2:end,:);
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.TEMP.d_energy = dE_dt_compiled_mex(ground.TEMP.d_energy, ground.STATVAR.thermCond_eff, ground.STATVAR.T, ground.STATVAR.layerDistance);
+                ground.TEMP.dLayerThick_compaction = compact_windDrift_compiled_mex(ground.STATVAR.T(2:5,:), ground.STATVAR.ice_snow, ground.STATVAR.layerThick_snow, ground.TEMP.snow_mat1, tile.ENSEMBLE.STATVAR.wind_compaction_timescale, ground.CONST.g);
+            else
+                %downwards flux
+                ground.TEMP.d_energy = ground.TEMP.d_energy - ground.STATVAR.thermCond_eff.*(ground.STATVAR.T(2:end,:)-ground.STATVAR.T(1:end-1,:))./ground.STATVAR.layerDistance;
+                %upwards flux, lower boundary already added
+                ground.TEMP.d_energy(1:end-1,:) = ground.TEMP.d_energy(1:end-1,:) + ground.STATVAR.thermCond_eff(2:end,:).*(ground.STATVAR.T(3:end,:)-ground.STATVAR.T(2:end-1,:))./ground.STATVAR.layerDistance(2:end,:);
             
+                ground.TEMP.dLayerThick_compaction = compact_windDrift(ground, tile);
+            end
             ground.TEMP.d_energy(1:3,:) = ground.TEMP.d_energy(1:3,:) .*  ground.TEMP.snow_mat2(1:3,:);
 
-            ground.TEMP.dLayerThick_compaction = compact_windDrift(ground, tile); 
+            %ground.TEMP.dLayerThick_compaction = compact_windDrift(ground, tile); 
             
         end
         
@@ -222,8 +244,14 @@ classdef GROUND_ESA_CCI < BASE
             
             ground.STATVAR.layerThick_snow = ground.STATVAR.layerThick_snow + ground.TEMP.dLayerThick_compaction.*tile.timestep;
             ground.STATVAR.layerThick_snow(ground.STATVAR.layerThick_snow<0) = 0;
-
-            ground.STATVAR.energy = ground.STATVAR.energy + ground.TEMP.d_energy .* tile.timestep;
+            
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.STATVAR.energy = advance_E_compiled_mex(ground.STATVAR.energy, ground.TEMP.d_energy, tile.timestep);
+                %ground.STATVAR.energy = double(advance_E_compiled_mex(single(ground.STATVAR.energy), single(ground.TEMP.d_energy), single(tile.timestep)));
+                
+            else
+                ground.STATVAR.energy = ground.STATVAR.energy + ground.TEMP.d_energy .* tile.timestep;
+            end
             
             for i=1:3 %set energy to 0 for unused cells
                 ground.STATVAR.energy(i,:) = double(i >= ground.STATVAR.upper_cell) .* ground.STATVAR.energy(i,:);
@@ -310,11 +338,18 @@ classdef GROUND_ESA_CCI < BASE
         
         function ground = get_T(ground) 
             
-            %1. ground without first cell
-		    ground.STATVAR.T(6:end,:) = double(ground.STATVAR.energy(5:end,:)>=0) .* ground.STATVAR.energy(5:end,:) ./ ground.STATVAR.c_thawed(2:end,:) + ...
-                double(ground.STATVAR.energy(5:end,:) <= ground.STATVAR.E_frozen(2:end,:)) .* ((ground.STATVAR.energy(5:end,:) - ground.STATVAR.E_frozen(2:end,:)) ./ ground.STATVAR.c_frozen(2:end,:) + ground.STATVAR.T_end_freezing(2:end,:)) + ...
-                double(ground.STATVAR.energy(5:end,:) < 0 & ground.STATVAR.energy(5:end,:) > ground.STATVAR.E_frozen(2:end,:)) .* ground.STATVAR.energy(5:end,:)./ground.STATVAR.E_frozen(2:end,:) .*(ground.STATVAR.T_end_freezing(2:end,:));
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.STATVAR.T(6:end,:) = get_Tground_compiled_mex(ground.STATVAR.energy, ground.STATVAR.c_thawed, ground.STATVAR.c_frozen, ground.STATVAR.E_frozen, ground.STATVAR.T_end_freezing);
+                %ground.STATVAR.T(6:end,:) = double(get_Tground_compiled_mex(single(ground.STATVAR.energy), single(ground.STATVAR.c_thawed), single(ground.STATVAR.c_frozen), single(ground.STATVAR.E_frozen), single(ground.STATVAR.T_end_freezing)));
 
+            else
+            
+                %1. ground without first cell
+                ground.STATVAR.T(6:end,:) = double(ground.STATVAR.energy(5:end,:)>=0) .* ground.STATVAR.energy(5:end,:) ./ ground.STATVAR.c_thawed(2:end,:) + ...
+                    double(ground.STATVAR.energy(5:end,:) <= ground.STATVAR.E_frozen(2:end,:)) .* ((ground.STATVAR.energy(5:end,:) - ground.STATVAR.E_frozen(2:end,:)) ./ ground.STATVAR.c_frozen(2:end,:) + ground.STATVAR.T_end_freezing(2:end,:)) + ...
+                    double(ground.STATVAR.energy(5:end,:) < 0 & ground.STATVAR.energy(5:end,:) > ground.STATVAR.E_frozen(2:end,:)) .* ground.STATVAR.energy(5:end,:)./ground.STATVAR.E_frozen(2:end,:) .*(ground.STATVAR.T_end_freezing(2:end,:));
+            end
+            
             %2. first ground cell including initial snow - free water
             %freeze curve here, makes things much easier with the snow
 
@@ -336,16 +371,29 @@ classdef GROUND_ESA_CCI < BASE
         
         
         function ground = conductivity(ground)
-            ground.STATVAR.thermCond(5:end,:) = double(ground.STATVAR.T(5:end,:) < ground.STATVAR.T_end_freezing) .* ground.STATVAR.k_frozen + double(ground.STATVAR.T(5:end,:) > 0) .* ground.STATVAR.k_thawed + ...
-                double(ground.STATVAR.T(5:end,:) >= ground.STATVAR.T_end_freezing & ground.STATVAR.T(5:end,:) <= 0) .* ground.STATVAR.k_freezing; % ground
             
-            ground.STATVAR.thermCond_eff(5:end,:) = ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.thermCond(6:end,:).*...
-                (ground.STATVAR.layerThick(5:end-1,:)./2 + ground.STATVAR.layerThick(6:end,:)./2) ./ (ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.layerThick(6:end,:)./2 + ...
-                ground.STATVAR.thermCond(6:end,:).*ground.STATVAR.layerThick(5:end-1,:)./2 ); %size N
+            if (size(ground.STATVAR.layerThick, 2) == ground.PARA.speedup_size)
+                ground.STATVAR.thermCond(5:end,:) = thermCond_compiled_mex(ground.STATVAR.T, ground.STATVAR.T_end_freezing, ground.STATVAR.k_frozen, ground.STATVAR.k_freezing, ground.STATVAR.k_thawed);
+                ground.STATVAR.thermCond_eff(5:end,:) = thermCond_eff_compiled_mex(ground.STATVAR.thermCond, ground.STATVAR.layerThick);
+                
+                %ground.STATVAR.thermCond(5:end,:) = double(thermCond_compiled_mex(single(ground.STATVAR.T), single(ground.STATVAR.T_end_freezing), single(ground.STATVAR.k_frozen), single(ground.STATVAR.k_freezing), single(ground.STATVAR.k_thawed)));
+                %ground.STATVAR.thermCond_eff(5:end,:) = double(thermCond_eff_compiled_mex(single(ground.STATVAR.thermCond), single(ground.STATVAR.layerThick)));
+                
+                ground.STATVAR.thermCond_snow = thermCond_snow_compiled_mex(ground.STATVAR.ice_snow, ground.STATVAR.layerThick_snow);
+            else
+                ground.STATVAR.thermCond(5:end,:) = double(ground.STATVAR.T(5:end,:) < ground.STATVAR.T_end_freezing) .* ground.STATVAR.k_frozen + double(ground.STATVAR.T(5:end,:) > 0) .* ground.STATVAR.k_thawed + ...
+                    double(ground.STATVAR.T(5:end,:) >= ground.STATVAR.T_end_freezing & ground.STATVAR.T(5:end,:) <= 0) .* ground.STATVAR.k_freezing; % ground
+                
+                ground.STATVAR.thermCond_eff(5:end,:) = ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.thermCond(6:end,:).*...
+                    (ground.STATVAR.layerThick(5:end-1,:)./2 + ground.STATVAR.layerThick(6:end,:)./2) ./ (ground.STATVAR.thermCond(5:end-1,:).*ground.STATVAR.layerThick(6:end,:)./2 + ...
+                    ground.STATVAR.thermCond(6:end,:).*ground.STATVAR.layerThick(5:end-1,:)./2 ); %size N
             
-            %Thermal conductivity snow
-            snow_density = ground.STATVAR.ice_snow ./ max(1e-20, ground.STATVAR.layerThick_snow) .*920;
-            ground.STATVAR.thermCond_snow = max(5e-3, 2.3.*(snow_density./1000).^1.88);
+            
+                %Thermal conductivity snow
+                snow_density = ground.STATVAR.ice_snow ./ max(1e-20, ground.STATVAR.layerThick_snow) .*920;
+                ground.STATVAR.thermCond_snow = max(5e-3, 2.3.*(snow_density./1000).^1.88);
+            end
+            
             ground.STATVAR.thermCond(2:4,:) = ground.STATVAR.thermCond_snow(1:3,:); %snow
             
             %replace conductivities above upper boundary by some high
@@ -366,13 +414,12 @@ classdef GROUND_ESA_CCI < BASE
             
             ground.STATVAR.thermCond_eff(1:4,:) = ground.STATVAR.thermCond(1:4,:).*ground.STATVAR.thermCond(2:5,:).*(ground.STATVAR.layerThick(1:4,:)./2 + ground.STATVAR.layerThick(2:5,:)./2) ./ ...
                 (ground.STATVAR.thermCond(1:4,:).*ground.STATVAR.layerThick(2:5,:)./2 + ground.STATVAR.thermCond(2:5,:).*ground.STATVAR.layerThick(1:4,:)./2 ); %size N
-            
-            
+                    
             %NEW
             for i=1:3 %set higher thermal conductivity for influx in foiirst snow cell 
                 ground.STATVAR.thermCond_eff(i, :) =  ground.STATVAR.thermCond_eff(i, :) + double(i<=ground.STATVAR.upper_cell) .* (2 - ground.STATVAR.thermCond_eff(i, :));
             end
-            
+        
         end
         
         
