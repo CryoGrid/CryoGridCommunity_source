@@ -153,8 +153,9 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             ground.STATVAR.water(ground.STATVAR.water > waterIce) = waterIce(ground.STATVAR.water > waterIce); %elminates small rounding errors and avoids negative ice contents
             
             ground.STATVAR.water = ground.STATVAR.water .* ground.STATVAR.layerThick .* ground.STATVAR.area;
-            ground.STATVAR.ice = ground.STATVAR.waterIce - ground.STATVAR.water;
-            
+            %ground.STATVAR.ice = ground.STATVAR.waterIce - ground.STATVAR.water;
+            ground.STATVAR.ice = max(0, ground.STATVAR.waterIce - ground.STATVAR.water);
+                        
             
 %             for i=1:size(T_prime,1)
 %                 LUT_E_prime = ground.LUT.lut_E_prime((soil_type(i,1)-1).*LUT_size_T +(1:LUT_size_T),:);
@@ -227,7 +228,9 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             ground.STATVAR.waterPotential(linear_range)  = -mwp0(linear_range) ./ rho_w ./ g;
             ground.STATVAR.water(linear_range) = waterIce(linear_range);
             ground.STATVAR.Xwater(linear_range) = XwaterIce(linear_range);
+            
             ground.STATVAR.T(linear_range) = energy(linear_range) ./ ((waterIce(linear_range) + XwaterIce(linear_range)).* c_w + mineral(linear_range) .* c_m + organic(linear_range) .* c_o);
+            
             %done!
             
             %2. Xice melt regime, T=0, calculate Xice and Xwater, "normal soil" unfrozen
@@ -325,9 +328,11 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             
             ground.STATVAR.water = ground.STATVAR.water .* ground.STATVAR.layerThick .* ground.STATVAR.area;
             ground.STATVAR.Xwater = ground.STATVAR.Xwater .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            ground.STATVAR.Xwater(ground.STATVAR.T<0) = 0;
             ground.STATVAR.ice = max(0, ground.STATVAR.waterIce - ground.STATVAR.water);
+            ground.STATVAR.ice(ground.STATVAR.T>0) = 0;
             ground.STATVAR.Xice = max(0, ground.STATVAR.XwaterIce - ground.STATVAR.Xwater);
-             
+            ground.STATVAR.Xice(ground.STATVAR.T>0) = 0;
          end
         
         %         function ground = get_T_water_freezeC_Xice(ground)

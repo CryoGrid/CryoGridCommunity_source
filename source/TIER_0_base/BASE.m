@@ -43,6 +43,10 @@ classdef BASE < matlab.mixin.Copyable
             lateral.TEMP.open_system = 0;
         end
         
+        function ground = lateral_push_remove_water_overland_flow(ground, lateral)
+            
+        end
+        
         function ground = lateral3D_pull_water_unconfined_aquifer(ground, lateral)
             lateral.TEMP.open_system = 0;
         end
@@ -64,6 +68,10 @@ classdef BASE < matlab.mixin.Copyable
             hardBottom_next = 1;
         end
         
+        function ground = lateral3D_pull_water_overland_flow(ground, lateral)
+            
+        end
+        
         function ground = lateral3D_pull_heat(ground, lateral)
 
         end
@@ -71,6 +79,7 @@ classdef BASE < matlab.mixin.Copyable
         function ground = lateral3D_push_heat(ground, lateral)
             
         end
+        
         
 
     end

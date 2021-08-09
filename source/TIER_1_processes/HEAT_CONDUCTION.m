@@ -129,8 +129,17 @@ classdef HEAT_CONDUCTION < BASE
         
         function snow = conductivity_snow_Yen(snow)
             
-            ki = 2.2196 - 0.0062489 .* snow.STATVAR.T + 0.00010154.*snow.STATVAR.T.^2;
+            %ki = 2.2196 - 0.0062489 .* snow.STATVAR.T + 0.00010154.*snow.STATVAR.T.^2;
+            ki = 2.22 + snow.STATVAR.T ./-50 .* (2.76-2.22);
             snow.STATVAR.thermCond = ki.*(snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area).^1.88;
+            
+            %additional term from Sun et al., 1999, increasing k for high
+            %snow T
+            k1 = -0.06023;
+            k2 = 2.5425;
+            k3 = 289.99-273.15;
+            snow.STATVAR.thermCond + snow.STATVAR.thermCond +  max(0,k1-k2./(snow.STATVAR.T-k3));% tile.FORCING.TEMP.p ./ 1.05e5 .*
+            
         end
         
     end

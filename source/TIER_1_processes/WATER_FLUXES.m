@@ -373,6 +373,7 @@ classdef WATER_FLUXES < BASE
             %test Sebastian
             %water_saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
             water_saturation = max(0,min(1,water_saturation));
+            water_saturation(water_saturation >= (1 - 1e-9)) = 1;
             
             guaranteed_flow = ground.TEMP.d_water_ET;  %add other external fluxes here
             guaranteed_flow_energy = ground.TEMP.d_water_ET_energy;
@@ -460,6 +461,7 @@ classdef WATER_FLUXES < BASE
             water_saturation = (ground.STATVAR.waterIce - ground.PARA.min_waterIce .* (ground.STATVAR.layerThick.*ground.STATVAR.area- ground.STATVAR.XwaterIce)) ./ ...
                 (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
             water_saturation = max(0,min(1,water_saturation));
+            water_saturation(water_saturation >= (1 - 1e-9)) = 1;
             
             guaranteed_flow = ground.TEMP.d_water_ET;  %add other external fluxes here
             guaranteed_flow_energy = ground.TEMP.d_water_ET_energy;
@@ -677,6 +679,7 @@ classdef WATER_FLUXES < BASE
                  double(ground.TEMP.d_water <0 & ground.STATVAR.Xwater./ground.STATVAR.area > 1e-6)  .* ground.STATVAR.Xwater./ -ground.TEMP.d_water + ...
                  double(ground.TEMP.d_water > 0 & ground.TEMP.XwaterIce_formation==0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
              timestep(timestep<=0) = ground.PARA.dt_max;
+             
 
              timestep=nanmin(timestep);
              timestep2 = ground.PARA.dWater_max .* ground.STATVAR.layerThick .* ground.STATVAR.area ./ abs(ground.TEMP.d_water);
@@ -702,8 +705,12 @@ classdef WATER_FLUXES < BASE
             
             %timestep = ( double(ground.TEMP.d_water <0) .* (ground.STATVAR.waterIce - ground.PARA.field_capacity .* remaining_pore_space) ./ -ground.TEMP.d_water + ...
             %     double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
-            timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.water > ground.PARA.field_capacity .* remaining_pore_space ) .* (ground.STATVAR.water - ground.PARA.field_capacity .* remaining_pore_space) ./ -ground.TEMP.d_water + ...
-                double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
+%             timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.water > ground.PARA.field_capacity .* remaining_pore_space ) .* (ground.STATVAR.water - ground.PARA.field_capacity .* remaining_pore_space) ./ -ground.TEMP.d_water + ...
+%                 double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water) + ...
+%                 double(ground.TEMP.d_water <0 & ground.STATVAR.water <= ground.PARA.field_capacity .* remaining_pore_space ) .*ground.STATVAR.water ./ -ground.TEMP.d_water ./10; %[m3 / (m3/sec) = sec]
+%             
+            timestep = double(ground.TEMP.d_water <0) .* ground.STATVAR.water ./ -ground.TEMP.d_water ./10 + ...
+                double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water;
             
             timestep(timestep<=0) = ground.PARA.dt_max;
             timestep=nanmin(timestep);
@@ -728,7 +735,8 @@ classdef WATER_FLUXES < BASE
             ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
             ice_saturation = max(0,min(1,ice_saturation)); %count both ice and excess ice
             n = ground.STATVAR.n;
-            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation .* 10.^(-7.*ice_saturation); %final term from dall amico   
+            %ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation .* 10.^(-7.*ice_saturation); %final term from dall amico   
+            ground.STATVAR.hydraulicConductivity = ground.STATVAR.satHydraulicConductivity .* saturation .* 10.^(-7.*ice_saturation); %final term from dall amico
         end
 
         %Richards equation
@@ -756,7 +764,9 @@ classdef WATER_FLUXES < BASE
             ice_saturation = ground.STATVAR.ice ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.XwaterIce);
             ice_saturation = max(0,min(1,ice_saturation)); %count both ice and excess ice
             n = ground.STATVAR.n;
-            ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico            
+            %ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico            
+            ground.STATVAR.hydraulicConductivity = ground.STATVAR.satHydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico            
+ 
         end
         
         %SNOW classes
@@ -776,6 +786,28 @@ classdef WATER_FLUXES < BASE
             D = -3.376e-5;
 
             ground.STATVAR.viscosity_water = A.*exp(B./T + C.* T + D.* T.^2);
+        end
+        
+        function ground = calculate_hydraulicConductivity_RichardsEq2(ground)
+            saturation = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
+            saturation = max(0,min(1,saturation));
+            ice_saturation = ground.STATVAR.ice ./ ground.STATVAR.waterIce; %Changed Sebastian Hansen et al., 2004
+            ice_saturation = max(0,min(1,ice_saturation));
+            n = ground.STATVAR.n;
+
+            ground = calculate_viscosity_water(ground);
+            
+            ground.STATVAR.porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic) ./ ground.STATVAR.layerThick ./ ground.STATVAR.area; 
+            
+%             ground.STATVAR.diamater_pipe = 2./3 .*ground.STATVAR.porosity ./(1-ground.STATVAR.porosity) .* ground.STATVAR.grain_size;
+%             ground.STATVAR.number_of_pipes = ground.STATVAR.porosity ./ (pi()./4 .* ground.STATVAR.diamater_pipe.^2 .* ground.PARA.tortuosity_water); 
+%             ground.STATVAR.number_of_pipes(isnan(ground.STATVAR.number_of_pipes)) = 0; %if diameter is zero
+            
+          %  ground.STATVAR.satHydraulicConductivity = pi ./ 4.*ground.STATVAR.diamater_pipe.^4 ./ 8 ./ ground.STATVAR.viscosity_water .* ground.STATVAR.number_of_pipes .* ground.CONST.rho_w .* ground.CONST.g;
+            
+            permeability = ground.STATVAR.grain_size.^2 ./ 180 .* ground.STATVAR.porosity .^3 ./ (1 - ground.STATVAR.porosity).^2; %Carman Kozeny model
+            ground.STATVAR.satHydraulicConductivity = permeability./ ground.STATVAR.viscosity_water .*ground.CONST.rho_w .* ground.CONST.g; %m
+            ground.STATVAR.hydraulicConductivity = ground.STATVAR.satHydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico
         end
     end
 end

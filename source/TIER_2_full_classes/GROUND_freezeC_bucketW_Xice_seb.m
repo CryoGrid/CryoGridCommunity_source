@@ -26,7 +26,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground.PARA.rootDepth = [];  %e-folding constant of transpiration reduction with depth [1/m]
             ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
-            ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
+            %ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
 
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -57,7 +57,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground.STATVAR.organic = []; % total volume of organics [m3]
             ground.STATVAR.energy = [];   % total internal energy [J]
             ground.STATVAR.soil_type = [];  % integer code for soil_type; 1: sand; 2: silt: 3: clay: 4: peat; 5: water (i.e. approximation of free water, very large-pore ground material).
-                        
+            ground.STATVAR.satHydraulicConductivity = [];
+            
             ground.STATVAR.T = [];  % temperature [degree C]
             ground.STATVAR.water = [];  % total volume of water [m3]
             ground.STATVAR.waterPotential = []; %soil water potential [Pa]
@@ -299,6 +300,11 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground = lateral_push_water_reservoir_Xice(ground, lateral);
         end
         
+        %---LAT_OVERLAND_FLOW----------
+        function ground = lateral_push_remove_water_overland_flow(ground, lateral)
+            ground = lateral_push_water_overland_flow_XICE(ground, lateral);
+        end
+        
         %----LAT3D_WATER_UNCONFINED_AQUIFER------------         
         function ground = lateral3D_pull_water_unconfined_aquifer(ground, lateral)
             ground = lateral3D_pull_water_unconfined_aquifer_Xice(ground, lateral);
@@ -310,6 +316,10 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
         
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(ground, lateral)
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_Xice(ground, lateral);
+        end
+        
+        function ground = lateral3D_pull_water_overland_flow(ground, lateral)
+            ground = lateral3D_pull_water_overland_flow_XICE(ground, lateral);
         end
         
         %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions

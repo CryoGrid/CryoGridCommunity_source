@@ -89,9 +89,10 @@ classdef LAT3D_HEAT < BASE_LATERAL
         
         function lateral = set_ACTIVE(lateral, i, t)
             lateral.PARENT.ACTIVE(i,1) = 0;
-            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next -1e-9
+            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next -1e-7
                 lateral.PARENT.ACTIVE(i,1) = 1;
-                lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
+                %lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
+                lateral.PARA.ia_time_next = lateral.PARA.ia_time_next + lateral.PARA.ia_time_increment;
             end
         end
         

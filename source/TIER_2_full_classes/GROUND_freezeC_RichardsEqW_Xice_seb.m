@@ -24,7 +24,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             ground.PARA.rootDepth = [];  %e-folding constant of transpiration reduction with depth [1/m]
             ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
-            ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
+            %ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
 
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -56,7 +56,8 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             ground.STATVAR.organic = []; % total volume of organics [m3]
             ground.STATVAR.energy = [];   % total internal energy [J]
             ground.STATVAR.soil_type = [];  % integer code for soil_type; 1: sand; 2: silt: 3: clay: 4: peat; 5: water (i.e. approximation of free water, very large-pore ground material).
-                        
+            ground.STATVAR.satHydraulicConductivity = [];            
+            
             ground.STATVAR.T = [];  % temperature [degree C]
             ground.STATVAR.water = [];  % total volume of water [m3]
             ground.STATVAR.waterPotential = []; %soil water potential [Pa]

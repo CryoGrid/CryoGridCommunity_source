@@ -122,7 +122,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 
                 %lateral, read only STATVAR and PARA---
                 result={};
-                ia_classes=TOP.LATERAL.IA_CLASSES;
+                ia_classes = tile.LATERAL.IA_CLASSES;
                 for i=1:size(ia_classes,1)
                     res = copy(ia_classes{i,1});
                     vars = fieldnames(res);

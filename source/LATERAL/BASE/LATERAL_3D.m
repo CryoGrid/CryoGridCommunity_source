@@ -239,7 +239,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
                
                lateral.ENSEMBLE ={};
                lateral.STATVAR2ALL = [];
-               lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
+               lateral.IA_TIME = lateral.IA_TIME + lateral.IA_TIME_INCREMENT;
 
             end
         end
