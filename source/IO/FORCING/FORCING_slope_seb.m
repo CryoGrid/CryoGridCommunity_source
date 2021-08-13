@@ -234,7 +234,7 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
 
             % Calculation of reflected SW
 
-            SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) * sky_view_factor;
+            SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) * (1 - sky_view_factor); % Corrected RBZ Aug-21
             
             %Calculation of reprojected direct SW
 

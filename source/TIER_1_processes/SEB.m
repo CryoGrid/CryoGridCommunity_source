@@ -121,7 +121,6 @@ classdef SEB < BASE
             end
         end
         
-        
         %latent heat flux from evaporation (not transpiration!), CLM 4.5,
         %to be used with Richards Equation scheme
         
@@ -169,7 +168,6 @@ classdef SEB < BASE
             seb.STATVAR.sublim_energy =  seb.STATVAR.sublim .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f); 
         end
         
-        
         %sensible heat flux
         function Q_h = Q_h(seb, forcing)
           
@@ -186,8 +184,8 @@ classdef SEB < BASE
             Lstar = seb.STATVAR.Lstar;
             p = forcing.TEMP.p;
                         
-            Tz=Tz+273.15;
-            TForcing=TForcing+273.15;
+            Tz=Tz+forcing.CONST.Tmfw;
+            TForcing=TForcing+forcing.CONST.Tmfw;
             rho = rho_air(seb, p, Tz);
 
             Q_h  = -rho.*cp.*kappa.* uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)) .* (Tz-TForcing)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
@@ -214,10 +212,72 @@ classdef SEB < BASE
             p= 0.622.*6.112.* 100.* exp(22.46.*(T-273.15)./(272.61-273.15+T));
         end
         
-        %---penetration of short-wave radiation---
+        % ---------- penetration of LW ----------------------------------
+        function [seb, L_up] = penetrate_LW_no_transmission(seb, L_down)
+            L_up = (1-seb.PARA.epsilon) .* L_down + seb.PARA.epsilon .* seb.CONST.sigma .* (seb.STATVAR.T(1)+ seb.CONST.Tmfw).^4;
+            seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (sum(L_down) - L_up);
+        end
+        
+        function [seb, Lout] = penetrate_LW_simpleShading(seb, Lin)
+            fractional_canopy_cover = seb.PARA.fractional_canopy_cover;
+            canopy_transmissivity = seb.PARA.canopy_transmissivity;
+            canopy_emissivity = seb.PARA.canopy_emissivity;
+            Tmfw = seb.CONST.Tmfw;
+            sigma = seb.CONST.sigma;
+            
+            % transmitted (directly and through canopy) and emitted LW downwards
+            L_down = fractional_canopy_cover * (canopy_transmissivity * Lin + ...
+                (1 - canopy_transmissivity) * canopy_emissivity * sigma * (seb.TEMP.Tair + Tmfw)^4) + ...
+                (1 - fractional_canopy_cover) * Lin;
+
+            % penetrate LW to class below
+            [seb.NEXT, L_up] = penetrate_LW(seb.NEXT, L_down);
+            
+            % transmitted/emitted/reflected upward
+            Lout = L_up * (fractional_canopy_cover * canopy_transmissivity + (1 - fractional_canopy_cover)) ...
+                + fractional_canopy_cover * (1 - canopy_transmissivity) * canopy_emissivity * sigma * (seb.TEMP.Tair + Tmfw)^4 ...
+                + Lin * (1 - canopy_emissivity) * fractional_canopy_cover + L_up.*(1-canopy_emissivity)*fractional_canopy_cover;
+            % Last term is upward LW reflected by the base of the canopy, which is added to Lout because multiple backstattering is not considered.
+            
+            seb.TEMP.L_abs = Lin + L_up.*canopy_emissivity*fractional_canopy_cover - L_down - Lout; % L_up which is reflected by the canopy is discarded
+        end
+        
+        % --------- penetration of short-wave radiation ----------------
         function [seb, S_up] = penetrate_SW_no_transmission(seb, S_down) % called recursively by surfaceEnergyBalance-function of TOP_CLASS, "hard" surface absorbing all SW-radiation in 1st cell
-            seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (1 - seb.PARA.albedo) .* sum(S_down); % .* seb.STATVAR.area(1,1);  %in [W]
+            seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (1 - seb.PARA.albedo) .* sum(S_down); %in [W/m2]
             S_up = seb.PARA.albedo .* S_down;  % in [W/m2]
+        end
+        
+        function [seb, Sout] = penetrate_SW_simpleShading(seb, Sin)
+            albedo = seb.PARA.canopy_albedo;
+            fractional_canopy_cover = seb.PARA.fractional_canopy_cover;
+            canopy_height = seb.PARA.canopy_height;
+            canopy_extinction_coefficient = seb.PARA.canopy_extinction_coefficient;
+            canopy_transmissivity = seb.PARA.canopy_transmissivity;
+            sun_angle = seb.TEMP.sun_angle;
+            
+            % split Sin into direct and diffuse radiation
+            S_down_dir = Sin .* seb.TEMP.Sin_dir_fraction;
+            S_down_dif = Sin .* (1 - seb.TEMP.Sin_dir_fraction);
+            
+            % Transmitted SW down
+            S_down_dir = fractional_canopy_cover * (S_down_dir * ...
+                exp(-canopy_extinction_coefficient * canopy_height /max(1e-12,sind(sun_angle)))) ...
+                + (1 - fractional_canopy_cover) * S_down_dir;
+            S_down_dif = fractional_canopy_cover * (S_down_dif * canopy_transmissivity) + ...
+                (1 - fractional_canopy_cover) * S_down_dif;
+            S_down = S_down_dir + S_down_dif;
+            
+            % penetrate SW to class below
+            [seb.NEXT, S_up] = penetrate_SW(seb.NEXT, S_down);
+            
+            % transmitted & reflected upward
+            % original parameterization only includes reduction of Sin, and has no albedo /Sout calculation!!  
+            Sout = fractional_canopy_cover .* (S_up .* canopy_transmissivity) + (1 - fractional_canopy_cover) .* S_up ...
+                + albedo .* fractional_canopy_cover .* Sin + S_up*albedo*fractional_canopy_cover; 
+            % Last term is backstattered SW reflected by the canopy, and is added to Sout because multiple backstatter is not considered!
+            
+            seb.TEMP.S_abs = Sin + S_up*(1-albedo)*fractional_canopy_cover - S_down - Sout;
         end
         
         function [seb, S_up] = penetrate_SW_transmission_bulk(seb, S_down)  %used with fixed albedo and SW extinction coefficient
@@ -260,7 +320,6 @@ classdef SEB < BASE
             end         
         end
         
-        
         function [seb, S_up] = penetrate_SW_transmission_spectral(seb, S_down)  %used with variable albedo and SW exticntion coefficient
             %S_up and S_down are spectrally resolved when provided as
             %row array, using e.g. spectral_ranges = [0.71 0.21 0.08]; 
@@ -300,7 +359,6 @@ classdef SEB < BASE
             end         
         end
         
-        
         %calculates derivatives of water (i.e. water fluxes) due to evapotranspiration
         function seb = calculateET(seb)
             L_v = latent_heat_evaporation(seb, seb.STATVAR.T(1)+273.15);
@@ -332,7 +390,6 @@ classdef SEB < BASE
             seb.TEMP.d_water_ET_energy = seb.TEMP.d_water_ET_energy + seb.TEMP.d_water_ET .* (double(seb.STATVAR.T>=0) .* seb.CONST.c_w + double(seb.STATVAR.T<0) .* seb.CONST.c_i) .* seb.STATVAR.T; %[J/sec]
         end
         
-        
         function seb = calculateET_Xice(seb)
             L_v = latent_heat_evaporation(seb, seb.STATVAR.T(1)+273.15);
             
@@ -362,8 +419,7 @@ classdef SEB < BASE
             end
             seb.TEMP.d_water_ET_energy = seb.TEMP.d_water_ET_energy + seb.TEMP.d_water_ET .* (double(seb.STATVAR.T>=0) .* seb.CONST.c_w + double(seb.STATVAR.T<0) .* seb.CONST.c_i) .* seb.STATVAR.T; %[J/sec]
         end
-        
-        
+         
         %calculate fraction of potential evapotranspiration for each grid cell, this reduces evapotranspiration if water content is lower than field capacity 
         function fraction = getET_fraction(seb)
             %waterC = seb.STATVAR.waterIce ./ seb.STATVAR.layerThick ./ max(1e-20, seb.STATVAR.area); %area can get zero if the area of SNOW CHILD is 100%

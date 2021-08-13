@@ -100,7 +100,6 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.CONST.rho_i = []; % ice density
         end
         
-        
         function snow = finalize_init(snow, tile) %assign all variables, that must be calculated or assigned otherwise for initialization
             snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
@@ -115,7 +114,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         end
         
         %---time integration------
-        %separate functions for CHILD pphase of snow cover
+        %separate functions for CHILD phase of snow cover
         
         function snow = get_boundary_condition_u(snow, tile) 
             forcing = tile.FORCING;
@@ -283,7 +282,6 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             %store "old" density - ice is updated for new snowfall and sublimation losses
             snow.STATVAR.target_density = snow.STATVAR.ice ./ snow.STATVAR.layerThick ./ snow.STATVAR.area;
         end
-        
         
         function snow = advance_prognostic_CHILD(snow, tile)
             timestep = tile.timestep;

@@ -214,7 +214,6 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_out = d_water_out;
         end
         
-        
         function ground = get_derivative_water_Xice(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable
             volume_matrix = ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce;
             saturation = (ground.STATVAR.waterIce  - ground.STATVAR.field_capacity .* volume_matrix)./...
@@ -330,8 +329,7 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_out = d_water_out;
         end
         
-     
-        %Richards equation         
+        %Richards equation
         function ground = get_derivative_water_RichardsEq(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable
 
             waterIce_saturation = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
@@ -547,7 +545,6 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_out = d_water_out;
 
         end
-        
         
         function rf = reduction_factor_out(saturation, ground)  %part of get_derivative_water2(ground)
             %smoothness = 3e-2;
