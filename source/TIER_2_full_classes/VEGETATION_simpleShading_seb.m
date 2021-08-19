@@ -10,17 +10,20 @@
 % R. B. Zweigel, July 2021
 %========================================================================
 
-classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
+classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
     
     methods
         
         function canopy = provide_PARA(canopy)
             canopy.PARA.canopy_albedo = [];
+            canopy.PARA.LAI = [];
+            canopy.PARA.leaf_cp_areal = [];
             canopy.PARA.canopy_transmissivity = [];
             canopy.PARA.canopy_height = [];
             canopy.PARA.canopy_extinction_coefficient = [];
             canopy.PARA.canopy_emissivity = [];
             canopy.PARA.fractional_canopy_cover = [];
+            canopy.PARA.dT_max = [];
         end
         
         function canopy = provide_STATVAR(canopy)
@@ -47,6 +50,9 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
         
         function canopy = finalize_init(canopy, tile)
             canopy.STATVAR.area = tile.PARA.area + canopy.STATVAR.layerThick .* 0;
+            canopy = get_E_simpleVegetation(canopy);
+            
+            canopy.TEMP.d_energy = canopy.STATVAR.energy.*0;
         end
         
         %--------------- time integration ---------------------------------
@@ -55,9 +61,8 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
         function canopy = get_boundary_condition_u(canopy, tile)
             forcing = tile.FORCING;
             canopy = canopy_energy_balance(canopy,forcing);
+            
             canopy = canopy_water_balance(canopy,forcing);
-%             canopy.NEXT = get_boundary_condition_u_RichardsEq(canopy.NEXT, forcing);
-
         end
         
         function [canopy, L_up] = penetrate_LW(canopy, L_down)  %mandatory function when used with class that features LW penetration
@@ -77,11 +82,13 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
         end
         
         function timestep = get_timestep(canopy, tile)
-            timestep = 1e8;
+%             timestep = 1e8;
+            timestep = get_timestep_canopy_T(canopy);
         end
         
         function canopy = advance_prognostic(canopy, tile)
-            
+            timestep = tile.timestep;
+            canopy.STATVAR.energy = canopy.STATVAR.energy + timestep .* canopy.TEMP.d_energy;
         end
         
         function canopy = compute_diagnostic_first_cell(canopy, tile)
@@ -90,7 +97,9 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
         end
         
         function canopy = compute_diagnostic(canopy, tile)
+            canopy = get_T_simpleVegetatation(canopy);
             
+            canopy.TEMP.d_energy = canopy.STATVAR.energy.*0;
         end
         
         function canopy = check_trigger(canopy, tile)
@@ -102,7 +111,7 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
         
         function canopy = canopy_energy_balance(canopy,forcing)
             % 1. Longwave penetration
-            canopy.TEMP.Tair = forcing.TEMP.Tair;
+%             canopy.STATVAR.T = forcing.TEMP.Tair; % RBZ: original code, changed when canopy temperature was introduced
             [canopy, L_up] = penetrate_LW(canopy, forcing.TEMP.Lin .* canopy.STATVAR.area(1));
             canopy.STATVAR.Lout = sum(L_up) ./ canopy.STATVAR.area(1);
             % 2. Shortwave penetration
@@ -115,11 +124,12 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
             canopy.STATVAR.Sin = forcing.TEMP.Sin;
             canopy.STATVAR.Lin = forcing.TEMP.Lin;
             
+            canopy.TEMP.d_energy(1) = canopy.TEMP.d_energy(1) + (canopy.TEMP.L_abs + canopy.TEMP.S_abs);
         end
         
         function canopy = canopy_water_balance(canopy,forcing) 
             % route all rainwater to next class
-            canopy.NEXT = get_boundary_condition_u_RichardsEq(canopy.NEXT, forcing);
+            canopy.NEXT = get_boundary_condition_u_water(canopy.NEXT, forcing);
         end
         %-----------------inherited Tier 1 functions ----------------------
         %==================================================================
@@ -130,6 +140,10 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES % & VEGETATION
         
         function [canopy, S_up] = penetrate_SW_simpleShading(canopy,S_down)
             [canopy, S_up] = penetrate_SW_simpleShading@SEB(canopy,S_down);
+        end
+        
+        function timestep = get_timestep_canopy_T(canopy)
+            timestep = get_timestep_canopy_T@VEGETATION(canopy);
         end
 
     end

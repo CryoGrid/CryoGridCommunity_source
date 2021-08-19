@@ -213,12 +213,14 @@ classdef SEB < BASE
         end
         
         % ---------- penetration of LW ----------------------------------
-        function [seb, L_up] = penetrate_LW_no_transmission(seb, L_down)
-            L_up = (1-seb.PARA.epsilon) .* L_down + seb.PARA.epsilon .* seb.CONST.sigma .* (seb.STATVAR.T(1)+ seb.CONST.Tmfw).^4;
-            seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (sum(L_down) - L_up);
+        function [seb, Lout] = penetrate_LW_no_transmission(seb, Lin)
+            % Lin is in W, not W/m2!
+            Lout = (1-seb.PARA.epsilon) .* Lin + seb.PARA.epsilon .* seb.CONST.sigma .* (seb.STATVAR.T(1)+ seb.CONST.Tmfw).^4 .*seb.STATVAR.area(1);
+            seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (sum(Lin) - Lout);
         end
         
         function [seb, Lout] = penetrate_LW_simpleShading(seb, Lin)
+            % Lin is in W, not W/m2!
             fractional_canopy_cover = seb.PARA.fractional_canopy_cover;
             canopy_transmissivity = seb.PARA.canopy_transmissivity;
             canopy_emissivity = seb.PARA.canopy_emissivity;
@@ -227,7 +229,7 @@ classdef SEB < BASE
             
             % transmitted (directly and through canopy) and emitted LW downwards
             L_down = fractional_canopy_cover * (canopy_transmissivity * Lin + ...
-                (1 - canopy_transmissivity) * canopy_emissivity * sigma * (seb.TEMP.Tair + Tmfw)^4) + ...
+                (1 - canopy_transmissivity) * canopy_emissivity * sigma * (seb.STATVAR.T + Tmfw)^4).*seb.STATVAR.area + ...
                 (1 - fractional_canopy_cover) * Lin;
 
             % penetrate LW to class below
@@ -235,7 +237,7 @@ classdef SEB < BASE
             
             % transmitted/emitted/reflected upward
             Lout = L_up * (fractional_canopy_cover * canopy_transmissivity + (1 - fractional_canopy_cover)) ...
-                + fractional_canopy_cover * (1 - canopy_transmissivity) * canopy_emissivity * sigma * (seb.TEMP.Tair + Tmfw)^4 ...
+                + fractional_canopy_cover * (1 - canopy_transmissivity) * canopy_emissivity * sigma * (seb.STATVAR.T + Tmfw)^4.*seb.STATVAR.area ...
                 + Lin * (1 - canopy_emissivity) * fractional_canopy_cover + L_up.*(1-canopy_emissivity)*fractional_canopy_cover;
             % Last term is upward LW reflected by the base of the canopy, which is added to Lout because multiple backstattering is not considered.
             

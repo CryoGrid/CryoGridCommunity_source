@@ -66,7 +66,10 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
             else
                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
             end
+            
             out.TEMP = struct();
+            out.TEMP.count = 0;
+            out.TEMP.time = 0;
         end
         
         %-------time integration----------------
@@ -82,12 +85,17 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
              %run_number = tile.RUN_NUMBER;
              run_name = tile.PARA.run_name;
              result_path = tile.PARA.result_path;
-             timestep = tile.timestep;
              
-            
+             out.TEMP.count = out.TEMP.count + 1;
+             out.TEMP.time = out.TEMP.time + tile.timestep;
+             
+%           --- Write OUTPUT ---
             if t==out.OUTPUT_TIME
                 %if id == 1
-                disp([datestr(t)])
+                avg_timestep = out.TEMP.time/out.TEMP.count;
+                disp([datestr(t,'dd-mmm-yyyy HH:MM') ' Average timestep: ' num2str(avg_timestep)])
+                out.TEMP.count = 0;
+                out.TEMP.time = 0;
                 %end
                 %labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
@@ -139,6 +147,8 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 %---
                 
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
+                
+%               --- Store OUTPUT ---
                 if t==out.SAVE_TIME 
                    if ~(exist([result_path run_name])==7)
                        mkdir([result_path run_name])
