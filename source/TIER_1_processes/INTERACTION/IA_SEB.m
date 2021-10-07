@@ -30,7 +30,6 @@ classdef IA_SEB < IA_BASE
             
             Q_h  = -rho.*cp.*kappa.* uz.*kappa./(log(z./z0)- psi_M(stratigraphy2, z./Lstar, z0./Lstar)) .* (Tz-TForcing)./(log(z./z0)- psi_H(stratigraphy2, z./Lstar, z0./Lstar));
             stratigraphy2.STATVAR.Qh = Q_h;
-            stratigraphy1.STATVAR.Qh = Q_h;
         end
         
         function ia_seb = get_boundary_condition_Qe_m(ia_seb, tile)
@@ -39,7 +38,6 @@ classdef IA_SEB < IA_BASE
             stratigraphy2 = ia_seb.NEXT; % ground
             
             stratigraphy2 = Q_evap_CLM4_5(stratigraphy2, forcing);
-            stratigraphy1.STATVAR.Qe = stratigraphy2.STATVAR.Qe;
             
             stratigraphy2.TEMP.d_water_ET(1,1) = stratigraphy2.TEMP.d_water_ET(1,1) -  stratigraphy2.STATVAR.evap.* stratigraphy2.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
             stratigraphy2.TEMP.d_water_ET_energy(1,1) = stratigraphy2.TEMP.d_water_ET_energy(1,1) -  stratigraphy2.STATVAR.evap_energy.* stratigraphy2.STATVAR.area(1,1);

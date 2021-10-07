@@ -325,7 +325,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
            snow = L_star@SEB(snow, forcing); 
         end
         
-         function [snow, S_up] = penetrate_SW_no_transmission(snow, S_down)
+        function [snow, S_up] = penetrate_SW_no_transmission(snow, S_down)
              [snow, S_up] = penetrate_SW_no_transmission@SEB(snow, S_down);
          end
         

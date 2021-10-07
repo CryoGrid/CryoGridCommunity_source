@@ -1,30 +1,38 @@
 %========================================================================
-% CryoGrid VEGETATION class VEGETATION_simpleShading_seb
+% CryoGrid VEGETATION class VEGETATION_CLM5_seb
 %
-% First attempt of a VEGETATION class, providing simple shading by the
-% canopy, see Link & Marks (1999), Garen & Marks (2005), and Bair et al. (2016)
+% Surface energy and water balance of vegetated surfaces as in CLM5
 %
-% These parameterizations are the same as originally found in
-% FORCING_slope_forest_seb_readNc
-%
-% R. B. Zweigel, July 2021
+% Radiation added in September 2021
+% Sensible heat exchange in October 2021
+% R. B. Zweigel, September 2021
 %========================================================================
 
-classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
+classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
     
     methods
         
         function canopy = provide_PARA(canopy)
-            canopy.PARA.canopy_albedo = [];
-            canopy.PARA.canopy_temperature = [];
-            canopy.PARA.LAI = [];
-            canopy.PARA.leaf_cp_areal = [];
-            canopy.PARA.canopy_transmissivity = [];
-            canopy.PARA.canopy_height = [];
-            canopy.PARA.canopy_extinction_coefficient = [];
             canopy.PARA.canopy_emissivity = [];
-            canopy.PARA.fractional_canopy_cover = [];
+            canopy.PARA.leaf_cp_areal = [];
+            canopy.PARA.nir_fraction = [];
+            canopy.PARA.LAI = [];
+            canopy.PARA.SAI = [];
+            canopy.PARA.Khi_L = [];
+            canopy.PARA.alpha_leaf_vis = [];
+            canopy.PARA.alpha_stem_vis = [];
+            canopy.PARA.tau_leaf_vis = [];
+            canopy.PARA.tau_stem_vis = [];
+            canopy.PARA.alpha_leaf_nir = [];
+            canopy.PARA.alpha_stem_nir = [];
+            canopy.PARA.tau_leaf_nir = [];
+            canopy.PARA.tau_stem_nir = [];
             canopy.PARA.dT_max = [];
+            canopy.PARA.Cv = [];
+            canopy.PARA.z_top = [];
+            canopy.PARA.d_leaf = [];
+            canopy.PARA.Cs_dense = [];
+            canopy.PARA.R_z0 = [];
         end
         
         function canopy = provide_STATVAR(canopy)
@@ -42,20 +50,37 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
             canopy.STATVAR.T = [];  % temperature [degree C]
             canopy.STATVAR.water = [];  % total volume of water [m3]
             canopy.STATVAR.ice = [];  %total volume of ice [m3]
+            
+            canopy.STATVAR.Lstar = [];  %Obukhov length [m]
+            canopy.STATVAR.u_star = [];
+            canopy.STATVAR.Qh = [];     %sensible heat flux [W/m2]
+            canopy.STATVAR.Qe = [];     % latent heat flux [W/m2]
         end
         
         function canopy = provide_CONST(canopy)
             canopy.CONST.Tmfw = []; % freezing temperature of free water [K]
-            canopy.CONST.sigma = []; %Stefan-Boltzmann constant
+            canopy.CONST.sigma = []; % Stefan-Boltzmann constant
+            canopy.CONST.R_spec = []; % gas constant for dry air [J/K kg]
+            canopy.CONST.ypsilon = []; % [kg/(m sec)]
+            canopy.CONST.cp = []; % Specific heat capacity of air
+            canopy.CONST.kappa = []; % von Karman constant
+            canopy.CONST.Gamma_dry = []; %negative of dry adiabatic lapse rate
+            canopy.CONST.g = []; % gravitational constant
+            canopy.CONST.L_s = []; % Latent heat of sublimation
         end
         
         function canopy = finalize_init(canopy, tile)
             canopy.STATVAR.area = tile.PARA.area + canopy.STATVAR.layerThick .* 0;
             canopy.TEMP.d_energy = canopy.STATVAR.area.*0;
+            canopy = get_E_simpleVegetation(canopy);
             
-            if canopy.PARA.canopy_temperature == 1
-                canopy = get_E_simpleVegetation(canopy);
-            end
+            canopy.PARA.airT_height = tile.FORCING.PARA.airT_height; % why tranfer this parameter to ground/canopy, and not use forcing directly?
+            canopy.PARA.z0 = 0.1955; % z0_vegetation(canopy); WHY CANT I CALL THIS FUNCTION??!!
+            
+            canopy.STATVAR.Lstar = -100;
+            canopy.STATVAR.u_star = 0.1;
+            canopy.STATVAR.Qh = 0;
+            canopy.STATVAR.Qe = 0;
         end
         
         %--------------- time integration ---------------------------------
@@ -69,11 +94,11 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
         end
         
         function [canopy, L_up] = penetrate_LW(canopy, L_down)  %mandatory function when used with class that features LW penetration
-            [canopy, L_up] = penetrate_LW_simpleShading(canopy, L_down);
+            [canopy, L_up] = penetrate_LW_CLM5(canopy, L_down);
         end
         
         function [canopy, S_up] = penetrate_SW(canopy, S_down)  %mandatory function when used with class that features SW penetration
-            [canopy, S_up] = penetrate_SW_simpleShading(canopy, S_down);
+            [canopy, S_up] = penetrate_SW_CLM5(canopy, S_down);
         end
         
         function canopy = get_boundary_condition_l(canopy, tile)
@@ -85,30 +110,22 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
         end
         
         function timestep = get_timestep(canopy, tile)
-            if canopy.PARA.canopy_temperature == 1
-                timestep = get_timestep_canopy_T(canopy);
-            else
-                timestep = 1e8;
-            end
+            timestep = get_timestep_canopy_T(canopy);
         end
         
         function canopy = advance_prognostic(canopy, tile)
-            if canopy.PARA.canopy_temperature == 1
-                timestep = tile.timestep;
-                canopy.STATVAR.energy = canopy.STATVAR.energy + timestep .* canopy.TEMP.d_energy;
-            end
+            timestep = tile.timestep;
+            canopy.STATVAR.energy = canopy.STATVAR.energy + timestep .* canopy.TEMP.d_energy;
         end
         
         function canopy = compute_diagnostic_first_cell(canopy, tile)
             forcing = tile.FORCING;
-            canopy.NEXT = L_star(canopy.NEXT, forcing);
+            canopy = L_star(canopy, forcing);
         end
         
         function canopy = compute_diagnostic(canopy, tile)
-            if canopy.PARA.canopy_temperature == 1
-                canopy = get_T_simpleVegetatation(canopy);
-                canopy.TEMP.d_energy = canopy.STATVAR.energy.*0;
-            end
+            canopy = get_T_simpleVegetatation(canopy);
+            canopy.TEMP.d_energy = canopy.STATVAR.energy.*0;
         end
         
         function canopy = check_trigger(canopy, tile)
@@ -118,14 +135,23 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
         %---------------non-mandatory functions----------------------------
         %==================================================================
         
+        function z0v = z0_vegetation(canopy) % roughness length of vegetated surface (CLM5)
+            % if L changes due to leaf/needle fall, z0v should also be
+            % recalculated!!
+            L = canopy.PARA.LAI; % Leaf area index
+            S = canopy.PARA.SAI; % Stem area index
+            z0g = canopy.NEXT.PARA.z0; % Roughness lenght of ground
+            R_z0 = canopy.PARA.R_z0; % Ratio of momentum roughness length to canopy height
+            z_top = sum(canopy.STATVAR.layerThick); % canopy height
+            
+            V = ( 1-exp(-1.*min(L+S,2)) ./ (1-exp(-2)) ); % Eq. 5.127
+            z0v = exp( V.*log(z_top.*R_z0) + (1-V).*log(z0g) ); % Eq. 5.125
+        end
+        
         function canopy = canopy_energy_balance(canopy,forcing)
             % 1. Longwave penetration
-            if canopy.PARA.canopy_temperature == 0 % Assume canopy temperature = Tair
-                canopy.STATVAR.T = forcing.TEMP.Tair; % RBZ: original code, changed when canopy temperature was introduced
-            end
-            
             [canopy, L_up] = penetrate_LW(canopy, forcing.TEMP.Lin .* canopy.STATVAR.area(1));
-            canopy.STATVAR.Lout = sum(L_up) ./ canopy.STATVAR.area(1);
+            canopy.STATVAR.Lout = L_up./canopy.STATVAR.area(1);
             
             % 2. Shortwave penetration
             canopy.TEMP.sun_angle = forcing.TEMP.sunElevation * double(forcing.TEMP.sunElevation > 0);
@@ -136,6 +162,11 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
             
             canopy.STATVAR.Sin = forcing.TEMP.Sin;
             canopy.STATVAR.Lin = forcing.TEMP.Lin;
+            
+            % 3. Sensible heat
+            canopy.STATVAR.Qh = Q_h_CLM5(canopy,forcing);
+            
+            canopy.TEMP.d_energy = canopy.TEMP.d_energy - canopy.STATVAR.Qh;
         end
         
         function canopy = canopy_water_balance(canopy,forcing)
@@ -145,12 +176,16 @@ classdef VEGETATION_simpleShading_seb < SEB & WATER_FLUXES  & VEGETATION
         %-----------------inherited Tier 1 functions ----------------------
         %==================================================================
         
-        function [canopy, L_up] = penetrate_LW_simpleShading(canopy,L_down)
-            [canopy, L_up] = penetrate_LW_simpleShading@SEB(canopy,L_down);
+        function [canopy, L_up] = penetrate_LW_CLM5(canopy,L_down)
+            [canopy, L_up] = penetrate_LW_CLM5@SEB(canopy,L_down);
         end
         
-        function [canopy, S_up] = penetrate_SW_simpleShading(canopy,S_down)
-            [canopy, S_up] = penetrate_SW_simpleShading@SEB(canopy,S_down);
+        function [canopy, S_up] = penetrate_SW_CLM5(canopy,S_down)
+            [canopy, S_up] = penetrate_SW_CLM5@SEB(canopy,S_down);
+        end
+        
+        function flux = Q_h_CLM5(canopy,forcing)
+            flux = Q_h_CLM5@SEB(canopy,forcing);
         end
         
         function timestep = get_timestep_canopy_T(canopy)

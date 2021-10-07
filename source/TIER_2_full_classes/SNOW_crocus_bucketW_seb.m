@@ -189,7 +189,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.STATVAR.upperPos = snow.PARENT.STATVAR.upperPos;
         end
         
-       function [snow, S_up] = penetrate_SW(snow, S_down)  %mandatory function when used with class that features SW penetration
+        function [snow, S_up] = penetrate_SW(snow, S_down)  %mandatory function when used with class that features SW penetration
             [snow, S_up] = penetrate_SW_transmission_spectral(snow, S_down);
         end
         
@@ -393,12 +393,9 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.F_ub;
         end
         
-        
-        
         function snow = conductivity(snow)
             snow = conductivity_snow_Yen(snow);
         end
-        
         
         %-----LATERAL-------------------
         
