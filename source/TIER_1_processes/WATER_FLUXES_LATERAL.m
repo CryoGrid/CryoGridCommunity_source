@@ -1433,7 +1433,7 @@ classdef WATER_FLUXES_LATERAL < BASE
         function ground = lateral3D_pull_water_overland_flow_LAKE(ground, lateral)
            
            lateral.PARENT.STATVAR.water_depth = ground.STATVAR.layerThick(1,1); 
-           lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.waterIce(1,1) .* 0.25);
+           lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.water(1,1) .* 0.25);
            lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
             
         end
@@ -1443,14 +1443,22 @@ classdef WATER_FLUXES_LATERAL < BASE
                 lateral.PARENT.STATVAR.water_depth = max(0, ground.STATVAR.layerThick(1,1) - ground.STATVAR.layerThickSnowFirstCell);
                 lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.layerThick(1,1) - ground.STATVAR.layerThickSnowFirstCell) .* ground.STATVAR.area(1,1) .* 0.25;
                 lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
+            else
+                lateral.PARENT.STATVAR.water_depth = 0;
+                lateral.PARENT.STATVAR.max_flow = 1e-4.* ground.STATVAR.area(1,1);
+                lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
             end
             
         end
         
         function ground = lateral3D_pull_water_overland_flow_XICE(ground, lateral)
-            if ground.STATVAR.Xice(1,1) == 0
+            if ground.STATVAR.Xwater(1,1) > 0
                 lateral.PARENT.STATVAR.water_depth = max(0, ground.STATVAR.Xwater(1,1) ./ ground.STATVAR.area(1,1));
                 lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.XwaterIce(1,1) .* 0.25);
+                lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
+            else
+                lateral.PARENT.STATVAR.water_depth = 0;
+                lateral.PARENT.STATVAR.max_flow = 1e-4.* ground.STATVAR.area(1,1);
                 lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
             end
         end

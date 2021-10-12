@@ -159,6 +159,7 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 fraction_mobile(isnan(fraction_mobile))=0;
                 fraction_mobile = min(0.5, fraction_mobile);
                 drifting_SWE = -lateral.STATVAR.exposure .* fraction_mobile .* snow.STATVAR.ice;
+                lateral.STATVAR.drift_pool = lateral.STATVAR.drift_pool - sum(drifting_SWE);
                 
                 %drifting_SWE = min(drifting_SWE, 0.5 .* snow.STATVAR.ice); %limit amount of drifting snow per timestep for numerical reasons
                 remaining_fraction = 1 - drifting_SWE ./ snow.STATVAR.ice;
@@ -171,6 +172,7 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 
             elseif lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure > 0 %gain snow
                 new_snow.STATVAR = lateral.STATVAR.ds;
+                lateral.STATVAR.drift_pool = lateral.STATVAR.drift_pool + lateral.STATVAR.ds.waterIce;
                 snow.STATVAR.layerThick(1) =  snow.STATVAR.layerThickSnowFirstCell;
                 
                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'}, 'ice');
