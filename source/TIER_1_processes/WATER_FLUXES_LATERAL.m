@@ -477,6 +477,50 @@ classdef WATER_FLUXES_LATERAL < BASE
           
         end
         
+        function ground = lateral_push_water_reservoir_RichardsEq_pressure(ground, lateral)
+
+            depths = ground.STATVAR.upperPos - cumsum(ground.STATVAR.layerThick) + ground.STATVAR.layerThick./2; %midpoints!
+            
+            above = (depths > lateral.PARA.reservoir_elevation);
+            saturated = ground.STATVAR.saturation > 1-1e-6;
+            head = ground.STATVAR.waterPotential;
+            head(saturated) = head(saturated) + (ground.STATVAR.overburden_pressure(saturated) - ground.STATVAR.bearing_capacity(saturated))./ground.CONST.density_water ./ ground.CONST.g;
+            head(above) = head(above) + (depths(above) - lateral.PARA.reservoir_elevation);
+            head(~saturated & ~above) = head(~saturated & ~above) + (depths(~saturated & ~above) - lateral.PARA.reservoir_elevation);
+            
+            cross_section = lateral.PARA.reservoir_contact_length .* ground.STATVAR.layerThick;    
+            fluxes = ground.STATVAR.hydraulicConductivity  .* head ./ lateral.PARA.distance_reservoir .* cross_section .* lateral.PARENT.IA_TIME_INCREMENT .* lateral.CONST.day_sec;
+            %positive: outflow; negative: inflow
+            
+            %make sure fluxes are too large
+            %unsaturated -> no more inflow than pore space, no more outflow than fixed fraction of available water
+            %saturated -> nothing if water Potential < 0, otherwise limit flow so that equilibrium layerThick is reached
+            pore_space = max(0,ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.waterIce - ground.STATVAR.mineral - ground.STATVAR.organic);
+            
+            fluxes(~saturated & fluxes>0) = min(fluxes(~saturated & fluxes>0), ground.STATVAR.water(~saturated & fluxes>0)./4);
+            fluxes(~saturated & fluxes<0) = -1 .* min(-fluxes(~saturated & fluxes<0), pore_space(~saturated & fluxes<0));
+            
+            porosity_equilibrium = (ground.STATVAR.initial_voidRatio - ground.STATVAR.compression_index .* log10(ground.STATVAR.overburden_pressure./ground.STATVAR.reference_pressure)) ./ ...
+                (1 + ground.STATVAR.initial_voidRatio - ground.STATVAR.compression_index .* log10(ground.STATVAR.overburden_pressure./ground.STATVAR.reference_pressure));
+            waterIce_equilibrium = (ground.STATVAR.mineral + ground.STATVAR.organic) ./ (1 - porosity_equilibrium) - ground.STATVAR.mineral - ground.STATVAR.organic;
+            
+            water_deficit = ground.STATVAR.waterIce < waterIce_equilibrium;
+            water_overshoot = ground.STATVAR.waterIce > waterIce_equilibrium;
+            fluxes(saturated & fluxes>0 & water_overshoot) = max(0,min(fluxes(saturated & fluxes>0 & water_overshoot), ground.STATVAR.waterIce(saturated & fluxes>0 & water_overshoot) - waterIce_equilibrium(saturated & fluxes>0 & water_overshoot)));
+            fluxes(saturated & fluxes<0 & water_deficit) = -1 .* max(0, min(-fluxes(saturated & fluxes<0 & water_deficit), waterIce_equilibrium(saturated & fluxes<0 & water_deficit) - ground.STATVAR.waterIce(saturated & fluxes<0 & water_deficit)));
+              
+            ground.STATVAR.waterIce = ground.STATVAR.waterIce - fluxes;
+            if isempty(lateral.PARA.reservoir_temperature) || isnan(lateral.PARA.reservoir_temperature)
+                inflow_temperature = ground.STATVAR.T;
+            else
+                inflow_temperature = lateral.PARA.reservoir_temperature;
+            end
+            ground.STATVAR.energy = ground.STATVAR.energy - fluxes .* inflow_temperature .* ...
+                (ground.CONST.c_w .* double(inflow_temperature>=0) + ground.CONST.c_i .* double(inflow_temperature<0));
+            
+            ground.STATVAR.layerThick(saturated) = ground.STATVAR.layerThick(saturated) - fluxes(saturated) ./ ground.STATVAR.area(saturated);
+        end
+        
         function ground = lateral_push_water_reservoir_snow(ground, lateral)
             water_volumetric = ground.STATVAR.water ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.ice)./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
