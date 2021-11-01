@@ -19,6 +19,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground = provide_PARA@GROUND_freezeC_bucketW_Xice_seb_snow(ground);
             
             ground.PARA.BGC_CLASS = [];
+            ground.PARA.target_grid_cell_size = 0.05;
         end
         
         function ground = provide_STATVAR(ground)
@@ -48,11 +49,11 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground.BGC = provide_CONST(ground.BGC);
             ground.BGC = finalize_init(ground.BGC, tile);
             
-            ground.IA_BGC = IA_BGC_simple();
+            ground.IA_BGC = IA_BGC_Xice();
             ground.IA_BGC.BGC = ground.BGC;
             ground.IA_BGC.GROUND = ground;
             ground.BGC.IA_BGC = ground.IA_BGC;
-
+            finalize_init(ground.IA_BGC, tile);
         end
         
         
@@ -101,7 +102,12 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground = check_trigger@GROUND_freezeC_bucketW_Xice_seb_snow(ground, tile);
             ground.BGC = check_trigger(ground.BGC, tile);
         end
-
+    
+        function ground = reset_time_BGC(ground, tile) %used e.g. with TILE_BUILDER update_forcing_out
+            ground.BGC = reset_time(ground.BGC, tile);
+        end
+        
+        
     end
     
 end

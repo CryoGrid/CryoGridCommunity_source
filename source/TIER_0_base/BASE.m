@@ -80,6 +80,10 @@ classdef BASE < matlab.mixin.Copyable
             
         end
         
+        function ground = reset_time_BGC(ground, tile)
+            
+        end
+        
         
 
     end

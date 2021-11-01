@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef IA_BGC_simple <  IA_BGC
+classdef IA_BGC_Xice <  IA_BGC
     
     properties
         GROUND
@@ -29,8 +29,8 @@ classdef IA_BGC_simple <  IA_BGC
         
         function get_ground_variables(ia_BGC, tile)
             
-            vol_water_ground = ia_BGC.GROUND.STATVAR.water ./ ia_BGC.GROUND.STATVAR.layerThick ./ ia_BGC.GROUND.STATVAR.area;
-
+            vol_water_ground = ia_BGC.GROUND.STATVAR.waterIce ./ (ia_BGC.GROUND.STATVAR.layerThick .* ia_BGC.GROUND.STATVAR.area - ia_BGC.GROUND.STATVAR.XwaterIce); %must be water plus ice, not water, water_modifer would otherwise lead to strong degradation when frozen (= little water)
+            
             if isempty(ia_BGC.BGC.STATVAR.BGC_overlap_vector) %before 1st BGC grid cell is present
                 ia_BGC.BGC.STATVAR.T = ia_BGC.GROUND.STATVAR.T(1,1);
                 ia_BGC.BGC.STATVAR.vol_water  = vol_water_ground(1,1);
@@ -50,24 +50,59 @@ classdef IA_BGC_simple <  IA_BGC
 %             disp(ia_BGC.BGC.STATVAR.BGC_overlap_vector)
 %             disp('Hallo2')
 %             disp(ia_BGC.BGC.TEMP.d_organic)
+
+            d_layerThick = ia_BGC.GROUND.STATVAR.layerThick .* 0;
+            d_organic = ia_BGC.GROUND.STATVAR.layerThick .* 0;
             for i=1:size(ia_BGC.BGC.STATVAR.BGC_overlap_vector,1)
                 %change in layerThick, organic and energy
                 index = ia_BGC.BGC.STATVAR.BGC_overlap_vector(i,1);
                 
-                ia_BGC.GROUND.STATVAR.organic(index, 1) = ia_BGC.GROUND.STATVAR.organic(index, 1) + ia_BGC.BGC.TEMP.d_organic(i,1) .* ia_BGC.GROUND.STATVAR.area(index, 1);
+                d_organic(index, 1) = d_organic(index, 1) + ia_BGC.BGC.TEMP.d_organic(i,1) .* ia_BGC.GROUND.STATVAR.area(index, 1);
                 ia_BGC.GROUND.STATVAR.energy(index, 1) = ia_BGC.GROUND.STATVAR.energy(index, 1) + ia_BGC.BGC.TEMP.d_organic(i,1) .* ia_BGC.GROUND.STATVAR.T(index, 1) .* ...
                     ia_BGC.GROUND.CONST.c_o .* ia_BGC.GROUND.STATVAR.area(index, 1);
                 
-                ia_BGC.GROUND.STATVAR.layerThick(index, 1) = ia_BGC.GROUND.STATVAR.layerThick(index, 1) + ia_BGC.BGC.TEMP.d_layerThick(i,1);
+                d_layerThick(index, 1) = d_layerThick(index, 1) + ia_BGC.BGC.TEMP.d_layerThick(i,1);
 
             end
+
+
+            plus_LT = d_layerThick > 0;
+            minus_LT = d_layerThick < 0;
+
+            %plus_LT, layerThick increases, "void space" (air) of
+            %d_layerThic - d_organic created, which can be filled by
+            %XwaterIce if available. 1. determine d_air; 2. redistribute XwaterIce to waterIce up to d_air 3. increase layerThick if necessary 
             
-            %adjust waterIce and XwaterIce
-            residual_waterIce =  max(0, ia_BGC.GROUND.STATVAR.XwaterIce + ia_BGC.GROUND.STATVAR.waterIce + ia_BGC.GROUND.STATVAR.mineral + ia_BGC.GROUND.STATVAR.organic - ia_BGC.GROUND.STATVAR.layerThick .* ia_BGC.GROUND.STATVAR.area);
-            ia_BGC.GROUND.STATVAR.layerThick = max(ia_BGC.GROUND.STATVAR.layerThick, ...
-                (ia_BGC.GROUND.STATVAR.XwaterIce + ia_BGC.GROUND.STATVAR.waterIce + ia_BGC.GROUND.STATVAR.mineral + ia_BGC.GROUND.STATVAR.organic)./ia_BGC.GROUND.STATVAR.area); 
-            ia_BGC.GROUND.STATVAR.waterIce = ia_BGC.GROUND.STATVAR.waterIce - residual_waterIce;
-            ia_BGC.GROUND.STATVAR.XwaterIce = ia_BGC.GROUND.STATVAR.XwaterIce + residual_waterIce;
+            d_air_pot = d_layerThick(plus_LT) .* ia_BGC.GROUND.STATVAR.area(plus_LT) - d_organic(plus_LT);
+            d_air = max(0, d_air_pot - ia_BGC.GROUND.STATVAR.XwaterIce(plus_LT));
+            water_change = d_air_pot-d_air;
+            ia_BGC.GROUND.STATVAR.XwaterIce(plus_LT) = ia_BGC.GROUND.STATVAR.XwaterIce(plus_LT) - water_change;
+            ia_BGC.GROUND.STATVAR.waterIce(plus_LT) = ia_BGC.GROUND.STATVAR.waterIce(plus_LT) + water_change;
+            ia_BGC.GROUND.STATVAR.layerThick(plus_LT) = ia_BGC.GROUND.STATVAR.layerThick(plus_LT) + (d_air + d_organic(plus_LT)) ./ ia_BGC.GROUND.STATVAR.area(plus_LT);
+            
+            %minus_LT, layerThick decreases, air is pressed out, oif no air
+            %available, waterIce is converted to XwaterIce  
+            
+            d_air_pot = -(d_layerThick(minus_LT) .* ia_BGC.GROUND.STATVAR.area(minus_LT) - d_organic(minus_LT));
+            d_air_max = max(0, ia_BGC.GROUND.STATVAR.layerThick(minus_LT) .* ia_BGC.GROUND.STATVAR.area(minus_LT) - ia_BGC.GROUND.STATVAR.XwaterIce(minus_LT) - ...
+                 ia_BGC.GROUND.STATVAR.waterIce(minus_LT) - ia_BGC.GROUND.STATVAR.mineral(minus_LT) - ia_BGC.GROUND.STATVAR.organic(minus_LT) );
+             water_change = max(0, d_air_pot - d_air_max);
+             d_air = -(d_air_pot - water_change);
+             
+             ia_BGC.GROUND.STATVAR.XwaterIce(minus_LT) = ia_BGC.GROUND.STATVAR.XwaterIce(minus_LT) + water_change;
+             ia_BGC.GROUND.STATVAR.waterIce(minus_LT) = ia_BGC.GROUND.STATVAR.waterIce(minus_LT) - water_change;
+             ia_BGC.GROUND.STATVAR.layerThick(minus_LT) = ia_BGC.GROUND.STATVAR.layerThick(minus_LT) + (d_air + d_organic(minus_LT)) ./ ia_BGC.GROUND.STATVAR.area(minus_LT);
+
+             %update organic
+             ia_BGC.GROUND.STATVAR.organic = ia_BGC.GROUND.STATVAR.organic + d_organic;
+            
+%             ia_BGC.GROUND.STATVAR.layerThick(minus_LT) = ia_BGC.GROUND.STATVAR.layerThick(minus_LT) + d_layerThick(minus_LT);
+%             %adjust waterIce and XwaterIce
+%             residual_waterIce =  max(0, ia_BGC.GROUND.STATVAR.XwaterIce(minus_LT) + ia_BGC.GROUND.STATVAR.waterIce + ia_BGC.GROUND.STATVAR.mineral + ia_BGC.GROUND.STATVAR.organic - ia_BGC.GROUND.STATVAR.layerThick .* ia_BGC.GROUND.STATVAR.area);
+%             ia_BGC.GROUND.STATVAR.layerThick = max(ia_BGC.GROUND.STATVAR.layerThick, ...
+%                 (ia_BGC.GROUND.STATVAR.XwaterIce + ia_BGC.GROUND.STATVAR.waterIce + ia_BGC.GROUND.STATVAR.mineral + ia_BGC.GROUND.STATVAR.organic)./ia_BGC.GROUND.STATVAR.area); 
+%             ia_BGC.GROUND.STATVAR.waterIce = ia_BGC.GROUND.STATVAR.waterIce - residual_waterIce;
+%             ia_BGC.GROUND.STATVAR.XwaterIce = ia_BGC.GROUND.STATVAR.XwaterIce + residual_waterIce;
             
         end
         
@@ -135,7 +170,8 @@ classdef IA_BGC_simple <  IA_BGC
                 area_phys=[];
                 energy_phys = [];
                 
-                layerThick_BGC_acc = cumsum(ia_BGC.BGC.STATVAR.layerThick + XwaterIce_thickness_BGC);
+                %layerThick_BGC_acc = cumsum(ia_BGC.BGC.STATVAR.layerThick + XwaterIce_thickness_BGC);
+                layerThick_BGC_acc = cumsum(ia_BGC.BGC.STATVAR.layerThick);
                  
                 i=1;
                 start_pos =1;
@@ -153,6 +189,7 @@ classdef IA_BGC_simple <  IA_BGC
                 end
                 ia_BGC.BGC.STATVAR.BGC_overlap_vector(start_pos:end,1) = i;
                 
+                %reassemble stratigraphy
                 first_mineral_cell_old = ia_BGC.GROUND.STATVAR.first_mineral_cell;
                 ia_BGC.GROUND.STATVAR.first_mineral_cell = i;
                 
@@ -162,6 +199,18 @@ classdef IA_BGC_simple <  IA_BGC
                 ia_BGC.GROUND.STATVAR.XwaterIce = [XwaterIce_phys; ia_BGC.GROUND.STATVAR.XwaterIce(first_mineral_cell_old:end,1)];
                 ia_BGC.GROUND.STATVAR.area = [area_phys; ia_BGC.GROUND.STATVAR.area(first_mineral_cell_old:end,1)];
                 ia_BGC.GROUND.STATVAR.energy = [energy_phys; ia_BGC.GROUND.STATVAR.energy(first_mineral_cell_old:end,1)];
+                
+                ia_BGC.GROUND.STATVAR.mineral = [energy_phys.*0; ia_BGC.GROUND.STATVAR.mineral(first_mineral_cell_old:end,1)];
+                ia_BGC.GROUND.STATVAR.soil_type = [energy_phys.*0+4; ia_BGC.GROUND.STATVAR.soil_type(first_mineral_cell_old:end,1)];
+                ia_BGC.GROUND.STATVAR.n = [energy_phys.*0 + ia_BGC.GROUND.CONST.vanGen_n(1,4); ia_BGC.GROUND.STATVAR.n(first_mineral_cell_old:end,1)];
+                ia_BGC.GROUND.STATVAR.alpha = [energy_phys.*0 + ia_BGC.GROUND.CONST.vanGen_alpha(1,4); ia_BGC.GROUND.STATVAR.alpha(first_mineral_cell_old:end,1)];
+                ia_BGC.GROUND.STATVAR.field_capacity = [energy_phys.*0 + 0.5; ia_BGC.GROUND.STATVAR.field_capacity(first_mineral_cell_old:end,1)];
+                ia_BGC.GROUND.STATVAR.satHydraulicConductivity = [energy_phys.*0 + 1e-5; ia_BGC.GROUND.STATVAR.satHydraulicConductivity(first_mineral_cell_old:end,1)];
+                
+                ia_BGC.GROUND.STATVAR.non_BGC_layerThick = [energy_phys.*0; ia_BGC.GROUND.STATVAR.non_BGC_layerThick(first_mineral_cell_old:end,1)];
+                ia_BGC.GROUND.STATVAR.non_BGC_mineral = [energy_phys.*0; ia_BGC.GROUND.STATVAR.non_BGC_mineral(first_mineral_cell_old:end,1)];
+                ia_BGC.GROUND.STATVAR.non_BGC_organic = [energy_phys.*0; ia_BGC.GROUND.STATVAR.non_BGC_organic(first_mineral_cell_old:end,1)];
+
                 
                 %add remaining BGC cells to the first mineral grid cell
                 pos = size(ia_BGC.BGC.STATVAR.layerThick,1);
@@ -173,7 +222,11 @@ classdef IA_BGC_simple <  IA_BGC
                 ia_BGC.GROUND.STATVAR.energy(ia_BGC.GROUND.STATVAR.first_mineral_cell,1) = ia_BGC.GROUND.STATVAR.energy(ia_BGC.GROUND.STATVAR.first_mineral_cell,1) + sum(energy_BGC(start_pos:pos,1));
                 
                 
-                ia_BGC.GROUND = compute_diagnostic(ia_BGC.GROUND, tile);
+                
+                ia_BGC.GROUND = get_T_water_freezeC_Xice(ia_BGC.GROUND);
+                
+                ia_BGC.GROUND = conductivity(ia_BGC.GROUND);
+                ia_BGC.GROUND = calculate_hydraulicConductivity_Xice(ia_BGC.GROUND);
             end
             %ia_BGC.GROUND.STATVAR.first_mineral_cell = 1;
             %-check the correct length of the GROUND vector, maybe make

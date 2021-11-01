@@ -378,6 +378,13 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             %reset IA time
             tile.LATERAL.IA_TIME = tile.t + tile.LATERAL.IA_TIME_INCREMENT;
             
+            %reset time for BGC class (do mothing if no BGC class exists)
+            CURRENT = tile.TOP.NEXT;
+            while ~isequal(CURRENT.NEXT, tile.BOTTOM)
+                CURRENT = reset_time_BGC(CURRENT, tile);
+                CURRENT = CURRENT.NEXT;
+            end
+            
 %             tile.LATERAL = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.lateral_class){tile.PARA.lateral_class_index,1});
 %             tile.LATERAL = finalize_init(tile.LATERAL, tile);
             

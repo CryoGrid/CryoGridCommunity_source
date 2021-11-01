@@ -16,9 +16,9 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
         
         function run_info = provide_PARA(run_info)
 
-            run_info.PARA.coordinates = [];
-            run_info.PARA.crs = [];
-            run_info.PARA.height_system = [];
+%             run_info.PARA.coordinates = [];
+%             run_info.PARA.crs = [];
+%             run_info.PARA.height_system = [];
             
             run_info.PARA.tile_class = [];
             run_info.PARA.tile_class_index = [];
