@@ -10,7 +10,7 @@
 %========================================================================
 
 
-classdef OUT_all_lateral < matlab.mixin.Copyable
+classdef OUT_all_lateral_BGC < matlab.mixin.Copyable
 
     properties
 		out_index
@@ -104,14 +104,19 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                         result=[result; {res}];
                     end
                     res = copy(CURRENT);
+                    if isprop(res, 'BGC')
+                        res.STATVAR.BGC = res.BGC.STATVAR;
+                        res.BGC = [];
+                        res.IA_BGC = [];
+                    end
                     if isprop(res, 'LUT')
                         res.LUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
-                    if isprop(res, 'READ_OUT')
-                        res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
-                    end
                     if isprop(res, 'STORE')
                         res.STORE = [];
+                    end
+                    if isprop(res, 'READ_OUT')
+                        res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_PREVIOUS=[];  %cut all dependencies
                     if isprop(res, 'CHILD')

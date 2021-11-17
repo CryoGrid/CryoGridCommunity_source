@@ -262,6 +262,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
         end
         
         function ground = surface_energy_balance(ground, forcing)
+            ground.STATVAR.Lin = forcing.TEMP.Lin;
+            ground.STATVAR.Sin = forcing.TEMP.Sin;
             ground.STATVAR.Lout = (1-ground.PARA.epsilon) .* forcing.TEMP.Lin + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ 273.15).^4;
             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
             ground.STATVAR.Qh = Q_h(ground, forcing);

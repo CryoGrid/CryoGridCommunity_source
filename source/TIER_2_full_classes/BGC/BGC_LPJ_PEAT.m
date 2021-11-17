@@ -88,7 +88,9 @@ classdef BGC_LPJ_PEAT < PEAT_ACCUMULATION & PEAT_DECOMPOSE
 %             ground.PARA.accumulation_month = 1;
 %             ground.PARA.accumulation_day = 1;
 
-            ground.PARA.initialDecomposition = 10e-2/365;
+            ground.PARA.Q10 = 2;
+
+            ground.PARA.initialDecomposition = 0.055/365; %10e-2/365;
             ground.PARA.decompo = 1.0;
 
             ground.PARA.fieldCapacity = 0.75;% soil water at field capacity

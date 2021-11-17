@@ -82,7 +82,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             tile.BUILDER.TILE = tile;
             
             build_tile(tile.BUILDER);
-            
         end
         
 
@@ -112,6 +111,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             %TIME INTEGRATION
             %=========================================================================
             while tile.t < tile.FORCING.PARA.end_time
+                
                 
                 %interpolate focing data to time t
                 tile = interpolate_forcing_tile(tile);
@@ -145,14 +145,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                 end
                 tile.next_break_time = min(tile.LATERAL.IA_TIME, tile.OUT.OUTPUT_TIME);
                 tile.timestep = min(tile.timestep, (tile.next_break_time - tile.t).*tile.CONST.day_sec);
-%                 
-%                 if tile.t>datenum(1980,9,8,18,0,0) && tile.timestep < 1e-13 && tile.timestep > 0
-%                     disp(tile.timestep)
-%                     tile.t=tile.FORCING.PARA.end_time;
-%                     %run_info = tile.RUN_INFO;
-%                     %save('save_all.mat', 'run_info')
-%                    % hljlkgf
-%                 end
                 
                 %prognostic step - integrate prognostic variables in time
                 CURRENT = TOP.NEXT;

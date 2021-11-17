@@ -355,6 +355,35 @@ classdef SNOW < BASE
             end
         end
         
+        function snow = make_SNOW_CHILD_ubT(snow)
+            if size(snow.STATVAR.layerThick,1) == 1 && snow.STATVAR.ice(1,1) ./ snow.STATVAR.area(1,1) < 0.5 .* snow.PARA.swe_per_cell
+                
+                ground = snow.NEXT;
+                
+                ground.PREVIOUS = snow.PREVIOUS; %reassign ground
+                ground.PREVIOUS.NEXT = ground;
+                ground.CHILD = snow;
+                snow.PARENT = ground;
+                ground.IA_CHILD = snow.IA_NEXT;
+                ground.IA_CHILD.NEXT = ground;
+                ground.IA_CHILD.PREVIOUS = snow;
+                
+                ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
+                
+                %snow.NEXT =[];  %cut all dependencies, except for snow.NEXT which keeps being pointed to snow.PARENT, so that SW radiation can be transmitted
+                snow.PREVIOUS =[];
+                snow.IA_NEXT =[];
+                snow.IA_PREVIOUS =[];
+                
+                %change to constant layerThick, variable area
+                volume = snow.STATVAR.layerThick .* snow.STATVAR.area;
+                snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ snow.PARA.density; %[m] constant layerThick
+                snow.STATVAR.area = volume ./ snow.STATVAR.layerThick;
+                
+                snow = ground; %assign snow pointer to ground to return to regular stratigraphy
+            end
+        end
+        
     end
 end
 

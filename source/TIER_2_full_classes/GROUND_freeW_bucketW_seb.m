@@ -13,9 +13,7 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function ground = GROUND_freeW_bucketW_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
+
         
         function ground = provide_PARA(ground)
             
