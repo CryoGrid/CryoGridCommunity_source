@@ -226,6 +226,8 @@ classdef IA_BGC_Xice <  IA_BGC
                 
                 ia_BGC.GROUND = conductivity(ia_BGC.GROUND);
                 ia_BGC.GROUND = calculate_hydraulicConductivity_Xice(ia_BGC.GROUND);
+                
+                ia_BGC.GROUND = set_TEMP_2zero(ia_BGC.GROUND);
             end
             %ia_BGC.GROUND.STATVAR.first_mineral_cell = 1;
             %-check the correct length of the GROUND vector, maybe make

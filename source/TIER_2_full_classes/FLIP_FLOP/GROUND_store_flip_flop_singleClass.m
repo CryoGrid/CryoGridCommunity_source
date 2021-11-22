@@ -96,7 +96,11 @@ classdef GROUND_store_flip_flop_singleClass < FLIP_FLOP
                 load([result_path run_name '/' run_name '_STORE_' num2str(ground.TEMP.year_count) '.mat']);
                 ground.STORE = store;
                 
-                ground.TEMP.next_file_time = datenum([ground.PARA.save_date num2str(str2num(datestr(ground.TEMP.next_file_time, 'yyyy')) + 1)], 'dd.mm.yyyy');
+                save_day = str2num(ground.PARA.save_date(1:2));
+                save_month = str2num(ground.PARA.save_date(4:5));
+                [year, ~,~] = datevec(ground.TEMP.next_file_time);
+                ground.TEMP.next_file_time = datenum(year+1, save_day, save_month);
+               % ground.TEMP.next_file_time = datenum([ground.PARA.save_date num2str(str2num(datestr(ground.TEMP.next_file_time, 'yyyy')) + 1)], 'dd.mm.yyyy');
                 
             end
                 

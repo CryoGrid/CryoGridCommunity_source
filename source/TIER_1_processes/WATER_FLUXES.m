@@ -191,13 +191,18 @@ classdef WATER_FLUXES < BASE
         function ground = get_derivative_water2(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable 
             saturation = (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick.*ground.STATVAR.area)./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.field_capacity.*ground.STATVAR.layerThick.*ground.STATVAR.area);
             saturation = max(0,min(1,saturation)); % 0 water at field capacity, 1: water at saturation
-            saturation(saturation >= (1 - 1e-9)) = 1;
+            saturation(saturation >= (1 - 1e-6)) = 1;
+            saturation(saturation <= (0 + 1e-6)) = 0;
             
             guaranteed_flow = ground.TEMP.d_water_ET;  %add other external fluxes here
             guaranteed_flow_energy = ground.TEMP.d_water_ET_energy;
             
             %outflow
-            d_water_out = max(0, ground.STATVAR.hydraulicConductivity .* ground.STATVAR.area); 
+            %saturation_water = ground.STATVAR.water./ground.STATVAR.waterIce;
+            vol_water = ground.STATVAR.water ./ (ground.STATVAR.layerThick.*ground.STATVAR.area);
+            d_water_out = max(0, ground.STATVAR.hydraulicConductivity .* ground.STATVAR.area ); %.* saturation_water
+            d_water_out(vol_water <= ground.STATVAR.field_capacity) = 0;
+
             guaranteed_inflow = guaranteed_flow.* double(guaranteed_flow > 0); 
             d_water_out = double(guaranteed_inflow >= d_water_out) .* d_water_out + double(guaranteed_inflow < d_water_out) .* ...
                  (guaranteed_inflow + (d_water_out - guaranteed_inflow) .* reduction_factor_out(saturation, ground)); %this is positive when flowing out
@@ -594,6 +599,8 @@ classdef WATER_FLUXES < BASE
             %smoothness = 3e-2;
             smoothness = 3e-1;
             rf = (1- exp((saturation-1)./smoothness));
+
+%             rf = double(saturation <= 0.9) + double (saturation > 0.9) .* (1 - saturation) ./0.1;
         end
         
         
@@ -603,11 +610,12 @@ classdef WATER_FLUXES < BASE
              %    double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
              timestep =  double(ground.TEMP.d_water <0) .* ground.STATVAR.water ./ -ground.TEMP.d_water ./10 + ...
                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
-%            rand_factor = 1e-9 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
-%              timestep = (double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce + 1e-9 .* rand_factor > ground.STATVAR.field_capacity .* ...
-%                  ground.STATVAR.layerThick .* ground.STATVAR.area) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) ./ -ground.TEMP.d_water + ...
-%                  (double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce + 1e-9 .* rand_factor <= ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) .* ground.STATVAR.water ./ -ground.TEMP.d_water./10 + ...
-%                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
+           
+rand_factor = 1e-6 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
+             timestep = double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce + rand_factor > ground.STATVAR.field_capacity .* ...
+                 ground.STATVAR.layerThick .* ground.STATVAR.area) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) ./ -ground.TEMP.d_water + ...
+                 double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce +  rand_factor <= ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) .* ground.STATVAR.water ./ -ground.TEMP.d_water./10 + ...
+                 double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
 
              timestep(timestep<=0) = ground.PARA.dt_max;
              timestep=nanmin(timestep);
@@ -626,11 +634,7 @@ classdef WATER_FLUXES < BASE
                  (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) ./ -ground.TEMP.d_water + ...
                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce - ground.STATVAR.XwaterIce) ...
                  ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
-             
-%              ts = double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce > ground.STATVAR.field_capacity .* ...
-%                  (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce)) ./ -ground.TEMP.d_water;
-%              ts(1)
-%              ts(2)
+
              
              timestep(timestep<=0) = ground.PARA.dt_max;
              %[mini,pos] = nanmin(timestep)

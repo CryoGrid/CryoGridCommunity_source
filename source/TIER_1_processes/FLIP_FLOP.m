@@ -30,16 +30,29 @@ classdef FLIP_FLOP < BASE
         
         function ground = finalize_init_flip_flop(ground, tile)
             
-
-            if tile.FORCING.PARA.start_time <= datenum([ground.PARA.save_date datestr(tile.FORCING.PARA.start_time, 'yyyy')], 'dd.mm.yyyy')
-                ground.TEMP.next_store_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year - 1), ], 'dd.mm.yyyy') + ground.PARA.store_interval;
-                ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy');
-                ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.number_of_model_years)], 'dd.mm.yyyy');
-            else
-                ground.TEMP.next_store_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy') + ground.PARA.store_interval;
-                ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year + 1)], 'dd.mm.yyyy');
-                ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.number_of_model_years + 1)], 'dd.mm.yyyy');
-            end
+                save_day = str2num(ground.PARA.save_date(1:2));
+                save_month = str2num(ground.PARA.save_date(4:5));
+                [year, ~,~] = datevec(tile.FORCING.PARA.start_time);
+                
+                if tile.FORCING.PARA.start_time <= datenum(year, save_month, save_day)
+                    ground.TEMP.next_store_time = datenum(year + ground.PARA.start_store_year - 1, save_month, save_day) + ground.PARA.store_interval;
+                    ground.TEMP.next_save_time = datenum(year + ground.PARA.start_store_year, save_month, save_day);
+                    ground.TEMP.next_flip_time = datenum(year + ground.PARA.number_of_model_years, save_month, save_day);
+                else
+                    ground.TEMP.next_store_time = datenum(year + ground.PARA.start_store_year, save_month, save_day) + ground.PARA.store_interval;
+                    ground.TEMP.next_save_time = datenum(year + ground.PARA.start_store_year + 1, save_month, save_day);
+                    ground.TEMP.next_flip_time = datenum(year + ground.PARA.number_of_model_years +1, save_month, save_day);
+                end
+% 
+%             if tile.FORCING.PARA.start_time <= datenum([ground.PARA.save_date datestr(tile.FORCING.PARA.start_time, 'yyyy')], 'dd.mm.yyyy')
+%                 ground.TEMP.next_store_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year - 1), ], 'dd.mm.yyyy') + ground.PARA.store_interval;
+%                 ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy');
+%                 ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.number_of_model_years)], 'dd.mm.yyyy');
+%             else
+%                 ground.TEMP.next_store_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy') + ground.PARA.store_interval;
+%                 ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.start_store_year + 1)], 'dd.mm.yyyy');
+%                 ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.FORCING.PARA.start_time, 'yyyy')) + ground.PARA.number_of_model_years + 1)], 'dd.mm.yyyy');
+%             end
             
             ground.TEMP.year_count = 1;
             ground.STORE.stratigraphy =[];
@@ -88,7 +101,13 @@ classdef FLIP_FLOP < BASE
                 
                 ground.STORE.stratigraphy = [];
                 ground.TEMP.year_count = ground.TEMP.year_count + 1;
-                ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(ground.TEMP.next_save_time, 'yyyy')) + 1)], 'dd.mm.yyyy');
+                
+                save_day = str2num(ground.PARA.save_date(1:2));
+                save_month = str2num(ground.PARA.save_date(4:5));
+                [year, ~,~] = datevec(ground.TEMP.next_save_time);
+
+                ground.TEMP.next_save_time = datenum(year + 1, save_month, save_day);
+               % ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(ground.TEMP.next_save_time, 'yyyy')) + 1)], 'dd.mm.yyyy');
             end
             
             
@@ -99,8 +118,12 @@ classdef FLIP_FLOP < BASE
             %move "normal" class to STORE
             %change IA class downwards
              if tile.t >= ground.TEMP.next_flip_time
+                 save_day = str2num(ground.PARA.save_date(1:2));
+                 save_month = str2num(ground.PARA.save_date(4:5));
+                 [year, ~,~] = datevec(tile.t);
+                 ground.TEMP.next_flip_time = datenum(year + ground.PARA.number_of_read_years, save_month, save_day);
                  
-                 ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_read_years)], 'dd.mm.yyyy');
+                 %ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_read_years)], 'dd.mm.yyyy');
                  new_ground = GROUND_store_flip_flop_singleClass();
                  %new_ground.TEMP.next_flip_time = ground.TEMP.next_flip_time;
                  new_ground.TEMP = ground.TEMP;
@@ -129,7 +152,7 @@ classdef FLIP_FLOP < BASE
                      ground.IA_NEXT.PREVIOUS = ground;
                      ground.IA_NEXT.NEXT = ground.NEXT;
                  end
-
+                 tile.LATERAL.IA_TIME = ground.TEMP.next_flip_time + tile.LATERAL.IA_TIME_INCREMENT; %no lateral interactions during READ phase
             end
             
         end
@@ -139,8 +162,11 @@ classdef FLIP_FLOP < BASE
             %move "normal" class to STORE
             %change IA class downwards
              if tile.t >= ground.TEMP.next_flip_time
-                 
-                 ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_read_years)], 'dd.mm.yyyy');
+                 save_day = str2num(ground.PARA.save_date(1:2));
+                 save_month = str2num(ground.PARA.save_date(4:5));
+                 [year, ~,~] = datevec(tile.t);
+                 ground.TEMP.next_flip_time = datenum(year + ground.PARA.number_of_read_years, save_month, save_day);
+                 %ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_read_years)], 'dd.mm.yyyy');
                  
                  new_ground = GROUND_store_flip_flop_singleClass_BGC();
                  
@@ -180,8 +206,10 @@ classdef FLIP_FLOP < BASE
                      ground.IA_NEXT.PREVIOUS = ground;
                      ground.IA_NEXT.NEXT = ground.NEXT;
                  end
-
-            end
+                 
+                 tile.LATERAL.IA_TIME = ground.TEMP.next_flip_time + tile.LATERAL.IA_TIME_INCREMENT; %no lateral interactions during READ phase
+             end
+            
             
         end
         
@@ -209,10 +237,19 @@ classdef FLIP_FLOP < BASE
                 ground.TEMP.year_count = 1;
                 ground.STORE.stratigraphy =[];
                 
-                ground.TEMP.next_store_time = max(datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year - 1), ], 'dd.mm.yyyy') + ground.PARA.store_interval, tile.t + ground.PARA.store_interval);
-                ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy');
-                 ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_model_years)], 'dd.mm.yyyy');
+                save_day = str2num(ground.PARA.save_date(1:2));
+                save_month = str2num(ground.PARA.save_date(4:5));
+                [year, ~,~] = datevec(tile.t);
+                ground.TEMP.next_store_time = max(datenum(year + ground.PARA.start_store_year - 1, save_month, save_day) + ground.PARA.store_interval, tile.t + ground.PARA.store_interval);
+                ground.TEMP.next_save_time = datenum(year + ground.PARA.start_store_year, save_month, save_day);
+                ground.TEMP.next_flip_time = datenum(year + ground.PARA.number_of_model_years, save_month, save_day);
+                
+%                 ground.TEMP.next_store_time = max(datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year - 1), ], 'dd.mm.yyyy') + ground.PARA.store_interval, tile.t + ground.PARA.store_interval);
+%                 ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy');
+%                 ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_model_years)], 'dd.mm.yyyy');
             end
+            
+            
         end
         
         %at next_flip_time
@@ -248,9 +285,16 @@ classdef FLIP_FLOP < BASE
                  ground.TEMP.year_count = 1;
                  ground.STORE.stratigraphy =[];
                                   
-                 ground.TEMP.next_store_time = max(datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year - 1), ], 'dd.mm.yyyy') + ground.PARA.store_interval, tile.t + ground.PARA.store_interval);
-                 ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy');
-                 ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_model_years)], 'dd.mm.yyyy');
+                 save_day = str2num(ground.PARA.save_date(1:2));
+                 save_month = str2num(ground.PARA.save_date(4:5));
+                 [year, ~,~] = datevec(tile.t);
+                 ground.TEMP.next_store_time = max(datenum(year + ground.PARA.start_store_year - 1, save_month, save_day) + ground.PARA.store_interval, tile.t + ground.PARA.store_interval);
+                 ground.TEMP.next_save_time = datenum(year + ground.PARA.start_store_year, save_month, save_day);
+                 ground.TEMP.next_flip_time = datenum(year + ground.PARA.number_of_model_years, save_month, save_day);
+%                  
+%                  ground.TEMP.next_store_time = max(datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year - 1), ], 'dd.mm.yyyy') + ground.PARA.store_interval, tile.t + ground.PARA.store_interval);
+%                  ground.TEMP.next_save_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.start_store_year)], 'dd.mm.yyyy');
+%                  ground.TEMP.next_flip_time = datenum([ground.PARA.save_date num2str(str2num(datestr(tile.t, 'yyyy')) + ground.PARA.number_of_model_years)], 'dd.mm.yyyy');
             end
         end
         

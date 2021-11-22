@@ -65,7 +65,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             lateral.TOP = tile.TOP;
             lateral.BOTTOM = tile.BOTTOM;
             
-            %user-defined in the paraemter file
+            %user-defined in the parameter file
             for i=1:size(tile.PARA.lateral_IA_classes, 1)
                 lat_ia_class = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.lateral_IA_classes{i,1});
                 lat_ia_class = lat_ia_class{tile.PARA.lateral_IA_classes_index, 1};
@@ -93,6 +93,8 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             lateral.PARA.num_realizations = tile.RUN_INFO.PARA.number_of_tiles;
             
             lateral.STATVAR.index = lateral.PARA.worker_number; % this is double, but it is necessary to store the index also in STATVAR
+        
+            %lateral.PARA.is_active = 1; %can be used to switch off lateral interactions temporarily
         end
 
  
@@ -159,7 +161,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         %recompute diagnostic step
         function lateral = interact(lateral, tile)
             t=tile.t;
-            if t>=lateral.IA_TIME
+            if t>=lateral.IA_TIME %lateral.PARA.is_active && 
                 if sum(lateral.ACTIVE) > 0
                     %disp(t-floor(t))
                     

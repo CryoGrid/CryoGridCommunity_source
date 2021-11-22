@@ -208,7 +208,8 @@ classdef BGC_Frolking_PEAT < PEAT_ACCUMULATION & PEAT_DECOMPOSE
         
         function ground = reset_time(ground, tile) %used e.g. with TILE_BUILDER update_forcing_out
             ground.STATVAR.next_decompose_timestamp = tile.t + ground.PARA.BGC_timestep;
-            ground.TEMP.year = str2num(datestr(tile.t, 'yyyy'));
+            [year, ~,~] = datevec(tile.t);
+            ground.TEMP.year = year; %str2num(datestr(tile.t, 'yyyy'));
         end
 
     end

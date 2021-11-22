@@ -40,6 +40,8 @@ classdef OUT_all_lateral_BGC2 < matlab.mixin.Copyable
             out.PARA.output_timestep = [];
             out.PARA.save_date = [];
             out.PARA.save_interval = [];
+            out.PARA.number_of_save_intervals = [];
+            out.PARA.number_of_gap_intervals = [];
         end
         
         function out = provide_CONST(out)
@@ -52,12 +54,7 @@ classdef OUT_all_lateral_BGC2 < matlab.mixin.Copyable
 		
 	
 		function out = finalize_init(out, tile)
-			% FINALIZE_SETUP  Performs all additional property
-            %   initializations and modifications. Checks for some (but not
-            %   all) data validity.
-			
-			%	ARGUMENTS:
-			%	forcing:	instance of FORCING class
+
             forcing = tile.FORCING;
 			
 			out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.output_timestep;
@@ -67,6 +64,8 @@ classdef OUT_all_lateral_BGC2 < matlab.mixin.Copyable
                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
             end
             out.TEMP = struct();
+            
+            out.TEMP.number_of_save_intervals = 1;
         end
         
         %-------time integration----------------
