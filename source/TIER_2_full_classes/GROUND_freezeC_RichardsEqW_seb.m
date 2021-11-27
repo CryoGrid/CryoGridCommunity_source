@@ -5,30 +5,21 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_Painter
+classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL 
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function ground = GROUND_freezeC_RichardsEqW_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
-
-        
+ 
         function ground = provide_PARA(ground)
             
             ground.PARA.albedo = [];  %surface albedo [-]
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
 
-            %ground.PARA.rootDepth = []; %e-folding constant of transpiration reduction with depth [1/m]
-            %ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
-            %ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
             ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
-            %ground.STATVAR.hydraulicConductivity = []; % hydraulic conductivity [m/sec]
             
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]

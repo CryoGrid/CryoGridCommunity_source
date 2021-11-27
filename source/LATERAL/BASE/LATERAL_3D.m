@@ -20,7 +20,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         STATVAR % the state variables of the realization itself
         STATVAR2ALL %the state variables of the realization itself that should be sent to all other workers, not only the connected dones
         STATVAR_PRIVATE
-        ENSEMBLE %the state varaibles of the other ensemble members (cell aray)
+        ENSEMBLE %the state variables of the other ensemble members (cell aray)
     end
     
     methods

@@ -7,7 +7,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE %& INITIALIZE
+classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE 
     
     
     methods
@@ -15,9 +15,6 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE %& INITIALIZE
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function ground = LAKE_simple_seb(index, pprovider, cprovider, forcing)
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         %initializes class when switching from unfrozen to frozen conditions
         function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)

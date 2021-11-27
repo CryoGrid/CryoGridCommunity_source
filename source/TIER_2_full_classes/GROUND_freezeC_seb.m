@@ -5,13 +5,10 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & HEAT_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_DallAmico 
+classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & HEAT_FLUXES_LATERAL 
     
     methods
         
-%         function ground = GROUND_freezeC_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         function ground = provide_PARA(ground)
             

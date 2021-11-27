@@ -15,9 +15,6 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         %----mandatory functions---------------
         %----initialization--------------------
         
-%        function ground = LAKE_simple_bucketW_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
 
          %initializes class when switching from unfrozen to frozen conditions
          function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)

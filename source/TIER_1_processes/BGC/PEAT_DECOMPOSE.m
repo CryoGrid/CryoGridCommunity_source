@@ -1,3 +1,8 @@
+%========================================================================
+% CryoGrid TIER1 library class PEAT_DECOMPOSE, containing functions related to peat decompostion in BGC_Frolking_peat
+% S. Westermann, November 2021
+%========================================================================
+
 classdef PEAT_DECOMPOSE < BASE
     
     
@@ -37,7 +42,7 @@ classdef PEAT_DECOMPOSE < BASE
         function peat = peat_decompose_Frolking(peat)
             
             %if ~isempty(peat.STATVAR.total_peat_PFT)
-                peat.STATVAR.cato = repmat(peat.PARA.initial_decomposability, size(peat.STATVAR.total_peat_PFT,1),1).*(peat.STATVAR.total_peat_PFT./peat.STATVAR.totalpeatC_originalMass);  %0.05
+            peat.STATVAR.cato = repmat(peat.PARA.initial_decomposability, size(peat.STATVAR.total_peat_PFT,1),1).*(peat.STATVAR.total_peat_PFT./peat.STATVAR.totalpeatC_originalMass);  %0.05
 %             else
 %                 peat.STATVAR.cato=[];
 %             end

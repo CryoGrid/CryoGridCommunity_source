@@ -19,12 +19,7 @@ classdef LAKE_simple_bucketW_seb_snow < LAKE_simple_bucketW_seb
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function ground = LAKE_simple_bucketW_seb_snow(index, pprovider, cprovider, forcing)
-%             ground@LAKE_simple_bucketW_seb(index, pprovider, cprovider, forcing);
-%         end
-%         
-         
+
        function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)
             ground = initialize_from_LAKE_previous_season@LAKE_simple_bucketW_seb(ground, LAKE_simple_unfrozen);
             ground.CHILD = 0; % no snow

@@ -1,8 +1,8 @@
 %========================================================================
-% CryoGrid GROUND class SNOW_simple_ubT
-% simple snow scheme with little value for science
-% constant initial density, no sublimation, no water flow, refreezing of melt/rain water within a cell, constant albedo
-% S. Westermann, October 2020
+% CryoGrid SNOW class SNOW_simple_ubT
+% simple snow scheme forced by snow depth and surface temperature
+% constant density, no water flow, melt, or refreezing of melt/rain water 
+% S. Westermann, October 2021
 %========================================================================
 
 classdef SNOW_simple_ubT <  HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL & REGRID 

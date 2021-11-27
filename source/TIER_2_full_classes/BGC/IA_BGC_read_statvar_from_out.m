@@ -1,8 +1,7 @@
 %========================================================================
-% CryoGrid INTERACTION (IA) class for heat conduction between two GROUND
-% classes without water cycle
-% contains function for SNOW CHILD phase 
-% S. Westermann, October 2020
+% CryoGrid INTERACTION (IA) for GROUND_..._BGC classes with
+% GROUND_store_flip_flop classes
+% S. Westermann, November 2021
 %========================================================================
 
 classdef IA_BGC_read_statvar_from_out <  IA_BGC

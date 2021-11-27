@@ -15,10 +15,6 @@ classdef GROUND_freeW_seb_snow < GROUND_freeW_seb
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function ground = GROUND_freeW_seb_snow(index, pprovider, cprovider, forcing)
-%             ground@GROUND_freeW_seb(index, pprovider, cprovider, forcing);
-%         end
 
        function ground = provide_PARA(ground)  
             ground = provide_PARA@GROUND_freeW_seb(ground);

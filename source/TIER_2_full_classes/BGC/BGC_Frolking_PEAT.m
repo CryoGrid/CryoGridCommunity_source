@@ -1,7 +1,8 @@
 %========================================================================
-% CryoGrid GROUND class BGC_CLASS_TEMPLATE
-
-% S. Westermann, November 2020
+% CryoGrid BGC class based on Frolking et al. 2010, https://esd.copernicus.org/articles/1/1/2010/esd-1-1-2010.pdf
+% The model is combined with a dependence of NPP on solar radiation, ET and
+% near-surface temperature
+% S. Westermann, November 2021
 %========================================================================
 
 classdef BGC_Frolking_PEAT < PEAT_ACCUMULATION & PEAT_DECOMPOSE
@@ -24,7 +25,7 @@ classdef BGC_Frolking_PEAT < PEAT_ACCUMULATION & PEAT_DECOMPOSE
             ground.PARA.fieldCapacity = 0.75;% soil water at field capacity
             ground.PARA.bulkDensity = 105; %is this kg/m3
             
-            ground.PARA.BGC_timestep = 0.25; %[days]
+            ground.PARA.BGC_timestep = 1.25; %[days]
             
             %accumulation
             ground.PARA.start_PhotSyn_T = 0;

@@ -1,7 +1,7 @@
 %========================================================================
 % CryoGrid TIER1 library class for functions related to the freeze curve
-% caclulated by the freezing = drying assumption, Dall'Amico et al., 2011
-% S. Westermann, October 2020
+% of Karra and Painter 2014
+% S. Westermann, December 2020
 %========================================================================
 
 
@@ -209,6 +209,13 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             waterIce = ground.STATVAR.waterIce./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             XwaterIce = ground.STATVAR.XwaterIce./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             soil_type = ground.STATVAR.soil_type;
+
+            %new Sebastian
+            ground.STATVAR.waterPotential  = energy .*0;
+            ground.STATVAR.water = energy .*0;
+            ground.STATVAR.Xwater = energy .*0;
+            ground.STATVAR.T = energy .*0;
+            %end new Sebastian
             
             n = ground.STATVAR.n;
             alpha = ground.STATVAR.alpha ./ rho_w ./ g;

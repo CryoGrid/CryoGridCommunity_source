@@ -1,3 +1,8 @@
+%========================================================================
+% CryoGrid TIER1 library class PEAT_ACCUMULATION, containing functions related to peat accumulation in BGC_Frolking_peat
+% S. Westermann, November 2021
+%========================================================================
+
 classdef PEAT_ACCUMULATION < BASE
     
     
@@ -114,7 +119,8 @@ classdef PEAT_ACCUMULATION < BASE
             
             %assume constant NPP
             %new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./70e3 .* peat.PARA.BGC_timestep;
-            new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./100e3 .* peat.PARA.BGC_timestep;
+            %new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./100e3 .* peat.PARA.BGC_timestep;
+            new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./100e3;
             
             peat.STATVAR.total_peat = [sum(new_peat,2); peat.STATVAR.total_peat];
             peat.STATVAR.total_peat_PFT = [new_peat; peat.STATVAR.total_peat_PFT];
@@ -133,7 +139,8 @@ classdef PEAT_ACCUMULATION < BASE
           
              %assume constant NPP
              %new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./70e3 .* peat.PARA.BGC_timestep;
-             new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./100e3 .* peat.PARA.BGC_timestep;
+             %new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./100e3 .* peat.PARA.BGC_timestep;
+             new_peat = peat.STATVAR.annual_NPP .* peat.TEMP.GPP_acc./100e3;
              
              peat.STATVAR.total_peat(1,1) = peat.STATVAR.total_peat(1,1) + sum(new_peat,2);
              peat.STATVAR.total_peat_PFT(1,:) = peat.STATVAR.total_peat_PFT(1,:) + new_peat;

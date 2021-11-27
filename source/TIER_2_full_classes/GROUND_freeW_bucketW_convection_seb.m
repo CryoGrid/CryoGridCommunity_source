@@ -6,17 +6,13 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL & AIR_CONVECTION %& INITIALIZE
+classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL & AIR_CONVECTION 
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function ground = GROUND_freeW_bucketW_convection_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
        
         
         function ground = provide_PARA(ground)

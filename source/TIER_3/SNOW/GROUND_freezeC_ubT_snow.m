@@ -1,8 +1,9 @@
 %========================================================================
-% CryoGrid GROUND class GROUND_freezeC_ubT_snow
+% CryoGrid GROUND class GROUND_freezeC_ubT_snow forced by surface
+% temperature
 % heat conduction, constant water  +ice, freeze curve based on
 % freezing=drying assumption, surface energy balance
-% S. Westermann, October 2020
+% S. Westermann, October 2021
 %========================================================================
 
 classdef GROUND_freezeC_ubT_snow < GROUND_freezeC_ubT
@@ -17,10 +18,6 @@ classdef GROUND_freezeC_ubT_snow < GROUND_freezeC_ubT
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function ground = GROUND_freezeC_ubT_snow(index, pprovider, cprovider, forcing)
-%             ground@GROUND_freezeC_ubT(index, pprovider, cprovider, forcing);
-%         end
-
        function ground = provide_PARA(ground)  
             ground = provide_PARA@GROUND_freezeC_ubT(ground);
        end

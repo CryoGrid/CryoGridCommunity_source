@@ -1,23 +1,18 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freezeC_seb forced by surface temperature
-% heat conduction, constant water+ice, freeze curve 
-% S. Westermann, October 2020
+% heat conduction, constant water+ice, 
+% S. Westermann, November 2021
 %========================================================================
 
-classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & HEAT_FLUXES_LATERAL 
+classdef GROUND_fcSimple_salt_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & SALT
     
     methods
         
         
         function ground = provide_PARA(ground)
 
-            ground.PARA.LUT_size_waterIce = []; %size of lookup table for the waterIce variable [-]
-            ground.PARA.LUT_size_T = [];   %size of lookup table for the (temperature) T variable [-]
-            ground.PARA.min_T = []; %minimum temperature for which the LUT is calculated (modeled temperatures must be above this value) [degree C]
-            ground.PARA.min_waterIce = [];  %minimum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be above this value) [-]
-            ground.PARA.max_waterIce = []; %maximum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be below this value) [-]
-            ground.PARA.min_mineral_organic = [];  %maximum mineral plus organic content in volumetric fraction for which the LUT is calculated (mineral plus organic content must be below this value) [-]
-            
+            ground.PARA.tortuosity=[]; % tortuosity of salt diffusion [-]
+
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
@@ -32,11 +27,11 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             ground.STATVAR.mineral = [];   % total volume of minerals [m3]
             ground.STATVAR.organic = [];   % total volume of organics [m3]
             ground.STATVAR.energy = [];    % total internal energy [J]
-            ground.STATVAR.soil_type = []; % integer code for soil_type; 1: sand; 2: silt: 3: clay: 4: peat; 5: water (i.e. approximation of free water, very large-pore ground material).
+            ground.STATVAR.saltConc =[]; %total molar salt volume within a grid cell [mol]
+            ground.STATVAR.deltaT =[]; % freezing point depression/onset temperature of frezing for zero salt content [degree C]
                         
             ground.STATVAR.T = [];  % temperature [degree C]
             ground.STATVAR.water = [];  % total volume of water [m3]
-            ground.STATVAR.waterPotential = []; %soil water potential [Pa]
             ground.STATVAR.ice = [];  %total volume of ice [m3]
             ground.STATVAR.air = [];  % total volume of air [m3] - NOT USED
             ground.STATVAR.thermCond = []; %thermal conductivity [W/mK]
@@ -65,28 +60,10 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             
             ground.CONST.cp = [];  %specific heat capacity at constant pressure of air
             ground.CONST.g = [];   % gravitational acceleration Earth surface
+            ground.CONST.R = []; % universal gas constant
             
             ground.CONST.rho_w = []; % water density
             ground.CONST.rho_i = []; %ice density
-            
-            %Mualem Van Genuchten model
-            ground.CONST.alpha_water = [];  %alpha parameter for different soil types [m^-1]
-            ground.CONST.alpha_sand = [];
-            ground.CONST.alpha_silt = [];
-            ground.CONST.alpha_clay = [];
-            ground.CONST.alpha_peat = [];
-            
-            ground.CONST.n_water = [];  %n parameter for different soil types [-]
-            ground.CONST.n_sand = [];
-            ground.CONST.n_silt = [];
-            ground.CONST.n_clay = [];
-            ground.CONST.n_peat = [];
-            
-            ground.CONST.residual_wc_water = [];  %residual water content for different soil types [-]
-            ground.CONST.residual_wc_sand = [];   %NOTE: this parameter is generally set to 0
-            ground.CONST.residual_wc_silt = [];
-            ground.CONST.residual_wc_clay = [];
-            ground.CONST.residual_wc_peat = [];
 
         end
         
@@ -94,17 +71,12 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
-            ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
-            ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
-            ground.CONST.vanGen_residual_wc = [ ground.CONST.residual_wc_sand ground.CONST.residual_wc_silt ground.CONST.residual_wc_clay ground.CONST.residual_wc_peat ground.CONST.residual_wc_water];
-            
-            
-            ground = get_E_freezeC(ground);
-            ground = conductivity(ground);
-            
-            ground = create_LUT_freezeC(ground);
+            ground = get_E_water_salt_FreezeDepress_Xice(ground); %calculate energy, water and ice contents and brine salt concentration
+            ground = conductivity(ground); %calculate thermal conductivity
+            ground = diffusivity_salt(ground); % calculate salt diffusivity 
 
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
+            ground.TEMP.d_salt = ground.STATVAR.energy.*0;
             ground.TEMP.F_ub = 0;
             
         end
@@ -115,20 +87,23 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             forcing = tile.FORCING;
             %ground.TEMP.F_ub = (tile.FORCING.TEMP.Tair - ground.STATVAR.T(1,1)) .* ground.STATVAR.thermCond(1,1) ./ground.STATVAR.layerThick(1,1)
             ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + (tile.FORCING.TEMP.T_ub - ground.STATVAR.T(1,1)) .* ground.STATVAR.thermCond(1,1) ./ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1);
+            ground = get_boundary_condition_u_ZERO_SALT(ground); %zero salt flux assumed at upper and lower boundary
         end
         
-        function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
-            [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
-        end
+%         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
+%             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
+%         end
         
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
+            ground = get_boundary_condition_l_ZERO_SALT(ground);
         end
         
         function ground = get_derivatives_prognostic(ground, tile)
             ground = get_derivative_energy(ground);
+            ground = get_derivative_salt(ground);   
 
         end
         
@@ -140,6 +115,7 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             timestep = tile.timestep;
             %energy
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_energy;
+            ground.STATVAR.saltConc = ground.STATVAR.saltConc + timestep .* ground.TEMP.d_salt;
         end
         
         function ground = compute_diagnostic_first_cell(ground, tile)
@@ -147,9 +123,12 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
         end
        
         function ground = compute_diagnostic(ground, tile)
-            ground = get_T_water_freezeC(ground);
-            ground = conductivity(ground);
+            ground = get_T_water_salt_fcSimple_Xice(ground); % calculate temperature, water and ice contents and brine salt concentration 
+            ground = conductivity(ground); %calculate thermal conductivity
+            ground = diffusivity_salt(ground); % calculate salt diffusivity 
+
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
+            ground.TEMP.d_salt = ground.STATVAR.energy.*0;
             ground.TEMP.F_ub = 0;
         end
         

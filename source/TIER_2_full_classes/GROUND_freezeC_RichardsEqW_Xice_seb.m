@@ -2,6 +2,7 @@
 % CryoGrid GROUND class GROUND_freezeC_RichardsEqW_Xice_seb
 % heat conduction, Richards equation water scheme, freeze curve based on
 % freezing=drying assumption, surface energy balance, excess ice 
+% DISCONTINUED, do not use any more!
 % S. Westermann, October 2020
 %========================================================================
 
@@ -9,10 +10,6 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
 
     
     methods
-        
-%         function ground = GROUND_freezeC_RichardsEqW_Xice_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         
         function ground = provide_PARA(ground)

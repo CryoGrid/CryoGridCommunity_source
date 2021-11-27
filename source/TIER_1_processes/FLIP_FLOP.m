@@ -1,5 +1,6 @@
 %========================================================================
-% CryoGrid TIER1 library class 
+% CryoGrid TIER1 library class FLIP_FLOP, designed to store all STATVAR
+% from a class in a model phase, and then read these STATVAR in a read phase. This makes multi-millennial runs possible for some applications. 
 % S. Westermann, November 2021
 %========================================================================
 

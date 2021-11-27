@@ -2,10 +2,10 @@
 % CryoGrid GLACIER CLASS class GLACIER_freeW_seb
 % heat conduction, free water freeze curve, surface
 % energy balance
-% L. Schmidt, S. Westermann, October 2021
+% L. Schmidt, S. Westermann, November 2021
 %========================================================================
 
-classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE
+classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL 
 
     
     methods
@@ -203,14 +203,6 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
                     ground.STATVAR.waterIce = ground.STATVAR.waterIce + [ground.STATVAR.waterIce(2:end).*sf(2:end); 0] - [0; ground.STATVAR.waterIce(2:end).*sf(2:end)];
                     ground.STATVAR.energy = ground.STATVAR.energy + [ground.STATVAR.energy(2:end).*sf(2:end); 0] - [0; ground.STATVAR.energy(2:end).*sf(2:end)]; 
                     ground.STATVAR.layerThick = ground.STATVAR.layerThick + [ground.STATVAR.layerThick(2:end).*sf(2:end); 0] - [0; ground.STATVAR.layerThick(2:end).*sf(2:end)];
-%                     ground.STATVAR.water = ground.STATVAR.water + [ground.STATVAR.water(2:end).*sf(2:end); 0] - [0; ground.STATVAR.water(2:end).*sf(2:end)]; 
-%                     ground.STATVAR.ice = ground.STATVAR.ice + [ground.STATVAR.ice(2:end).*sf(2:end); 0] - [0; ground.STATVAR.ice(2:end).*sf(2:end)]; 
-%                     
-%                     E_frozen1 = - ground.STATVAR.waterIce .* ground.CONST.L_f;
-%                     
-%                     ground.STATVAR.T = double(ground.STATVAR.energy < E_frozen1) .* (ground.STATVAR.energy - E_frozen1) ./ (ground.CONST.c_i.*ground.STATVAR.waterIce + ground.CONST.c_m.*ground.STATVAR.mineral + ground.CONST.c_o.*ground.STATVAR.organic) + ... 
-%                     double(ground.STATVAR.energy >0) .* ground.STATVAR.energy ./ (ground.CONST.c_w*ground.STATVAR.waterIce + ground.CONST.c_m.*ground.STATVAR.mineral + ground.CONST.c_o.*ground.STATVAR.organic);
-%                     
 
                     ground.STATVAR.mineral = ground.STATVAR.mineral + [ground.STATVAR.mineral(2:end).*sf(2:end); 0] - [0; ground.STATVAR.mineral(2:end).*sf(2:end)];
                     ground.STATVAR.organic = ground.STATVAR.organic + [ground.STATVAR.organic(2:end).*sf(2:end); 0] - [0; ground.STATVAR.organic(2:end).*sf(2:end)]; 
@@ -233,18 +225,7 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
                           ground.STATVAR.energy(i) = sf2.*ground.STATVAR.energy(i);
                           ground.STATVAR.layerThick(i+1) = sf1.*ground.STATVAR.layerThick(i)+ground.STATVAR.layerThick(i+1);
                           ground.STATVAR.layerThick(i) = sf2.*ground.STATVAR.layerThick(i);
-%                           ground.STATVAR.water(i+1) = sf1.*ground.STATVAR.water(i)+ground.STATVAR.water(i+1);
-%                           ground.STATVAR.water(i) = sf2.*ground.STATVAR.water(i);
-%                           ground.STATVAR.ice(i+1) = sf1.*ground.STATVAR.ice(i)+ground.STATVAR.ice(i+1);
-%                           ground.STATVAR.ice(i) = sf2.*ground.STATVAR.ice(i);
-%                           E_frozen1 = - ground.STATVAR.waterIce(i) .* ground.CONST.L_f;
-%                           E_frozen2 = - ground.STATVAR.waterIce(i+1) .* ground.CONST.L_f;
-%                           ground.STATVAR.T(i) = double(ground.STATVAR.energy(i) < E_frozen1) .* (ground.STATVAR.energy(i) - E_frozen1) ./ (ground.CONST.c_i.*ground.STATVAR.waterIce(i) + ground.CONST.c_m.*ground.STATVAR.mineral(i) + ground.CONST.c_o.*ground.STATVAR.organic(i)) + ...
-%                               double(ground.STATVAR.energy(i) >0) .* ground.STATVAR.energy(i) ./ (ground.CONST.c_w*ground.STATVAR.waterIce(i) + ground.CONST.c_m.*ground.STATVAR.mineral(i) + ground.CONST.c_o.*ground.STATVAR.organic(i));
-%                           
-%                           ground.STATVAR.T(i+1) = double(ground.STATVAR.energy(i+1) < E_frozen2) .* (ground.STATVAR.energy(i+1) - E_frozen2) ./ (ground.CONST.c_i.*ground.STATVAR.waterIce(i+1) + ground.CONST.c_m.*ground.STATVAR.mineral(i+1) + ground.CONST.c_o.*ground.STATVAR.organic(i+1)) + ...
-%                               double(ground.STATVAR.energy(i+1) >0) .* ground.STATVAR.energy(i+1) ./ (ground.CONST.c_w*ground.STATVAR.waterIce(i+1) + ground.CONST.c_m.*ground.STATVAR.mineral(i+1) + ground.CONST.c_o.*ground.STATVAR.organic(i+1));
-%                           
+
                           ground.STATVAR.mineral(i+1) = sf1.*ground.STATVAR.mineral(i)+ground.STATVAR.mineral(i+1);
                           ground.STATVAR.mineral(i) = sf2.*ground.STATVAR.mineral(i);
                           ground.STATVAR.organic(i+1) = sf1.*ground.STATVAR.organic(i)+ground.STATVAR.organic(i+1);

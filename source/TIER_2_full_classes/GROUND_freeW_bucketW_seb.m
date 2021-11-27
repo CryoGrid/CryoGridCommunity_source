@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE
+classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL 
 
     
     methods
@@ -14,7 +14,6 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         %----initialization--------------------
         
 
-        
         function ground = provide_PARA(ground)
             
             ground.PARA.albedo = [];  %surface albedo [-]

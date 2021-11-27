@@ -1,7 +1,9 @@
 %========================================================================
-% CryoGrid GROUND class 
-
-% S. Westermann, October 2020
+% CryoGrid TIER 3 GROUND class combining snow and biogeochemistry coupling
+% with write/read capabilities of the FLIP_FLOP Tier 1 class
+% This class can serve as a template to enable FLIP_FLOP also for other
+% GROUND classes
+% S. Westermann, November 2021
 %========================================================================
 
 classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC_FLIP_FLOP < GROUND_freezeC_bucketW_Xice_seb_snow_BGC & FLIP_FLOP

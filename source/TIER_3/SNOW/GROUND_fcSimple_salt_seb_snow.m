@@ -15,10 +15,7 @@ classdef GROUND_fcSimple_salt_seb_snow < GROUND_fcSimple_salt_seb
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function self = GROUND_fcSimple_salt_seb_snow(index, pprovider, cprovider, forcing)
-%             self@GROUND_fcSimple_salt_seb(index, pprovider, cprovider, forcing);
-%         end
+
         
         function ground = provide_PARA(ground)
             ground = provide_PARA@GROUND_fcSimple_salt_seb(ground);

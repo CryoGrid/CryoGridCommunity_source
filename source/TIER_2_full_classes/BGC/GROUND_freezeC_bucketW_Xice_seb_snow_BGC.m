@@ -1,4 +1,8 @@
-
+%========================================================================
+% CryoGrid GROUND class GROUND_freezeC_bucketW_Xice_seb_snow_BGC
+% enables coupling to biogeochemistry BGC classes
+% S. Westermann, November 2021
+%========================================================================
 
 classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_seb_snow
 
@@ -39,10 +43,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground = finalize_init@GROUND_freezeC_bucketW_Xice_seb_snow(ground, tile);
 
             class_handle = str2func(ground.PARA.BGC_CLASS);
-            %ground.BGC = class_handle(-1,0,0,0); 
             ground.BGC = class_handle(); 
             ground.BGC.PARENT = ground;
-            %remove this in the end
             
             ground.BGC = provide_PARA(ground.BGC);
             ground.BGC = provide_STATVAR(ground.BGC);

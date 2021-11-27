@@ -44,6 +44,37 @@ if strcmp(below_class, 'GROUND_freezeC_ubT_snow')
     below_class = 'GROUND_freezeC_seb_snow';
 end
 
+%----------
+if strcmp(above_class, 'GROUND_freeW_ubT')
+    above_class = 'GROUND_freeW_seb';
+end
+if strcmp(below_class, 'GROUND_freeW_ubT')
+    below_class = 'GROUND_freeW_seb';
+end
+
+if strcmp(above_class, 'GROUND_freeW_ubT_snow')
+    above_class = 'GROUND_freeW_seb_snow';
+end
+if strcmp(below_class, 'GROUND_freeW_ubT_snow')
+    below_class = 'GROUND_freeW_seb_snow';
+end
+%------
+
+if strcmp(above_class, 'GROUND_fcSimple_salt_ubT')
+    above_class = 'GROUND_fcSimple_salt_seb';
+end
+if strcmp(below_class, 'GROUND_fcSimple_salt_ubT')
+    below_class = 'GROUND_fcSimple_salt_seb';
+end
+
+if strcmp(above_class, 'GROUND_fcSimple_salt_ubT_snow')
+    above_class = 'GROUND_fcSimple_salt_seb_snow';
+end
+if strcmp(below_class, 'GROUND_fcSimple_salt_ubT_snow')
+    below_class = 'GROUND_fcSimple_salt_seb_snow';
+end
+%------
+
 if strcmp(above_class, 'SNOW_simple_ubT')
     above_class = 'SNOW_simple_seb';
 end

@@ -382,6 +382,26 @@ classdef SNOW < BASE
                 
                 snow = ground; %assign snow pointer to ground to return to regular stratigraphy
             end
+
+            if isempty(snow.STATVAR.layerThick) %snow depth has become zero in a ssigle time step, jumping over the CHILD phase 
+                
+                ground = snow.NEXT;
+                
+                ground.PREVIOUS = snow.PREVIOUS; %reassign ground
+                ground.PREVIOUS.NEXT = ground;
+                ground.CHILD = 0;
+               
+                ground.IA_CHILD = [];
+                
+                ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
+                
+                %snow.NEXT =[];  %cut all dependencies, except for snow.NEXT which keeps being pointed to snow.PARENT, so that SW radiation can be transmitted
+                snow.PREVIOUS =[];
+                snow.IA_NEXT =[];
+                snow.IA_PREVIOUS =[];
+
+                snow = ground; %assign snow pointer to ground to return to regular stratigraphy
+            end
         end
         
     end

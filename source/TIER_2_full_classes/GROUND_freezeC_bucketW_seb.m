@@ -5,17 +5,13 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_DallAmico
+classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL 
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function ground = GROUND_freezeC_bucketW_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         function ground = provide_PARA(ground)
             

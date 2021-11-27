@@ -1,7 +1,8 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_store_flip_flop_singleClass
-% reads variables from FLIP_FLOP files
-% S. Westermann, November 2020
+% reads variables from FLIP_FLOP files, to be used in conjuction with
+% ..._FLIP_FLOP classes, from where it is called
+% S. Westermann, November 2021
 %========================================================================
 
 classdef GROUND_store_flip_flop_singleClass < FLIP_FLOP
@@ -12,9 +13,7 @@ classdef GROUND_store_flip_flop_singleClass < FLIP_FLOP
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
 
-        
          function ground = provide_PARA(ground)
             
 

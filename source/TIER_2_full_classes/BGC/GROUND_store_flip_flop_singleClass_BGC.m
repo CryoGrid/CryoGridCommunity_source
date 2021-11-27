@@ -1,8 +1,9 @@
 %========================================================================
-% CryoGrid GROUND class READ_STATVAR_FROM_OUT_BGC
-% reads variables from OUT files of the OUT class
-% OUT_all_lateral_STORE4READ and interacts with BGC class
-% S. Westermann, November 2020
+% CryoGrid GROUND class GROUND_store_flip_flop_singleClass_BGC
+% reads variables from FLIP_FLOP files, to be used in conjuction with
+% ..._FLIP_FLOP classes, from where it is called. It is used with
+% biogeochemeistry classes.
+% S. Westermann, November 2021
 %========================================================================
 
 classdef GROUND_store_flip_flop_singleClass_BGC < GROUND_store_flip_flop_singleClass
@@ -48,7 +49,6 @@ classdef GROUND_store_flip_flop_singleClass_BGC < GROUND_store_flip_flop_singleC
             ground.BGC = get_boundary_condition_u(ground.BGC, tile);
         end
         
-        
         function ground = get_boundary_condition_l(ground, tile)
             ground = get_boundary_condition_l@GROUND_store_flip_flop_singleClass(ground, tile);
             ground.BGC = get_boundary_condition_l(ground.BGC, tile);
@@ -78,18 +78,15 @@ classdef GROUND_store_flip_flop_singleClass_BGC < GROUND_store_flip_flop_singleC
         function ground = compute_diagnostic(ground, tile)
 
             ground.BGC = compute_diagnostic(ground.BGC, tile);
-
             ground = compute_diagnostic@GROUND_store_flip_flop_singleClass(ground, tile);
 
         end
         
         function ground = check_trigger(ground, tile)
-            %ground = check_trigger@GROUND_store_flip_flop_singleClass(ground, tile);
+
             ground.BGC = check_trigger(ground.BGC, tile);
-            
             ground = switch2model_flip_flop_BGC(ground, tile);
         end
-        
 
     end
     

@@ -11,10 +11,7 @@ classdef LAT3D_HEAT < BASE_LATERAL
             
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function lateral = LAT3D_HEAT(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
+
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;

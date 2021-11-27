@@ -18,10 +18,6 @@ classdef GROUND_freezeC_bucketW_seb_snow < GROUND_freezeC_bucketW_seb
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function ground = GROUND_freezeC_bucketW_seb_snow(index, pprovider, cprovider, forcing)
-%             ground@GROUND_freezeC_bucketW_seb(index, pprovider, cprovider, forcing);
-%         end
-        
         function ground = provide_PARA(ground)
             ground = provide_PARA@GROUND_freezeC_bucketW_seb(ground);
         end
