@@ -1,5 +1,7 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_TTOP_simple 
+% CAUTION: this class takes unnecessary long time to run! It is best used
+% with OUT_last_timestep
 % S. Westermann, October 2020
 %========================================================================
 
@@ -38,9 +40,9 @@ classdef GROUND_TTOP_simple < BASE
             ground.TEMP.FDD_acc = 0;
             ground.TEMP.TDD_acc = 0;
             ground.TEMP.time_interval = 0;
-            ground.TEMP.current_timestamp = tile.FORCING.start_time;
+            ground.TEMP.current_timestamp = tile.FORCING.PARA.start_time;
             ground.TEMP.next_timestamp = ground.TEMP.current_timestamp + ground.PARA.timestep;
-            if isempty(ground.PARA.interval) || isnan(ground.PARA.interval)
+            if isempty(ground.PARA.number_of_years) || isnan(ground.PARA.number_of_years)
                 [~, month, day] = datevec(tile.FORCING.PARA.start_time);
                 [year,~ ,~] = datevec(tile.FORCING.PARA.end_time);
             else
@@ -72,7 +74,6 @@ classdef GROUND_TTOP_simple < BASE
         
         function ground = advance_prognostic(ground, tile) 
             timestep = tile.timestep;
-
             ground.TEMP.FDD_acc = ground.TEMP.FDD_acc + timestep ./ ground.CONST.day_sec .* tile.FORCING.TEMP.(ground.PARA.surface_T_variable) .* double(tile.FORCING.TEMP.(ground.PARA.surface_T_variable)<0);
             ground.TEMP.TDD_acc = ground.TEMP.TDD_acc + timestep ./ ground.CONST.day_sec .* tile.FORCING.TEMP.(ground.PARA.surface_T_variable) .* double(tile.FORCING.TEMP.(ground.PARA.surface_T_variable)>0);
             ground.TEMP.time_interval = ground.TEMP.time_interval + timestep ./ ground.CONST.day_sec;        
@@ -84,28 +85,32 @@ classdef GROUND_TTOP_simple < BASE
        
         function ground = compute_diagnostic(ground, tile)
 
-            if tile.t + tile.timestep >= ground.TEMP.next_timestamp
+            if tile.t + tile.timestep./ground.CONST.day_sec >= ground.TEMP.next_timestamp
                 ground.TEMP.next_timestamp = ground.TEMP.next_timestamp + ground.PARA.timestep;
             end
-            if tile.t + tile.timestep >= ground.TEMP.next_TTOP_time
+            if tile.t + tile.timestep./ground.CONST.day_sec >= ground.TEMP.next_TTOP_time
                 ground.STATVAR.MAAT = (ground.TEMP.TDD_acc + ground.TEMP.FDD_acc) ./ ground.TEMP.time_interval;
 
                 ground.STATVAR.MAGST = (ground.PARA.nt .* ground.TEMP.TDD_acc + ground.PARA.nf .* ground.TEMP.FDD_acc) ./ ground.TEMP.time_interval;
                 is_PF = ground.PARA.nt .* ground.PARA.rk .* ground.TEMP.TDD_acc + ground.PARA.nf  .* ground.TEMP.FDD_acc < 0;
-                ground.STATVAR.MAGT = double(is_PF) .* (ground.PARA.nt .* ground.PARA.rk .* ground.TEMP.TDD_acc + ground.PARA.nf  .* ground.TEMP.FDD_acc) ./ ground.TEMP.time_interval +
+                ground.STATVAR.MAGT = double(is_PF) .* (ground.PARA.nt .* ground.PARA.rk .* ground.TEMP.TDD_acc + ground.PARA.nf  .* ground.TEMP.FDD_acc) ./ ground.TEMP.time_interval + ...
                     double(~is_PF) .* (ground.PARA.nt .* ground.TEMP.TDD_acc + ground.PARA.nf ./ ground.PARA.rk  .* ground.TEMP.FDD_acc) ./ ground.TEMP.time_interval;
 
-                ground.STATVAR.TDD = ground.TEMP.TDD_acc ./365.25;
-                ground.STATVAR.FDD = ground.TEMP.FDD_acc ./365.25;
+                ground.STATVAR.TDD = ground.TEMP.TDD_acc ./ (ground.TEMP.time_interval./365.25);
+                ground.STATVAR.FDD = ground.TEMP.FDD_acc ./ (ground.TEMP.time_interval./365.25);
 
                 ground.TEMP.FDD_acc = 0;
                 ground.TEMP.TDD_acc = 0;
                 ground.TEMP.time_interval = 0;
-                
-                [~, month, day] = datevec(tile.FORCING.PARA.start_time);
-                [year,~ ,~] = datevec(tile.t);
-                year = year + ground.PARA.number_of_years;
-                ground.TEMP.next_TTOP_time = min(tile.FORCING.PARA.end_time, datenum(year, month, day));
+                if isempty(ground.PARA.number_of_years) || isnan(ground.PARA.number_of_years)
+                else
+                    [~, month, day] = datevec(tile.FORCING.PARA.start_time);
+                    [year,~ ,~] = datevec(tile.t);
+                    year = year + ground.PARA.number_of_years;
+                    ground.TEMP.next_TTOP_time = min(tile.FORCING.PARA.end_time, datenum(year, month, day));
+                    
+%                     ground.TEMP.next_TTOP_time = tile.FORCING.PARA.end_time;
+                end
             end
         end
         

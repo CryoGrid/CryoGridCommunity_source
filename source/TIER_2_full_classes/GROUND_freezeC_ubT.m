@@ -11,6 +11,8 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
         
         function ground = provide_PARA(ground)
 
+            ground.PARA.conductivity_function = [];
+
             ground.PARA.LUT_size_waterIce = []; %size of lookup table for the waterIce variable [-]
             ground.PARA.LUT_size_T = [];   %size of lookup table for the (temperature) T variable [-]
             ground.PARA.min_T = []; %minimum temperature for which the LUT is calculated (modeled temperatures must be above this value) [degree C]
@@ -89,10 +91,20 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             ground.CONST.residual_wc_peat = [];
 
         end
+
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal_ubT(unit_converter, ground, tile);
+        end
         
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'thermalConductivity_CLM4_5';
+            end
             
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
@@ -164,7 +176,9 @@ classdef GROUND_freezeC_ubT < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
         
         
         function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+            %ground = conductivity_mixing_squares(ground);
         end
         
         

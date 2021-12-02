@@ -75,6 +75,12 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             ground.CONST.rho_i = []; %ice density
         end
         
+        function ground = convert_units(ground, tile)
+                unit_converter = str2func(tile.PARA.unit_conversion_class);
+                unit_converter = unit_converter();
+                ground = convert_normal(unit_converter, ground, tile);
+        end
+
         function ground = finalize_init(ground, tile) 
             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;

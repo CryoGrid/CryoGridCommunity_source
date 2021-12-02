@@ -32,7 +32,7 @@ classdef OUT_last_timestep < matlab.mixin.Copyable
         
         function out = provide_PARA(out)         
 
-            out.PARA.save_timestep = [];
+            out.PARA.save_timestep = []; %if empty save final state at the end of the run, so that it can serve as initial condition for new runs
 
         end
 		
@@ -49,8 +49,11 @@ classdef OUT_last_timestep < matlab.mixin.Copyable
 		function out = finalize_init(out, tile)
 		
 			forcing = tile.FORCING;
-
-			out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.save_timestep;
+            if isempty(out.PARA.save_timestep) || isnan(out.PARA.save_timestep)
+                out.OUTPUT_TIME = forcing.PARA.end_time;
+            else
+                out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.save_timestep;
+            end
             out.SAVE_TIME = forcing.PARA.end_time;
 
         end

@@ -10,7 +10,9 @@ classdef GROUND_freeW_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& FREEZ
         
         
         function ground = provide_PARA(ground)
-            
+
+            ground.PARA.conductivity_function = [];
+
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
@@ -59,39 +61,29 @@ classdef GROUND_freeW_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& FREEZ
             
             ground.CONST.rho_w = []; % water density
             ground.CONST.rho_i = []; %ice density
-            
-%             %Mualem Van Genuchten model
-%             ground.CONST.alpha_water = [];  %alpha parameter for different soil types [m^-1]
-%             ground.CONST.alpha_sand = [];
-%             ground.CONST.alpha_silt = [];
-%             ground.CONST.alpha_clay = [];
-%             ground.CONST.alpha_peat = [];
-%             
-%             ground.CONST.n_water = [];  %n parameter for different soil types [-]
-%             ground.CONST.n_sand = [];
-%             ground.CONST.n_silt = [];
-%             ground.CONST.n_clay = [];
-%             ground.CONST.n_peat = [];
-%             
-%             ground.CONST.residual_wc_water = [];  %residual water content for different soil types [-]
-%             ground.CONST.residual_wc_sand = [];   %NOTE: this parameter is generally set to 0
-%             ground.CONST.residual_wc_silt = [];
-%             ground.CONST.residual_wc_clay = [];
-%             ground.CONST.residual_wc_peat = [];
 
+        end
+
+        function ground = convert_units(ground, tile)
+                unit_converter = str2func(tile.PARA.unit_conversion_class);
+                unit_converter = unit_converter();
+                ground = convert_normal_ubT(unit_converter, ground, tile);
         end
         
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'conductivity_mixing_squares';
+            end
+
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
-           
             ground = get_E_freeW(ground);
             ground = conductivity(ground);
 
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.F_ub = 0;
-            
         end
         
         %---time integration------
@@ -149,7 +141,9 @@ classdef GROUND_freeW_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& FREEZ
         
         
         function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+            %ground = conductivity_mixing_squares(ground);
         end
         
         

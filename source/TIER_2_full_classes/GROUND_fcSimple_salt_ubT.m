@@ -12,6 +12,7 @@ classdef GROUND_fcSimple_salt_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL 
         function ground = provide_PARA(ground)
 
             ground.PARA.tortuosity=[]; % tortuosity of salt diffusion [-]
+            ground.PARA.conductivity_function = [];
 
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -66,10 +67,20 @@ classdef GROUND_fcSimple_salt_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL 
             ground.CONST.rho_i = []; %ice density
 
         end
+
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal_ubT(unit_converter, ground, tile);
+        end
         
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'conductivity_mixing_squares';
+            end
             
             ground = get_E_water_salt_FreezeDepress_Xice(ground); %calculate energy, water and ice contents and brine salt concentration
             ground = conductivity(ground); %calculate thermal conductivity
@@ -143,7 +154,9 @@ classdef GROUND_fcSimple_salt_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL 
         
         
         function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+%             ground = conductivity_mixing_squares(ground);
         end
         
         

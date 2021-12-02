@@ -123,11 +123,16 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
 
         end
 
-        
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_Xice(unit_converter, ground, tile);
+        end
+
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];

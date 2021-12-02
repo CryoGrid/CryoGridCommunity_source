@@ -90,17 +90,23 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         end
         
         
-        function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
-            ground = provide_PARA(ground); 
-            ground = provide_CONST(ground);
-            ground = provide_STATVAR(ground);
+%         function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
+%             ground = provide_PARA(ground); 
+%             ground = provide_CONST(ground);
+%             ground = provide_STATVAR(ground);
+%         end
+
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal(unit_converter, ground, tile);
         end
         
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
-            
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             
             ground = get_E_freeW(ground);            
             
             ground.STATVAR.Lstar = -100;

@@ -55,9 +55,9 @@ classdef HEAT_CONDUCTION < BASE
         function ground = get_E_freeW(ground) %required for initialization
 
             T = ground.STATVAR.T;
-            mineral= ground.STATVAR.mineral;
-            organic = ground.STATVAR.organic;
-            waterIce = ground.STATVAR.waterIce;
+            mineral= ground.STATVAR.mineral ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
+            organic = ground.STATVAR.organic ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
+            waterIce = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
             layerThick = ground.STATVAR.layerThick;
             area = ground.STATVAR.area;
 

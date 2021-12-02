@@ -45,11 +45,12 @@ classdef GROUND_freezeC_ubT_snow < GROUND_freezeC_ubT
                 ground = get_boundary_condition_u@GROUND_freezeC_ubT(ground, tile); %call the native function for the ground class
                 
                 if forcing.TEMP.snow_depth > 0  %create CHILD 
-                    CURRENT = ground.PREVIOUS;  %go to Top() and get the stored SNOW class
-                    while ~strcmp(class(CURRENT), 'Top')
-                        CURRENT = CURRENT.PREVIOUS;
-                    end
-                    ground.CHILD = copy(CURRENT.STORE.SNOW);
+%                     CURRENT = ground.PREVIOUS;  %go to Top() and get the stored SNOW class
+%                     while ~strcmp(class(CURRENT), 'Top')
+%                         CURRENT = CURRENT.PREVIOUS;
+%                     end
+%                     ground.CHILD = copy(CURRENT.STORE.SNOW);
+                    ground.CHILD = copy(tile.STORE.SNOW);
                     ground.CHILD.PARENT = ground;
                     ground.CHILD.NEXT = ground; 
                     ground.IA_CHILD = get_IA_class(class(ground.CHILD), class(ground));

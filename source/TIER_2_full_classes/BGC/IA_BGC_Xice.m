@@ -245,9 +245,11 @@ classdef IA_BGC_Xice <  IA_BGC
                BGC_layerThick = sum(ia_BGC.BGC.STATVAR.layerThick(new_cells),1);
                GROUND_layerThick = ia_BGC.GROUND.STATVAR.layerThick(i,1) - ia_BGC.GROUND.STATVAR.XwaterIce(i,1) ./ ia_BGC.GROUND.STATVAR.area(i,1) - ia_BGC.GROUND.STATVAR.non_BGC_layerThick(i,1);
                
+               T_GROUND = ia_BGC.GROUND.STATVAR.T(i,1);
+
                if BGC_layerThick > GROUND_layerThick %cell size has increased
                    
-                   T_GROUND = ia_BGC.GROUND.STATVAR.T(i,1);
+                   %T_GROUND = ia_BGC.GROUND.STATVAR.T(i,1);
                    saturation_waterIce = ia_BGC.GROUND.STATVAR.waterIce(i,1) ./ (ia_BGC.GROUND.STATVAR.layerThick(i,1) .* ia_BGC.GROUND.STATVAR.area(i,1) - ia_BGC.GROUND.STATVAR.XwaterIce(i,1) - ia_BGC.GROUND.STATVAR.mineral(i,1) - ia_BGC.GROUND.STATVAR.organic(i,1));
                    fraction_XwaterIce = ia_BGC.GROUND.STATVAR.XwaterIce(i,1) ./ (ia_BGC.GROUND.STATVAR.layerThick(i,1) .* ia_BGC.GROUND.STATVAR.area(i,1) - ia_BGC.GROUND.STATVAR.XwaterIce(i,1));
                    energy_density_waterIce = (ia_BGC.GROUND.STATVAR.energy(i,1) - T_GROUND .* ia_BGC.GROUND.STATVAR.organic(i,1) .* ia_BGC.GROUND.CONST.c_o - ...
@@ -298,6 +300,7 @@ classdef IA_BGC_Xice <  IA_BGC
             %get water table depth
             saturation = ia_BGC.GROUND.STATVAR.waterIce ./ (ia_BGC.GROUND.STATVAR.layerThick .* ia_BGC.GROUND.STATVAR.area - ia_BGC.GROUND.STATVAR.XwaterIce - ia_BGC.GROUND.STATVAR.mineral - ia_BGC.GROUND.STATVAR.organic);
             ia_BGC.BGC.TEMP.water_table_depth = sum(ia_BGC.GROUND.STATVAR.layerThick(1:find(saturation>0.95,1)-1,1),1) - ia_BGC.GROUND.STATVAR.XwaterIce(1,1)./ ia_BGC.GROUND.STATVAR.area(1,1);
+            ia_BGC.BGC.TEMP.water_table_depth = min(ia_BGC.BGC.TEMP.water_table_depth, 1.5);
         end
         
         function peat_depth = get_peat_depth(ia_BGC, tile)

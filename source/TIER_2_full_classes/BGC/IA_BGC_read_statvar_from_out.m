@@ -68,6 +68,7 @@ classdef IA_BGC_read_statvar_from_out <  IA_BGC
             %get water table depth
             saturation = ia_BGC.GROUND.STATVAR.waterIce ./ (ia_BGC.GROUND.STATVAR.layerThick .* ia_BGC.GROUND.STATVAR.area - ia_BGC.GROUND.STATVAR.XwaterIce - ia_BGC.GROUND.STATVAR.mineral - ia_BGC.GROUND.STATVAR.organic);
             ia_BGC.BGC.TEMP.water_table_depth = sum(ia_BGC.GROUND.STATVAR.layerThick(1:find(saturation>0.95,1)-1,1),1) - ia_BGC.GROUND.STATVAR.XwaterIce(1,1)./ ia_BGC.GROUND.STATVAR.area(1,1);
+            ia_BGC.BGC.TEMP.water_table_depth = min(ia_BGC.BGC.TEMP.water_table_depth, 1.5);
         end
         
         

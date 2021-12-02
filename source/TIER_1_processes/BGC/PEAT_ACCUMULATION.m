@@ -202,11 +202,11 @@ classdef PEAT_ACCUMULATION < BASE
                 2 1 19;
                 4 6 19]';
             
-            peat.PARA.optimum_water_table_depth = ...
-                [0.4 0.4 0.4;
-                0.1 0.3 0.3;
-                0.1 0.4 0.4;
-                0.2 0.2 1;
+            peat.PARA.optimum_water_table_depth = ...   % [0.4 0.4 0.4; 
+                [0.4 0.4 2; 
+                0.1 0.3 0.3; 
+                0.1 0.4 0.4; 
+                0.2 0.2 1; 
                 0.2 0.2 0.2;
                 0.2 0.3 0.3;
                 0.3 0.3 1;

@@ -12,7 +12,8 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
         FORCING
         CONST
         GRID
-        OUT        
+        OUT 
+        STORE
         
         t        
         timestep
@@ -66,6 +67,8 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
             %restart_OUT_last_timestep
             tile.PARA.restart_file_path = [];
             tile.PARA.restart_file_name = [];
+
+            tile.PARA.unit_conversion_class = 'UNIT_CONVERSION_standard'; %can be overwritten if needed
             
         end
         
@@ -275,6 +278,8 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
             
             CURRENT = tile.TOP_CLASS;
             CURRENT.STATVAR.top_depth_rel2groundSurface = 0; %set initial surface to zero
+
+            CURRENT = convert_units(CURRENT, tile);
             CURRENT = finalize_init(CURRENT, tile);
 
             CURRENT.PARA.target_grid = tile.GRID.STATVAR.GRID;
@@ -282,6 +287,7 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
             while ~isequal(CURRENT.NEXT, tile.BOTTOM_CLASS.NEXT)
                 CURRENT.NEXT.STATVAR.top_depth_rel2groundSurface = CURRENT.STATVAR.top_depth_rel2groundSurface + sum(CURRENT.STATVAR.layerThick,1);
                 
+                CURRENT.NEXT = convert_units(CURRENT.NEXT, tile);
                 CURRENT.NEXT = finalize_init(CURRENT.NEXT, tile);
 
                 CURRENT.NEXT.PARA.target_grid = tile.GRID.STATVAR.GRID;
@@ -312,20 +318,31 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
                 snow_class =  tile.RUN_INFO.PPROVIDER.CLASSES.(snow_class_name);
                 snow_class = snow_class{snow_class_index,1};
                 
-                tile.TOP.STORE.SNOW = copy(snow_class);
-                tile.TOP.STORE.SNOW = finalize_init(tile.TOP.STORE.SNOW, tile); %make this dependent on TILE!
+%                 tile.TOP.STORE.SNOW = copy(snow_class);
+%                 tile.TOP.STORE.SNOW = finalize_init(tile.TOP.STORE.SNOW, tile); %make this dependent on TILE!
+                tile.STORE.SNOW = copy(snow_class);
+                tile.STORE.SNOW = finalize_init(tile.STORE.SNOW, tile); 
             end
             
             %9. assign sleeping classes
             sleeping_classes = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_classes_class){tile.PARA.strat_classes_class_index,1}.PARA.sleeping_classes_name;
             sleeping_classes_index = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_classes_class){tile.PARA.strat_classes_class_index,1}.PARA.sleeping_classes_index; 
 
+%             for i=1:size(sleeping_classes,1)
+%                 sc = tile.RUN_INFO.PPROVIDER.CLASSES.(sleeping_classes{i,1});
+%                 sc = sc{sleeping_classes_index(i,1),1};
+%                 tile.TOP.STORE.SLEEPING{i,1} = copy(sc);
+%                 tile.TOP.STORE.SLEEPING{i,1} = convert_units(tile.TOP.STORE.SLEEPING{i,1}, tile);
+%                 tile.TOP.STORE.SLEEPING{i,1} = finalize_init(tile.TOP.STORE.SLEEPING{i,1}, tile);
+%                 tile.TOP.STORE.SLEEPING{i,2} = sleeping_classes_index(i,1);
+%             end
             for i=1:size(sleeping_classes,1)
                 sc = tile.RUN_INFO.PPROVIDER.CLASSES.(sleeping_classes{i,1});
                 sc = sc{sleeping_classes_index(i,1),1};
-                tile.TOP.STORE.SLEEPING{i,1} = copy(sc);
-                tile.TOP.STORE.SLEEPING{i,1} = finalize_init(tile.TOP.STORE.SLEEPING{i,1}, tile);
-                tile.TOP.STORE.SLEEPING{i,2} = sleeping_classes_index(i,1);
+                tile.STORE.SLEEPING{i,1} = copy(sc);
+                tile.STORE.SLEEPING{i,1} = convert_units(tile.STORE.SLEEPING{i,1}, tile);
+                tile.STORE.SLEEPING{i,1} = finalize_init(tile.STORE.SLEEPING{i,1}, tile);
+                tile.STORE.SLEEPING{i,2} = sleeping_classes_index(i,1);
             end
             
             %10. assign time, etc.
