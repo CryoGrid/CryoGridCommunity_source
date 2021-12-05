@@ -97,6 +97,14 @@ if strcmp(below_class, 'GLACIER_freeW_seb_snow')
     below_class = 'GROUND_freeW_seb_snow';
 end
 
+%set dummy, so that it doesn't crash
+if strcmp(above_class, 'GROUND_multi_tile2')
+    above_class2 = above_class;
+    above_class = 'GROUND_freeW_seb';
+else
+    above_class2 = 0;
+end
+
 
 %list of all CryoGrid GROUND classes
 classes = [ {'GROUND_freeW_seb'};
@@ -252,6 +260,10 @@ else
     disp('combination of classes not supported')
 end
 
+
+if strcmp(above_class2, 'GROUND_multi_tile2')
+    ia_class = IA_MULTI_TILE10();
+end
 % if  strcmp(below_class,'READ_OUT_BGC') && strcmp(above_class,'READ_OUT_BGC')
 %     ia_class = IA_DO_NOTHING();
 % end

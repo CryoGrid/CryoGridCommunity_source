@@ -134,6 +134,13 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freezeC(ground);
+            ground = conductivity(ground);
+
+        end
+        
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile) 

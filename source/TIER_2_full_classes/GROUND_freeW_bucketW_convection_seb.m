@@ -119,6 +119,14 @@ classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLU
             ground.TEMP.d_water_ET_energy = ground.STATVAR.energy.*0;
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+            ground = pipes_Darcy_Weisbach(ground);
+            ground = calculate_hydraulicConductivity(ground);
+
+        end
+        
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile)

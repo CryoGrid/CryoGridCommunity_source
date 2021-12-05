@@ -113,6 +113,13 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
 
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+            ground = calculate_hydraulicConductivity(ground);
+
+        end
+        
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile) 

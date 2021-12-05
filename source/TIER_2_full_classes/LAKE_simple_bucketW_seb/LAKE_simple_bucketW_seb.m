@@ -118,6 +118,12 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+
+        end
+        
         function ground = create_stratigraphy_from_STATVAR(ground)  %create stratigraphy of ice-covered water body, with ice layer on top and cells belwo at 0 degree C 
 
             ground = regrid_full(ground, {'layerThick'; 'waterIce'; 'mineral'; 'organic'});

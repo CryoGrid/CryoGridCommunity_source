@@ -156,6 +156,14 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground = set_TEMP_2zero(ground);
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freezeC_Xice(ground);
+            ground = conductivity(ground);
+            ground = calculate_hydraulicConductivity_Xice(ground); 
+
+        end
+        
         
         %---time integration------
         

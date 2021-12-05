@@ -153,6 +153,14 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.TEMP.surface_runoff = 0;
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freezeC(ground);
+            ground = conductivity(ground);
+            ground = calculate_hydraulicConductivity_RichardsEq(ground);
+
+        end
+        
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile)

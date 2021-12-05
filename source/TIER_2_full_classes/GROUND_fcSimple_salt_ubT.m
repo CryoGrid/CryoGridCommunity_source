@@ -92,6 +92,14 @@ classdef GROUND_fcSimple_salt_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL 
             
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_water_salt_FreezeDepress_Xice(ground); %calculate energy, water and ice contents and brine salt concentration
+            ground = conductivity(ground); %calculate thermal conductivity
+            ground = diffusivity_salt(ground); % calculate salt diffusivity 
+
+        end
+        
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile) 

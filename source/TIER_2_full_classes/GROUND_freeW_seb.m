@@ -95,6 +95,12 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL
             
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+            
+        end
+        
         
         %---time integration------
         

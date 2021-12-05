@@ -86,6 +86,20 @@ classdef GROUND_freeW_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& FREEZ
             ground.TEMP.F_ub = 0;
         end
         
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+            ground = conductivity(ground);
+
+        end
+        
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+            ground = conductivity(ground);
+
+        end
+        
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile) 
