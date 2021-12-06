@@ -29,6 +29,21 @@ if strcmp(below_class, 'GROUND_freezeC_bucketW_Xice_seb_snow_BGC')
     below_class = 'GROUND_freezeC_bucketW_Xice_seb_snow';
 end
 
+
+if strcmp(above_class, 'GROUND_freezeC_RichardsEqW_seb_pressure')
+    above_class = 'GROUND_freezeC_RichardsEqW_seb';
+end
+if strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb_pressure')
+    below_class = 'GROUND_freezeC_RichardsEqW_seb';
+end
+
+if strcmp(above_class, 'GROUND_freezeC_RichardsEqW_seb_pressure_snow')
+    above_class = 'GROUND_freezeC_RichardsEqW_seb_snow';
+end
+if strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb_pressure_snow')
+    below_class = 'GROUND_freezeC_RichardsEqW_seb_snow';
+end
+
 %----------
 if strcmp(above_class, 'GROUND_freezeC_ubT')
     above_class = 'GROUND_freezeC_seb';
@@ -104,6 +119,7 @@ if strcmp(above_class, 'GROUND_multi_tile2')
 else
     above_class2 = 0;
 end
+
 
 
 %list of all CryoGrid GROUND classes
