@@ -19,9 +19,6 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function snow = SNOW_crocus_bucketW_seb(index, pprovider, cprovider, forcing)  
-%             snow@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         function snow = provide_PARA(snow)
 
@@ -37,6 +34,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             
             snow.PARA.slope = [];  %slope angle [-]
             snow.PARA.timescale_winddrift = []; %timescale of snow compaction for wind drift [hours!!]
+            snow.PARA.max_wind_slab_density = [];
             
             snow.PARA.dt_max = [];  %maximum possible timestep [sec]
             snow.PARA.dE_max = [];  %maximum possible energy change per timestep [J/m3]
@@ -451,6 +449,16 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         function snow = lateral3D_push_snow(snow, lateral)
             snow = lateral3D_push_snow_crocus(snow, lateral);
         end
+        
+        %----LAT3D_SNOW_CROCUS_snow_dump------------
+        function snow = lateral3D_pull_snow_dump(snow, lateral)
+            snow = lateral3D_pull_snow_crocus_dump(snow, lateral);
+        end
+        
+        function snow = lateral3D_push_snow_dump(snow, lateral)
+            snow = lateral3D_push_snow_crocus_dump(snow, lateral);
+        end
+        
         
         
         %----inherited Tier 1 functions ------------

@@ -282,7 +282,7 @@ classdef WATER_FLUXES_LATERAL < BASE
         function ground = lateral_push_water_reservoir_Xice(ground, lateral) %causes problems when columen is unfrozen, check
             water_volumetric = ground.STATVAR.water ./ (ground.STATVAR.layerThick.* ground.STATVAR.area  - ground.STATVAR.XwaterIce);
             porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic)./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
-            saturated = (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce) > 0.999 %avoid rounding errors
+            saturated = (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce) > 0.999; %avoid rounding errors
             saturated = [saturated; 0]; %change later, so that first cell of next class is checked -> next class assumed to be hard-bottom now
             hardBottom = (water_volumetric <= lateral.PARA.hardBottom_cutoff) | (ground.STATVAR.Xice > 0);
             hardBottom = [hardBottom; 1];
@@ -344,7 +344,7 @@ classdef WATER_FLUXES_LATERAL < BASE
                             ground.STATVAR.layerThick(water_table_cell:i,1) = ground.STATVAR.layerThick(water_table_cell:i,1) + X_flux ./ ground.STATVAR.area(water_table_cell:i,1);
 
                             % allow for advection of heat
-                            if isempty(lateral.PARA.reservoir_temperature)
+                            if isempty(lateral.PARA.reservoir_temperature) || isnan(lateral.PARA.reservoir_temperature)
                                 inflow_temperature = ground.STATVAR.T(water_table_cell:i,1);
                             else
                                 inflow_temperature = lateral.PARA.reservoir_temperature;
@@ -477,6 +477,50 @@ classdef WATER_FLUXES_LATERAL < BASE
           
         end
         
+        function ground = lateral_push_water_reservoir_RichardsEq_pressure(ground, lateral)
+
+            depths = ground.STATVAR.upperPos - cumsum(ground.STATVAR.layerThick) + ground.STATVAR.layerThick./2; %midpoints!
+            
+            above = (depths > lateral.PARA.reservoir_elevation);
+            saturated = ground.STATVAR.saturation > 1-1e-6;
+            head = ground.STATVAR.waterPotential;
+            head(saturated) = head(saturated) + (ground.STATVAR.overburden_pressure(saturated) - ground.STATVAR.bearing_capacity(saturated))./ground.CONST.density_water ./ ground.CONST.g;
+            head(above) = head(above) + (depths(above) - lateral.PARA.reservoir_elevation);
+            head(~saturated & ~above) = head(~saturated & ~above) + (depths(~saturated & ~above) - lateral.PARA.reservoir_elevation);
+            
+            cross_section = lateral.PARA.reservoir_contact_length .* ground.STATVAR.layerThick;    
+            fluxes = ground.STATVAR.hydraulicConductivity  .* head ./ lateral.PARA.distance_reservoir .* cross_section .* lateral.PARENT.IA_TIME_INCREMENT .* lateral.CONST.day_sec;
+            %positive: outflow; negative: inflow
+            
+            %make sure fluxes are too large
+            %unsaturated -> no more inflow than pore space, no more outflow than fixed fraction of available water
+            %saturated -> nothing if water Potential < 0, otherwise limit flow so that equilibrium layerThick is reached
+            pore_space = max(0,ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.waterIce - ground.STATVAR.mineral - ground.STATVAR.organic);
+            
+            fluxes(~saturated & fluxes>0) = min(fluxes(~saturated & fluxes>0), ground.STATVAR.water(~saturated & fluxes>0)./4);
+            fluxes(~saturated & fluxes<0) = -1 .* min(-fluxes(~saturated & fluxes<0), pore_space(~saturated & fluxes<0));
+            
+            porosity_equilibrium = (ground.STATVAR.initial_voidRatio - ground.STATVAR.compression_index .* log10(ground.STATVAR.overburden_pressure./ground.STATVAR.reference_pressure)) ./ ...
+                (1 + ground.STATVAR.initial_voidRatio - ground.STATVAR.compression_index .* log10(ground.STATVAR.overburden_pressure./ground.STATVAR.reference_pressure));
+            waterIce_equilibrium = (ground.STATVAR.mineral + ground.STATVAR.organic) ./ (1 - porosity_equilibrium) - ground.STATVAR.mineral - ground.STATVAR.organic;
+            
+            water_deficit = ground.STATVAR.waterIce < waterIce_equilibrium;
+            water_overshoot = ground.STATVAR.waterIce > waterIce_equilibrium;
+            fluxes(saturated & fluxes>0 & water_overshoot) = max(0,min(fluxes(saturated & fluxes>0 & water_overshoot), ground.STATVAR.waterIce(saturated & fluxes>0 & water_overshoot) - waterIce_equilibrium(saturated & fluxes>0 & water_overshoot)));
+            fluxes(saturated & fluxes<0 & water_deficit) = -1 .* max(0, min(-fluxes(saturated & fluxes<0 & water_deficit), waterIce_equilibrium(saturated & fluxes<0 & water_deficit) - ground.STATVAR.waterIce(saturated & fluxes<0 & water_deficit)));
+              
+            ground.STATVAR.waterIce = ground.STATVAR.waterIce - fluxes;
+            if isempty(lateral.PARA.reservoir_temperature) || isnan(lateral.PARA.reservoir_temperature)
+                inflow_temperature = ground.STATVAR.T;
+            else
+                inflow_temperature = lateral.PARA.reservoir_temperature;
+            end
+            ground.STATVAR.energy = ground.STATVAR.energy - fluxes .* inflow_temperature .* ...
+                (ground.CONST.c_w .* double(inflow_temperature>=0) + ground.CONST.c_i .* double(inflow_temperature<0));
+            
+            ground.STATVAR.layerThick(saturated) = ground.STATVAR.layerThick(saturated) - fluxes(saturated) ./ ground.STATVAR.area(saturated);
+        end
+        
         function ground = lateral_push_water_reservoir_snow(ground, lateral)
             water_volumetric = ground.STATVAR.water ./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.ice)./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
@@ -593,6 +637,67 @@ classdef WATER_FLUXES_LATERAL < BASE
         end
         
         
+        %-overland flow 1D--
+                %overland flow, implemented for three GROUND classes which
+        %represent surface water
+        function ground = lateral_push_water_overland_flow_LAKE(ground, lateral)
+           
+            lateral.STATVAR.water_depth = ground.STATVAR.layerThick(1,1);
+            lateral.STATVAR.max_flow = max(0, ground.STATVAR.waterIce(1,1) .* 0.25);
+            lateral = gaucklerManningFlow(ground, lateral);
+            
+            ground.STATVAR.waterIce(1,1) = ground.STATVAR.waterIce(1,1) + lateral.STATVAR.flow;
+            ground.STATVAR.water(1,1) = ground.STATVAR.water(1,1) + lateral.STATVAR.flow;
+            ground.STATVAR.layerThick(1,1) = ground.STATVAR.layerThick(1,1) + lateral.STATVAR.flow ./ ground.STATVAR.area(1,1);
+            ground.STATVAR.energy = ground.STATVAR.energy + lateral.STATVAR.flow_energy;
+        end
+        
+        function ground = lateral_push_water_overland_flow_SNOW_crocus2(ground, lateral)
+            if ground.STATVAR.T(1,1) == 0
+                lateral.STATVAR.water_depth = max(0, ground.STATVAR.layerThick(1,1) - ground.STATVAR.layerThickSnowFirstCell);
+                lateral.STATVAR.max_flow = max(0, ground.STATVAR.layerThick(1,1) - ground.STATVAR.layerThickSnowFirstCell) .* ground.STATVAR.area(1,1) .* 0.25;
+                lateral = gaucklerManningFlow(ground, lateral);
+                
+                ground.STATVAR.waterIce(1,1) = ground.STATVAR.waterIce(1,1) + lateral.STATVAR.flow;
+                ground.STATVAR.water(1,1) = ground.STATVAR.water(1,1) + lateral.STATVAR.flow;
+                ground.STATVAR.layerThick(1,1) = ground.STATVAR.layerThick(1,1) + lateral.STATVAR.flow ./ ground.STATVAR.area(1,1);
+                ground.STATVAR.energy = ground.STATVAR.energy + lateral.STATVAR.flow_energy;
+                
+                lateral.STATVAR.surface_flow = lateral.STATVAR.surface_flow - lateral.STATVAR.flow;
+            end
+            
+        end
+        
+        function ground = lateral_push_water_overland_flow_XICE(ground, lateral)
+            if ground.STATVAR.Xice(1,1) == 0
+                lateral.STATVAR.water_depth = max(0, ground.STATVAR.Xwater(1,1) ./ ground.STATVAR.area(1,1));
+                lateral.STATVAR.max_flow = max(0, ground.STATVAR.XwaterIce(1,1) .* 0.25);
+                lateral = gaucklerManningFlow(ground, lateral);
+                
+                ground.STATVAR.XwaterIce(1,1) = ground.STATVAR.XwaterIce(1,1) + lateral.STATVAR.flow;
+                ground.STATVAR.Xwater(1,1) = ground.STATVAR.Xwater(1,1) + lateral.STATVAR.flow;
+                ground.STATVAR.layerThick(1,1) = ground.STATVAR.layerThick(1,1) + lateral.STATVAR.flow ./ ground.STATVAR.area(1,1);
+                ground.STATVAR.energy = ground.STATVAR.energy + lateral.STATVAR.flow_energy;
+                
+                lateral.STATVAR.surface_flow = lateral.STATVAR.surface_flow - lateral.STATVAR.flow;
+            end
+        end
+        
+        function lateral = gaucklerManningFlow(ground, lateral)
+            if lateral.STATVAR.water_depth >1e-6 
+               velocity = lateral.PARA.GaMa_coefficient .* real(lateral.STATVAR.water_depth.^(2/3) .* abs(lateral.PARA.gradient).^0.5);
+                flow = -velocity .* lateral.STATVAR.water_depth .* lateral.PARA.overland_flow_contact_length; %negative, outflow only
+                lateral.STATVAR.flow = max(flow .* lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec, -lateral.STATVAR.max_flow);
+                
+                lateral.STATVAR.flow_energy = flow .* lateral.CONST.c_w .* ground.STATVAR.T(1,1);
+                
+                lateral.STATVAR.surface_flow = lateral.STATVAR.surface_flow - lateral.STATVAR.flow;
+                
+            end
+        end
+        
+        %-------------------------------
+        
         %--LAT3D multi tile----------------
 
         %LAT3D_WATER_UNCONFINED_AQUIFER
@@ -614,6 +719,9 @@ classdef WATER_FLUXES_LATERAL < BASE
             hardBottom = [hardBottom; hardBottom_next];
             %add one cell based on NEXT 
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
+            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+            end
             %lateral.PARENT.STATVAR.water_available = 0;
             
             mobile_water = depths .* 0; %m3 - water than can be added 
@@ -736,6 +844,7 @@ classdef WATER_FLUXES_LATERAL < BASE
         function ground = lateral3D_pull_water_unconfined_aquifer_Xice(ground, lateral)
             water_volumetric = ground.STATVAR.water ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
             waterIce_volumetric = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+            waterAir_volumetric = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.ice) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
             porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic)./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
             saturated = (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce) > 0.999; %avoid rounding errors
             
@@ -746,15 +855,19 @@ classdef WATER_FLUXES_LATERAL < BASE
                 hardBottom_next = 1;
             end
             saturated = [saturated; saturated_next];
-            hardBottom = (water_volumetric <= lateral.PARA.hardBottom_cutoff) | ground.STATVAR.Xice > 0;  %main difference to simple: layer also considered hard when it has Xice
+            hardBottom = (waterAir_volumetric <= lateral.PARA.hardBottom_cutoff) | (ground.STATVAR.Xice > 0 & ground.STATVAR.T <= 0) | (ground.STATVAR.T < 0);  %main difference to simple: layer also considered hard when it has Xice
             hardBottom = [hardBottom; hardBottom_next];
             %add one cell based on NEXT 
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
+            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+            end
             %lateral.PARENT.STATVAR.water_available = 0;
             
             mobile_water = depths .* 0; %m3 - water than can be added 
             hydraulicConductivity = depths .* 0;
             T_water = depths .* 0;
+%             first_cell_saturated = 0;
 
             %go down until hitting the water table or a hard bottom
             i = 1;
@@ -808,6 +921,11 @@ classdef WATER_FLUXES_LATERAL < BASE
                     else
                         water_table_bottom_cell = i;
                         water_table_elevation = [];
+                        if saturated(i,1)
+                            lateral.TEMP.open_system = 0; %ADDED SEBASTIAN ERROR, relevant if the very first cell is saturated and the next cell unsaturated, so that the bottom of the bucket is reached
+                            water_table_elevation = depths(i,1);                            
+                            %first_cell_saturated = 1;
+                        end
                     end
                 else
                     lateral.TEMP.open_system = 0;
@@ -832,7 +950,9 @@ classdef WATER_FLUXES_LATERAL < BASE
             lateral.PARENT.STATVAR.water_status = [lateral.PARENT.STATVAR.water_status; mobile_water(1:water_table_bottom_cell+j,1)];
             lateral.PARENT.STATVAR.hydraulicConductivity = [lateral.PARENT.STATVAR.hydraulicConductivity;  hydraulicConductivity(1:water_table_bottom_cell+j,1)];
             if isempty(lateral.PARENT.STATVAR.water_table_elevation)
+%                 if ~first_cell_saturated
                 lateral.PARENT.STATVAR.water_table_elevation = water_table_elevation;
+%                 end
             else
                 lateral.PARENT.STATVAR.water_table_elevation = max(water_table_elevation, lateral.PARENT.STATVAR.water_table_elevation);
             end
@@ -842,9 +962,11 @@ classdef WATER_FLUXES_LATERAL < BASE
         
                 
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_Xice(ground, lateral)
-            water_volumetric = ground.STATVAR.water(1,1) ./ (ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1) - ground.STATVAR.XwaterIce(1,1));
+            %water_volumetric = ground.STATVAR.water(1,1) ./ (ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1) - ground.STATVAR.XwaterIce(1,1));
+            %waterAir_volumetric = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.ice) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+            waterAir_volumetric = 1 - (ground.STATVAR.mineral(1,1) + ground.STATVAR.organic(1,1) + ground.STATVAR.ice(1,1)) ./ (ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1) - ground.STATVAR.XwaterIce(1,1));
             saturated_next = (ground.STATVAR.waterIce(1,1) + ground.STATVAR.mineral(1,1) + ground.STATVAR.organic(1,1)) ./ (ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1) - ground.STATVAR.XwaterIce(1,1)) > 0.999; %avoid rounding errors
-            hardBottom_next = (water_volumetric <= lateral.PARA.hardBottom_cutoff) | ground.STATVAR.Xice(1,1) > 0;
+            hardBottom_next = (waterAir_volumetric <= lateral.PARA.hardBottom_cutoff) | ground.STATVAR.Xice(1,1) > 0;
         end
         
         
@@ -858,6 +980,19 @@ classdef WATER_FLUXES_LATERAL < BASE
                 CURRENT = CURRENT.PREVIOUS;
             end
             for i = bottom_cell:-1:1
+                %new--remove any existing Xwater when draining
+                if lateral.PARENT.STATVAR.water_flux(end,1)<0 && ground.STATVAR.Xwater(i,1)>0
+                    Xwater_flux = min(-lateral.PARENT.STATVAR.water_flux(end,1), ground.STATVAR.Xwater(i,1)); %positive
+                    Xwater_flux_fraction = -Xwater_flux./(lateral.PARENT.STATVAR.water_flux(end,1));
+                    Xwater_flux_fraction(isnan(Xwater_flux_fraction)) = 0;
+                    ground.STATVAR.XwaterIce(i,1) = max(0,ground.STATVAR.XwaterIce(i,1) - Xwater_flux);
+                    ground.STATVAR.layerThick(i,1) = max(ground.STATVAR.layerThick(i,1) - Xwater_flux ./ ground.STATVAR.area(1,1), ...
+                        (ground.STATVAR.waterIce(i,1) + ground.STATVAR.mineral(i,1) + ground.STATVAR.organic(i,1)) ./ ground.STATVAR.area(i,1));
+                    ground.STATVAR.energy(i,1) = ground.STATVAR.energy(i,1) + lateral.PARENT.STATVAR.water_flux_energy(end,1) .* Xwater_flux_fraction;
+                    lateral.PARENT.STATVAR.water_flux(end,1) = lateral.PARENT.STATVAR.water_flux(end,1) + Xwater_flux;
+                    lateral.PARENT.STATVAR.water_flux_energy(end,1) = lateral.PARENT.STATVAR.water_flux_energy(end,1) .*(1-Xwater_flux_fraction);
+                end
+                %new_end
                 ground.STATVAR.waterIce(i,1) = ground.STATVAR.waterIce(i,1) + lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up;
                 lateral.PARENT.STATVAR.water_up = max(0, ground.STATVAR.waterIce(i,1) + ground.STATVAR.XwaterIce(i,1) + ground.STATVAR.mineral(i,1) + ground.STATVAR.organic(i,1) - ground.STATVAR.layerThick(i,1) .* ground.STATVAR.area(i,1));
                 ground.STATVAR.waterIce(i,1) = ground.STATVAR.waterIce(i,1) - lateral.PARENT.STATVAR.water_up;
@@ -1047,7 +1182,7 @@ classdef WATER_FLUXES_LATERAL < BASE
         
         %LAKE unfrozen
         function ground = lateral3D_pull_water_unconfined_aquifer_lake_unfrozen(ground, lateral)
-            hydraulic_conductivity_water = 5.*1e-4; %set a higher value than  ground -> maybe problematic when two lakes are communicating! 
+            hydraulic_conductivity_water = 1e-4; %5.*1e-5; %set a higher value than  ground -> maybe problematic when two lakes are communicating! 
             saturated = 1; 
             hardBottom = 0;
             if ~strcmp(class(ground.NEXT), 'Bottom') %get the values for the first cell of the next class
@@ -1061,6 +1196,9 @@ classdef WATER_FLUXES_LATERAL < BASE
 
             
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
+            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+            end
 
             lateral.TEMP.open_system = 1;
             lateral.PARENT.STATVAR.water_table_top_cell =  0; %water level is not split between cells!
@@ -1098,10 +1236,21 @@ classdef WATER_FLUXES_LATERAL < BASE
                 CURRENT = CURRENT.PREVIOUS;
             end
             for i = bottom_cell:-1:1
-                    ground.STATVAR.waterIce(i,1) = ground.STATVAR.waterIce(i,1) + lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up;                    
-                    ground.STATVAR.energy(i,1) = ground.STATVAR.energy(i,1) + lateral.PARENT.STATVAR.water_flux_energy(end,1) + lateral.PARENT.STATVAR.water_up_energy;
-                    ground.STATVAR.layerThick(i,1) = ground.STATVAR.layerThick(i,1) + (lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up) ./ ground.STATVAR.area(i,1);
-         
+%                     water_change = max(-0.9 .* ground.STATVAR.waterIce(i,1), min(ground.STATVAR.waterIce(i,1), lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up));
+%                     fraction_change = water_change ./ (lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up);
+%                     ground.STATVAR.waterIce(i,1) = ground.STATVAR.waterIce(i,1) + water_change;                    
+%                     ground.STATVAR.energy(i,1) =  ground.STATVAR.energy(i,1) + fraction_change .* (lateral.PARENT.STATVAR.water_flux_energy(end,1) + lateral.PARENT.STATVAR.water_up_energy);
+%                     ground.STATVAR.layerThick(i,1) =  ground.STATVAR.layerThick(i,1) + water_change ./ ground.STATVAR.area(i,1);
+                    water_change = max(-0.9 .* ground.STATVAR.waterIce(i,1), min(ground.STATVAR.waterIce(i,1), lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up));
+                    fraction_change = water_change ./ (lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up);
+                    fraction_change(isnan(fraction_change)) = 0;
+                    ground.STATVAR.waterIce(i,1) = ground.STATVAR.waterIce(i,1) + water_change;                    
+                    ground.STATVAR.energy(i,1) =  ground.STATVAR.energy(i,1) + fraction_change .* (lateral.PARENT.STATVAR.water_flux_energy(end,1) + lateral.PARENT.STATVAR.water_up_energy);
+                    ground.STATVAR.layerThick(i,1) =  ground.STATVAR.layerThick(i,1) + water_change ./ ground.STATVAR.area(i,1);
+%                     ground.STATVAR.waterIce(i,1) = ground.STATVAR.waterIce(i,1) + lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up;
+%                     ground.STATVAR.energy(i,1) =  ground.STATVAR.energy(i,1) + lateral.PARENT.STATVAR.water_flux_energy(end,1) + lateral.PARENT.STATVAR.water_up_energy;
+%                     ground.STATVAR.layerThick(i,1) =  ground.STATVAR.layerThick(i,1) + (lateral.PARENT.STATVAR.water_flux(end,1) + lateral.PARENT.STATVAR.water_up) ./ ground.STATVAR.area(i,1);
+                    
                     lateral.PARENT.STATVAR.water_up_energy = 0;
                     lateral.PARENT.STATVAR.water_up = 0; %all water taken up by lake
                     lateral.PARENT.STATVAR.water_flux(end,:) = [];
@@ -1340,6 +1489,43 @@ classdef WATER_FLUXES_LATERAL < BASE
             lateral.PARENT.STATVAR.water_up_energy = water_up_energy;
             
         end
+        
+        %overland flow, implemented for three GROUND classes which
+        %represent surface water
+        function ground = lateral3D_pull_water_overland_flow_LAKE(ground, lateral)
+           
+           lateral.PARENT.STATVAR.water_depth = ground.STATVAR.layerThick(1,1); 
+           lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.water(1,1) .* 0.25);
+           lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
+            
+        end
+        
+        function ground = lateral3D_pull_water_overland_flow_SNOW_crocus2(ground, lateral)
+            if ground.STATVAR.T(1,1) == 0
+                lateral.PARENT.STATVAR.water_depth = max(0, ground.STATVAR.layerThick(1,1) - ground.STATVAR.layerThickSnowFirstCell);
+                lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.layerThick(1,1) - ground.STATVAR.layerThickSnowFirstCell) .* ground.STATVAR.area(1,1) .* 0.25;
+                lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
+            else
+                lateral.PARENT.STATVAR.water_depth = 0;
+                lateral.PARENT.STATVAR.max_flow = 1e-4.* ground.STATVAR.area(1,1);
+                lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
+            end
+            
+        end
+        
+        function ground = lateral3D_pull_water_overland_flow_XICE(ground, lateral)
+            if ground.STATVAR.Xwater(1,1) > 0
+                lateral.PARENT.STATVAR.water_depth = max(0, ground.STATVAR.Xwater(1,1) ./ ground.STATVAR.area(1,1));
+                lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.XwaterIce(1,1) .* 0.25);
+                lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
+            else
+                lateral.PARENT.STATVAR.water_depth = 0;
+                lateral.PARENT.STATVAR.max_flow = 1e-4.* ground.STATVAR.area(1,1);
+                lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
+            end
+        end
+        
+        
     end
 end
 

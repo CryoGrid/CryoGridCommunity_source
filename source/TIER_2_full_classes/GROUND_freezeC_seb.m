@@ -5,13 +5,10 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & HEAT_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_DallAmico 
+classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & HEAT_FLUXES_LATERAL 
     
     methods
         
-%         function ground = GROUND_freezeC_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         function ground = provide_PARA(ground)
             
@@ -20,6 +17,8 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             ground.PARA.z0 = []; % roughness length [m] 
 
             ground.PARA.rs = []; %surface resistance against evaporation [s/m]
+
+            ground.PARA.conductivity_function = [];
             
             ground.PARA.LUT_size_waterIce = []; %size of lookup table for the waterIce variable [-]
             ground.PARA.LUT_size_T = [];   %size of lookup table for the (temperature) T variable [-]
@@ -103,10 +102,20 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
 
         end
         
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal(unit_converter, ground, tile);
+        end
+
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'thermalConductivity_CLM4_5';
+            end
             
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
@@ -123,6 +132,13 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
             ground.STATVAR.Qe = 0;
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             
+        end
+        
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freezeC(ground);
+            ground = conductivity(ground);
+
         end
         
         %---time integration------
@@ -186,7 +202,9 @@ classdef GROUND_freezeC_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter 
         end
         
         function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+            %ground = conductivity_mixing_squares(ground);
         end
         
         

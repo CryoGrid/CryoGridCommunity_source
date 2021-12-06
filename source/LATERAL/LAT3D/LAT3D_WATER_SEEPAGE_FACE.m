@@ -18,9 +18,6 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function lateral = LAT3D_WATER_SEEPAGE_FACE(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;
@@ -52,6 +49,8 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
         
         function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
             
+            %disp(['Hallo ' datestr(tile.t)])
+            
             %seepage flow of saturated cells above other cell's water table
             if lateral.PARENT.STATVAR.water_available
                 depth_rel2surface = lateral.PARENT.STATVAR.water_table_elevation - lateral.PARENT.STATVAR.depths;
@@ -68,7 +67,18 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
                 lateral.PARENT.STATVAR.water_flux_energy = lateral.PARENT.STATVAR.water_flux_energy + seepage_flux_energy .* lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec;       
                 lateral.STATVAR.subsurface_run_off = lateral.STATVAR.subsurface_run_off - sum(seepage_flux) .* lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec;
                 
+                %remove later
+
+                lateral.STATVAR.head_test = head;
+                lateral.STATVAR.depths = depths;
+                lateral.STATVAR.contact_height = contact_height;
+                lateral.STATVAR.seepage_flux = seepage_flux;
+
             end
+            lateral.STATVAR.hydCond = lateral.PARENT.STATVAR.hydraulicConductivity;
+            lateral.STATVAR.active = lateral.PARENT.ACTIVE;
+            lateral.STATVAR.wt_elevation = lateral.PARENT.STATVAR.water_table_elevation;
+            lateral.STATVAR.w_avail = lateral.PARENT.STATVAR.water_available;
         end
         
         
@@ -79,9 +89,10 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
         
         function lateral = set_ACTIVE(lateral, i, t)
             lateral.PARENT.ACTIVE(i,1) = 0;
-            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next - 1e-9
+            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next - 1e-7
                 lateral.PARENT.ACTIVE(i,1) = 1;
-                lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
+                %lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
+                lateral.PARA.ia_time_next = lateral.PARA.ia_time_next + lateral.PARA.ia_time_increment;
                 %disp(lateral.PARA.ia_time_next-floor(lateral.PARA.ia_time_next));
             end
         end

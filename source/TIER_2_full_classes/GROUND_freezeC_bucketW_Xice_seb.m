@@ -5,17 +5,14 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_DallAmico
+classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL 
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function ground = GROUND_freezeC_bucketW_Xice_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
+
         
          function ground = provide_PARA(ground)
             
@@ -26,7 +23,9 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground.PARA.rootDepth = [];  %e-folding constant of transpiration reduction with depth [1/m]
             ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
-            ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
+            %ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
+
+            ground.PARA.conductivity_function = [];
 
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -57,7 +56,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground.STATVAR.organic = []; % total volume of organics [m3]
             ground.STATVAR.energy = [];   % total internal energy [J]
             ground.STATVAR.soil_type = [];  % integer code for soil_type; 1: sand; 2: silt: 3: clay: 4: peat; 5: water (i.e. approximation of free water, very large-pore ground material).
-                        
+            ground.STATVAR.satHydraulicConductivity = [];
+            
             ground.STATVAR.T = [];  % temperature [degree C]
             ground.STATVAR.water = [];  % total volume of water [m3]
             ground.STATVAR.waterPotential = []; %soil water potential [Pa]
@@ -123,11 +123,21 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground.CONST.residual_wc_peat = [];
 
         end
+
+        function ground = convert_units(ground, tile)
+                unit_converter = str2func(tile.PARA.unit_conversion_class);
+                unit_converter = unit_converter();
+                ground = convert_Xice(unit_converter, ground, tile);
+        end
         
         function ground = finalize_init(ground, tile)
             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'conductivity_mixing_squares_Xice';
+            end
 
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
@@ -144,6 +154,14 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground.STATVAR.Qe = 0;
             
             ground = set_TEMP_2zero(ground);
+        end
+        
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freezeC_Xice(ground);
+            ground = conductivity(ground);
+            ground = calculate_hydraulicConductivity_Xice(ground); 
+
         end
         
         
@@ -175,6 +193,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
         function timestep = get_timestep(ground, tile) 
            timestep = get_timestep_heat_coduction(ground);
            timestep = min(timestep, get_timestep_water_Xice(ground)); 
+
         end
         
         function ground = advance_prognostic(ground, tile) 
@@ -229,7 +248,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             %water overtopping first cell
             if isequal(class(ground.PREVIOUS), 'Top') && ground.STATVAR.Xwater(1) > ground.PARA.threshold_Xwater .* ground.STATVAR.area(1) % no snow cover and too much Xwater
                                 
-                if isempty(ground.PARA.threshold_Xwater_class) %default, remove water from first cell, otherwise the Q_e calculation crashes
+                if isempty(ground.PARA.threshold_Xwater_class) || isnan(ground.PARA.threshold_Xwater_class) %default, remove water from first cell, otherwise the Q_e calculation crashes
                     remove_first_cell = max(0, ground.STATVAR.Xwater(1) - ground.PARA.threshold_Xwater .* ground.STATVAR.area(1));
                     ground.STATVAR.XwaterIce(1) = ground.STATVAR.XwaterIce(1) - remove_first_cell;
                     ground.STATVAR.layerThick(1) = ground.STATVAR.layerThick(1) - remove_first_cell ./ ground.STATVAR.area(1);
@@ -258,6 +277,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
         end
         
         function ground = surface_energy_balance(ground, forcing)
+            ground.STATVAR.Lin = forcing.TEMP.Lin;
+            ground.STATVAR.Sin = forcing.TEMP.Sin;
             ground.STATVAR.Lout = (1-ground.PARA.epsilon) .* forcing.TEMP.Lin + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ 273.15).^4;
             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
             ground.STATVAR.Qh = Q_h(ground, forcing);
@@ -270,7 +291,9 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
         end
         
         function ground = conductivity(ground)
-            ground = conductivity_mixing_squares_Xice(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+%             ground = conductivity_mixing_squares_Xice(ground);
         end
         
         
@@ -296,6 +319,11 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground = lateral_push_water_reservoir_Xice(ground, lateral);
         end
         
+        %---LAT_OVERLAND_FLOW----------
+        function ground = lateral_push_remove_water_overland_flow(ground, lateral)
+            ground = lateral_push_water_overland_flow_XICE(ground, lateral);
+        end
+        
         %----LAT3D_WATER_UNCONFINED_AQUIFER------------         
         function ground = lateral3D_pull_water_unconfined_aquifer(ground, lateral)
             ground = lateral3D_pull_water_unconfined_aquifer_Xice(ground, lateral);
@@ -307,6 +335,10 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
         
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(ground, lateral)
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_Xice(ground, lateral);
+        end
+        
+        function ground = lateral3D_pull_water_overland_flow(ground, lateral)
+            ground = lateral3D_pull_water_overland_flow_XICE(ground, lateral);
         end
         
         %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
