@@ -1,7 +1,7 @@
 %========================================================================
 % CryoGrid LATERAL_IA class LAT3D_WATER
 % simulates lateral water flow between pairs of CryoGrid stratigraphies.
-% NOTE: does not work stable yet. 
+% NOTE: does not work stable yet, DO NOT USE!
 % S. Westermann, Oct 2020
 %========================================================================
 
@@ -13,10 +13,7 @@ classdef LAT3D_WATER < BASE_LATERAL
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function lateral = LAT3D_WATER(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
+
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;

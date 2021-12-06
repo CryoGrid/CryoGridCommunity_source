@@ -15,10 +15,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER < BASE_LATERAL
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function lateral = LAT3D_WATER_UNCONFINED_AQUIFER(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
+
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;
@@ -146,7 +143,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER < BASE_LATERAL
 
             lateral.PARENT.STATVAR.water_flux = flux .* lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec;
             lateral.PARENT.STATVAR.water_flux_energy = flux_energy .* lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec;
-            
+            lateral.STATVAR.subsurface_run_off = sum(lateral.PARENT.STATVAR.water_flux);
             
              %modified Sep2020, moved to push
 %             if ~isempty(lateral.PARENT.STATVAR.water_flux)
@@ -192,9 +189,10 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER < BASE_LATERAL
         
         function lateral = set_ACTIVE(lateral, i, t)
             lateral.PARENT.ACTIVE(i,1) = 0;
-            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next - 1e-9
+            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next - 1e-7
                 lateral.PARENT.ACTIVE(i,1) = 1;
-                lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
+                %lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
+                lateral.PARA.ia_time_next = lateral.PARA.ia_time_next + lateral.PARA.ia_time_increment;
                 %disp(lateral.PARA.ia_time_next-floor(lateral.PARA.ia_time_next));
             end
         end

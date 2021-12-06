@@ -79,17 +79,15 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
              TOP = tile.TOP; 
              BOTTOM = tile.BOTTOM;
              forcing = tile.FORCING;
-             %run_number = tile.RUN_NUMBER;
              run_name = tile.PARA.run_name;
              result_path = tile.PARA.result_path;
              timestep = tile.timestep;
              
             
-            if t==out.OUTPUT_TIME
+            if t==out.OUTPUT_TIME %|| (tile.timestep <1e-12 && t>datenum(2014,4,1))
                 %if id == 1
                 disp([datestr(t)])
                 %end
-                %labBarrier
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 CURRENT =TOP.NEXT;
@@ -112,6 +110,9 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                     if isprop(res, 'READ_OUT')
                         res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
+                    if isprop(res, 'STORE')
+                        res.STORE = [];
+                    end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_PREVIOUS=[];  %cut all dependencies
                     if isprop(res, 'CHILD')
                         res.CHILD = [];
@@ -124,7 +125,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 
                 %lateral, read only STATVAR and PARA---
                 result={};
-                ia_classes=TOP.LATERAL.IA_CLASSES;
+                ia_classes = tile.LATERAL.IA_CLASSES;
                 for i=1:size(ia_classes,1)
                     res = copy(ia_classes{i,1});
                     vars = fieldnames(res);
@@ -139,7 +140,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 %---
                 
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.output_timestep;
-                if t==out.SAVE_TIME 
+                if t==out.SAVE_TIME  %|| (tile.timestep <1e-12 && t>datenum(2014,4,1))
                    if ~(exist([result_path run_name])==7)
                        mkdir([result_path run_name])
                    end
