@@ -60,8 +60,11 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                     %initialize PARA
                     new_class = provide_PARA(new_class);
                     if ~isempty(new_class.PARA)
-                        fieldnames_PARA  = fieldnames(new_class.PARA); %list of field in PARA, run through the Excel struct, find the field and populate it
+                        fieldnames_PARA  = fieldnames(new_class.PARA); %list of fields in the PARA structure of new_class
+                        
+                        % Iterate over all fieldnames in new_class.PARA
                         for ii = 1:size(fieldnames_PARA,1)
+                            %run through the Excel struct, find the field and populate it
                             j=i+2;
                             while j<=size(data,1) && ~strcmp(data{j,1}, 'CLASS_END')
                                 if strcmp(data{j,1}, fieldnames_PARA{ii,1})
