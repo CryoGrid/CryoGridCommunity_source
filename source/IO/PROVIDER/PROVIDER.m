@@ -12,7 +12,7 @@ classdef PROVIDER < PROVIDER_EXCEL & PROVIDER_EXCEL3D & PROVIDER_MAT & PROVIDER_
             elseif strcmp(init_format, 'MAT')
                 provider = assign_paths_mat(provider, run_name, result_path);
 			elseif strcmp(init_format, 'YAML')
-                provider = assign_paths_yaml(provider, run_name, result_path);
+                provider = assign_paths_yaml(provider, run_name, result_path, constant_file);
             end
         end
 
@@ -51,7 +51,7 @@ classdef PROVIDER < PROVIDER_EXCEL & PROVIDER_EXCEL3D & PROVIDER_MAT & PROVIDER_
        function provider = update_run_name(provider, worker_number)
            if strcmp(provider.PARA.init_format, 'EXCEL3D')
                provider = update_run_name_excel3d(provider, worker_number);
-		   if strcmp(provider.PARA.init_format, 'YAML')
+           elseif strcmp(provider.PARA.init_format, 'YAML')
                provider = update_run_name_yaml(provider, worker_number);
            end
        end

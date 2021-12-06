@@ -1,11 +1,10 @@
 classdef PROVIDER_YAML < BASE_PROVIDER
 
-    
     methods
         
         function provider = assign_paths_yaml(provider, run_name, result_path, constant_file)
             
-			warning(['WARNING: YAML provider not fully implemented and tested!']
+			warning('WARNING: YAML provider not fully implemented and tested!')
 			
             constant_file = [result_path run_name '/' constant_file '.yml'];
             parameter_file = [result_path run_name '/' run_name '.yml'];
@@ -41,6 +40,12 @@ classdef PROVIDER_YAML < BASE_PROVIDER
             for i = 1:length(class_sections)
                 section = data.(class_sections{i});
                 
+                if isempty(section)
+                    % if section is set to 'null' in yaml file
+                    % skip processing it
+                    continue
+                end
+
                 % loop over definitions in section
                 for k = 1:length(section)
                     % instantiate new class
@@ -57,7 +62,7 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                             if isfield(provider.CONST, fieldnames_CONST{ii,1})
                                 new_class.CONST.(fieldnames_CONST{ii,1}) = provider.CONST.(fieldnames_CONST{ii,1});
                             else
-                                warning(['WARNING: constant ' fieldnames_CONST{ii,1} ' in class ' class(new_class) ' not populated.'])
+                                warning(['Constant "' fieldnames_CONST{ii,1} '" in class "' class(new_class) '" not populated.'])
                             end
                         end
                     end
@@ -72,7 +77,7 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                         for ii = 1:size(fieldnames_PARA,1)
                             fieldname = fieldnames_PARA{ii};
                             if ~isfield(section{k}, fieldname)
-                                warning(['WARNING: parameter ' fieldname ' in class ' class(new_class) ' not populated.'])
+                                warning(['Parameter "' fieldname '" in class "' class(new_class) '" not populated.'])
                                 continue
                             end
                             
@@ -90,35 +95,69 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                                 end
                             elseif isstruct(contents)
                                 % it is a structure
-                                if ~isfield(contents,'type') || ~strcmp(contents.type,'V_MATRIX')
-                                    warning(['WARNING: datatype of ' fieldname ' was not recognized in file ' provider.PARA.parameter_file '.\n'
-                                             '         parameter ' fieldname ' in class ' class(new_class) ' not populated.']);
-                                    continue
-                                end
-                                    
-                                % so it is a V_MATRIX, a table with columnar data
+                                if isfield(contents,'type') 
+                                    if strcmp(contents.type,'V_MATRIX')
+                                        % it is a V_MATRIX, a table with columnar data
 
-                                % If matrix contains any string values,
-                                % it is read as a 1D cell array of 1D cell arrays.
-                                if size(contents.values,1) == 1 && iscell(contents.values{1})                                
-                                    % this matrix contains some text data
-                                    % handle this special case
-                                    contents.values = vertcat(contents.values{:});
-                                    % now it has same format as numeric matrix
-                                end
-                                
-                                for kk = 1:length(contents.names)
-                                    cname = contents.names{kk};
+                                        % If matrix contains any string values,
+                                        % it is read as a 1D cell array of 1D cell arrays.
+                                        if size(contents.values,1) == 1 && iscell(contents.values{1})                                
+                                            % this matrix contains some text data
+                                            % handle this special case
+                                            contents.values = vertcat(contents.values{:});
+                                            % now it has same format as numeric matrix
+                                        end
 
-                                    % check type, just to be sure
-                                    if isnumeric(contents.values{1,kk})
-                                        % it is a numeric type, so convert
-                                        % to matrix
-                                        new_class.PARA.(fieldname).(cname) = cell2mat(contents.values(:,kk));
+                                        for kk = 1:length(contents.names)
+                                            cname = contents.names{kk};
+
+                                            % check type, just to be sure
+                                            if isnumeric(contents.values{1,kk})
+                                                % it is a numeric type, so convert
+                                                % to matrix
+                                                new_class.PARA.(fieldname).(cname) = cell2mat(contents.values(:,kk));
+                                            else
+                                                % it contains text, keep as cell array
+                                                new_class.PARA.(fieldname).(cname) = contents.values(:,kk);
+                                            end
+                                        end
+                                        
+                                    elseif strcmp(contents.type,'STRAT_MATRIX')
+                                        % it is a STRAT_MATRIX, a table
+                                        % with columnar data, which must
+                                        % have 'depth' in the first column
+                                        
+                                        if ~strcmp(contents.names{1},'depth')
+                                            error(['STRAT_MATRIX does not have "depth" as first column. "' fieldname '" in class "' class(new_class) '" not populated.'])
+                                        end
+                                        
+                                        % If matrix contains any string values,
+                                        % it is read as a 1D cell array of 1D cell arrays.
+                                        if size(contents.values,1) == 1 && iscell(contents.values{1})                                
+                                            % this matrix contains some text data
+                                            % handle this special case
+                                            contents.values = vertcat(contents.values{:});
+                                            % now it has same format as numeric matrix
+                                        end
+                                        
+                                        for kk = 1:length(contents.names)
+                                            cname = contents.names{kk};
+
+                                            % check type, just to be sure
+                                            if isnumeric(contents.values{1,kk})
+                                                % it is a numeric type, so convert
+                                                % to matrix
+                                                new_class.PARA.(fieldname).(cname) = cell2mat(contents.values(:,kk));
+                                            else
+                                                % it contains text, keep as cell array
+                                                new_class.PARA.(fieldname).(cname) = contents.values(:,kk);
+                                            end
+                                        end
                                     else
-                                        % it contains text, keep as cell array
-                                        new_class.PARA.(fieldname).(cname) = contents.values(:,kk);
+                                        warning(['Parameter type "' contents.type '" not recognized. Parameter "' fieldname '" in class "' class(new_class) '" not populated.'])
                                     end
+                                else
+                                    warning(['Unrecognized compound parameter format. Parameter "' fieldname '" in class "' class(new_class) '" not populated.'])
                                 end
                             elseif isempty(contents)
                                 new_class.PARA.(fieldname) = NaN;
@@ -128,11 +167,6 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                             end
                         end
                     end
-                    %mandatory function in all classes compatible with
-                    %provider_YAML
-                    warning('Calling "initialize_excel@new_class". Please reconsider need for this method!')
-                    new_class = initialize_excel(new_class);
-
                     provider.CLASSES.(class_name){class_index,1} = new_class;
                     
                     if strcmp(class_sections{i}, 'RUN_INFO') && class_index == 1
