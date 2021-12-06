@@ -62,6 +62,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.STATVAR.air = [];  % total volume of air [m3] - NOT USED
             ground.STATVAR.thermCond = []; %thermal conductivity [W/mK]
             ground.STATVAR.hydraulicConductivity = []; % hydraulic conductivity [m/sec]
+            ground.STATVAR.permeability = [];  %permeability for fluids/gases [m2]
             
             ground.STATVAR.Lstar = [];  %Obukhov length [m]
             ground.STATVAR.Qh = [];     %sensible heat flux [W/m2]
@@ -144,6 +145,8 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.STATVAR.Qe = 0;
             ground.STATVAR.runoff = 0;
             
+            ground.STATVAR.year_old = []; %str2num(datestr(tile.t, 'yyyy'));
+            
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET = ground.STATVAR.energy.*0;
@@ -216,6 +219,11 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         function ground = check_trigger(ground, tile)
             %do nothing at this stage - add create LAKE if there is too
             %much surface water, similar to Xice 
+            % Every year, the heat reservoir is 10% further away
+%             if isempty(ground.STATVAR.year_old) || str2num(datestr(tile.t, 'yyyy'))>ground.STATVAR.year_old
+%                 ground.STATVAR.year_old = str2num(datestr(tile.t, 'yyyy'));
+%                 tile.LATERAL.IA_CLASSES{2,1}.PARA.distance_heatReservoir = tile.LATERAL.IA_CLASSES{2,1}.PARA.distance_heatReservoir .*1.1;
+%             end
         end
         
         
@@ -272,6 +280,11 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         %----LAT_WATER_RESERVOIR------------          
         function ground = lateral_push_water_reservoir(ground, lateral)
             ground = lateral_push_water_reservoir_simple(ground, lateral);
+        end
+        
+        %----LAT_HEAT------------
+        function ground = lateral_push_heat(ground, lateral)
+            ground = lateral_push_heat_simple(ground, lateral);
         end
 
         %----LAT3D_WATER_UNCONFINED_AQUIFER------------         
