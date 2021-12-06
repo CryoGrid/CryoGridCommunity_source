@@ -80,18 +80,19 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
              TOP = tile.TOP; 
              BOTTOM = tile.BOTTOM;
              forcing = tile.FORCING;
-             %run_number = tile.RUN_NUMBER;
              run_name = tile.PARA.run_name;
              result_path = tile.PARA.result_path;
              timestep = tile.timestep;
              out_tag = out.PARA.tag;
              
             
+
             if t>=out.OUTPUT_TIME
-				% It is time to collect output
+        				% It is time to collect output
                 % Store the current state of the model in the out structure.
                 
                 disp([datestr(t)])
+
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 CURRENT =TOP.NEXT;
@@ -114,6 +115,9 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                     if isprop(res, 'READ_OUT')
                         res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
+                    if isprop(res, 'STORE')
+                        res.STORE = [];
+                    end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_PREVIOUS=[];  %cut all dependencies
                     if isprop(res, 'CHILD')
                         res.CHILD = [];
@@ -126,7 +130,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 
                 %lateral, read only STATVAR and PARA---
                 result={};
-                ia_classes=TOP.LATERAL.IA_CLASSES;
+                ia_classes = tile.LATERAL.IA_CLASSES;
                 for i=1:size(ia_classes,1)
                     res = copy(ia_classes{i,1});
                     vars = fieldnames(res);
@@ -166,6 +170,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                         % If save_interval is not defined, we will save at the very end of the model run
                         % and thus do not need to update SAVE_TIME (update would fail because save_interval is nan)
 					end
+
                 end
             end
         end

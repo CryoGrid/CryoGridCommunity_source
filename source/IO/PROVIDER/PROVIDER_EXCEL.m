@@ -49,7 +49,7 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                             if isfield(provider.CONST, fieldnames_CONST{ii,1})
                                 new_class.CONST.(fieldnames_CONST{ii,1}) = provider.CONST.(fieldnames_CONST{ii,1});
                             else
-                                disp(['WARNING: constant ' fieldnames_CONST{ii,1} ' in class ' class(new_class) ' not populated.'])
+                               % disp(['WARNING: constant ' fieldnames_CONST{ii,1} ' in class ' class(new_class) ' not populated.'])
                             end
                         end
                     end
@@ -146,9 +146,9 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                                 end
                                 j=j+1;
                             end
-                            if strcmp(data{j,1}, 'CLASS_END')
-                                disp(['WARNING: ' fieldnames_PARA{ii,1} ' not initialized'])
-                            end
+%                             if strcmp(data{j,1}, 'CLASS_END')
+%                                 disp(['WARNING: ' fieldnames_PARA{ii,1} ' not initialized'])
+%                             end
                         end
                         
                     end

@@ -23,9 +23,6 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         %----mandatory functions---------------
         %----initialization--------------------  
         
-%         function self = SNOW_crocus2_bucketW_seb(index, pprovider, cprovider, forcing)  
-%             self@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         function snow = provide_PARA(snow)
 
@@ -41,6 +38,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             
             snow.PARA.slope = []; %slope angle [-]
             snow.PARA.timescale_winddrift = []; %timescale of snow compaction for wind drift [hours!!]
+            snow.PARA.max_wind_slab_density = [];
             
             snow.PARA.dt_max = [];  %maximum possible timestep [sec]
             snow.PARA.dE_max = [];  %maximum possible energy change per timestep [J/m3]
@@ -251,6 +249,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         function timestep = get_timestep_CHILD(snow, tile)  
             timestep = get_timestep_SNOW_CHILD(snow);
              timestep = min(timestep, get_timestep_SNOW_sublimation(snow));
+             timestep = min(timestep, get_timestep_water_SNOW(snow));
             %timestep1 = get_timestep_heat_coduction(snow);
             %timestep2 = get_timestep_SNOW_CHILD(snow);
             %timestep = min(timestep1, timestep2);
@@ -345,7 +344,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow = get_T_water_freeW(snow);
             snow = subtract_water2(snow);
 
-            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
+            [snow, regridded_yesNo] = regrid_snow(snow, {'waterIce'; 'energy'; 'layerThick'; 'ice'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
 
             if regridded_yesNo
                 snow = get_T_water_freeW(snow);
@@ -439,6 +438,11 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow = lateral_push_water_reservoir_snow(snow, lateral);
         end
         
+        %---LAT_OVERLAND_FLOW----------
+        function ground = lateral_push_remove_water_overland_flow(ground, lateral)
+            ground = lateral_push_water_overland_flow_SNOW_crocus2(ground, lateral);
+        end
+        
         %----LAT3D_WATER_UNCONFINED_AQUIFER------------        
         function snow = lateral3D_pull_water_unconfined_aquifer(snow, lateral)
             snow = lateral3D_pull_water_unconfined_aquifer_snow(snow, lateral);
@@ -450,6 +454,11 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(snow, lateral)
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_snow(snow, lateral);
+        end
+        
+        %---LAT3D_WATER_OVERLAND_FLOW-----------------
+        function snow = lateral3D_pull_water_overland_flow(snow, lateral)
+            snow = lateral3D_pull_water_overland_flow_SNOW_crocus2(snow, lateral);
         end
         
         %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
@@ -470,6 +479,15 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         
         function snow = lateral3D_push_snow(snow, lateral)
             snow = lateral3D_push_snow_crocus2(snow, lateral);
+        end
+        
+        %----LAT3D_SNOW_CROCUS_snow_dump------------
+        function snow = lateral3D_pull_snow_dump(snow, lateral)
+            snow = lateral3D_pull_snow_crocus_dump(snow, lateral);
+        end
+        
+        function snow = lateral3D_push_snow_dump(snow, lateral)
+            snow = lateral3D_push_snow_crocus2_dump(snow, lateral);
         end
 
         

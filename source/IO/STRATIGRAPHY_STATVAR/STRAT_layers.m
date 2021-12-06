@@ -21,66 +21,52 @@ classdef STRAT_layers < matlab.mixin.Copyable
     
     methods
         
-		
 
-
-        function self = initialize(self)
-            % INITIALIZE  Initializes all properties needed by the class.
-
-            self.depth = [];
-			self.variable_names = {};
-			self.variable_values = [];
-			self.variable_gridded = [];
-			self = self.initialize_PARA();
-        end
-		
-		function self = provide_PARA(self)  %this is problematic, these fields must be completely arbitray, it changes accoriding to the requirements of the classes
-            %this information must be derived from the STATVAR field of the
-            %different classes
-			% INITIALIZE_PARA  Initializes PARA structure.
+		function stratigraphy = provide_PARA(stratigraphy)  %this is problematic, these fields must be completely arbitray, it changes accoriding to the requirements of the classes
 			
-			self.PARA.layers = [];
+			stratigraphy.PARA.layers = [];
         end
         
-        function self = provide_CONST(self)
+        function stratigraphy = provide_CONST(stratigraphy)
 
         end
         
-        function self = provide_STATVAR(self)
+        function stratigraphy = provide_STATVAR(stratigraphy)
 
         end 
         
-%         function self = initialize_excel(self)
-%             
-%         end
         
-        function strat = finalize_init(strat, tile)
+        function stratigraphy = finalize_init(stratigraphy, tile)
 			
-            variables = fieldnames(strat.PARA.layers);
-            depth = strat.PARA.layers.depth;
+            variables = fieldnames(stratigraphy.PARA.layers);
+            depth = stratigraphy.PARA.layers.depth;
             depth = [depth; Inf];
             for i=1:size(variables,1)
                 if ~strcmp(variables{i,1}, 'depth')
                     tile.GRID.STATVAR.(variables{i,1}) = tile.GRID.STATVAR.MIDPOINTS .* 0;
                     for j=1:size(depth,1)-1
                         range = tile.GRID.STATVAR.MIDPOINTS > depth(j,1) & tile.GRID.STATVAR.MIDPOINTS <= depth(j+1,1);
-                        tile.GRID.STATVAR.(variables{i,1})(range) = strat.PARA.layers.(variables{i,1})(j,1);
+                        tile.GRID.STATVAR.(variables{i,1})(range) = stratigraphy.PARA.layers.(variables{i,1})(j,1);
                     end
                 end
             end
-            
-            %conversion of variables, make this a dedicated class??
-%             for i=1:size(variables,1)
-%                 if strcmp(variables{i,1}, 'waterIce') || strcmp(variables{i,1}, 'mineral') || strcmp(variables{i,1}, 'organic')
-%                     tile.GRID.STATVAR.(variables{i,1}) = tile.GRID.STATVAR.(variables{i,1}) .* tile.GRID.STATVAR.layerThick .* tile.PARA.area;
-%                  %ADD CONVERSION OF OTHER VARIABLES HERE
-%                 elseif strcmp(variables{i,1}, 'Xice')
-%                     
-%                 end
-%             end
         end
         
-            
+         function stratigraphy = finalize_init_GROUND_multi_tile(stratigraphy, GRID)
+			
+            variables = fieldnames(stratigraphy.PARA.layers);
+            depth = stratigraphy.PARA.layers.depth;
+            depth = [depth; Inf];
+            for i=1:size(variables,1)
+                if ~strcmp(variables{i,1}, 'depth')
+                    GRID.STATVAR.(variables{i,1}) = GRID.STATVAR.MIDPOINTS .* 0;
+                    for j=1:size(depth,1)-1
+                        range = GRID.STATVAR.MIDPOINTS > depth(j,1) & GRID.STATVAR.MIDPOINTS <= depth(j+1,1);
+                        GRID.STATVAR.(variables{i,1})(range) = stratigraphy.PARA.layers.(variables{i,1})(j,1);
+                    end
+                end
+            end
+        end           
             
 %             variable_gridded = repmat(tile.GRID.MIDPOINTS .* 0, 1, size(self.variable_values,2));
 %             for j=1:size(self.variable_values,1)-1
@@ -96,39 +82,39 @@ classdef STRAT_layers < matlab.mixin.Copyable
 		
         
         
-		
-		function self = populate_variables(self, pprovider)
-			% POPULATE_VARIABLES  Updates the PARA structure with values from pprovider. Assigns values from the PARA structure to the corresponding class properties.
-            %
-            %   ARGUMENTS:
-            %   pprovider:  instance of PARAMETER_PROVIDER class
-			self.PARA = pprovider.populate_struct(self.PARA, 'STRAT_layers', mfilename('class'), self.strat_layers_index);
-			
-			fn_substruct = fieldnames(self.PARA.layers);
-			p = properties(self);
-			for i = 1:size(fn_substruct, 1)
-				if any(strcmp(p, fn_substruct(i)))
-					index = find(strcmp(p, fn_substruct{i}));
-					self.(p{index}) = self.PARA.layers.(fn_substruct{i});
-				else
-					self.variable_names = [self.variable_names fn_substruct(i)];
-					self.variable_values = [self.variable_values self.PARA.layers.(fn_substruct{i})];
-				end
-			end
-			self.depth = cell2mat(self.depth);
-			self.variable_values = cell2mat(self.variable_values);		
-            
-        end
-        
-        
-		
-
-
-        function xls_out = write_excel(self)
-			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
-            
-			xls_out = {'STRATIGRAPHY','index';'STRAT_linear',1;NaN,NaN;'depth','T';'[m]','[degree C]';'TOP',NaN;0,1;1,0;10,-5;100,0;5000,20;'BOTTOM',NaN;'STRATIGRAPHY_END',NaN};
-        end
+% 		
+% 		function self = populate_variables(self, pprovider)
+% 			% POPULATE_VARIABLES  Updates the PARA structure with values from pprovider. Assigns values from the PARA structure to the corresponding class properties.
+%             %
+%             %   ARGUMENTS:
+%             %   pprovider:  instance of PARAMETER_PROVIDER class
+% 			self.PARA = pprovider.populate_struct(self.PARA, 'STRAT_layers', mfilename('class'), self.strat_layers_index);
+% 			
+% 			fn_substruct = fieldnames(self.PARA.layers);
+% 			p = properties(self);
+% 			for i = 1:size(fn_substruct, 1)
+% 				if any(strcmp(p, fn_substruct(i)))
+% 					index = find(strcmp(p, fn_substruct{i}));
+% 					self.(p{index}) = self.PARA.layers.(fn_substruct{i});
+% 				else
+% 					self.variable_names = [self.variable_names fn_substruct(i)];
+% 					self.variable_values = [self.variable_values self.PARA.layers.(fn_substruct{i})];
+% 				end
+% 			end
+% 			self.depth = cell2mat(self.depth);
+% 			self.variable_values = cell2mat(self.variable_values);		
+%             
+%         end
+%         
+%         
+% 		
+% 
+% 
+%         function xls_out = write_excel(self)
+% 			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
+%             
+% 			xls_out = {'STRATIGRAPHY','index';'STRAT_linear',1;NaN,NaN;'depth','T';'[m]','[degree C]';'TOP',NaN;0,1;1,0;10,-5;100,0;5000,20;'BOTTOM',NaN;'STRATIGRAPHY_END',NaN};
+%         end
         
 %         % ==========================================
 %         % DEPRECATED METHODS

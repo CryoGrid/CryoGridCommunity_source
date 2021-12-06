@@ -7,7 +7,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE %& INITIALIZE
+classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE 
     
     
     methods
@@ -15,9 +15,6 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE %& INITIALIZE
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function ground = LAKE_simple_seb(index, pprovider, cprovider, forcing)
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         %initializes class when switching from unfrozen to frozen conditions
         function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)
@@ -90,16 +87,22 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE %& INITIALIZE
             
         end
         
-        function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
-            ground = provide_PARA(ground);
-            ground = provide_CONST(ground);
-            ground = provide_STATVAR(ground);
+%         function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
+%             ground = provide_PARA(ground);
+%             ground = provide_CONST(ground);
+%             ground = provide_STATVAR(ground);
+%         end
+
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal(unit_converter, ground, tile);
         end
         
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
             
@@ -109,6 +112,12 @@ classdef LAKE_simple_seb < SEB & HEAT_CONDUCTION & LAKE %& INITIALIZE
             
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             
+        end
+        
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+
         end
         
         
