@@ -41,7 +41,8 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
 % % %             %ground.PARA.reference_pressure = 100; %[Pa] correpsonds to ~10cm water column
             
             ground.PARA.hardBottom_cutoff = 0.03;
-            ground.PARA.reference_pressure = 100; %[Pa] correpsonds to ~10cm water column
+%            ground.PARA.reference_pressure = 100; %[Pa] correpsonds to ~10cm water column
+            ground.PARA.smoothing_factor = [];
         end
         
         function ground = provide_STATVAR(ground)
@@ -51,6 +52,7 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
             ground.STATVAR.layerThick = []; % thickness of grid cells [m]
             
             ground.STATVAR.waterIce = [];  % total volume of water plus ice in a grid cell [m3]
+            %ground.STATVAR.saturation = [];
             ground.STATVAR.mineral = [];   % total volume of minerals [m3]
             ground.STATVAR.organic = [];   % total volume of organics [m3]
             ground.STATVAR.energy = [];    % total internal energy [J]
@@ -147,9 +149,11 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
         function ground = finalize_init(ground, tile)
             
             %REMOVE THIS!!
-            ground.STATVAR.initial_voidRatio = ground.STATVAR.initial_voidRatio + ground.STATVAR.T .* 0;
-            ground.STATVAR.compression_index = ground.STATVAR.compression_index + ground.STATVAR.T .* 0;
+            %ground.STATVAR.initial_voidRatio = ground.STATVAR.initial_voidRatio + ground.STATVAR.T .* 0;
+            %ground.STATVAR.compression_index = ground.STATVAR.compression_index + ground.STATVAR.T .* 0;
             %end remove!
+            
+            ground.STATVAR.initial_layerThick = ground.STATVAR.layerThick;
             
             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
@@ -159,30 +163,90 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
             ground.CONST.vanGen_residual_wc = [ ground.CONST.residual_wc_sand ground.CONST.residual_wc_silt ground.CONST.residual_wc_clay ground.CONST.residual_wc_peat ground.CONST.residual_wc_water];
             
-            ground = get_E_freezeC(ground);
+            %Initialization for compressed soil column
+            
+            %get variables
+            %initial_saturation = ground.STATVAR.saturation;
+            initial_water = ground.STATVAR.waterIce .* ground.STATVAR.layerThick .* ground.STATVAR.area; %For initialization, soil column is completely unfrozen
+            mineral = ground.STATVAR.mineral .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            organic = ground.STATVAR.organic .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            initial_porosity = ground.STATVAR.initial_voidRatio ./ (1 + ground.STATVAR.initial_voidRatio);
+            %initial_water = initial_saturation .* initial_porosity .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            initial_saturation = round((initial_water ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ initial_porosity,2); %round because 100% saturation is difficult to set in excel with waterIce
+            ground.STATVAR.initial_layerThick = ground.STATVAR.layerThick;
+            
+            %Overburden pressure
+            threshold = 0.5; above_threshold = initial_saturation >= threshold;
+            overburden_pressure_per_cell_normal = (mineral .* ground.CONST.density_mineral + organic .* ground.CONST.density_organic + ...
+                initial_water .* ground.CONST.density_water) ./ ground.STATVAR.area .*ground.CONST.g; %[Pa]
+            overburden_pressure_per_cell_normal_boyant = (mineral .* (ground.CONST.density_mineral - ground.CONST.density_water) + organic .* (ground.CONST.density_organic - ground.CONST.density_water) + ...
+                + (ground.STATVAR.layerThick - mineral - organic - initial_water) .* (-ground.CONST.density_water)) ./ ground.STATVAR.area .*ground.CONST.g; %[Pa]
+            overburden_pressure_per_cell = double(~above_threshold) .* overburden_pressure_per_cell_normal + ...
+                double(above_threshold) .* (overburden_pressure_per_cell_normal + (initial_saturation-threshold)./ (1-threshold) .* (overburden_pressure_per_cell_normal_boyant - overburden_pressure_per_cell_normal));
+            
+            ground.STATVAR.overburden_pressure = cumsum(overburden_pressure_per_cell)-overburden_pressure_per_cell./2; %[Pa]
+            ground.STATVAR.overburden_pressure = ground.STATVAR.overburden_pressure + ground.STATVAR.external_pressure;
+            
+            %Calculate porosity for given overburden pressure
+            ground.STATVAR.porosity = (ground.STATVAR.initial_voidRatio - ground.STATVAR.compression_index .* log10(ground.STATVAR.overburden_pressure./ground.STATVAR.reference_pressure)) ./ ...
+                (1 + ground.STATVAR.initial_voidRatio - ground.STATVAR.compression_index .* log10(ground.STATVAR.overburden_pressure./ground.STATVAR.reference_pressure));
+            ground.STATVAR.porosity = min(ground.STATVAR.porosity, ground.STATVAR.initial_voidRatio ./(1 + ground.STATVAR.initial_voidRatio)); %do not allow higher porosities than initial void ration
+            ground.STATVAR.void_ratio = ground.STATVAR.porosity ./ (1 - ground.STATVAR.porosity); %Void ratio
+            ground.STATVAR.layerThick = ((mineral + organic) ./ (1 - ground.STATVAR.porosity)) ./ ground.STATVAR.area;
+            
+            ground.STATVAR.waterIce = initial_saturation .* ground.STATVAR.porosity;
+            ground.STATVAR.saturation = ground.STATVAR.waterIce ./ ground.STATVAR.porosity;
+            
+            %Bearing capacity
+            ground.STATVAR.bearing_capacity = (10.^((ground.STATVAR.initial_voidRatio - ground.STATVAR.porosity - ground.STATVAR.initial_voidRatio .* ground.STATVAR.porosity) ./ (ground.STATVAR.compression_index - ground.STATVAR.porosity .* ground.STATVAR.compression_index))) .* ground.STATVAR.reference_pressure;  %[Pa]
+            ground.STATVAR.bearing_capacity = max(ground.STATVAR.reference_pressure, ground.STATVAR.bearing_capacity); %generate "Xice" (void ratio becomes smaller than initial void ratio)    
+
+            %FreezeC
+            ground = get_E_freezeC_pressure(ground);
             ground = conductivity(ground);
             ground = calculate_hydraulicConductivity_RichardsEq(ground);
             
             ground = create_LUT_freezeC(ground);
-            
-            %Parameters for calculation of pressure
-            ground.STATVAR.porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic)./ground.STATVAR.layerThick./ground.STATVAR.area;
-            ground.STATVAR.void_ratio = ground.STATVAR.porosity ./ (1 - ground.STATVAR.porosity); %Void ratio
-            
+                        
             ground.STATVAR.field_capacity = (1+((ground.STATVAR.alpha./ground.CONST.g./ground.CONST.rho_w).*(ground.CONST.g.*ground.CONST.rho_w)).^ground.STATVAR.n).^(-(1-1./ground.STATVAR.n)).*ground.STATVAR.porosity;
             
-            ground.STATVAR.saturation = (ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ ground.STATVAR.porosity;
-            ground.STATVAR.water_saturation = (ground.STATVAR.water ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ ground.STATVAR.porosity;
-            ground.STATVAR.ice_saturation = (ground.STATVAR.ice ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ ground.STATVAR.porosity;
+%             %Update saturation for water and ice
+             ground.STATVAR.saturation = (ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ ground.STATVAR.porosity;
+             ground.STATVAR.water_saturation = (ground.STATVAR.water ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ ground.STATVAR.porosity;
+%             ground.STATVAR.water_saturation = (ground.STATVAR.water ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ ground.STATVAR.porosity;
+%             ground.STATVAR.ice_saturation = (ground.STATVAR.ice ./ (ground.STATVAR.layerThick .* ground.STATVAR.area)) ./ ground.STATVAR.porosity;
+                       
+            %Find all saturated cells
+            saturated = ground.STATVAR.saturation > 1-1e-6;
+            %Calculate gravitational potential, assuming that all gridcells are unsaturated
+            for i = size(saturated,1) : -1 : 1
+                gravitationalPotential_unsaturated(i,1) = sum(ground.STATVAR.layerThick(i:size(saturated,1),1));
+            end
+            %Calculate gravitational potential
+            gravitationalPotential = [];
+            for i = 1 : size(saturated,1)
+                if saturated(i,1) == 0
+                    gravitationalPotential(i,1) = gravitationalPotential_unsaturated(i,1);
+                    if i ~= size(saturated,1) && saturated(i+1,1) == 1 && ground.STATVAR.T(i+1,1) > 0 %&& abs(ground.STATVAR.waterPotential(i,1)-ground.STATVAR.waterPotential(i+1,1)) < gravitationalPotential_unsaturated(i,1)-gravitationalPotential_unsaturated(i+1,1)
+                        %If gridcell below is saturated and waterPotential is smaller than gravitational potential
+                        %--> Water would be pressed into saturated zone --> should not be the case
+                        %--> Add waterPotential to gravitationalPotential so that flux into saturated zone is prevented(d_head = 0)
+                        gravitationalPotential(i+1,1) = gravitationalPotential_unsaturated(i,1) + ground.STATVAR.waterPotential(i,1);
+                    end
+                elseif saturated(i,1) == 1
+                    if size(gravitationalPotential,1) == i
+                        gravitationalPotential(i+1,1) = gravitationalPotential(i,1);
+                    else
+                        gravitationalPotential(i,1) = gravitationalPotential_unsaturated(i,1);
+                        gravitationalPotential(i+1,1) = gravitationalPotential(i,1);
+                    end
+                end
+            end
+            if size(gravitationalPotential,1) > size(saturated,1)
+                gravitationalPotential(end) = [];
+            end
+            ground.STATVAR.gravitationalPotential = gravitationalPotential;
             
-            overburden_pressure_per_cell_total = (ground.STATVAR.water .* ground.CONST.density_water + ground.STATVAR.ice .* ground.CONST.density_ice + ground.STATVAR.mineral .* ground.CONST.density_mineral + ...
-                ground.STATVAR.organic .* ground.CONST.density_organic) ./ ground.STATVAR.area .*ground.CONST.g; %[Pa]
-            ground.STATVAR.overburden_pressure = cumsum(overburden_pressure_per_cell_total)-overburden_pressure_per_cell_total./2; %[Pa]
-            ground.STATVAR.overburden_pressure = ground.STATVAR.overburden_pressure + ground.STATVAR.external_pressure;
-            
-            ground.STATVAR.bearing_capacity = (10.^((ground.STATVAR.initial_voidRatio - ground.STATVAR.porosity - ground.STATVAR.initial_voidRatio .* ground.STATVAR.porosity) ./ (ground.STATVAR.compression_index - ground.STATVAR.porosity .* ground.STATVAR.compression_index))) .* ground.STATVAR.reference_pressure;  %[Pa]
-            ground.STATVAR.bearing_capacity = max(ground.STATVAR.reference_pressure, ground.STATVAR.bearing_capacity); %generate "Xice" (void ratio becomes smaller than initial void ratio)    
-
             ground.STATVAR.Lstar = -100;
             ground.STATVAR.Qh = 0;
             ground.STATVAR.Qe = 0;
@@ -232,7 +296,7 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
         function ground = advance_prognostic(ground, tile) 
             timestep = tile.timestep;
 
-            prognostic_layerThick = ground.STATVAR.saturation > 1-1e-6 & (ground.TEMP.d_water > 0 | (ground.TEMP.d_water < 0 & ground.TEMP.no_air));
+            prognostic_layerThick = ground.STATVAR.saturation > 1-1e-6 & (ground.TEMP.d_water > 0 | (ground.TEMP.d_water < 0 & ground.TEMP.no_air) | (ground.TEMP.d_water < 0 & ground.STATVAR.void_ratio > ground.STATVAR.initial_voidRatio));
             ground.TEMP.prognostic_layerThick = prognostic_layerThick;
 
             %energy
@@ -257,14 +321,15 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
        
         function ground = compute_diagnostic(ground, tile)
             
-            ground = soil_mechanics(ground);
+            ground = soil_mechanics(ground, tile);
             
-            ground = get_T_water_freezeC_Xice(ground);
+            ground = get_T_water_freezeC_Xice_pressure(ground);
             
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + ground.STATVAR.XwaterIce;
             ground.STATVAR.water = ground.STATVAR.water + ground.STATVAR.Xwater;
             ground.STATVAR.ice = ground.STATVAR.ice + ground.STATVAR.Xice;
 
+            ground = gravitational_potential(ground);
             ground = conductivity(ground);
             ground = calculate_hydraulicConductivity_RichardsEq(ground);
 
@@ -277,13 +342,13 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
             
         end
         
-        function ground = check_trigger(ground, tile)
-            % Every year, the heat reservoir is 10% further away
-            if isempty(ground.STATVAR.year_old) || str2num(datestr(tile.t, 'yyyy'))>ground.STATVAR.year_old
-                ground.STATVAR.year_old = str2num(datestr(tile.t, 'yyyy'));
-                tile.LATERAL.IA_CLASSES{2,1}.PARA.distance_heatReservoir = tile.LATERAL.IA_CLASSES{2,1}.PARA.distance_heatReservoir .*1.1;
-            end
-        end
+         function ground = check_trigger(ground, tile)
+%             % Every year, the heat reservoir is 10% further away
+%             if isempty(ground.STATVAR.year_old) || str2num(datestr(tile.t, 'yyyy'))>ground.STATVAR.year_old
+%                 ground.STATVAR.year_old = str2num(datestr(tile.t, 'yyyy'));
+%                 tile.LATERAL.IA_CLASSES{2,1}.PARA.distance_heatReservoir = tile.LATERAL.IA_CLASSES{2,1}.PARA.distance_heatReservoir .*1.1;
+%             end
+         end
         
         
         %-----non-mandatory functions-------

@@ -490,25 +490,54 @@ classdef WATER_FLUXES < BASE
                 (ground.STATVAR.hydraulicConductivity(1:end-1,1).*ground.STATVAR.layerThick(2:end,1)./2 + ground.STATVAR.hydraulicConductivity(2:end,1).*ground.STATVAR.layerThick(1:end-1,1)./2);
 
             ground.TEMP.d_head_waterPotential = ground.STATVAR.waterPotential(1:end-1,1) - ground.STATVAR.waterPotential(2:end,1);
-            ground.TEMP.d_head_gravity = (ground.STATVAR.layerThick(1:end-1,1) + ground.STATVAR.layerThick(2:end,1))./2;
-            ground.TEMP.d_head_buoyancy = double(ground.STATVAR.saturation(1:end-1,1) >= 1-1e-6 & ground.STATVAR.saturation(2:end,1) >= 1-1e-6) .* -ground.TEMP.d_head_gravity;
-            ground.TEMP.d_head_soilMechanics = (double(ground.STATVAR.saturation(1:end-1,1) > 1-1e-6) .* (ground.STATVAR.overburden_pressure(1:end-1,1) - ground.STATVAR.bearing_capacity(1:end-1,1)) ...
-                - double(ground.STATVAR.saturation(2:end,1) > 1-1e-6) .*( ground.STATVAR.overburden_pressure(2:end,1) - ground.STATVAR.bearing_capacity(2:end,1))) ./ ground.CONST.density_water./ground.CONST.g;
-
-            ground.TEMP.d_head = ground.TEMP.d_head_waterPotential + ground.TEMP.d_head_gravity + ground.TEMP.d_head_buoyancy + ground.TEMP.d_head_soilMechanics;
+            ground.TEMP.d_head_gravitationalPotential = ground.STATVAR.gravitationalPotential(1:end-1,1) - ground.STATVAR.gravitationalPotential(2:end,1);
+            %ground.TEMP.d_head_gravity = (double(ground.STATVAR.saturation(1:end-1,1) <= 1-1e-6) .* ground.STATVAR.layerThick(1:end-1,1) + double(ground.STATVAR.saturation(2:end,1) <= 1-1e-6) .* ground.STATVAR.layerThick(2:end,1))./2;
+            %ground.TEMP.d_head_hydrostatic_pressure = double(ground.STATVAR.saturation(1:end-1,1) >= 1-1e-6 & ground.STATVAR.saturation(2:end,1) >= 1-1e-6) .* ((ground.STATVAR.hydrostatic_pressure(1:end-1,1) - ground.STATVAR.hydrostatic_pressure(2:end,1))./ground.CONST.density_water./ground.CONST.g);
+            %ground.TEMP.d_head_soilMechanics = (double(ground.STATVAR.saturation(1:end-1,1) > 1-1e-6) .* double(ground.STATVAR.saturation(2:end,1) > 1-1e-6) .* ((ground.STATVAR.overburden_pressure(1:end-1,1) - ground.STATVAR.bearing_capacity(1:end-1,1)) ...
+            %    - ( ground.STATVAR.overburden_pressure(2:end,1) - ground.STATVAR.bearing_capacity(2:end,1)))) ./ ground.CONST.density_water./ground.CONST.g;           
+            %ground.TEMP.d_head_soilMechanics = (double(ground.STATVAR.saturation(2:end,1) > 1-1e-6) .* ((ground.STATVAR.overburden_pressure(1:end-1,1) - ground.STATVAR.bearing_capacity(1:end-1,1)) ...
+            %    - ( ground.STATVAR.overburden_pressure(2:end,1) - ground.STATVAR.bearing_capacity(2:end,1)))) ./ ground.CONST.density_water./ground.CONST.g;           
+            %%%ground.TEMP.d_head_soilMechanics = ((double(ground.STATVAR.saturation(1:end-1,1) > 1-1e-6) .* (ground.STATVAR.overburden_pressure(1:end-1,1) - ground.STATVAR.bearing_capacity(1:end-1,1))) ...
+            %%%    - (double(ground.STATVAR.saturation(2:end,1) > 1-1e-6) .* (ground.STATVAR.overburden_pressure(2:end,1) - ground.STATVAR.bearing_capacity(2:end,1)))) ./ ground.CONST.density_water./ground.CONST.g;
+            
+            ground.TEMP.d_head_soilMechanics = ((double(ground.STATVAR.saturation(1:end-1,1) > 1-1e-6) .* (ground.STATVAR.overburden_pressure(1:end-1,1) - ground.STATVAR.bearing_capacity(1:end-1,1))) ...
+                - (double(ground.STATVAR.saturation(2:end,1) > 1-1e-6) .*(ground.STATVAR.overburden_pressure(2:end,1) - ground.STATVAR.bearing_capacity(2:end,1)))) ./ ground.CONST.density_water./ground.CONST.g;
+            
+            ground.TEMP.d_head = ground.TEMP.d_head_waterPotential + ground.TEMP.d_head_gravitationalPotential + ground.TEMP.d_head_soilMechanics;
+            
+            if ground.TEMP.d_head(5,1) < 0.01
+                xxx = 0;
+            end
+            
             %fluxes from one cell into another
             fluxes = -k_eff.* ground.TEMP.d_head .* 0.5.* (ground.STATVAR.area(1:end-1,1) + ground.STATVAR.area(2:end,1));
             %fluxes to the surface --> has to be positive as water can be pressed out of soil but no water available to be drawn into the soil
-            flux_out_surface_soilMechanics = max(0,double(ground.STATVAR.saturation(1,1) >= 1-1e-6) .* ((ground.STATVAR.hydraulicConductivity(1,1) ./ (ground.STATVAR.layerThick(1,1)./2)) .* (ground.STATVAR.overburden_pressure(1,1) - ground.STATVAR.bearing_capacity(1,1) - 0) .* ground.STATVAR.area(1,1)));
+            %flux_out_surface_soilMechanics = max(0,double(ground.STATVAR.saturation(1,1) >= 1-1e-6) .* ((ground.STATVAR.hydraulicConductivity(1,1) ./ (ground.STATVAR.layerThick(1,1)./2)) .* (ground.STATVAR.overburden_pressure(1,1) - ground.STATVAR.bearing_capacity(1,1) - 0) .* ground.STATVAR.area(1,1)));
            
             ground.TEMP.fluxes = fluxes;
+         
+            for i = 2 : size(ground.STATVAR.porosity,1)
+                if ground.STATVAR.porosity(i,1) > 0.49
+                    xxxx = 0;
+                end
+            end
+            for i = 7
+                if ground.STATVAR.porosity(i,1) < 0.4
+                    xxxx = 0;
+                end
+            end
             
             %same as for bucketW
             d_water_out = ground.STATVAR.hydraulicConductivity .* 0;
             d_water_out(1:end-1,1) = -fluxes .* double(fluxes <0);
             d_water_out(2:end,1) = d_water_out(2:end,1)  + fluxes .* double(fluxes >0);
             
-            d_water_out(1,1) = d_water_out(1,1) + flux_out_surface_soilMechanics;
+            %d_water_out(1,1) = d_water_out(1,1) + flux_out_surface_soilMechanics;
+            Xwater_out = 0;
+            if ground.STATVAR.Xwater(1,1) / ground.STATVAR.waterIce(1,1) > 0.05
+                Xwater_out = ground.STATVAR.Xwater(1,1) - 0.05 * ground.STATVAR.waterIce(1,1);
+            end
+            d_water_out(1,1) = d_water_out(1,1) + Xwater_out;
             
             d_water_in_from_above = ground.STATVAR.hydraulicConductivity .* 0;
             d_water_in_from_above(2:end,1) = -fluxes .* double(fluxes<0);
@@ -678,6 +707,54 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_in_from_below = d_water_in_from_below;
             ground.TEMP.d_water_out = d_water_out;
 
+        end
+        
+        function ground = gravitational_potential(ground) %calculates gravitational potential
+            
+            %Find all saturated cells
+            saturated = ground.STATVAR.saturation > 1-1e-6;
+            id_unsaturated = find(saturated == 0);
+            
+            %Calculate gravitational potential, assuming that all gridcells are unsaturated
+            for i = size(saturated,1) : -1 : 1
+                gravitationalPotential_unsaturated(i,1) = sum(ground.STATVAR.layerThick(i:size(saturated,1),1));
+            end
+            
+            %Calculate gravitational potential
+            gravitationalPotential = [];
+            for i = 1 : size(saturated,1)
+                if saturated(i,1) == 0
+                    gravitationalPotential(i,1) = gravitationalPotential_unsaturated(i,1);
+                    if i ~= size(saturated,1) && saturated(i+1,1) == 1 && ground.STATVAR.T(i+1,1) > 0 %&& abs(ground.STATVAR.waterPotential(i,1)-ground.STATVAR.waterPotential(i+1,1)) < gravitationalPotential_unsaturated(i,1)-gravitationalPotential_unsaturated(i+1,1)
+                        %If gridcell below is saturated and unfrozen
+                        %--> Water would be pressed into saturated zone --> should not be the case
+                        %--> Add waterPotential to gravitationalPotential so that flux into saturated zone is prevented(d_head = 0)
+                        gravitationalPotential(i+1,1) = gravitationalPotential_unsaturated(i,1) + ground.STATVAR.waterPotential(i,1);
+                        %Should not be the case if the saturated cell below is just a waterfront after precipitation that moves down
+                        %--> Water accumulates in saturated cell and porosity becomes unnaturally large
+                        %--> Check if there is an unsaturated cell below
+                        for j = 1 : size(id_unsaturated)
+                            if id_unsaturated(j,1) > i
+                                gravitationalPotential(i+1,1) = gravitationalPotential_unsaturated(i+1,1);
+                                break
+                            end
+                        end    
+                    end
+                elseif saturated(i,1) == 1
+                    if size(gravitationalPotential,1) == i
+                        gravitationalPotential(i+1,1) = gravitationalPotential(i,1);
+                    else
+                        gravitationalPotential(i,1) = gravitationalPotential_unsaturated(i,1);
+                        gravitationalPotential(i+1,1) = gravitationalPotential(i,1);
+                    end
+                end
+            end
+            if size(gravitationalPotential,1) > size(saturated,1)
+                gravitationalPotential(end) = [];
+            end
+            
+            ground.STATVAR.gravitationalPotential = gravitationalPotential;
+  
         end
         
         
