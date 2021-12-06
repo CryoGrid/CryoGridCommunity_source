@@ -15,10 +15,7 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
 
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function lateral = LAT3D_SNOW_CROCUS(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
+
         
         function lateral = provide_PARA(lateral)
             lateral.PARA.N_drift = []; %5;

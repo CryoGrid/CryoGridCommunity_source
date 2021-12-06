@@ -282,7 +282,7 @@ classdef WATER_FLUXES_LATERAL < BASE
         function ground = lateral_push_water_reservoir_Xice(ground, lateral) %causes problems when columen is unfrozen, check
             water_volumetric = ground.STATVAR.water ./ (ground.STATVAR.layerThick.* ground.STATVAR.area  - ground.STATVAR.XwaterIce);
             porosity = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic)./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
-            saturated = (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce) > 0.999 %avoid rounding errors
+            saturated = (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce) > 0.999; %avoid rounding errors
             saturated = [saturated; 0]; %change later, so that first cell of next class is checked -> next class assumed to be hard-bottom now
             hardBottom = (water_volumetric <= lateral.PARA.hardBottom_cutoff) | (ground.STATVAR.Xice > 0);
             hardBottom = [hardBottom; 1];
@@ -344,7 +344,7 @@ classdef WATER_FLUXES_LATERAL < BASE
                             ground.STATVAR.layerThick(water_table_cell:i,1) = ground.STATVAR.layerThick(water_table_cell:i,1) + X_flux ./ ground.STATVAR.area(water_table_cell:i,1);
 
                             % allow for advection of heat
-                            if isempty(lateral.PARA.reservoir_temperature)
+                            if isempty(lateral.PARA.reservoir_temperature) || isnan(lateral.PARA.reservoir_temperature)
                                 inflow_temperature = ground.STATVAR.T(water_table_cell:i,1);
                             else
                                 inflow_temperature = lateral.PARA.reservoir_temperature;
@@ -719,6 +719,9 @@ classdef WATER_FLUXES_LATERAL < BASE
             hardBottom = [hardBottom; hardBottom_next];
             %add one cell based on NEXT 
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
+            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+            end
             %lateral.PARENT.STATVAR.water_available = 0;
             
             mobile_water = depths .* 0; %m3 - water than can be added 
@@ -852,15 +855,19 @@ classdef WATER_FLUXES_LATERAL < BASE
                 hardBottom_next = 1;
             end
             saturated = [saturated; saturated_next];
-            hardBottom = (waterAir_volumetric <= lateral.PARA.hardBottom_cutoff) | (ground.STATVAR.Xice > 0 & ground.STATVAR.T <=0);  %main difference to simple: layer also considered hard when it has Xice
+            hardBottom = (waterAir_volumetric <= lateral.PARA.hardBottom_cutoff) | (ground.STATVAR.Xice > 0 & ground.STATVAR.T <= 0) | (ground.STATVAR.T < 0);  %main difference to simple: layer also considered hard when it has Xice
             hardBottom = [hardBottom; hardBottom_next];
             %add one cell based on NEXT 
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
+            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+            end
             %lateral.PARENT.STATVAR.water_available = 0;
             
             mobile_water = depths .* 0; %m3 - water than can be added 
             hydraulicConductivity = depths .* 0;
             T_water = depths .* 0;
+%             first_cell_saturated = 0;
 
             %go down until hitting the water table or a hard bottom
             i = 1;
@@ -914,6 +921,11 @@ classdef WATER_FLUXES_LATERAL < BASE
                     else
                         water_table_bottom_cell = i;
                         water_table_elevation = [];
+                        if saturated(i,1)
+                            lateral.TEMP.open_system = 0; %ADDED SEBASTIAN ERROR, relevant if the very first cell is saturated and the next cell unsaturated, so that the bottom of the bucket is reached
+                            water_table_elevation = depths(i,1);                            
+                            %first_cell_saturated = 1;
+                        end
                     end
                 else
                     lateral.TEMP.open_system = 0;
@@ -938,7 +950,9 @@ classdef WATER_FLUXES_LATERAL < BASE
             lateral.PARENT.STATVAR.water_status = [lateral.PARENT.STATVAR.water_status; mobile_water(1:water_table_bottom_cell+j,1)];
             lateral.PARENT.STATVAR.hydraulicConductivity = [lateral.PARENT.STATVAR.hydraulicConductivity;  hydraulicConductivity(1:water_table_bottom_cell+j,1)];
             if isempty(lateral.PARENT.STATVAR.water_table_elevation)
+%                 if ~first_cell_saturated
                 lateral.PARENT.STATVAR.water_table_elevation = water_table_elevation;
+%                 end
             else
                 lateral.PARENT.STATVAR.water_table_elevation = max(water_table_elevation, lateral.PARENT.STATVAR.water_table_elevation);
             end
@@ -949,7 +963,8 @@ classdef WATER_FLUXES_LATERAL < BASE
                 
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_Xice(ground, lateral)
             %water_volumetric = ground.STATVAR.water(1,1) ./ (ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1) - ground.STATVAR.XwaterIce(1,1));
-            waterAir_volumetric = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.ice) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+            %waterAir_volumetric = 1 - (ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.ice) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+            waterAir_volumetric = 1 - (ground.STATVAR.mineral(1,1) + ground.STATVAR.organic(1,1) + ground.STATVAR.ice(1,1)) ./ (ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1) - ground.STATVAR.XwaterIce(1,1));
             saturated_next = (ground.STATVAR.waterIce(1,1) + ground.STATVAR.mineral(1,1) + ground.STATVAR.organic(1,1)) ./ (ground.STATVAR.layerThick(1,1) .* ground.STATVAR.area(1,1) - ground.STATVAR.XwaterIce(1,1)) > 0.999; %avoid rounding errors
             hardBottom_next = (waterAir_volumetric <= lateral.PARA.hardBottom_cutoff) | ground.STATVAR.Xice(1,1) > 0;
         end
@@ -1181,6 +1196,9 @@ classdef WATER_FLUXES_LATERAL < BASE
 
             
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
+            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+            end
 
             lateral.TEMP.open_system = 1;
             lateral.PARENT.STATVAR.water_table_top_cell =  0; %water level is not split between cells!

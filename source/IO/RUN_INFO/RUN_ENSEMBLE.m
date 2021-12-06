@@ -54,8 +54,11 @@ classdef RUN_ENSEMBLE < matlab.mixin.Copyable
 
                 tile.RUN_INFO = run_info;
                 run_info.TILE = tile;
-
+                
                 tile = finalize_init(tile);
+                
+                tile.PARA.run_name = [tile.PARA.run_name '_' num2str(run_info.PARA.worker_number)];
+                
                 
                 tile = run_model(tile);  %time integration
             end

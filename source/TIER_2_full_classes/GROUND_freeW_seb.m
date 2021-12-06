@@ -4,25 +4,22 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& INITIALIZE
-
+classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function self = GROUND_freeW_seb(index, pprovider, cprovider, forcing)  
-%             self@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         function ground = provide_PARA(ground)
             
             ground.PARA.albedo = []; %surface albedo [-]
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; %roughness length [m]
-            
             ground.PARA.rs = []; %surface resistance against evapotranspiration [secm] 
+
+            ground.PARA.conductivity_function = [];
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
@@ -73,11 +70,21 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& INITI
             ground.CONST.rho_w = [];   % water density
             ground.CONST.rho_i = [];   %ice density
         end
+
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal(unit_converter, ground, tile);
+        end
         
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'conductivity_mixing_squares';
+            end
             
             ground = get_E_freeW(ground);
 
@@ -86,8 +93,11 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& INITI
             ground.STATVAR.Qe = 0;
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             
-            %new
-            %ground.STATVAR.airT_height = ground.PARA.airT_height;
+        end
+        
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
             
         end
         
@@ -154,7 +164,9 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& INITI
         end
         
         function ground = conductivity(ground)
-            ground = conductivity_mixing_squares(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+%             ground = conductivity_mixing_squares(ground);
         end
         
         

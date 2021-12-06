@@ -1,7 +1,7 @@
 %========================================================================
 % CryoGrid TIER1 library class for functions related to the freeze curve
-% caclulated by the freezing = drying assumption, Dall'Amico et al., 2011
-% S. Westermann, October 2020
+% of Karra and Painter 2014
+% S. Westermann, December 2020
 %========================================================================
 
 
@@ -209,6 +209,13 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             waterIce = ground.STATVAR.waterIce./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             XwaterIce = ground.STATVAR.XwaterIce./ ground.STATVAR.layerThick ./ ground.STATVAR.area;
             soil_type = ground.STATVAR.soil_type;
+
+            %new Sebastian
+            ground.STATVAR.waterPotential  = energy .*0;
+            ground.STATVAR.water = energy .*0;
+            ground.STATVAR.Xwater = energy .*0;
+            ground.STATVAR.T = energy .*0;
+            %end new Sebastian
             
             n = ground.STATVAR.n;
             alpha = ground.STATVAR.alpha ./ rho_w ./ g;
@@ -622,9 +629,12 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             T0 = ground.CONST.Tmfw;
             
             T = ground.STATVAR.T;
-            mineral= ground.STATVAR.mineral;
-            organic = ground.STATVAR.organic;
-            waterIce = ground.STATVAR.waterIce;
+            mineral= ground.STATVAR.mineral ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
+            organic = ground.STATVAR.organic ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
+            waterIce = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
+%             mineral= ground.STATVAR.mineral;
+%             organic = ground.STATVAR.organic;
+%             waterIce = ground.STATVAR.waterIce;
             layerThick = ground.STATVAR.layerThick;
             area = ground.STATVAR.area;
             soil_type = ground.STATVAR.soil_type;
@@ -729,15 +739,19 @@ classdef FREEZE_CURVE_KarraPainter < BASE
             T0 = ground.CONST.Tmfw;
             
             T = ground.STATVAR.T;
-            mineral= ground.STATVAR.mineral;
-            organic = ground.STATVAR.organic;
-            waterIce = ground.STATVAR.waterIce;
+            mineral= ground.STATVAR.mineral ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+            organic = ground.STATVAR.organic ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+            waterIce = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
+%             mineral= ground.STATVAR.mineral;
+%             organic = ground.STATVAR.organic;
+%             waterIce = ground.STATVAR.waterIce;
             layerThick = ground.STATVAR.layerThick;
             area = ground.STATVAR.area;
             soil_type = ground.STATVAR.soil_type;
             
-            Xice = ground.STATVAR.Xice .* double(T <= 0); % Xice initially only possible when frozen, provided in multiples of the "matrix", 1 means 50 vol% Xice, 50 % normal soil
-            
+%            Xice = ground.STATVAR.Xice .* double(T <= 0); % Xice initially only possible when frozen, provided in multiples of the "matrix", 1 means 50 vol% Xice, 50 % normal soil
+            Xice = ground.STATVAR.XwaterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);        
+
             n = double(soil_type == 1) .* ground.CONST.vanGen_n(1) + double(soil_type == 2) .* ground.CONST.vanGen_n(2) + double(soil_type == 3) .* ground.CONST.vanGen_n(3) + double(soil_type == 4) .* ground.CONST.vanGen_n(4) + double(soil_type == 5) .* ground.CONST.vanGen_n(5);
             ground.STATVAR.n = n;
             alpha = double(soil_type == 1) .* ground.CONST.vanGen_alpha(1) + double(soil_type == 2) .* ground.CONST.vanGen_alpha(2) + double(soil_type == 3) .* ground.CONST.vanGen_alpha(3) + double(soil_type == 4) .* ground.CONST.vanGen_alpha(4) + + double(soil_type == 5) .* ground.CONST.vanGen_alpha(5);

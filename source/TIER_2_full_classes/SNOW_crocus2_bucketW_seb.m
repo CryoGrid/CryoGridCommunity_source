@@ -23,9 +23,6 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         %----mandatory functions---------------
         %----initialization--------------------  
         
-%         function self = SNOW_crocus2_bucketW_seb(index, pprovider, cprovider, forcing)  
-%             self@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         function snow = provide_PARA(snow)
 

@@ -110,6 +110,9 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                     if isprop(res, 'READ_OUT')
                         res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
+                    if isprop(res, 'STORE')
+                        res.STORE = [];
+                    end
                     res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_PREVIOUS=[];  %cut all dependencies
                     if isprop(res, 'CHILD')
                         res.CHILD = [];

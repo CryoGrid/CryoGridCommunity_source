@@ -1,10 +1,9 @@
 %========================================================================
-% CryoGrid LATERAL_IA class LAT3D_WATER_UNCONFINED_AQUIFER 
+% CryoGrid LATERAL_IA class LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW 
 % simulates lateral water flow between pairs of CryoGrid stratigraphies
-% for the topmost unconfined aquifer.
-% NOTE: no flow if there is no unconfined aquifer for one of the two stratigraphies,
-% e.g. if the first cell is saturated with ice. Use LAT_3D_WATER instead. 
-% S. Westermann, Oct 2020
+% for the topmost unconfined aquifer, as well as overland flow according to
+% Gauckler-Manning equation
+% S. Westermann, Oct 2020, June 2021
 %========================================================================
 
 
@@ -15,10 +14,6 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function lateral = LAT3D_WATER_UNCONFINED_AQUIFER(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = []; %24 .* 3600;
@@ -54,7 +49,8 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
             lateral.PARENT.STATVAR.T_water = [];
             lateral.PARENT.STATVAR.water_table_top_cell = 0;      
             lateral.PARENT.STATVAR.water_depth = 0; %depth of the free water at the surface flowing according to Gauckler-Manning 
-            
+            lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
+
             lateral.TEMP.open_system = 1; %start with open system
 
             CURRENT = lateral.PARENT.TOP.NEXT;

@@ -1,10 +1,7 @@
 %========================================================================
-% CryoGrid LATERAL_IA class LAT_SEEPAGE_FACE_WATER 
-% simulates lateral water flow through a seepage face with defined upper
-% and lower elevation (absolute elevation, not relative to the surface!), 
-%  as well as contact lengths (i.e. width) and distance from the GROUND column.
-% At the seepage face, air pressure is assumed.
-% S. Westermann, Oct 2020
+% CryoGrid LATERAL_IA class LAT_OVERLAND_FLOW 
+% simulates overland flow accroding to Gauckler-Manning equation
+% S. Westermann, June 2021
 %========================================================================
 
 
@@ -16,9 +13,6 @@ classdef LAT_OVERLAND_FLOW < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function lateral = LAT_SEEPAGE_FACE_WATER(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
 
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = [];

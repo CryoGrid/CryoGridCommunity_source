@@ -5,30 +5,23 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_Painter
+classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL 
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-        
-%         function ground = GROUND_freezeC_RichardsEqW_seb(index, pprovider, cprovider, forcing)  
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
-
-        
+ 
         function ground = provide_PARA(ground)
             
             ground.PARA.albedo = [];  %surface albedo [-]
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
 
-            %ground.PARA.rootDepth = []; %e-folding constant of transpiration reduction with depth [1/m]
-            %ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
-            %ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
             ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
-            %ground.STATVAR.hydraulicConductivity = []; % hydraulic conductivity [m/sec]
+
+            ground.PARA.conductivity_function = [];
             
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -123,12 +116,20 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
 
         end
         
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal(unit_converter, ground, tile);
+        end
         
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'thermalConductivity_CLM4_5';
+            end
             
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
@@ -153,6 +154,14 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET_energy = ground.STATVAR.energy.*0;
             ground.TEMP.surface_runoff = 0;
+        end
+        
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freezeC(ground);
+            ground = conductivity(ground);
+            ground = calculate_hydraulicConductivity_RichardsEq(ground);
+
         end
         
         %---time integration------
@@ -256,7 +265,9 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         end
         
         function ground = conductivity(ground)
-            ground = thermalConductivity_CLM4_5(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+            %ground = thermalConductivity_CLM4_5(ground);
             %ground = conductivity_mixing_squares(ground);
         end
         

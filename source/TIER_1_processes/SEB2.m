@@ -1,6 +1,7 @@
 %========================================================================
 % CryoGrid TIER1 library class, functions related to surface energy balance 
 % NOTE: also contains functions for penetration of short-wave radiation
+%DO NOT USE, EXPERIMENTAL DEAD-END!!!
 % S. Westermann, October 2020
 %========================================================================
 
