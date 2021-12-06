@@ -33,6 +33,7 @@ classdef OUT_last_timestep < matlab.mixin.Copyable
         function out = provide_PARA(out)         
 
             out.PARA.save_timestep = []; %if empty save final state at the end of the run, so that it can serve as initial condition for new runs
+            out.PARA.tag = [];
 
         end
 		
@@ -62,6 +63,8 @@ classdef OUT_last_timestep < matlab.mixin.Copyable
         
         function out = store_OUT(out, tile)
             t = tile.t;
+            out_tag = out.PARA.tag;
+            
             if t==out.SAVE_TIME || t == out.OUTPUT_TIME
                 
                 disp([datestr(t)])
@@ -76,7 +79,12 @@ classdef OUT_last_timestep < matlab.mixin.Copyable
                 if ~(exist([result_path run_name])==7)
                     mkdir([result_path result_path])
                 end
-                save([result_path run_name '/' run_name '_last_timestep.mat'], 'out')
+                if isempty(out_tag) || all(isnan(out_tag))
+                    save([result_path run_name '/' run_name '_last_timestep.mat'], 'out')
+                else
+                    save([result_path run_name '/' run_name '_' out_tag '_last_timestep.mat'], 'out')
+                end
+                
                 out.OUTPUT_TIME = out.OUTPUT_TIME + out.PARA.save_timestep;
             end
             
