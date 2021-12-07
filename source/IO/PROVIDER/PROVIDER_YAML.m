@@ -159,6 +159,8 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                                 else
                                     warning(['Unrecognized compound parameter format. Parameter "' fieldname '" in class "' class(new_class) '" not populated.'])
                                 end
+                            elseif ismatrix(contents) && isempty(contents)
+                                new_class.PARA.(fieldname) = [];
                             elseif isempty(contents)
                                 new_class.PARA.(fieldname) = NaN;
                             else
