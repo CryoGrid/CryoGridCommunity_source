@@ -120,6 +120,7 @@ classdef IA_WATER < IA_BASE
                 (ia_heat_water.NEXT.STATVAR.layerThick(1).*ia_heat_water.NEXT.STATVAR.area(1) - ia_heat_water.NEXT.STATVAR.mineral(1) - ia_heat_water.NEXT.STATVAR.organic(1) - ...
                 ia_heat_water.NEXT.STATVAR.field_capacity(1).*ia_heat_water.NEXT.STATVAR.layerThick(1).*ia_heat_water.NEXT.STATVAR.area(1));
             saturation_next = max(0,min(1,saturation_next)); % 0 water at field capacity, 1: water at saturation
+            saturation_next(saturation_next >= (1 - 1e-9)) = 1;
             
             %outflow
             d_water_out = ia_heat_water.PREVIOUS.STATVAR.hydraulicConductivity(end) .* ia_heat_water.PREVIOUS.STATVAR.area(end); 
@@ -164,6 +165,7 @@ classdef IA_WATER < IA_BASE
             saturation_next = (ia_heat_water.NEXT.STATVAR.waterIce(1)  - ia_heat_water.NEXT.STATVAR.field_capacity(1) .* volume_matrix)./...
                 (volume_matrix - ia_heat_water.NEXT.STATVAR.mineral(1) - ia_heat_water.NEXT.STATVAR.organic(1) - ia_heat_water.NEXT.STATVAR.field_capacity(1) .* volume_matrix);
             saturation_next = max(0,min(1,saturation_next)); % 0 water at field capacity, 1: water at saturation
+            saturation_next(saturation_next >= (1 - 1e-9)) = 1;
             
             %outflow
             d_water_out = ia_heat_water.PREVIOUS.STATVAR.hydraulicConductivity(end) .* ia_heat_water.PREVIOUS.STATVAR.area(end); 
@@ -203,6 +205,7 @@ classdef IA_WATER < IA_BASE
             saturation_next = (ia_heat_water.NEXT.STATVAR.waterIce(1)  - ia_heat_water.NEXT.STATVAR.field_capacity(1) .* volume_matrix)./...
                 (volume_matrix - ia_heat_water.NEXT.STATVAR.mineral(1) - ia_heat_water.NEXT.STATVAR.organic(1) - ia_heat_water.NEXT.STATVAR.field_capacity(1) .* volume_matrix);
             saturation_next = max(0,min(1,saturation_next)); % 0 water at field capacity, 1: water at saturation
+            saturation_next(saturation_next >= (1 - 1e-9)) = 1;
             
             %outflow
             d_water_out = ia_heat_water.NEXT.STATVAR.hydraulicConductivity(1) .* ia_heat_water.PREVIOUS.STATVAR.area(end);
@@ -260,7 +263,7 @@ classdef IA_WATER < IA_BASE
             
             saturation_previous = max(0,min(1,saturation_previous)); % 0 water at field capacity, 1: water at saturation
             
-            %check if water can penetrate through ice, and get first (amlost) unfrozen cell
+            %check if water can penetrate through ice, and get first (almost) unfrozen cell
             i=1;
             first_water_cell_reached = 0;
             while i<= size(ia_heat_water.NEXT.STATVAR.layerThick,1) && ia_heat_water.NEXT.STATVAR.water(i,1) > 0 && ~first_water_cell_reached
@@ -424,10 +427,11 @@ classdef IA_WATER < IA_BASE
             saturation_next = ia_heat_water.NEXT.STATVAR.waterIce(1,1) ./ (ia_heat_water.NEXT.STATVAR.layerThick(1,1).*ia_heat_water.NEXT.STATVAR.area(1,1) ...
                 - ia_heat_water.NEXT.STATVAR.mineral(1,1) - ia_heat_water.NEXT.STATVAR.organic(1,1) - ia_heat_water.NEXT.STATVAR.XwaterIce(1,1));
             saturation_next = max(0,min(1,saturation_next)); % 0 water at field capacity, 1: water at saturation
+            saturation_next(saturation_next >= (1 - 1e-9)) = 1;
             
             %outflow
             %d_water_out = ia_heat_water.NEXT.PARA.hydraulicConductivity .* ia_heat_water.PREVIOUS.STATVAR.water(end) ./ ia_heat_water.PREVIOUS.STATVAR.layerThick(end); % area cancels out; make this depended on both involved cells?
-            d_water_out = ia_heat_water.NEXT.STATVAR.hydraulicConductivity(1,1) .* ground.STATVAR.area(1,1);
+            d_water_out = ia_heat_water.NEXT.STATVAR.hydraulicConductivity(1,1) .* ia_heat_water.NEXT.STATVAR.area(1,1);
             %inflow
             d_water_in = d_water_out .* reduction_factor_in(saturation_next, ia_heat_water);
             
@@ -451,7 +455,7 @@ classdef IA_WATER < IA_BASE
             ia_heat_water.NEXT.TEMP.d_water_energy(1) = ia_heat_water.NEXT.TEMP.d_water_energy(1) + ia_heat_water.NEXT.TEMP.F_ub_water_energy;
             
             if ia_heat_water.NEXT.STATVAR.Xwater(1) > 1e-6 .* ia_heat_water.NEXT.STATVAR.area(1) %Xwater moving up, 1e-6 corresponds to threshold in get_timestep.
-                d_water_up = ia_heat_water.NEXT.STATVAR.hydraulicConductivity(1,1) .* ground.STATVAR.area(1,1); %does not include overburden pressure, but is right order of magnitude
+                d_water_up = ia_heat_water.NEXT.STATVAR.hydraulicConductivity(1,1) .* ia_heat_water.NEXT.STATVAR.area(1,1); %does not include overburden pressure, but is right order of magnitude
                 d_water_up_energy = d_water_up .* ia_heat_water.NEXT.CONST.c_w .* ia_heat_water.NEXT.STATVAR.T(1);
                 
                 ia_heat_water.PREVIOUS.TEMP.d_water(end) = ia_heat_water.PREVIOUS.TEMP.d_water(end) + d_water_up;
@@ -475,6 +479,7 @@ classdef IA_WATER < IA_BASE
                 - ia_heat_water.NEXT.STATVAR.mineral(1,1) - ia_heat_water.NEXT.STATVAR.organic(1,1) - ia_heat_water.NEXT.STATVAR.XwaterIce(1,1));
             %saturation_next = ia_heat_water.NEXT.STATVAR.waterIce(1,1) ./ (ia_heat_water.NEXT.STATVAR.layerThick(1,1).*ia_heat_water.NEXT.STATVAR.area(1,1) - ia_heat_water.NEXT.STATVAR.mineral(1,1) - ia_heat_water.NEXT.STATVAR.organic(1,1));
             saturation_next = max(0,min(1,saturation_next)); % 0 water at field capacity, 1: water at saturation
+            saturation_next(saturation_next >= (1 - 1e-9)) = 1;
             
             %outflow
             d_water_out = ia_heat_water.PREVIOUS.STATVAR.hydraulicConductivity(end) .* ia_heat_water.PREVIOUS.STATVAR.area(end);
