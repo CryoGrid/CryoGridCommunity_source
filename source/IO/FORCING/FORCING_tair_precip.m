@@ -42,6 +42,9 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
 
             forcing.PARA.filename = [];       % filename of Matlab file containing forcing data
 			forcing.PARA.forcing_path = [];   % location (path) of forcing files
+            forcing.PARA.latitude = [];       % 
+            forcing.PARA.longitude = [];      % 
+            forcing.PARA.altitude = [];       % 
             forcing.PARA.start_time = [];     % start time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.end_time = [];       % end time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.rain_fraction = [];  % rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
