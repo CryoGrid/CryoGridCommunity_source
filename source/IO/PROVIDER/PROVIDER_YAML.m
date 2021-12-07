@@ -61,8 +61,8 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                         for ii = 1:size(fieldnames_CONST,1)
                             if isfield(provider.CONST, fieldnames_CONST{ii,1})
                                 new_class.CONST.(fieldnames_CONST{ii,1}) = provider.CONST.(fieldnames_CONST{ii,1});
-                            else
-                                warning(['Constant "' fieldnames_CONST{ii,1} '" in class "' class(new_class) '" not populated.'])
+                            %else
+                                %warning(['Constant "' fieldnames_CONST{ii,1} '" in class "' class(new_class) '" not populated.'])
                             end
                         end
                     end
@@ -77,7 +77,7 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                         for ii = 1:size(fieldnames_PARA,1)
                             fieldname = fieldnames_PARA{ii};
                             if ~isfield(section{k}, fieldname)
-                                warning(['Parameter "' fieldname '" in class "' class(new_class) '" not populated.'])
+                                %warning(['Parameter "' fieldname '" in class "' class(new_class) '" not populated.'])
                                 continue
                             end
                             
@@ -187,7 +187,7 @@ classdef PROVIDER_YAML < BASE_PROVIDER
         function provider = update_run_name_yaml(provider, worker_number)
             %change run name and make new result directories if necessary
             provider.PARA.run_name = [provider.PARA.run_name '_' num2str(worker_number)];
-            if ~(exist([provider.PARA.result_path provider.PARA.run_name ])==7)
+            if ~(exist([provider.PARA.result_path provider.PARA.run_name ], 'dir')==7)
                 mkdir([provider.PARA.result_path provider.PARA.run_name]);
             end
         end
