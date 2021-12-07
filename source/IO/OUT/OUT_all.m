@@ -72,6 +72,8 @@ classdef OUT_all < matlab.mixin.Copyable
             end
             
             out.TEMP = struct();
+            out.TEMP.count = 0;
+            out.TEMP.time = 0;
             
         end
         
@@ -81,6 +83,7 @@ classdef OUT_all < matlab.mixin.Copyable
             
         function out = store_OUT(out, tile)           
             
+
             t = tile.t;
             TOP = tile.TOP; 
             BOTTOM = tile.BOTTOM;
@@ -90,11 +93,20 @@ classdef OUT_all < matlab.mixin.Copyable
             timestep = tile.timestep;
             out_tag = out.PARA.tag;
             
+             out.TEMP.count = out.TEMP.count + 1;
+             out.TEMP.time = out.TEMP.time + tile.timestep;
+             
             if t>=out.OUTPUT_TIME
                 % It is time to collect output
                 % Store the current state of the model in the out structure.
+                %if id == 1
+                avg_timestep = out.TEMP.time/out.TEMP.count;
+                disp([datestr(t,'dd-mmm-yyyy HH:MM') ' Average timestep: ' num2str(avg_timestep)])
+                out.TEMP.count = 0;
+                out.TEMP.time = 0;
+                %end
+                %labBarrier
 
-                disp([datestr(t)])
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 CURRENT =TOP.NEXT;
@@ -129,7 +141,7 @@ classdef OUT_all < matlab.mixin.Copyable
 
                 % Set the next OUTPUT_TIME
                 out.OUTPUT_TIME = min(out.SAVE_TIME, out.OUTPUT_TIME + out.PARA.output_timestep);
-                
+
                 if t>=out.SAVE_TIME
                     % It is time to save all the collected model output to disk
                      

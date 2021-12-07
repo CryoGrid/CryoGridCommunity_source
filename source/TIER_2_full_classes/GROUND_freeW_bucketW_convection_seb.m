@@ -90,6 +90,7 @@ classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLU
             ground.CONST.rho_i = []; %ice density
             %ground.CONST.n_water = [];
         end
+
         
         function ground = convert_units(ground, tile)
                 unit_converter = str2func(tile.PARA.unit_conversion_class);
@@ -97,6 +98,7 @@ classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLU
                 ground = convert_normal(unit_converter, ground, tile);
         end        
             
+
         function ground = finalize_init(ground, tile)
 %             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
 %             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;

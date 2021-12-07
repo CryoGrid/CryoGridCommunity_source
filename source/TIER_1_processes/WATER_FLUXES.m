@@ -7,6 +7,27 @@ classdef WATER_FLUXES < BASE
 
     methods
         
+        function canopy = get_boundary_condition_u_water_canopy(canopy, forcing)
+            rain = forcing.TEMP.rainfall ./ 1000 ./ 24 ./3600 .* canopy.STATVAR.area(1); % mm/day -> m/s
+            Tair = forcing.TEMP.Tair;
+            L = canopy.PARA.LAI;
+            S = canopy.PARA.SAI;
+            
+            % interception (only when canopy water is below threshold)
+            f_intr_rain = tanh(L+S);
+            rain_intr = f_intr_rain.*rain; 
+            
+            energy_intr = rain_intr.*canopy.CONST.c_w.*Tair;
+            
+            % throughfall
+            rain_thru = rain.*(1-f_intr_rain);
+            
+            canopy.TEMP.d_water(1) = canopy.TEMP.d_water(1) + rain_intr;
+            canopy.TEMP.d_water_energy(1) = canopy.TEMP.d_water_energy(1) + energy_intr;
+            
+            canopy.TEMP.rain_thru = rain_thru;
+        end
+        
         %normal upper boundary condition for water fluxes for bucketW water scheme (the "2" has no meaning!)
         function ground = get_boundary_condition_u_water2(ground, forcing)
             rainfall = forcing.TEMP.rainfall ./ 1000 ./ 24 ./3600 .* ground.STATVAR.area(1);  %possibly add water from external source here 
@@ -217,6 +238,14 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_energy(end) = ground.TEMP.d_water_energy(end) + ground.TEMP.F_lb_water_energy;
         end
         
+        function canopy = get_derivate_water_canopy(canopy)
+            guaranteed_flow = canopy.TEMP.d_water_ET;  %add other external fluxes here
+            guaranteed_flow_energy = canopy.TEMP.d_water_ET_energy;
+            
+            canopy.TEMP.d_water = canopy.TEMP.d_water + guaranteed_flow;
+            canopy.TEMP.d_water_energy = canopy.TEMP.d_water_energy + guaranteed_flow_energy;
+        end
+        
         %water fluxes for bucketW hydrological scheme (the "2" has no meaning)
         function ground = get_derivative_water2(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable 
             saturation = (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick.*ground.STATVAR.area)./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.field_capacity.*ground.STATVAR.layerThick.*ground.STATVAR.area);
@@ -268,7 +297,6 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_in = d_water_in; % at this stage nice-to-have variables, good for troubleshooting
             ground.TEMP.d_water_out = d_water_out;
         end
-        
         
         function ground = get_derivative_water_Xice(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable
             volume_matrix = ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce;
@@ -398,8 +426,7 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_out = d_water_out;
         end
         
-     
-        %Richards equation         
+        %Richards equation
         function ground = get_derivative_water_RichardsEq(ground) %adapts the fluxes automatically so that no checks are necessary when advancing the prognostic variable
 
             waterIce_saturation = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick.*ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic);
@@ -714,6 +741,7 @@ classdef WATER_FLUXES < BASE
 
         end
         
+
         function ground = gravitational_potential(ground) %calculates gravitational potential
             
             %Find all saturated cells
@@ -762,7 +790,6 @@ classdef WATER_FLUXES < BASE
   
         end
         
-        
         function rf = reduction_factor_out(saturation, ground)  %part of get_derivative_water2(ground)
             %smoothness = 3e-2;
             smoothness = 3e-1;
@@ -777,6 +804,17 @@ classdef WATER_FLUXES < BASE
 %             rf = double(saturation <= 0.9) + double (saturation > 0.9) .* (1 - saturation) ./0.1;
         end
         
+        function timestep = get_timestep_snow_vegetation(canopy)
+            timestep = canopy.STATVAR.ice ./ -canopy.TEMP.d_snow;
+            timestep(canopy.TEMP.d_snow == 0) = canopy.PARA.dt_max;
+        end
+        
+        function timestep = get_timestep_water_vegetation(canopy)
+           timestep(canopy.TEMP.d_water ~= 0) = double(canopy.TEMP.d_water < 0).* canopy.STATVAR.water ./ -canopy.TEMP.d_water + ...
+               double(canopy.TEMP.d_water > 0).* 0.1 .* canopy.PARA.Wmax.*canopy.STATVAR.area ./ canopy.TEMP.d_water;
+           timestep(canopy.TEMP.d_water == 0) = canopy.PARA.dt_max;
+            timestep(timestep<=0) = canopy.PARA.dt_max;
+        end
         
         function timestep = get_timestep_water(ground)
             %outflow + inflow

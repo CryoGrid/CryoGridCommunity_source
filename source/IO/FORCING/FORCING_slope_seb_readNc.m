@@ -18,6 +18,7 @@
 % timestep in Matlab.
 % S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
 % Edited (changes for slopes) were made by J. Schmidt, December 2020
+% Small corrections by R. B. Zweigel, August 2021
 % The forcing data need in addition for the slope:
 %       S_TOA: Short-wave radiation at the top of the atmosphere
 %       albedo_foot: albedo at the foot of the slope (can vary in time for
@@ -167,6 +168,9 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             % Additional forcing data for slopes:
             forcing.TEMP.S_TOA=0;
             forcing.TEMP.albedo_foot=0;
+            forcing.TEMP.Sin_dif = 0;
+            forcing.TEMP.Sin_dir = 0;
+            forcing.TEMP.sunElevation = 0;
             
             % Non-mandatory forcing data for slopes:
 %             if isfield(temp.FORCING.data,'seaT') == 1
@@ -203,6 +207,11 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
+            
+            forcing.TEMP.Sin_dif=forcing.DATA.Sin_dif(posit,1)+(forcing.DATA.Sin_dif(posit+1,1)-forcing.DATA.Sin_dif(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            forcing.TEMP.Sin_dir=forcing.DATA.Sin_dir(posit,1)+(forcing.DATA.Sin_dir(posit+1,1)-forcing.DATA.Sin_dir(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            forcing.TEMP.sunElevation=forcing.DATA.sunElevation(posit,1)+(forcing.DATA.sunElevation(posit+1,1)-forcing.DATA.sunElevation(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+
             forcing.TEMP.t = t;
             
         end
@@ -251,7 +260,7 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
 
             % Calculation of reflected SW
 
-            SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) .* sky_view_factor;
+            SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) .* (1 - sky_view_factor); % corrected RBZ Aug-21
             
             %Calculation of reprojected direct SW
 
@@ -299,7 +308,7 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
 %                 Lin(i,1) = sky_view_factor * forcing.DATA.Lin(i,1) + (1 - sky_view_factor) * sigma * (forcing.DATA.Tair(i,1) + 273.15)^4; %Tair for calculation
 %                 end
 %             else %no water at the foot of the slope
-            Lin = sky_view_factor .* forcing.DATA.Lin + (1 - sky_view_factor) .* sigma .* (forcing.DATA.Tair + 273.15).^4; %Tair for calculation
+            Lin = sky_view_factor .* forcing.DATA.Lin + (1 - sky_view_factor) .* sigma .* (forcing.DATA.Tair + forcing.CONST.Tmfw).^4; %Tair for calculation
 %             end
          
             %end
