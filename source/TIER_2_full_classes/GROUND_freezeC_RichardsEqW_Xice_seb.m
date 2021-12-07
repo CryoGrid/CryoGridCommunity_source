@@ -98,6 +98,8 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             
             ground.CONST.cp = [];  %specific heat capacity at constant pressure of air
             ground.CONST.g = [];   % gravitational acceleration Earth surface
+            ground.CONST.R = [];    % Universal gas constant
+            ground.CONST.molar_mass_w = []; 
             
             ground.CONST.rho_w = []; % water density
             ground.CONST.rho_i = []; %ice density       
@@ -154,6 +156,10 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             forcing = tile.FORCING;
             ground = surface_energy_balance(ground, forcing);
             ground = get_boundary_condition_u_water_RichardsEq_Xice(ground, forcing); %checked that this flux can be taken up!!
+        end
+        
+        function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features LW penetration
+            [ground, L_up] = penetrate_LW_no_transmission(ground, L_down);
         end
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
@@ -350,6 +356,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
         function ground = get_boundary_condition_u_water2(ground, forcing)
            ground = get_boundary_condition_u_water2@WATER_FLUXES(ground, forcing);
         end
+        
         function ground = get_derivative_water2(ground)
             ground = get_derivative_water2@WATER_FLUXES(ground);
         end
@@ -368,6 +375,10 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
         
         function [ground, S_up] = penetrate_SW_no_transmission(ground, S_down)
             [ground, S_up] = penetrate_SW_no_transmission@SEB(ground, S_down);
+        end
+        
+        function [ground, L_up] = penetrate_LW_no_transmission(ground, L_down)
+            [ground, L_up] = penetrate_LW_no_transmission@SEB(ground, L_down);
         end
         
         function ground = get_T_water_freeW(ground)

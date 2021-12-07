@@ -136,7 +136,7 @@ ia=[1	0	3	3	3	3	1	0	3	3	3	3	0	0	0	0	0	0	0	0	6	6	0	0	0	0	0	0	0	0	0	0	0   0	0;
     0	2	0	10	0	10	0	2	0	10	0	11	0	15	0	15	0	15	0	18	0	2	0	2	0	0	12	0	0   0	0	0	0	0	0;
     0	0	0	0	0	0	0	0	0	10	0	11	0	15	0	15	0	15	0	18	0	0	0	0	0	0	12	0   0	0	0	0	0	0	0;
     0	0	0	0	0	0	0	0	0	0	0	0	20	0	0	0	0	0	0	0	0	0	0	0	0	0	0   0	0	0	0	0	0	0   0;
-    0	0	0	0	0	0	0	0	0	0	0	0	20	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0   0   0];
+    0	0	0	0	0	0	0	0	0	0	0	0	21	0	0	0	0	0	21	0	0	0	0	0	0	0	0	0	0	0	0	0	0   0   0];
 
  
 %all avilable INTERACTION (IA) classes
@@ -176,6 +176,8 @@ elseif ia(id_b,id_a) == 19
     ia_class = IA_HEAT11_WATER11_RichardsEq_LAKE_XICE();
 elseif ia(id_b,id_a) == 20
     ia_class = IA_HEAT01_SEB11_vegetation();
+elseif ia(id_b,id_a) == 21
+    ia_class = IA_HEAT01_SEB11_vegetation_CLM5();
 elseif ia(id_b,id_a) == 101
     ia_class = IA_LAKE_simple_frozen_unfrozen();
 else

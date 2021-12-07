@@ -11,7 +11,6 @@ classdef SEB < BASE
         
         %Obukhov length
         function seb = L_star(seb, forcing)
-            
             uz = forcing.TEMP.wind;
             z =  seb.PARA.airT_height;
             z0 = seb.PARA.z0;
@@ -38,7 +37,35 @@ classdef SEB < BASE
             
             seb.STATVAR.Lstar = L_star;
             seb.STATVAR.u_star = u_star;
+        end
+        
+        function seb = L_star_canopy(seb, forcing) % Same as L_star(..), but allowing z0 to be a variable
+            uz = forcing.TEMP.wind;
+            z =  seb.PARA.airT_height;
+            z0 = seb.STATVAR.z0;
+            Tz = forcing.TEMP.Tair+273.15;
+            Lstar = seb.STATVAR.Lstar;
+            p = forcing.TEMP.p;
+            Qh = seb.STATVAR.Qh;
+            Qe = seb.STATVAR.Qe;
             
+            rho = rho_air(seb, p, Tz);
+            cp = seb.CONST.cp;
+            kappa = seb.CONST.kappa; %0.4;
+            g = seb.CONST.g; %9.81;
+            
+            if Tz >=273.15
+                L = latent_heat_evaporation(seb, Tz); %1e3.*(2500.8 - 2.36.*(Tz-273.15));  %latent heat of evaporation of water
+            else
+                L = latent_heat_sublimation(seb, Tz); %1e3.*2834.1; %latent heat of sublimation
+            end
+            
+            u_star = real(uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)));
+            L_star = real(-rho.*cp.*Tz./kappa./g.*u_star.^3./(Qh + 0.61.*cp./L.*Tz.*Qe));
+            L_star=(abs(L_star)<1e-7).*L_star./abs(L_star).*1e-7 + (abs(L_star)>=1e-7).*L_star;  %limits Lstar
+            
+            seb.STATVAR.Lstar = L_star;
+            seb.STATVAR.u_star = u_star;
         end
         
         %atmospheric stability functions
@@ -86,9 +113,9 @@ classdef SEB < BASE
             L_i = latent_heat_sublimation(seb, TForcing); % 1e3.*2834.1; %latent heat of sublimation
             
             if TForcing<=273.15
-                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-.622.*satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
             else
-                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb,z./Lstar, z0./Lstar)).*(q-satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar)  ...
+                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb,z./Lstar, z0./Lstar)).*(q-.622.*satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar)  ...
                     + rs.*uz.*kappa.^2./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)));
             end
         end
@@ -115,9 +142,9 @@ classdef SEB < BASE
             L_i = latent_heat_sublimation(seb, TForcing); % 1e3.*2834.1; %latent heat of sublimation
             
             if TForcing<=273.15
-                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-.622.*satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
             else
-                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-.622.*satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
             end
         end
         
@@ -139,7 +166,7 @@ classdef SEB < BASE
             ice_fraction = seb.STATVAR.ice(1,1) ./ seb.STATVAR.waterIce(1,1);
             
             rho = rho_air(seb, p, seb.STATVAR.T(1)+273.15);
-            sat_pressure_first_cell = water_fraction .* satPresWater(seb, seb.STATVAR.T(1)+273.15) + ice_fraction .* satPresWater(seb, seb.STATVAR.T(1)+273.15);
+            sat_pressure_first_cell = water_fraction .* satPresWater(seb, seb.STATVAR.T(1)+273.15) + ice_fraction .* satPresIce(seb, seb.STATVAR.T(1)+273.15);
             latent_heat = water_fraction .* latent_heat_evaporation(seb, seb.STATVAR.T(1)+273.15) + ice_fraction .* latent_heat_sublimation(seb, seb.STATVAR.T(1)+273.15);
             
             %             sat_pressure_first_cell = double(seb.STATVAR.T(1)>=0) .* satPresWater(seb, seb.STATVAR.T(1)+273.15) + double(seb.STATVAR.T(1)<0) .* satPresWater(seb, seb.STATVAR.T(1)+273.15);
@@ -153,10 +180,13 @@ classdef SEB < BASE
             %this might be wrong if the ground is frozen?
             q_first_cell = sat_pressure_first_cell .* saturation_fraction_air_first_cell ./ p;
             
-            vol_water_first_cell = seb.STATVAR.water(1,1) ./ (seb.STATVAR.layerThick(1,1) .* seb.STATVAR.area(1,1));
-            reduce_yes_no = vol_water_first_cell < seb.STATVAR.field_capacity(1,1) && forcing.TEMP.q < q_first_cell;
-            betaCLM4_5 = 1 +  double(reduce_yes_no) .* (-1 +  0.25 .* (1-(cos(pi() .* vol_water_first_cell ./ seb.STATVAR.field_capacity(1,1)))).^2);
-            
+            %             betaCLM4_5 = soil_resistance_beta(seb.NEXT,forcing); Does not
+            %             work both with and without canopy
+            betaCLM4_5 = soil_resistance_beta(seb,forcing);
+            %             vol_water_first_cell = seb.STATVAR.water(1,1) ./ (seb.STATVAR.layerThick(1,1) .* seb.STATVAR.area(1,1));
+            %             reduce_yes_no = vol_water_first_cell < seb.STATVAR.field_capacity(1,1) && forcing.TEMP.q < q_first_cell;
+            %             betaCLM4_5 = 1 +  double(reduce_yes_no) .* (-1 +  0.25 .* (1-(cos(pi() .* vol_water_first_cell ./ seb.STATVAR.field_capacity(1,1)))).^2);
+            %
             %             vol_water_first_cell
             %             betaCLM4_5
             
@@ -166,6 +196,75 @@ classdef SEB < BASE
             seb.STATVAR.evap_energy =  seb.STATVAR.evap.*  (double(seb.STATVAR.T(1,1)>=0) .* seb.CONST.c_w .* seb.STATVAR.T(1,1) + ...
                 double(seb.STATVAR.T(1,1)<0) .* seb.CONST.c_i .* seb.STATVAR.T(1,1));
             seb.STATVAR.sublim_energy =  seb.STATVAR.sublim .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f);
+        end
+        
+        function seb = Q_e_CLM5(seb, forcing)
+            L = seb.STATVAR.LAI; % Leaf area index
+            S = seb.STATVAR.SAI; % Stem area index
+            Tmfw = forcing.CONST.Tmfw;
+            Tv = seb.STATVAR.T(1); % leaf temperature
+            q_atm = forcing.TEMP.q; % atm. specific humidity
+            p = forcing.TEMP.p; % surface pressure
+            rho_atm = seb.TEMP.rho_atm; % air density
+            L_sun = seb.TEMP.L_sun;
+            L_sha = seb.TEMP.L_sha;
+            f_dry = seb.STATVAR.f_dry;
+            f_wet = seb.STATVAR.f_wet;
+            r_sun = seb.TEMP.r_sun;
+            r_sha = seb.TEMP.r_sha;
+            
+            q_g = get_humidity_ground(seb.IA_NEXT, forcing); % ground specific humidity
+            e_v = double(Tv>=0).*satPresWater(seb,Tv+Tmfw) + double(Tv<0).*satPresIce(seb,Tv+Tmfw); % saturation water pressure of leafs
+            qs_Tv = .622.*e_v./p; % saturation water vapor specific humidity at leaf temperature
+            
+            r_aw = seb.TEMP.r_a; % aerodynamic resistance against water vapor transport canopy air - atmosphere
+            r_aw_prime = seb.TEMP.r_a_prime; % aerodynamic resistance against water vapor transport soil - canopy air
+            r_b = seb.TEMP.r_b; % leaf boudnary layer resitance against vapor transport
+            r_total = seb.TEMP.r_total;
+            r_soil = seb.TEMP.r_soil;
+            
+            ca = 1/r_aw;
+            cv = 1/r_total;
+            cg = 1./(r_aw_prime + r_soil);
+            
+            q_s = (q_atm.*ca + q_g.*cg + qs_Tv.*cv)./(ca + cv + cg); % Eq. 5.108, canopy specific humidity
+            
+            seb.STATVAR.q_s = q_s;
+            seb.STATVAR.qs_TV = qs_Tv;
+            
+            water_fraction = seb.STATVAR.water(1) ./ seb.STATVAR.waterIce(1);
+            ice_fraction = seb.STATVAR.ice(1) ./ seb.STATVAR.waterIce(1);
+            water_fraction(seb.STATVAR.waterIce == 0) = double(Tv>=0);
+            ice_fraction(seb.STATVAR.waterIce == 0) = double(Tv<0);
+            
+            if seb.TEMP.Ev_pot > 0 % evaporation/transpiration in m3 water /(m2*s), not kg/(m2*s) as in CLM5
+                seb.TEMP.evap = -rho_atm.*(q_s - qs_Tv).* f_wet.*water_fraction.*(L+S) ./r_b ./seb.CONST.rho_w;
+                seb.TEMP.sublim = -rho_atm.*(q_s - qs_Tv).* f_wet.*ice_fraction.*(L+S) ./r_b ./seb.CONST.rho_w; % Is this correct? or use f_snow?
+                seb.TEMP.transp_sun = -rho_atm.*(q_s - qs_Tv).* f_dry.*L_sun ./(r_b+r_sun) ./seb.CONST.rho_w;
+                seb.TEMP.transp_sha = -rho_atm.*(q_s - qs_Tv).* f_dry.*L_sha ./(r_b+r_sha) ./seb.CONST.rho_w;
+            else % condensation/deposition
+                seb.TEMP.evap = -rho_atm.*(q_s - qs_Tv).* water_fraction.*(L+S) ./r_b ./seb.CONST.rho_w;
+                seb.TEMP.sublim = -rho_atm.*(q_s - qs_Tv).* ice_fraction.*(L+S) ./r_b ./seb.CONST.rho_w;
+                seb.TEMP.transp_sun = 0;
+                seb.TEMP.transp_sha = 0;
+            end
+            seb.TEMP.Qe_canopy = latent_heat_evaporation(seb, Tv+Tmfw).*seb.TEMP.evap.*seb.CONST.rho_w + latent_heat_sublimation(seb, Tv+Tmfw).*seb.TEMP.sublim.*seb.CONST.rho_w;
+            seb.TEMP.Qt_sun = latent_heat_evaporation(seb, Tv+Tmfw).*seb.TEMP.transp_sun.*seb.CONST.rho_w;
+            seb.TEMP.Qt_sha = latent_heat_evaporation(seb, Tv+Tmfw).*seb.TEMP.transp_sha.*seb.CONST.rho_w;
+            
+            seb.STATVAR.Qe = seb.TEMP.Qe_canopy + seb.TEMP.Qt_sun + seb.TEMP.Qt_sha;
+            seb.TEMP.evap_energy = seb.TEMP.evap.*( double(Tv>=0).*seb.CONST.c_w.*Tv + double(Tv<0).*seb.CONST.c_i.*Tv);
+            seb.TEMP.sublim_energy = seb.TEMP.sublim .* (seb.CONST.c_i.*Tv - seb.CONST.L_f);
+            seb.TEMP.transp_energy = (seb.TEMP.transp_sun+seb.TEMP.transp_sha).*seb.CONST.c_w.*Tv; % assumes water within the leaf is always unfrozen when transpiring
+            
+            if seb.STATVAR.waterIce > seb.PARA.Wmax.*(L+S).*seb.STATVAR.area && seb.TEMP.evap < 0
+                seb.TEMP.evap = 0;
+                seb.TEMP.evap_energy = 0;
+            elseif seb.STATVAR.waterIce > seb.PARA.Wmax.*(L+S).*seb.STATVAR.area && seb.TEMP.sublim < 0
+                seb.TEMP.sublim = 0;
+                seb.TEMP.sublim_energy = 0;
+            end
+            
         end
         
         %sensible heat flux
@@ -192,42 +291,91 @@ classdef SEB < BASE
             
         end
         
-        function Q_h = Q_h_CLM5(seb, forcing)
-            Cp = seb.CONST.cp; % Specific heat capacity of air
-            L = seb.PARA.LAI; % Leaf area index
-            S = seb.PARA.SAI; % Stem area index
-            Tv = seb.STATVAR.T(1)+forcing.CONST.Tmfw; % leaf temperature
+        function seb = Q_h_CLM5(seb, forcing)
+            cp = seb.CONST.cp;
+            L = seb.STATVAR.LAI;
+            S = seb.PARA.SAI;
+            Tv = seb.STATVAR.T(1)+forcing.CONST.Tmfw;
             Tg = seb.NEXT.STATVAR.T(1)+forcing.CONST.Tmfw; % ground temperature
-            z = forcing.PARA.airT_height;
-            z0v = seb.PARA.z0; % roughness length of vegetation
-            z0g = seb.NEXT.PARA.z0; % Roughness lenght of ground
-            %R_z0 = seb.PARA.R_z0; % not needed when zo
             Tz = forcing.TEMP.Tair+forcing.CONST.Tmfw; % air temperature in Kelvin
+            z = forcing.PARA.airT_height; % height above ground for measurements
+            z = z + sum(seb.STATVAR.layerThick); % adjust so forcing height is above canopy
             Gamma = seb.CONST.Gamma_dry; % negative of dry adiabatic lapse rate
-            kappa = seb.CONST.kappa;
-            u_star = seb.STATVAR.u_star;
-            Lstar = seb.STATVAR.Lstar;
-            Cv = seb.PARA.Cv; % Turbulent transfer coefficient canopy surface - canopy air
-            d_leaf = seb.PARA.d_leaf;
-            z_top = sum(seb.STATVAR.layerThick);
-            ypsilon = seb.CONST.ypsilon; % kinematic viscosity of air
-            Cs_dense = seb.PARA.Cs_dense;
-            z = z + z_top;
-            
+            r_b = seb.TEMP.r_b;
+            r_ah = seb.TEMP.r_a; % r_ah = r_aw, resistance to sensible heat transfer canopy air - atmosphere
+            r_ah_prime = seb.TEMP.r_a_prime;
+            rho_atm = seb.TEMP.rho_atm; % air density
             Tz_pot = Tz+Gamma.*z; % Eq. 5.7 potential temperature
+            
+            Ts = (Tz_pot./r_ah + Tg./r_ah_prime + Tv.*(L+S)./r_b)./(1./r_ah + 1/r_ah_prime + (L+S)./r_b); % Eq. 5.93 canopy air temperature
+            
+            seb.STATVAR.Ts = Ts - forcing.CONST.Tmfw;
+            seb.STATVAR.Qh = -rho_atm.*cp.*(Ts-Tv).*(L+S)./r_b; % Eq. 5.88
+            
+        end
+        
+        function seb = get_canopy_resistances(seb, forcing)
+            p = forcing.TEMP.p; % surface pressure
+            L = seb.STATVAR.LAI; % Leaf area index
+            S = seb.STATVAR.SAI; % Stem area index
+            q_s = seb.STATVAR.q_s; % canopy air specific humidity (last timestep)
+            L_sun = seb.TEMP.L_sun; % sunlit LAI
+            L_sha = seb.TEMP.L_sha; % shaded LAI
+            f_dry = seb.STATVAR.f_dry; % dry fraction of canopy
+            f_wet = seb.STATVAR.f_wet; % wet fraction of canopy
+            Tv = seb.STATVAR.T(1)+forcing.CONST.Tmfw; % leaf temperature
+            kappa = seb.CONST.kappa; % van Karman constant
+            u_star = seb.STATVAR.u_star; % from Monin-Ubukhov
+            Lstar = seb.STATVAR.Lstar; % Monin-Ubukhov length
+            Cv = seb.PARA.Cv; % Turbulent transfer coefficient canopy surface - canopy air
+            d_leaf = seb.PARA.d_leaf; % characteristic dimension of the leaves in the direction of wind flow [m]
+            ypsilon = seb.CONST.ypsilon; % kinematic viscosity of air
+            Cs_dense = seb.PARA.Cs_dense; %  dense canopy turbulent transfer coefficient
+            z = forcing.PARA.airT_height; % height above ground for measurements
+            z0v = seb.STATVAR.z0; % roughness length of vegetation
+            z0g = get_z0_ground(seb.IA_NEXT); % Roughness lenght of ground
+            z = z + sum(seb.STATVAR.layerThick); % adjust so forcing height is above canopy
+            beta_t = seb.TEMP.beta_t; % soil moisture stress function
+            
+            e_v = double(Tv>=forcing.CONST.Tmfw).*satPresWater(seb,Tv) + double(Tv<forcing.CONST.Tmfw).*satPresIce(seb,Tv); % saturation water pressure of leafs
+            qs_Tv = .622.*e_v./p;
+            seb.TEMP.rho_atm = rho_air_moist(seb,forcing);
             Cs_bare = kappa./.13.*(z0g.*u_star./ypsilon).^(-.45); % Eq.5.121 bare soil turbulent transfer coefficient
             W = exp(-(L+S));% Eq. 5.119
             Cs = Cs_bare.*W + Cs_dense.*(1-W); % Eq. 5.118 turbulent transfer coefficient between soil and canopy air
-            r_ah = 1./(kappa^2.*u_star).*(log(z./z0v)- psi_M(seb, z./Lstar, z0v./Lstar)).*(log(z./z0v)- psi_H(seb, z./Lstar, z0v./Lstar)); % From original CG3 publication
-            r_b = 1./Cv*(u_star./d_leaf).^(-.5); % Eq. 5.122 leaf boundary layer resistance
-            r_ah2 = 1/(Cs.*u_star); % Eq. 5.116 aerodynamic resistance to heat transfer soil - canopy air
-            Ts = (Tz_pot./r_ah + Tg./r_ah2 + Tv.*(L+S)./r_b)./(1./r_ah + 1/r_ah2 + (L+S)./r_b); % Eq. 5.93 canopy air temperature
-            rho = rho_air_moist(seb,forcing); % Eq. 5.8-9, moist air density
-            Q_h = -rho.*Cp.*(Ts-Tv).*(L+S)./r_b; % Eq. 5.88
             
-            Q_h_ground  = -rho.*Cp.*(Ts-Tg)./r_ah2;
-            seb.NEXT.TEMP.d_energy(1) = seb.NEXT.TEMP.d_energy(1) - Q_h_ground;
-
+            seb.TEMP.r_a = 1./(kappa^2.*u_star).*(log(z./z0v)- psi_M(seb, z./Lstar, z0v./Lstar)).*(log(z./z0v)- psi_H(seb, z./Lstar, z0v./Lstar)); % aerodynamic resistance to heat/water vapor fransper canopy air - atmosphere. From original CG3 publication
+            seb.TEMP.r_b = 1./Cv*(u_star./d_leaf).^(-.5); % Eq. 5.122 leaf boundary layer resistance
+            seb.TEMP.r_a_prime = 1/(Cs.*u_star); % Eq. 5.116 aerodynamic resistance to heat/water vapor transfer soil - canopy air
+            seb.TEMP.r_soil = ground_resistance_evap(seb.IA_NEXT, forcing); % resistance to water vapor flux within the soil matrix
+            seb.TEMP.rr_dry = f_dry.*seb.TEMP.r_b./L .* (L_sun./(seb.TEMP.r_b+seb.TEMP.r_sun) + L_sha./(seb.TEMP.r_b+seb.TEMP.r_sha));
+            seb.TEMP.Ev_pot = -seb.TEMP.rho_atm.*(q_s - qs_Tv)./seb.TEMP.r_b;
+            seb.TEMP.rr = double(seb.TEMP.Ev_pot<=0) + double(seb.TEMP.Ev_pot>0).*(f_wet + double(beta_t>0).*seb.TEMP.rr_dry);
+            if L > 0
+                seb.TEMP.r_total = seb.TEMP.r_b./(seb.TEMP.rr.*(L+S));
+            else % No leaves - no transpiration
+                seb.TEMP.r_total = seb.TEMP.r_b./S;
+            end
+        end
+        
+        function beta = soil_resistance_beta(seb, forcing)
+            uz = forcing.TEMP.wind;
+            kappa = seb.CONST.kappa;
+            field_capacity = seb.STATVAR.field_capacity(1);
+            q = forcing.TEMP.q;
+            p = forcing.TEMP.p;
+            T_surf = seb.STATVAR.T(1)+seb.CONST.Tmfw;
+            
+            water_fraction = seb.STATVAR.water(1) ./ seb.STATVAR.waterIce(1);
+            ice_fraction = seb.STATVAR.ice(1) ./ seb.STATVAR.waterIce(1);
+            saturation_factor_surf= exp(seb.STATVAR.waterPotential(1) .* seb.CONST.g ./ ((seb.CONST.R./ seb.CONST.molar_mass_w) .*T_surf));
+            e_sat_surface = water_fraction .* satPresWater(seb, T_surf) + ice_fraction .* satPresIce(seb, T_surf);
+            q_surf = .622.*e_sat_surface.*saturation_factor_surf./p;
+            
+            water_cont_surf = seb.STATVAR.water(1) ./ (seb.STATVAR.layerThick(1) .* seb.STATVAR.area(1));
+            
+            reduce =  water_cont_surf >= field_capacity | q > q_surf;
+            beta = 1 + double(reduce) .* (-1 +  0.25 .* (1-(cos(pi .* water_cont_surf ./ field_capacity))).^2);
         end
         
         function rho = rho_air(seb, p, T) %air density [kg m^(-3)]
@@ -244,20 +392,20 @@ classdef SEB < BASE
             rho = (p - 0.378*e)./(R_da * Tz);
         end
         
-        function L_w = latent_heat_evaporation(seb, T) %specific latent heat of evaporation of water [J/kg K]
+        function L_w = latent_heat_evaporation(seb, T) %specific latent heat of evaporation of water [J/kg]
             L_w = 1e3.*(2500.8 - 2.36.*(T - 273.15));
         end
         
-        function L_i = latent_heat_sublimation(seb, T_forcing) %1e3.*2834.1; %latent heat of sublimation, constant [J/kg K]
+        function L_i = latent_heat_sublimation(seb, T_forcing) %1e3.*2834.1; %latent heat of sublimation, constant [J/kg]
             L_i = seb.CONST.L_s;
         end
         
         function p = satPresWater(seb, T) %saturation pressure water, Magnus formula
-            p=0.622.* 6.112 .* 100 .* exp(17.62.*(T-273.15)./(243.12-273.15+T));
+            p= 6.112 .* 100 .* exp(17.62.*(T-273.15)./(243.12-273.15+T)); % Removed the factor .622 to give actual vapor pressure, RBZ Nov. 2021
         end
         
         function p = satPresIce(seb, T) %saturation pressure ice, Magnus formula
-            p= 0.622.*6.112.* 100.* exp(22.46.*(T-273.15)./(272.61-273.15+T));
+            p= 6.112.* 100.* exp(22.46.*(T-273.15)./(272.61-273.15+T)); % Removed the factor .622 to give actual vapor pressure, RBZ Nov. 2021
         end
         
         % ---------- penetration of LW ----------------------------------
@@ -300,7 +448,7 @@ classdef SEB < BASE
         
         function [seb, Lout] = penetrate_LW_CLM5(seb,Lin)
             % Lin is in W, not W/m2!!!!
-            canopy_emissivity = seb.PARA.canopy_emissivity;
+            canopy_emissivity = seb.STATVAR.emissivity;
             Tmfw = seb.CONST.Tmfw;
             sigma = seb.CONST.sigma;
             
@@ -313,10 +461,10 @@ classdef SEB < BASE
             % transmitted/emitted/reflected upward
             Lout = (1- canopy_emissivity).*L_up + canopy_emissivity.*sigma.*(seb.STATVAR.T + Tmfw)^4.*seb.STATVAR.area;
             
-            seb.TEMP.L_abs = (Lin + L_up - Lout - L_down)./seb.STATVAR.area;
+            seb.TEMP.L_abs = Lin + L_up - Lout - L_down;
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.L_abs;
-            seb.TEMP.L_down = L_down./seb.STATVAR.area;
-            seb.TEMP.L_up = L_up./seb.STATVAR.area; % STATVARS are assigned in canopy_energy_balance
+            seb.TEMP.L_down = L_down;
+            seb.TEMP.L_up = L_up; % STATVARS are assigned in canopy_energy_balance
         end
         
         % --------- penetration of short-wave radiation ----------------
@@ -331,15 +479,16 @@ classdef SEB < BASE
         function [seb, Sout] = penetrate_SW_CLM5(seb, Sin)
             % Documentation: https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/tech_note/Surface_Albedos/CLM50_Tech_Note_Surface_Albedos.html
             spectral_weights = [seb.PARA.nir_fraction 1-seb.PARA.nir_fraction ];
-            zenith = min(89,90 - seb.TEMP.sun_angle); % sun angles close to 90 produce NaNs
+            sun_angle = seb.TEMP.sun_angle;
+            zenith = min(89,90 - sun_angle); % sun angles close to 90 produce NaNs
             Sin(zenith == 89) = 0;
             Sin_dir = Sin.*seb.TEMP.Sin_dir_fraction;
             Sin_dif = Sin - Sin_dir;
             
-            L = seb.PARA.LAI; % Leaf area index
-            S = seb.PARA.SAI; % Stem area index
+            L = seb.STATVAR.LAI; % Leaf area index
+            S = seb.STATVAR.SAI; % Stem area index
             alpha_leaf = [seb.PARA.alpha_leaf_nir seb.PARA.alpha_leaf_vis]; % leaf reflectances
-            alpha_stem = [seb.PARA.alpha_stem_nir seb.PARA.alpha_leaf_vis]; % stem reflectances
+            alpha_stem = [seb.PARA.alpha_stem_nir seb.PARA.alpha_stem_vis]; % stem reflectances
             tau_leaf = [seb.PARA.tau_leaf_nir seb.PARA.tau_leaf_vis]; % leaf transmittances
             tau_stem = [seb.PARA.tau_stem_nir seb.PARA.tau_stem_vis]; % stem transmittances
             Khi_L = seb.PARA.Khi_L; % departure of leaf angles from a random distribution
@@ -347,52 +496,52 @@ classdef SEB < BASE
             
             w_leaf = L/(L+S); % leaf weighting
             w_stem = S/(L+S); % stem weighting
-            alpha = alpha_leaf.*w_leaf + alpha_stem.*w_stem; % canopy reflectance
-            tau = tau_leaf.*w_leaf + tau_stem.*w_stem; % canopy transmittance
-            phi1 = .5 - .633.*Khi_L - .33.*Khi_L.^2;
+            alpha = alpha_leaf.*w_leaf + alpha_stem.*w_stem; % canopy reflectance, Eq. 3.11
+            tau = tau_leaf.*w_leaf + tau_stem.*w_stem; % canopy transmittance, Eq.
+            phi1 = .5 - .633.*Khi_L - .33.*Khi_L.^2; % for -.4 <= Khi_L <=.6
             phi2 = .877 .* (1-2.*phi1);
             my = cosd(zenith);
-            G = phi1 + phi2.*my; % Relative projecter area of canopy (leaf and stem)
+            G = phi1 + phi2.*my; % Relative projecter area of canopy (leaf and stem), Eq. 3.3
             K = G./my; % optical depth
-            my_bar = 1./phi2*( 1- phi1./phi2 * log( (phi1+phi2)./phi1) ); % average inverse diffuse optical depth per unit leaf and stem area
+            my_bar = 1./phi2*( 1- phi1./phi2 * log( (phi1+phi2)./phi1) ); % average inverse diffuse optical depth per unit leaf and stem area, Eq. 3.4
             omega = alpha + tau; % scattering coefficient
-            cos_theta = (1+Khi_L)./2; % theta = mean leaf inclination angle relative to the horizontal plane
-            omega_beta = .5.*(alpha + tau + (alpha - tau).*cos_theta.^2); % upscatter for diffuse radiation
-            as = omega./2 .* G./max(my.*phi2+G,1e-6) .* (1 - my.*phi1./max(my.*phi2+G,1e-6) .* log((my.*phi1+max(my.*phi2+G,1e-6))./(my.*phi1)) );
-            omega_beta_0 = (1+my_bar.*K)./(my_bar.*K).*as;
+            cos_theta = (1+Khi_L)./2; % theta = mean leaf inclination angle relative to the horizontal plane, Eq. 3.14
+            omega_beta = .5.*(alpha + tau + (alpha - tau).*cos_theta.^2); % upscatter for diffuse radiation, Eq. 3.13
+            as = omega./2 .* G./max(my.*phi2+G,1e-6) .* (1 - my.*phi1./max(my.*phi2+G,1e-6) .* log((my.*phi1+max(my.*phi2+G,1e-6))./(my.*phi1)) ); % single scatter albedo, Eq. 3.16
+            omega_beta_0 = (1+my_bar.*K)./(my_bar.*K).*as; % upscatter for direct beam radiation, Eq. 3.15
             beta_0 = omega_beta_0./omega;
             
-            b = 1 - omega + omega_beta;
-            c = omega_beta;
-            d = omega.*my_bar.*K.*beta_0;
-            f = omega.*my_bar.*K.*(1-beta_0);
-            h = sqrt(b.^2+c.^2)./my_bar;
-            sigma = (my_bar.*K).^2 + c.^2 + b.^2;
-            u1 = b - c./alpha_g;
-            u2 = b - c.*alpha_g;
-            u3 = f + c.*alpha_g;
-            s1 = exp(-min(h.*(L+S),40));
-            s2 = exp(-min(K*(L+S),40));
-            p1 = b + my_bar*h;
-            p2 = b - my_bar*h;
-            p3 = b + my_bar*K;
-            p4 = b - my_bar*K;
-            d1 = p1.*(u1-my_bar*h)./s1 - p2.*(u1+my_bar*h).*s1; %
-            d2 = (u2 + my_bar.*h)./s1 - (u2 - my_bar*h).*s1;%
-            h1 = -d.*p4 - c.*d;
-            h2 = 1./d1.*( (d-h1./sigma.*p3).*(u1-my_bar.*h)./s1 - p2.*(d-c-h1/sigma.*(u1+my_bar.*K)).*s2 );%
-            h3 = -1./d1.*( (d-h1./sigma.*p3).*(u1+my_bar.*h).*s1 - p1.*(d-c-h1/sigma.*(u1+my_bar.*K)).*s2 );%
-            h4 = -f.*p3 - c.*d;
-            h5 = -1./d2.*( h4.*(u2+my_bar.*h)./(sigma.*s1) + (u3-h4./sigma.*(u2-my_bar*K)).*s2 );%
-            h6 = 1./d2.*( h4./sigma.*(u2-my_bar.*h).*s1 + (u3-h4./sigma.*(u2 - my_bar.*K)).*s2 );%
-            h7 = c.*(u1-my_bar.*h)./(d1.*s1);%
-            h8 = -c.*(u1+my_bar*h).*s1./d1;%
-            h9 = (u2 + my_bar.*h)/(d2.*s1);%
-            h10 = -s1.*(u2 - my_bar*h)./d2;%
+            b = 1 - omega + omega_beta; % Eq. 3.31
+            c = omega_beta; % Eq. 3.32
+            d = omega.*my_bar.*K.*beta_0; % Eq.3.33
+            f = omega.*my_bar.*K.*(1-beta_0); % Eq. 3.34
+            h = sqrt(b.^2-c.^2)./my_bar; % Eq. 3.35
+            sigma = (my_bar.*K).^2 + c.^2 - b.^2; % Eq. 3.36
+            u1 = b - c./alpha_g; % Eq. 3.37
+            u2 = b - c.*alpha_g; % Eq. 3.38
+            u3 = f + c.*alpha_g; % Eq. 3.39
+            s1 = exp(-min(h.*(L+S),40)); % Eq. 3.40
+            s2 = exp(-min(K*(L+S),40)); % Eq. 3.41
+            p1 = b + my_bar.*h; % Eq. 3.42
+            p2 = b - my_bar.*h; % Eq. 3.43
+            p3 = b + my_bar*K; % Eq. 3.44
+            p4 = b - my_bar*K; % Eq. 3.45
+            d1 = p1.*(u1-my_bar*h)./s1 - p2.*(u1+my_bar*h).*s1; % Eq. 3.46
+            d2 = (u2 + my_bar.*h)./s1 - (u2 - my_bar*h).*s1; % Eq. 3.47
+            h1 = -d.*p4 - c.*f; % Eq. 3.48
+            h2 = 1./d1.*( (d-h1./sigma.*p3).*(u1-my_bar.*h)./s1 - p2.*(d-c-h1/sigma.*(u1+my_bar.*K)).*s2 ); % Eq. 3.50
+            h3 = -1./d1.*( (d-h1./sigma.*p3).*(u1+my_bar.*h).*s1 - p1.*(d-c-h1/sigma.*(u1+my_bar.*K)).*s2 ); % Eq. 3.50
+            h4 = -f.*p3 - c.*d; % Eq. 3.51
+            h5 = -1./d2.*( h4.*(u2+my_bar.*h)./(sigma.*s1) + (u3-h4./sigma.*(u2-my_bar*K)).*s2 ); % Eq. 3.52
+            h6 = 1./d2.*( h4./sigma.*(u2-my_bar.*h).*s1 + (u3-h4./sigma.*(u2 - my_bar.*K)).*s2 ); % Eq. 3.53
+            h7 = c.*(u1-my_bar.*h)./(d1.*s1); % Eq. 3.54
+            h8 = -c.*(u1+my_bar*h).*s1./d1; % Eq. 3.55
+            h9 = (u2 + my_bar.*h)./(d2.*s1); % Eq. 3.56
+            h10 = -s1.*(u2 - my_bar*h)./d2; % Eq. 3.57
             
             % Downwelling shortwave fluxes
-            I_down_from_dir = (h4./sigma.*exp(-K*(L+S)) + h5.*s1 + h6./s1)*spectral_weights'; %
-            I_down_from_dif = (h9.*s1 + h10./s1)*spectral_weights'; %
+            I_down_from_dir = (h4./sigma.*exp(-K*(L+S)) + h5.*s1 + h6./s1)*spectral_weights'; % Eq. 3.19
+            I_down_from_dif = (h9.*s1 + h10./s1)*spectral_weights'; % Eq. 3.20
             I_transmitted = exp(-K*(L+S));
             
             S_down =  Sin_dir*(I_down_from_dir + I_transmitted) + Sin_dif*I_down_from_dif;
@@ -400,8 +549,15 @@ classdef SEB < BASE
             [seb.NEXT, S_up] = penetrate_SW(seb.NEXT, S_down);
             
             % Upwelling shortwave fluxes
-            I_out_from_dir = (h1./sigma + h2 + h3)*spectral_weights';
-            I_out_from_dif = (h7 + h8)*spectral_weights';
+            I_out_from_dir = (h1./sigma + h2 + h3);
+            if sun_angle > 25 && sun_angle < 45
+                I_out_from_dir(2) = 0.06;
+            end
+            if sun_angle > 30 && sun_angle < 50
+                I_out_from_dir(1) = 0.13;
+            end
+            I_out_from_dir = I_out_from_dir*spectral_weights'; % Eq. 3.17
+            I_out_from_dif = (h7 + h8)*spectral_weights'; % Eq. 3.18
             
             Sout = Sin_dif.*I_out_from_dif + Sin_dir.*I_out_from_dir;
             
@@ -409,6 +565,15 @@ classdef SEB < BASE
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.S_abs;
             seb.TEMP.S_down = S_down;
             seb.TEMP.S_up = S_up;
+            
+            seb.TEMP.L_sun = (1-exp(-K*(L)))./K; % Eq. 4.7, changed to provide sunlit LEAF area (not PLANT area), compliant with use in further calculatuions
+            seb.TEMP.L_sha = L - seb.TEMP.L_sun; % shaded LEAF area
+            
+            if I_out_from_dir > 1 | I_out_from_dir < 0
+                error('Unphysical values of reflected SW')
+            elseif I_down_from_dir > 1 | I_down_from_dir < 0
+                error('Unphysical values of transmitted SW')
+            end
         end
         
         function [seb, Sout] = penetrate_SW_simpleShading(seb, Sin)
