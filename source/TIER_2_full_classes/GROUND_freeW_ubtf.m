@@ -15,6 +15,7 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & UB_TEMPERAT
         %----initialization--------------------
         
         function ground = provide_PARA(ground)
+            ground.PARA.conductivity_function = [];
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
@@ -63,8 +64,21 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & UB_TEMPERAT
             ground.CONST.rho_w = [];   % water density
             ground.CONST.rho_i = [];   %ice density
         end
+
         
+        function ground = convert_units(ground, tile)
+                unit_converter = str2func(tile.PARA.unit_conversion_class);
+                unit_converter = unit_converter();
+                ground = convert_normal_ubT(unit_converter, ground, tile);
+        end
+
+
         function ground = finalize_init(ground, tile)
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'conductivity_mixing_squares';
+            end            
+
             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
