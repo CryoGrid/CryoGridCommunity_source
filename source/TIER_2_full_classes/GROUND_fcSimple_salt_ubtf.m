@@ -16,6 +16,7 @@ classdef GROUND_fcSimple_salt_ubtf < HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERA
         %----initialization--------------------
                 
         function ground = provide_PARA(ground)
+            ground.PARA.conductivity_function = [];
             ground.PARA.tortuosity=[]; % tortuosity of salt diffusion [-]
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -71,7 +72,19 @@ classdef GROUND_fcSimple_salt_ubtf < HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERA
             ground.CONST.rho_i = []; % ice density
         end
 
-        function ground = finalize_init(ground, tile) 
+        
+        function ground = convert_units(ground, tile)
+                unit_converter = str2func(tile.PARA.unit_conversion_class);
+                unit_converter = unit_converter();
+                ground = convert_normal_ubT(unit_converter, ground, tile);
+        end
+
+
+        function ground = finalize_init(ground, tile)
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'conductivity_mixing_squares';
+            end             
             ground.PARA.heatFlux_lb = tile.forcing.PARA.heatFlux_lb;
             ground.PARA.airT_height = tile.forcing.PARA.airT_height;
             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;

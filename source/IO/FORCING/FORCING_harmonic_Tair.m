@@ -1,29 +1,27 @@
 %========================================================================
-% CryoGrid FORCING class FORCING_tair_precip
+% CryoGrid FORCING class FORCING_harmonic_tair
 % simple model forcing for GROUND classes depending only on air temperature
 % and precipitation (rain or snow).
-% The data must be stored in a Matlab “.mat” file which contains 
-% a struct FORCING with field “data”, which contain the time series of the actual 
-% forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures. 
-% Have a look at the existing forcing files in the folder “forcing” and prepare 
-% new forcing files in the same way. 
+% The class generates a harmonically oscillating air temperature
+% timeseries, with a constant precipitation.
 %
-% The mandatory forcing variables are:
-% Tair:      Air temperature (Tair, in degree Celsius)
-% rainfall:  Rainfall (rainfall, in mm/day), 
-% snowfall:  Snowfall (snowfall, in mm/day)
-% t_span:    Timestamp (t_span, in Matlab time / increment 1 corresponds to one day)
+% The mandatory userdefined parameters are:
+% start_time
+% end_time
+% time_step
+% maat       Mean Annual Airt Temperature in degrees Celsius.
+% amplitude  Amplitude of the yearly variation (degrees Celsius).
+% lag        Phase lag (number of days to delay the harmonic oscillation). 
+% period     The number of days in a year, defaults to 365.242 days.
+% gradient   Gradual change in MAAT given in degrees/year, defaults to 0.
+% precip:    Rain/snowfall in mm/day. Will be constant throughout the
+%                simulation. Falls as snow when Tair<0, otherwise rain.
 %
-% IMPORTANT POINT: the time series must be equally spaced in time, and this must be 
-% really exact. When reading the timestamps from an existing data set (e.g. an Excel file),
-% rounding errors can result in small differences in the forcing timestep, often less 
-% than a second off. In this case, it is better to manually compile a new, equally spaced 
-% timestep in Matlab.
-%
-% T. Ingeman-Nielsen, S. Westermann, J. Scheer, December 2021
+% T. Ingeman-Nielsen, December 2021
 %========================================================================
 
-classdef FORCING_tair_precip < matlab.mixin.Copyable
+
+classdef FORCING_harmonic_Tair < matlab.mixin.Copyable
     
     properties
         forcing_index
@@ -40,15 +38,17 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
         function forcing = provide_PARA(forcing)         
             % INITIALIZE_PARA  Initializes PARA structure, setting the variables in PARA.  
 
-            forcing.PARA.filename = [];       % filename of Matlab file containing forcing data
-			forcing.PARA.forcing_path = [];   % location (path) of forcing files
             forcing.PARA.start_time = [];     % start time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.end_time = [];       % end time of the simulations (must be within the range of data in forcing file)
-            forcing.PARA.rain_fraction = [];  % rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
-            forcing.PARA.snow_fraction = [];  % snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
+            forcing.PARA.time_step = [];      % time step of timeseries [days] (e.g. 0.5 days)
+            forcing.PARA.maat = [];           % Mean Annual Airt Temperature
+            forcing.PARA.amplitude = [];      % Amplitude of the yearly variation
+            forcing.PARA.lag = [];            % Phase lag (number of days to delay the harmonic oscillation)
+            forcing.PARA.period = [];         % The number of days in a year, defaults to 365.242 days
+            forcing.PARA.gradient = [];       % Gradual change in MAAT given in degrees/year
+            forcing.PARA.precip = [];         % daily mean precipitation in mm/day
             forcing.PARA.heatFlux_lb = [];    % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];    % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
-            
         end
         
         function forcing = provide_CONST(forcing)
@@ -69,33 +69,23 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
             %   initializations and modifications. Checks for some (but not
             %   all) data validity.
             
-			temp = load([forcing.PARA.forcing_path forcing.PARA.filename], 'FORCING');
+            forcing.STATUS = 1;
+
+            % handle start time
+            forcing.PARA.start_time = datenum(forcing.PARA.start_time(1,1), forcing.PARA.start_time(2,1), forcing.PARA.start_time(3,1));
             
-            forcing.DATA.Tair = temp.FORCING.data.Tair;
-            forcing.DATA.rainfall=temp.FORCING.data.rainfall.*forcing.PARA.rain_fraction;
-            forcing.DATA.snowfall=temp.FORCING.data.snowfall.*forcing.PARA.snow_fraction;
-            forcing.DATA.timeForcing = temp.FORCING.data.t_span;
-            
-            if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1))>=1e-10
-                error('timestamp of forcing data is not in regular intervals -> check, fix and restart')
-            else
-                forcing.STATUS = 1;
+            % handle end time
+            forcing.PARA.end_time = datenum(forcing.PARA.end_time(1,1), forcing.PARA.end_time(2,1),forcing.PARA.end_time(3,1));
+
+            % generate time sequence
+            forcing.DATA.timeForcing = forcing.PARA.start_time:forcing.PARA.time_step:forcing.PARA.end_time;
+            forcing.PARA.time_zero = datenum(datetime(year(datetime(forcing.PARA.start_time,'ConvertFrom','datenum')),1,1,0,0,0));
+
+            % handle period, if not specified
+            if isempty(forcing.PARA.period) || isnan(forcing.PARA.period)
+                forcing.PARA.period = 365.242;
             end
 
-            % handle start time, if specified
-            if isempty(forcing.PARA.start_time) || ~ischar(forcing.PARA.start_time)
-                forcing.PARA.start_time = forcing.DATA.timeForcing(1,1);
-            else
-                forcing.PARA.start_time = datenum(forcing.PARA.start_time(1,1), forcing.PARA.start_time(2,1), forcing.PARA.start_time(3,1));
-            end
-            
-            % handle end time, if specified
-            if isempty(forcing.PARA.end_time) || isnan(forcing.PARA.end_time(1,1))
-                forcing.PARA.end_time = floor(forcing.DATA.timeForcing(end,1));
-            else
-                forcing.PARA.end_time = datenum(forcing.PARA.end_time(1,1), forcing.PARA.end_time(2,1),forcing.PARA.end_time(3,1));
-            end
-            
             %initialize TEMP
             forcing.TEMP.snowfall=0;
             forcing.TEMP.rainfall=0;
@@ -103,18 +93,22 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
             
         end
 
+
         function forcing = interpolate_forcing(forcing, tile)
             % Interpolate forcing data to timestep tile.t
             t = tile.t;
-            times = forcing.DATA.timeForcing;
-            posit = floor((t-times(1,1))./(times(2,1)-times(1,1)))+1;
 
-            forcing.TEMP.snowfall = forcing.lin_interp(t, posit, times, forcing.DATA.snowfall);
-            forcing.TEMP.rainfall = forcing.lin_interp(t, posit, times, forcing.DATA.rainfall);
-            forcing.TEMP.Tair =     forcing.lin_interp(t, posit, times, forcing.DATA.Tair);
-
-            forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
-            forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
+            forcing.TEMP.Tair = forcing.PARA.maat - forcing.PARA.amplitude * cos(2 * pi * (t - forcing.PARA.time_zero - forcing.PARA.lag) / (forcing.PARA.period ));
+            forcing.TEMP.Tair = forcing.TEMP.Tair + forcing.PARA.gradient * (t - forcing.PARA.start_time) / forcing.PARA.period;
+            
+            if forcing.TEMP.Tair <= 0
+                forcing.TEMP.rainfall = 0;
+                forcing.TEMP.snowfall = forcing.PARA.precip;
+            else
+                forcing.TEMP.snowfall = 0;
+                forcing.TEMP.rainfall = forcing.PARA.precip;
+            end
+            
             forcing.TEMP.t = t;
         end
 
