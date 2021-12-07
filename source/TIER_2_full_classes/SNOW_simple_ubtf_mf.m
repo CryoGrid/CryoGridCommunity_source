@@ -8,7 +8,7 @@
 %========================================================================
 
 
-classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW & SNOW_MELTFACTOR & INITIALIZE & REGRID
+classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW & SNOW_MELTFACTOR & REGRID
 
     properties
         PARENT
@@ -71,9 +71,9 @@ classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW &
         
         
         function snow = finalize_init(snow, tile) 
-            snow.PARA.heatFlux_lb = tile.PARA.heatFlux_lb;
-            snow.PARA.airT_height = tile.PARA.airT_height;
-            snow.PARA.latitude = tile.PARA.latitude;
+            snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            snow.PARA.latitude = tile.FORCING.PARA.latitude;
             
             snow = initialize_zero_snow_BASE(snow); 
             snow.STATVAR.excessWater = 0;
