@@ -88,6 +88,12 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.CONST.rho_w = []; % density of water [kg/m3]
         end
         
+        function ground = convert_units(ground, tile)
+%             unit_converter = str2func(tile.PARA.unit_conversion_class);
+%             unit_converter = unit_converter();
+%             ground = convert_normal(unit_converter, ground, tile);
+        end
+        
         function canopy = finalize_init(canopy, tile)
             canopy.STATVAR.area = tile.PARA.area + canopy.STATVAR.layerThick .* 0;
             canopy.STATVAR.SAI = canopy.PARA.SAI;
