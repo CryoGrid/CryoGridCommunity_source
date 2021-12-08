@@ -13,8 +13,7 @@ classdef IA_HEAT < IA_BASE
             flux = (stratigraphy1.STATVAR.T(end) - stratigraphy2.STATVAR.T(1)) .* stratigraphy1.STATVAR.thermCond(end) .* stratigraphy2.STATVAR.thermCond(1) ./...
                 (stratigraphy1.STATVAR.thermCond(end).* stratigraphy2.STATVAR.layerThick(1)./2 + stratigraphy2.STATVAR.thermCond(1).* stratigraphy1.STATVAR.layerThick(end)./2 );
             
-            %flux = flux .* (stratigraphy1.STATVAR.area(end) + stratigraphy2.STATVAR.area(1)) ./ 2;
-            flux = flux .* min(stratigraphy1.STATVAR.area(end), stratigraphy2.STATVAR.area(1));
+            flux = flux .* (stratigraphy1.STATVAR.area(end) + stratigraphy2.STATVAR.area(1)) ./ 2;
             
             stratigraphy1.TEMP.F_lb = -flux;
             stratigraphy2.TEMP.F_ub = flux;
@@ -28,8 +27,7 @@ classdef IA_HEAT < IA_BASE
             stratigraphy2 = ia_heat.NEXT;
             flux = (stratigraphy1.STATVAR.T(end) - stratigraphy2.STATVAR.T(1))  .* stratigraphy2.STATVAR.thermCond(1) ./ (stratigraphy2.STATVAR.layerThick(1) ./ 2);
             
-            %flux = flux .* (stratigraphy1.STATVAR.area(end) + stratigraphy2.STATVAR.area(1)) ./ 2;
-            flux = flux .* min(stratigraphy1.STATVAR.area(end), stratigraphy2.STATVAR.area(1));
+            flux = flux .* (stratigraphy1.STATVAR.area(end) + stratigraphy2.STATVAR.area(1)) ./ 2;
             
             stratigraphy1.TEMP.F_lb = -flux;
             stratigraphy2.TEMP.F_ub = flux;

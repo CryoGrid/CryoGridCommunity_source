@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_FLUXES_LATERAL & SNOW & REGRID 
+classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_FLUXES_LATERAL & SNOW & REGRID %& INITIALIZE
 
     properties
         PARENT
@@ -17,6 +17,9 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         %----mandatory functions---------------
         %----initialization--------------------
         
+%         function snow = SNOW_simple_bucketW_seb(index, pprovider, cprovider, forcing)  
+%             snow@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         function snow = provide_PARA(snow)
             
@@ -161,7 +164,10 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         end
         
         function snow = get_derivatives_prognostic_CHILD(snow, tile)
-            %do nothing
+            %do nothing, all handled in advance_prognostic()
+            %snow.TEMP.d_energy = snow.TEMP.d_energy + snow.TEMP.F_ub + snow.TEMP.F_lb;
+            %snow.TEMP.d_water = snow.TEMP.d_water + snow.TEMP.F_ub_water + snow.TEMP.F_lb_water;
+            %snow.TEMP.d_water_energy = snow.TEMP.d_water_energy + snow.TEMP.F_ub_water_energy + snow.TEMP.F_lb_water_energy;
         end
         
         function timestep = get_timestep(snow, tile) 

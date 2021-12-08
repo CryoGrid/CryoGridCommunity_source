@@ -15,6 +15,10 @@ classdef LAT_SEEPAGE_FACE_WATER < BASE_LATERAL
         
         %----mandatory functions---------------
         %----initialization--------------------
+        
+%         function lateral = LAT_SEEPAGE_FACE_WATER(index, pprovider, cprovider)
+%             lateral@BASE_LATERAL(index, pprovider, cprovider);
+%         end
 
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = [];

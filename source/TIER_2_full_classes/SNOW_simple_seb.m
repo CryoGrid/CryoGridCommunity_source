@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL & REGRID 
+classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL & REGRID %& INITIALIZE
 
     properties
         PARENT
@@ -16,7 +16,9 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
         
         %----mandatory functions---------------
         %----initialization--------------------
-
+%         function snow = SNOW_simple_seb(index, pprovider, cprovider, forcing)  
+%             snow@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         function snow = provide_PARA(snow)
             

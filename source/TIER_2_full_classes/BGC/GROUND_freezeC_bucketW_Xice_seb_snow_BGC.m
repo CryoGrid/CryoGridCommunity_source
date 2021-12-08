@@ -1,8 +1,4 @@
-%========================================================================
-% CryoGrid GROUND class GROUND_freezeC_bucketW_Xice_seb_snow_BGC
-% enables coupling to biogeochemistry BGC classes
-% S. Westermann, November 2021
-%========================================================================
+
 
 classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_seb_snow
 
@@ -23,7 +19,6 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground = provide_PARA@GROUND_freezeC_bucketW_Xice_seb_snow(ground);
             
             ground.PARA.BGC_CLASS = [];
-            ground.PARA.target_grid_cell_size = 0.05;
         end
         
         function ground = provide_STATVAR(ground)
@@ -43,19 +38,21 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground = finalize_init@GROUND_freezeC_bucketW_Xice_seb_snow(ground, tile);
 
             class_handle = str2func(ground.PARA.BGC_CLASS);
+            %ground.BGC = class_handle(-1,0,0,0); 
             ground.BGC = class_handle(); 
             ground.BGC.PARENT = ground;
+            %remove this in the end
             
             ground.BGC = provide_PARA(ground.BGC);
             ground.BGC = provide_STATVAR(ground.BGC);
             ground.BGC = provide_CONST(ground.BGC);
             ground.BGC = finalize_init(ground.BGC, tile);
             
-            ground.IA_BGC = IA_BGC_Xice();
+            ground.IA_BGC = IA_BGC_simple();
             ground.IA_BGC.BGC = ground.BGC;
             ground.IA_BGC.GROUND = ground;
             ground.BGC.IA_BGC = ground.IA_BGC;
-            finalize_init(ground.IA_BGC, tile);
+
         end
         
         
@@ -104,12 +101,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground = check_trigger@GROUND_freezeC_bucketW_Xice_seb_snow(ground, tile);
             ground.BGC = check_trigger(ground.BGC, tile);
         end
-    
-        function ground = reset_time_BGC(ground, tile) %used e.g. with TILE_BUILDER update_forcing_out
-            ground.BGC = reset_time(ground.BGC, tile);
-        end
-        
-        
+
     end
     
 end

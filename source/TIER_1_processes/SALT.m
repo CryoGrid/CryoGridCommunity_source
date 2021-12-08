@@ -126,14 +126,9 @@ classdef SALT < BASE
             freeWaterIce = 0; %[m]  possible excess ice amount (i.e. free ice that melts at exactly 0 degree), set to 0 here          
 
             deltaT = ground.STATVAR.deltaT;
-
-            mineral= ground.STATVAR.mineral ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
-            organic = ground.STATVAR.organic ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
-            waterIce = ground.STATVAR.waterIce ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);
-
-%             waterIce = ground.STATVAR.waterIce; % in volumetric fractions as provided byy the initialization 
-%             mineral = ground.STATVAR.mineral;
-%             organic = ground.STATVAR.organic;
+            waterIce = ground.STATVAR.waterIce; % in volumetric fractions as provided byy the initialization 
+            mineral = ground.STATVAR.mineral;
+            organic = ground.STATVAR.organic;
             area = ground.STATVAR.area;
             T = ground.STATVAR.T;
             

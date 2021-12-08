@@ -4,22 +4,25 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL 
+classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& INITIALIZE
+
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
         
+%         function self = GROUND_freeW_seb(index, pprovider, cprovider, forcing)  
+%             self@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         function ground = provide_PARA(ground)
             
             ground.PARA.albedo = []; %surface albedo [-]
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; %roughness length [m]
+            
             ground.PARA.rs = []; %surface resistance against evapotranspiration [secm] 
-
-            ground.PARA.conductivity_function = [];
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
@@ -70,21 +73,11 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL
             ground.CONST.rho_w = [];   % water density
             ground.CONST.rho_i = [];   %ice density
         end
-
-        function ground = convert_units(ground, tile)
-            unit_converter = str2func(tile.PARA.unit_conversion_class);
-            unit_converter = unit_converter();
-            ground = convert_normal(unit_converter, ground, tile);
-        end
         
         function ground = finalize_init(ground, tile)
-%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
-
-            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
-                ground.PARA.conductivity_function = 'conductivity_mixing_squares';
-            end
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
 
@@ -92,12 +85,6 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL
             ground.STATVAR.Qh = 0;
             ground.STATVAR.Qe = 0;
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
-            
-        end
-        
-        function ground = finalize_init2(ground, tile)
-
-            ground = get_E_freeW(ground);
             
         end
         
@@ -164,9 +151,7 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL
         end
         
         function ground = conductivity(ground)
-            conductivity_function = str2func(ground.PARA.conductivity_function);
-            ground = conductivity_function(ground);
-%             ground = conductivity_mixing_squares(ground);
+            ground = conductivity_mixing_squares(ground);
         end
         
         
@@ -184,37 +169,37 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL
         
         %----inherited Tier 1 functions ------------
         
-%         function ground = get_derivative_energy(ground)
-%            ground = get_derivative_energy@HEAT_CONDUCTION(ground); 
-%         end
-%         
-%         function ground = conductivity_mixing_squares(ground)
-%             ground = conductivity_mixing_squares@HEAT_CONDUCTION(ground);
-%         end
-%         
-%         function flux = Q_h(ground, forcing)
-%            flux = Q_h@SEB(ground, forcing);
-%         end
-%     
-%         function flux = Q_eq(ground, forcing)
-%             flux = Q_eq@SEB(ground, forcing);
-%         end
-%         
-%         function timestep = get_timestep_heat_coduction(ground)
-%             timestep = get_timestep_heat_coduction@HEAT_CONDUCTION(ground);
-%         end
-%         
-%         function ground = L_star(ground, forcing)
-%            ground = L_star@SEB(ground, forcing); 
-%         end
-%         
-%         function [ground, S_up] = penetrate_SW_no_transmission(ground, S_down)
-%             [ground, S_up] = penetrate_SW_no_transmission@SEB(ground, S_down);
-%         end
-%         
-%         function ground = get_T_water_freeW(ground)
-%             ground = get_T_water_freeW@HEAT_CONDUCTION(ground);
-%         end
+        function ground = get_derivative_energy(ground)
+           ground = get_derivative_energy@HEAT_CONDUCTION(ground); 
+        end
+        
+        function ground = conductivity_mixing_squares(ground)
+            ground = conductivity_mixing_squares@HEAT_CONDUCTION(ground);
+        end
+        
+        function flux = Q_h(ground, forcing)
+           flux = Q_h@SEB(ground, forcing);
+        end
+    
+        function flux = Q_eq(ground, forcing)
+            flux = Q_eq@SEB(ground, forcing);
+        end
+        
+        function timestep = get_timestep_heat_coduction(ground)
+            timestep = get_timestep_heat_coduction@HEAT_CONDUCTION(ground);
+        end
+        
+        function ground = L_star(ground, forcing)
+           ground = L_star@SEB(ground, forcing); 
+        end
+        
+        function [ground, S_up] = penetrate_SW_no_transmission(ground, S_down)
+            [ground, S_up] = penetrate_SW_no_transmission@SEB(ground, S_down);
+        end
+        
+        function ground = get_T_water_freeW(ground)
+            ground = get_T_water_freeW@HEAT_CONDUCTION(ground);
+        end
     end
     
 end

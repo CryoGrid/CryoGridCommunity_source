@@ -15,6 +15,9 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         %----mandatory functions---------------
         %----initialization--------------------
         
+%        function ground = LAKE_simple_bucketW_seb(index, pprovider, cprovider, forcing)  
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
 
          %initializes class when switching from unfrozen to frozen conditions
          function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_unfrozen)
@@ -90,23 +93,17 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
         end
         
         
-%         function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
-%             ground = provide_PARA(ground); 
-%             ground = provide_CONST(ground);
-%             ground = provide_STATVAR(ground);
-%         end
-
-        function ground = convert_units(ground, tile)
-            unit_converter = str2func(tile.PARA.unit_conversion_class);
-            unit_converter = unit_converter();
-            ground = convert_normal(unit_converter, ground, tile);
+        function ground = provide_variables(ground)  %initializes the subvariables as empty arrays
+            ground = provide_PARA(ground); 
+            ground = provide_CONST(ground);
+            ground = provide_STATVAR(ground);
         end
         
         function ground = finalize_init(ground, tile)
-%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
-%             
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+            
             ground = get_E_freeW(ground);            
             
             ground.STATVAR.Lstar = -100;
@@ -116,12 +113,6 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
-        end
-        
-        function ground = finalize_init2(ground, tile)
-
-            ground = get_E_freeW(ground);
-
         end
         
         function ground = create_stratigraphy_from_STATVAR(ground)  %create stratigraphy of ice-covered water body, with ice layer on top and cells belwo at 0 degree C 

@@ -5,7 +5,7 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL 
+classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE
 
     
     methods
@@ -13,7 +13,10 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         %----mandatory functions---------------
         %----initialization--------------------
         
-
+%         function ground = GROUND_freeW_bucketW_seb(index, pprovider, cprovider, forcing)  
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
+        
         function ground = provide_PARA(ground)
             
             ground.PARA.albedo = [];  %surface albedo [-]
@@ -25,7 +28,6 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
             ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
             
-            ground.PARA.conductivity_function = [];
             ground.PARA.dt_max = [];  %maximum possible timestep [sec]
             ground.PARA.dE_max = [];  %maximum possible energy change per timestep [J/m3]
         end
@@ -84,22 +86,12 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.CONST.rho_w = []; % water density
             ground.CONST.rho_i = []; %ice density
         end
-
-        function ground = convert_units(ground, tile)
-                unit_converter = str2func(tile.PARA.unit_conversion_class);
-                unit_converter = unit_converter();
-                ground = convert_normal(unit_converter, ground, tile);
-        end
         
         function ground = finalize_init(ground, tile) 
-%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
-
-            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
-                ground.PARA.conductivity_function = 'thermalConductivity_CLM4_5';
-            end
-
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+            
             ground = get_E_freeW(ground);
             ground = calculate_hydraulicConductivity(ground);
 
@@ -116,13 +108,6 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.TEMP.d_water_ET = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET_energy = ground.STATVAR.energy.*0;
-
-        end
-        
-        function ground = finalize_init2(ground, tile)
-
-            ground = get_E_freeW(ground);
-            ground = calculate_hydraulicConductivity(ground);
 
         end
         
@@ -208,9 +193,7 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         end
         
         function ground = conductivity(ground)
-            conductivity_function = str2func(ground.PARA.conductivity_function);
-            ground = conductivity_function(ground);
-            %ground = thermalConductivity_CLM4_5(ground);
+            ground = thermalConductivity_CLM4_5(ground);
             %ground = conductivity_mixing_squares(ground);
         end
         

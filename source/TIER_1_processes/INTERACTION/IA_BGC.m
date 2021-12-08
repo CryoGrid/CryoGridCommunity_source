@@ -1,7 +1,8 @@
 %========================================================================
-% CryoGrid INTERACTION (IA) class for biogeochemistry BGC classes with
-% physical GROUND classes
-% S. Westermann, November 2021
+% CryoGrid INTERACTION (IA) class for heat conduction between two GROUND
+% classes without water cycle
+% contains function for SNOW CHILD phase 
+% S. Westermann, October 2020
 %========================================================================
 
 classdef IA_BGC <  IA_BASE

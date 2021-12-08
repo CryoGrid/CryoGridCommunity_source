@@ -47,7 +47,7 @@ classdef READ_STATVAR_FROM_OUT_BGC < READ_STATVAR_FROM_OUT
             ground.BGC = provide_CONST(ground.BGC);
             ground.BGC = finalize_init(ground.BGC, tile);
             
-            ground.IA_BGC = IA_BGC_read_statvar_from_out();
+            ground.IA_BGC = IA_BGC_simple();
             ground.IA_BGC.BGC = ground.BGC;
             ground.IA_BGC.GROUND = ground;
             ground.BGC.IA_BGC = ground.IA_BGC;

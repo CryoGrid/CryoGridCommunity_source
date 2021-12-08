@@ -2,7 +2,6 @@
 % CryoGrid GROUND class GROUND_freezeC_RichardsEqW_Xice_seb
 % heat conduction, Richards equation water scheme, freeze curve based on
 % freezing=drying assumption, surface energy balance, excess ice 
-% DISCONTINUED, do not use any more!
 % S. Westermann, October 2020
 %========================================================================
 
@@ -10,6 +9,10 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
 
     
     methods
+        
+%         function ground = GROUND_freezeC_RichardsEqW_Xice_seb(index, pprovider, cprovider, forcing)  
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         
         function ground = provide_PARA(ground)
@@ -21,7 +24,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             ground.PARA.rootDepth = [];  %e-folding constant of transpiration reduction with depth [1/m]
             ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
-            %ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
+            ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
 
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -53,8 +56,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             ground.STATVAR.organic = []; % total volume of organics [m3]
             ground.STATVAR.energy = [];   % total internal energy [J]
             ground.STATVAR.soil_type = [];  % integer code for soil_type; 1: sand; 2: silt: 3: clay: 4: peat; 5: water (i.e. approximation of free water, very large-pore ground material).
-            ground.STATVAR.satHydraulicConductivity = [];            
-            
+                        
             ground.STATVAR.T = [];  % temperature [degree C]
             ground.STATVAR.water = [];  % total volume of water [m3]
             ground.STATVAR.waterPotential = []; %soil water potential [Pa]
@@ -125,16 +127,11 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
 
         end
 
-        function ground = convert_units(ground, tile)
-            unit_converter = str2func(tile.PARA.unit_conversion_class);
-            unit_converter = unit_converter();
-            ground = convert_Xice(unit_converter, ground, tile);
-        end
-
+        
         function ground = finalize_init(ground, tile)
-%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
@@ -151,14 +148,6 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             ground.STATVAR.Qe = 0;
             
             ground = set_TEMP_2zero(ground);
-        end
-        
-        function ground = finalize_init2(ground, tile)
-
-            ground = get_E_freezeC_Xice(ground);
-            ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity_RichardsEq_Xice(ground);
-
         end
         
         %---time integration------

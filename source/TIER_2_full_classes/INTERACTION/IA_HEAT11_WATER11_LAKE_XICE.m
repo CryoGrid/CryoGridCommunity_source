@@ -18,19 +18,13 @@ classdef IA_HEAT11_WATER11_LAKE_XICE < IA_WATER & IA_HEAT
         %class
         function trigger_create_LAKE(ia_heat_water, ground, tile)
                         
-%             CURRENT = ground.PREVIOUS;  %go to Top() and get the stored SLEEPING classes
-%             while ~strcmp(class(CURRENT), 'Top')
-%                 CURRENT = CURRENT.PREVIOUS;
-%             end
-%             for i=1:size(CURRENT.STORE.SLEEPING,1)  %find the correct sleeping class in the list and copy
-%                 if strcmp(class(CURRENT.STORE.SLEEPING{i,1}), ground.PARA.threshold_Xwater_class) && CURRENT.STORE.SLEEPING{i,2} == ground.PARA.threshold_Xwater_index
-%                     new_lake = copy(CURRENT.STORE.SLEEPING{i,1});
-%                 end
-%             end
-
-            for i=1:size(tile.STORE.SLEEPING,1)  %find the correct sleeping class in the list and copy
-                if strcmp(class(tile.STORE.SLEEPING{i,1}), ground.PARA.threshold_Xwater_class) && tile.STORE.SLEEPING{i,2} == ground.PARA.threshold_Xwater_index
-                    new_lake = copy(tile.STORE.SLEEPING{i,1});
+            CURRENT = ground.PREVIOUS;  %go to Top() and get the stored SLEEPING classes
+            while ~strcmp(class(CURRENT), 'Top')
+                CURRENT = CURRENT.PREVIOUS;
+            end
+            for i=1:size(CURRENT.STORE.SLEEPING,1)  %find the correct sleeping class in the list and copy
+                if strcmp(class(CURRENT.STORE.SLEEPING{i,1}), ground.PARA.threshold_Xwater_class) && CURRENT.STORE.SLEEPING{i,2} == ground.PARA.threshold_Xwater_index
+                    new_lake = copy(CURRENT.STORE.SLEEPING{i,1});
                 end
             end
             %initialize state variables

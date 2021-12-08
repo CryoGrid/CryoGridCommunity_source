@@ -67,8 +67,6 @@ classdef LATERAL_1D < matlab.mixin.Copyable
             lateral.ENSEMBLE={};
             lateral.STATVAR.index = 0; %set index to zero for 1D runs
             lateral.PARA.num_realizations = 1;
-            
-            %lateral.PARA.is_active = 1; %can be used to switch off lateral interactions temporarily
         end
         
 
@@ -126,7 +124,7 @@ classdef LATERAL_1D < matlab.mixin.Copyable
         
         function lateral = interact(lateral, tile)
             t=tile.t;
-            if  t>=lateral.IA_TIME  %lateral.PARA.is_active &&
+            if t>=lateral.IA_TIME
                 if sum(lateral.ACTIVE) > 0
                     %disp(t-floor(t))
                     

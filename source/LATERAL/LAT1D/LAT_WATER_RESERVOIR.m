@@ -5,7 +5,6 @@
 % as well as contact lengths (i.e. width) and distance from the GROUND column.
 % Water temperatures of the reservoir can have a defined constant
 % temperature (only relevant for inflow), otherwise inflow at grid cell temperature is assumed. 
-% NOTE: THIS CLASS IS KNOWN TO CRASH IN SOME CASES, USE WITH CARE! 
 % S. Westermann, Oct 2020
 %========================================================================
 
@@ -16,7 +15,10 @@ classdef LAT_WATER_RESERVOIR < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-
+%         function lateral = LAT_WATER_RESERVOIR(index, pprovider, cprovider)  
+%             lateral@BASE_LATERAL(index, pprovider, cprovider);
+%         end
+        
         
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = [];

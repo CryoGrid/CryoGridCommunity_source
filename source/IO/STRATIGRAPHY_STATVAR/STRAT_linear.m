@@ -19,76 +19,95 @@ classdef STRAT_linear < matlab.mixin.Copyable
     end
     
     methods
+        
 
+		
+		function self = initialize(self)
+            % INITIALIZE  Initializes all properties needed by the class.
 
-		function stratigraphy = provide_PARA(stratigraphy)
-			stratigraphy.PARA.points = [];
+            self.depth = [];
+			self.variable_names = {};
+			self.variable_values = [];
+			self.variable_gridded = [];
+			self = self.initialize_PARA ();
+        end	
+
+		function self = provide_PARA(self)
+			% INITIALIZE_PARA  Initializes initial conditions (initial conditions) in the PARA structure.
+			self.PARA.points = [];
+% 			self.PARA.initial_cond.depth = [];
+% 			self.PARA.initial_cond.T = [];
         end
         
-        function stratigraphy = provide_CONST(stratigraphy)
+        function self = provide_CONST(self)
 
         end
         
-        function stratigraphy = provide_STATVAR(stratigraphy)
+        function self = provide_STATVAR(self)
 
         end 
-
         
-        function stratigraphy = finalize_init(stratigraphy, tile)
-
-            variables = fieldnames(stratigraphy.PARA.points);
-            depth = stratigraphy.PARA.points.depth;
-            for i=1:size(variables,1)
-                if ~strcmp(variables{i,1}, 'depth')
-                    tile.GRID.STATVAR.(variables{i,1}) = interp1(depth, stratigraphy.PARA.points.(variables{i,1}), tile.GRID.STATVAR.MIDPOINTS, 'linear');
-                end
-            end           
-		end
-
-        function stratigraphy = finalize_init_GROUND_multi_tile(stratigraphy, GRID)
-            variables = fieldnames(stratigraphy.PARA.points);
-            depth = stratigraphy.PARA.points.depth;
-            for i=1:size(variables,1)
-                if ~strcmp(variables{i,1}, 'depth')
-                    GRID.STATVAR.(variables{i,1}) = interp1(depth, stratigraphy.PARA.points.(variables{i,1}), GRID.STATVAR.MIDPOINTS, 'linear');
-                end
-            end           
-		end
-        
-
-
-% 		
-% 		function self = populate_variables(self, pprovider)
-% 			% POPULATE_VARIABLES  Updates the PARA structure with values from pprovider. Assigns values from the PARA structure to the corresponding class properties.
-%             %
-%             %   ARGUMENTS:
-%             %   pprovider:  instance of PARAMETER_PROVIDER class
+%         function self = initialize_excel(self)
 %             
-% 			self.PARA = pprovider.populate_struct(self.PARA, 'STRAT_linear', mfilename('class'), self.strat_linear_index);
-% 			
-% 			fn_substruct = fieldnames(self.PARA.initial_cond);
-% 			p = properties(self);
-% 			for i = 1:size(fn_substruct, 1)
-% 				if any(strcmp(p, fn_substruct(i)))
-% 					index = find(strcmp(p, fn_substruct{i}));
-% 					self.(p{index}) = self.PARA.initial_cond.(fn_substruct{i});
-% 				else
-% 					self.variable_names = [self.variable_names fn_substruct(i)];
-% 					self.variable_values = [self.variable_values self.PARA.initial_cond.(fn_substruct{i})];
-% 				end
-% 			end
-% 			self.depth = cell2mat(self.depth);
-% 			self.variable_values = cell2mat(self.variable_values);					
-% 		end		
-% 		
-% 
-% 
-%         function xls_out = write_excel(self)
-% 			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
-% 			
-%             xls_out = {'STRATIGRAPHY','index';'STRAT_linear',1;NaN,NaN;'depth','T';'[m]','[degree C]';'TOP',NaN;0,1;1,0;10,-5;100,0;5000,20;'BOTTOM',NaN;'STRATIGRAPHY_END',NaN};
 %         end
-%         
+        
+        function strat = finalize_init(strat, tile)
+			% FINALIZE_SETUP  Performs all additional property
+            %   initializations and modifications. Checks for some (but not
+            %   all) data validity.
+            variables = fieldnames(strat.PARA.points);
+            depth = strat.PARA.points.depth;
+            for i=1:size(variables,1)
+                if ~strcmp(variables{i,1}, 'depth')
+                    tile.GRID.STATVAR.(variables{i,1}) = interp1(depth, strat.PARA.points.(variables{i,1}), tile.GRID.STATVAR.MIDPOINTS, 'linear');
+                end
+            end
+			
+            %conversion of variables, make this a dedicated class??
+            for i=1:size(variables,1)
+                if strcmp(variables{i,1}, 'waterIce') || strcmp(variables{i,1}, 'mineral') || strcmp(variables{i,1}, 'organic')
+                    tile.GRID.STATVAR.(variables{i,1}) = tile.GRID.STATVAR.(variables{i,1}) .* tile.GRID.STATVAR.layerThick .* tile.PARA.area;
+                 %ADD CONVERSION OF OTHER VARIABLES HERE
+                elseif strcmp(variables{i,1}, 'Xice')
+                    
+                end
+            end
+            
+		end
+        
+        
+		
+		function self = populate_variables(self, pprovider)
+			% POPULATE_VARIABLES  Updates the PARA structure with values from pprovider. Assigns values from the PARA structure to the corresponding class properties.
+            %
+            %   ARGUMENTS:
+            %   pprovider:  instance of PARAMETER_PROVIDER class
+            
+			self.PARA = pprovider.populate_struct(self.PARA, 'STRAT_linear', mfilename('class'), self.strat_linear_index);
+			
+			fn_substruct = fieldnames(self.PARA.initial_cond);
+			p = properties(self);
+			for i = 1:size(fn_substruct, 1)
+				if any(strcmp(p, fn_substruct(i)))
+					index = find(strcmp(p, fn_substruct{i}));
+					self.(p{index}) = self.PARA.initial_cond.(fn_substruct{i});
+				else
+					self.variable_names = [self.variable_names fn_substruct(i)];
+					self.variable_values = [self.variable_values self.PARA.initial_cond.(fn_substruct{i})];
+				end
+			end
+			self.depth = cell2mat(self.depth);
+			self.variable_values = cell2mat(self.variable_values);					
+		end		
+		
+
+
+        function xls_out = write_excel(self)
+			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
+			
+            xls_out = {'STRATIGRAPHY','index';'STRAT_linear',1;NaN,NaN;'depth','T';'[m]','[degree C]';'TOP',NaN;0,1;1,0;10,-5;100,0;5000,20;'BOTTOM',NaN;'STRATIGRAPHY_END',NaN};
+        end
+        
 
         
     end

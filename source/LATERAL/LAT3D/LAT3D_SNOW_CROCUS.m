@@ -15,7 +15,10 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
 
         %----mandatory functions---------------
         %----initialization--------------------
-
+        
+%         function lateral = LAT3D_SNOW_CROCUS(index, pprovider, cprovider)
+%             lateral@BASE_LATERAL(index, pprovider, cprovider);
+%         end
         
         function lateral = provide_PARA(lateral)
             lateral.PARA.N_drift = []; %5;
@@ -159,10 +162,9 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
         
         function lateral = set_ACTIVE(lateral, i, t)
             lateral.PARENT.ACTIVE(i,1) = 0;
-            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next - 1e-7
+            if t + lateral.PARENT.IA_TIME_INCREMENT >= lateral.PARA.ia_time_next - 1e-9
                 lateral.PARENT.ACTIVE(i,1) = 1;
-                %lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
-                lateral.PARA.ia_time_next = lateral.PARA.ia_time_next + lateral.PARA.ia_time_increment;
+                lateral.PARA.ia_time_next = t + lateral.PARENT.IA_TIME_INCREMENT + lateral.PARA.ia_time_increment;
             end
         end
         

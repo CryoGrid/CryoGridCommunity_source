@@ -49,7 +49,7 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                             if isfield(provider.CONST, fieldnames_CONST{ii,1})
                                 new_class.CONST.(fieldnames_CONST{ii,1}) = provider.CONST.(fieldnames_CONST{ii,1});
                             else
-                               % disp(['WARNING: constant ' fieldnames_CONST{ii,1} ' in class ' class(new_class) ' not populated.'])
+                                disp(['WARNING: constant ' fieldnames_CONST{ii,1} ' in class ' class(new_class) ' not populated.'])
                             end
                         end
                     end
@@ -60,11 +60,8 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                     %initialize PARA
                     new_class = provide_PARA(new_class);
                     if ~isempty(new_class.PARA)
-                        fieldnames_PARA  = fieldnames(new_class.PARA); %list of fields in the PARA structure of new_class
-                        
-                        % Iterate over all fieldnames in new_class.PARA
+                        fieldnames_PARA  = fieldnames(new_class.PARA); %list of field in PARA, run through the Excel struct, find the field and populate it
                         for ii = 1:size(fieldnames_PARA,1)
-                            %run through the Excel struct, find the field and populate it
                             j=i+2;
                             while j<=size(data,1) && ~strcmp(data{j,1}, 'CLASS_END')
                                 if strcmp(data{j,1}, fieldnames_PARA{ii,1})
@@ -146,9 +143,9 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                                 end
                                 j=j+1;
                             end
-%                             if strcmp(data{j,1}, 'CLASS_END')
-%                                 disp(['WARNING: ' fieldnames_PARA{ii,1} ' not initialized'])
-%                             end
+                            if strcmp(data{j,1}, 'CLASS_END')
+                                disp(['WARNING: ' fieldnames_PARA{ii,1} ' not initialized'])
+                            end
                         end
                         
                     end

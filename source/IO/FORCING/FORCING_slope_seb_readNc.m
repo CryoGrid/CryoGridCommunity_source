@@ -80,16 +80,7 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             end
             temp.time = ncread([forcing.PARA.forcing_path 't2m.nc'], 'time');
             
-            temp.info = ncinfo([forcing.PARA.forcing_path 't2m.nc']);
-            Index1 = find(contains({temp.info.Variables.Name},'time'));
-            Index2 = find(contains({temp.info.Variables(Index1).Attributes.Name},'units'));
-            reference = split(temp.info.Variables(Index1).Attributes(Index2).Value);
-            reference = reference(3);
-            reference_date = split(reference,"-");
-            reference_date = str2double(reference_date);
-            forcing.DATA.timeForcing = datenum(reference_date(1),reference_date(2),reference_date(3)) + double(temp.time)./24;
-            
-            %forcing.DATA.timeForcing = datenum(1900,1,1) + double(temp.time)./24;
+            forcing.DATA.timeForcing = datenum(1900,1,1) + double(temp.time)./24;
             forcing.DATA.Tair = temp.t2m - forcing.CONST.Tmfw;
             forcing.DATA.wind = sqrt(temp.u10.^2 + temp.u10.^2);
             forcing.DATA.Sin = temp.ssrd./3600;

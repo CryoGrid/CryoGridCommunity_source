@@ -5,13 +5,17 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL 
+classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & HEAT_FLUXES_LATERAL & WATER_FLUXES_LATERAL %& INITIALIZE & FREEZE_CURVE_DallAmico
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
+        
+%         function ground = GROUND_freezeC_bucketW_seb(index, pprovider, cprovider, forcing)  
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         function ground = provide_PARA(ground)
             
@@ -23,8 +27,6 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Karra
             ground.PARA.evaporationDepth = []; %e-folding constant of evaporation reduction reduction with depth [1/m]
             ground.PARA.ratioET = []; %fraction of transpiration of total evapotranspiration [-]
             ground.PARA.hydraulicConductivity = [];  %saturated hydraulic conductivity [m/sec]
-
-            ground.PARA.conductivity_function = [];
 
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
@@ -117,21 +119,11 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Karra
             ground.CONST.residual_wc_peat = [];
 
         end
-
-        function ground = convert_units(ground, tile)
-                unit_converter = str2func(tile.PARA.unit_conversion_class);
-                unit_converter = unit_converter();
-                ground = convert_normal(unit_converter, ground, tile);
-        end
         
         function ground = finalize_init(ground, tile)
-%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
-
-            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
-                ground.PARA.conductivity_function = 'thermalConductivity_CLM4_5';
-            end
+            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground.CONST.vanGen_alpha = [ ground.CONST.alpha_sand ground.CONST.alpha_silt ground.CONST.alpha_clay ground.CONST.alpha_peat ground.CONST.alpha_water];
             ground.CONST.vanGen_n = [ ground.CONST.n_sand ground.CONST.n_silt ground.CONST.n_clay ground.CONST.n_peat ground.CONST.n_water];
@@ -157,14 +149,6 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Karra
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET_energy = ground.STATVAR.energy.*0;
             ground.TEMP.surface_runoff = 0;
-        end
-        
-        function ground = finalize_init2(ground, tile)
-
-            ground = get_E_freezeC(ground);
-            ground = conductivity(ground);
-            ground = calculate_hydraulicConductivity(ground);
-
         end
         
         %---time integration------
@@ -204,7 +188,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Karra
             ground.STATVAR.energy = ground.STATVAR.energy + timestep .* ground.TEMP.d_water_energy; %add energy from water advection
             %water
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water; 
-            ground.STATVAR.waterIce = min(ground.STATVAR.waterIce, ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic); %prevent small rounding errors 
+            %ground.STATVAR.waterIce = min(ground.STATVAR.waterIce, ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic); %prevent small rounding errors 
             ground.STATVAR.excessWater = ground.STATVAR.excessWater + timestep .* ground.TEMP.surface_runoff;
             % NEW STATVARS, not tested yet! RBZ Jun 2021
             ground.STATVAR.evapotransp = ground.STATVAR.evapotransp + timestep .* sum(ground.TEMP.d_water_ET).*double(sum(ground.TEMP.d_water_ET < 0));
@@ -248,9 +232,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Karra
         end
         
         function ground = conductivity(ground)
-            conductivity_function = str2func(ground.PARA.conductivity_function);
-            ground = conductivity_function(ground);
-%             ground = conductivity_mixing_squares(ground);
+            ground = conductivity_mixing_squares(ground);
         end
         
         

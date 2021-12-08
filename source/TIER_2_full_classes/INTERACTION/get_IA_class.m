@@ -11,116 +11,13 @@
 
 function ia_class = get_IA_class(above_class, below_class)
 
-%---------------
-if strcmp(above_class(end-8:end), 'FLIP_FLOP')
-    above_class = above_class(1:end-10);
-end
 
-if strcmp(below_class(end-8:end), 'FLIP_FLOP')
-    below_class = below_class(1:end-10);
-end
-
-%quick fixes
-%---------
 if strcmp(above_class, 'GROUND_freezeC_bucketW_Xice_seb_snow_BGC')
     above_class = 'GROUND_freezeC_bucketW_Xice_seb_snow';
 end
 if strcmp(below_class, 'GROUND_freezeC_bucketW_Xice_seb_snow_BGC')
     below_class = 'GROUND_freezeC_bucketW_Xice_seb_snow';
 end
-
-
-if strcmp(above_class, 'GROUND_freezeC_RichardsEqW_seb_pressure')
-    above_class = 'GROUND_freezeC_RichardsEqW_seb';
-end
-if strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb_pressure')
-    below_class = 'GROUND_freezeC_RichardsEqW_seb';
-end
-
-if strcmp(above_class, 'GROUND_freezeC_RichardsEqW_seb_pressure_snow')
-    above_class = 'GROUND_freezeC_RichardsEqW_seb_snow';
-end
-if strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb_pressure_snow')
-    below_class = 'GROUND_freezeC_RichardsEqW_seb_snow';
-end
-
-%----------
-if strcmp(above_class, 'GROUND_freezeC_ubT')
-    above_class = 'GROUND_freezeC_seb';
-end
-if strcmp(below_class, 'GROUND_freezeC_ubT')
-    below_class = 'GROUND_freezeC_seb';
-end
-
-if strcmp(above_class, 'GROUND_freezeC_ubT_snow')
-    above_class = 'GROUND_freezeC_seb_snow';
-end
-if strcmp(below_class, 'GROUND_freezeC_ubT_snow')
-    below_class = 'GROUND_freezeC_seb_snow';
-end
-
-%----------
-if strcmp(above_class, 'GROUND_freeW_ubT')
-    above_class = 'GROUND_freeW_seb';
-end
-if strcmp(below_class, 'GROUND_freeW_ubT')
-    below_class = 'GROUND_freeW_seb';
-end
-
-if strcmp(above_class, 'GROUND_freeW_ubT_snow')
-    above_class = 'GROUND_freeW_seb_snow';
-end
-if strcmp(below_class, 'GROUND_freeW_ubT_snow')
-    below_class = 'GROUND_freeW_seb_snow';
-end
-%------
-
-if strcmp(above_class, 'GROUND_fcSimple_salt_ubT')
-    above_class = 'GROUND_fcSimple_salt_seb';
-end
-if strcmp(below_class, 'GROUND_fcSimple_salt_ubT')
-    below_class = 'GROUND_fcSimple_salt_seb';
-end
-
-if strcmp(above_class, 'GROUND_fcSimple_salt_ubT_snow')
-    above_class = 'GROUND_fcSimple_salt_seb_snow';
-end
-if strcmp(below_class, 'GROUND_fcSimple_salt_ubT_snow')
-    below_class = 'GROUND_fcSimple_salt_seb_snow';
-end
-%------
-
-if strcmp(above_class, 'SNOW_simple_ubT')
-    above_class = 'SNOW_simple_seb';
-end
-if strcmp(below_class, 'SNOW_simple_ubT')
-    below_class = 'SNOW_simple_seb';
-end
-
-
-%------------------
-
-if strcmp(above_class, 'GROUND_store_flip_flop_singleClass') || strcmp(above_class, 'GROUND_store_flip_flop_singleClass_BGC')
-    above_class = 'GROUND_freeW_seb';
-end
-
-
-if strcmp(above_class, 'GLACIER_freeW_seb_snow')
-    above_class = 'GROUND_freeW_seb_snow';
-end
-if strcmp(below_class, 'GLACIER_freeW_seb_snow')
-    below_class = 'GROUND_freeW_seb_snow';
-end
-
-%set dummy, so that it doesn't crash
-if strcmp(above_class, 'GROUND_multi_tile2')
-    above_class2 = above_class;
-    above_class = 'GROUND_freeW_seb';
-else
-    above_class2 = 0;
-end
-
-
 
 %list of all CryoGrid GROUND classes
 classes = [ {'GROUND_freeW_seb'};
@@ -288,10 +185,6 @@ else
     disp('combination of classes not supported')
 end
 
-
-if strcmp(above_class2, 'GROUND_multi_tile2')
-    ia_class = IA_MULTI_TILE10();
-end
 % if  strcmp(below_class,'READ_OUT_BGC') && strcmp(above_class,'READ_OUT_BGC')
 %     ia_class = IA_DO_NOTHING();
 % end

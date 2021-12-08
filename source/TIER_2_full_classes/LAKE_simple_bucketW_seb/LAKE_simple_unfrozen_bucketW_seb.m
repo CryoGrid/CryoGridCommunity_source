@@ -9,13 +9,18 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_FLUXES_LATERAL &  HEAT_FLUXES_LATERAL 
+classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_FLUXES_LATERAL &  HEAT_FLUXES_LATERAL %& INITIALIZE
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
+
+        % normal constructor with providers not used, always created by default constructor and initialized from LAKE_simple_bucketW_seb
+%         function ground = LAKE_simple_unfrozen_bucketW_seb(index, pprovider, cprovider, forcing)
+%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
+%         end
         
         %initializes class when switching from frozen to unfrozen conditions
         function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_frozen)
@@ -230,11 +235,6 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
            ground = lateral_push_water_reservoir_lake_unfrozen(ground, lateral);
         end
         
-        %---LAT_OVERLAND_FLOW----------
-        function ground = lateral_push_remove_water_overland_flow(ground, lateral)
-            ground = lateral_push_water_overland_flow_LAKE(ground, lateral);
-        end
-        
         %----LAT3D_WATER_UNCONFINED_AQUIFER------------     
         function ground = lateral3D_pull_water_unconfined_aquifer(ground, lateral)
             ground = lateral3D_pull_water_unconfined_aquifer_lake_unfrozen(ground, lateral);
@@ -246,10 +246,6 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
         
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(ground, lateral)
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_lake_unfrozen(ground, lateral);
-        end
-        
-        function ground = lateral3D_pull_water_overland_flow(ground, lateral)
-            ground = lateral3D_pull_water_overland_flow_LAKE(ground, lateral);
         end
         
         %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
