@@ -74,7 +74,7 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
             %    forcing:    instance of FORCING class
             forcing = tile.FORCING;
             
-            out.OUTPUT_TIME = forcing.PARA.start_time + out.PARA.output_timestep;
+            out.OUTPUT_TIME = forcing.PARA.start_time; % + out.PARA.output_timestep;
             if isempty(out.PARA.save_interval) || isnan(out.PARA.save_interval) 
                 out.SAVE_TIME = forcing.PARA.end_time;
             else
