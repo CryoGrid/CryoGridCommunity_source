@@ -9,18 +9,13 @@
 % S. Westermann, October 2020
 %========================================================================
 
-classdef LAKE_simple_unfrozen_seb < SEB & HEAT_CONDUCTION %& INITIALIZE
+classdef LAKE_simple_unfrozen_seb < SEB & HEAT_CONDUCTION 
 
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-
-        % normal constructor with providers not used, always created by default constructor and initialized from LAKE_simple_seb 
-%         function self = LAKE_simple_unfrozen_seb(index, pprovider, cprovider, forcing)
-%             self@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
         
         %initializes class when switching from frozen to unfrozen conditions
         function ground = initialize_from_LAKE_previous_season(ground, LAKE_simple_frozen)

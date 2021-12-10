@@ -42,6 +42,7 @@ classdef OUT_all_lateral_vegetation < matlab.mixin.Copyable
             out.PARA.output_timestep = [];
             out.PARA.save_date = [];
             out.PARA.save_interval = [];
+            out.PARA.tag = [];
         end
         
         function out = provide_CONST(out)
@@ -99,6 +100,7 @@ classdef OUT_all_lateral_vegetation < matlab.mixin.Copyable
              run_name = tile.PARA.run_name;
              result_path = tile.PARA.result_path;
              timestep = tile.timestep;
+             out_tag = out.PARA.tag;
              
             
             if t==out.OUTPUT_TIME
@@ -174,7 +176,12 @@ classdef OUT_all_lateral_vegetation < matlab.mixin.Copyable
                    if ~(exist([result_path run_name])==7)
                        mkdir([result_path run_name])
                    end
-                   save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
+                   if isempty(out_tag) || all(isnan(out_tag))
+                       save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
+                   else
+                       save([result_path run_name '/' run_name '_' out_tag '_' datestr(t,'yyyymmdd') '.mat'], 'out')
+                   end
+                   
                    out.STRATIGRAPHY=[];
                    out.VEGETATION =[];
                    out.FORCING = [];

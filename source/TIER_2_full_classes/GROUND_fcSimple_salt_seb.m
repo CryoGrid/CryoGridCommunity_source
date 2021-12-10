@@ -5,16 +5,13 @@
 %========================================================================
 
 
-classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERAL %& INITIALIZE
+classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERAL 
     
     
     methods
         
         %----mandatory functions---------------
         %----initialization--------------------
-%         function ground = GROUND_fcSimple_salt_seb(index, pprovider, cprovider, forcing)
-%             ground@INITIALIZE(index, pprovider, cprovider, forcing);
-%         end
                 
         function ground = provide_PARA(ground)
             
@@ -23,6 +20,9 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.PARA.z0 = []; %roughness length [m]
             ground.PARA.rs = []; %surface resistance against evapotranspiration [sec/m] 
             ground.PARA.tortuosity=[]; % tortuosity of salt diffusion [-]
+
+            ground.PARA.conductivity_function = [];
+
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
             ground.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
         end
@@ -45,7 +45,7 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.STATVAR.saltConc =[]; %total molar salt volume within a grid cell [mol]
             
             ground.STATVAR.thermCond = []; %thermal conductivity [W/mK]
-            ground.STATVAR.deltaT =[]; % freezing point depression/onset temperature of frezing for zero salt content [degree C]
+            ground.STATVAR.deltaT = []; % freezing point depression/onset temperature of frezing for zero salt content [degree C]
             ground.STATVAR.Lstar = []; %Obukhov length [m]
             ground.STATVAR.Qh = []; %sensible heat flux [W/m2]
             ground.STATVAR.Qe = []; % latent heat flux [W/m2]
@@ -76,11 +76,22 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.CONST.rho_i = []; %ice density
         end
 
-            
+
+        function ground = convert_units(ground, tile)
+            unit_converter = str2func(tile.PARA.unit_conversion_class);
+            unit_converter = unit_converter();
+            ground = convert_normal(unit_converter, ground, tile);
+        end
+        
+
         function ground = finalize_init(ground, tile)
             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+
+            if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
+                ground.PARA.conductivity_function = 'conductivity_mixing_squares';
+            end
             
             ground = get_E_water_salt_FreezeDepress_Xice(ground); %calculate energy, water and ice contents and brine salt concentration
             ground = conductivity(ground); %calculate thermal conductivity
@@ -92,6 +103,14 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
            
             ground.TEMP.d_energy = ground.STATVAR.energy.*0; %set derivatives to 0
             ground.TEMP.d_salt = ground.STATVAR.energy.*0;
+        end
+        
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_water_salt_FreezeDepress_Xice(ground); %calculate energy, water and ice contents and brine salt concentration
+            ground = conductivity(ground); %calculate thermal conductivity
+            ground = diffusivity_salt(ground); % calculate salt diffusivity 
+
         end
         
         %---time integration------
@@ -165,8 +184,9 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
         end
         
         function ground = conductivity(ground)
-            
-            ground = conductivity_mixing_squares(ground);
+            conductivity_function = str2func(ground.PARA.conductivity_function);
+            ground = conductivity_function(ground);
+            %ground = conductivity_mixing_squares(ground);
         end
 
         

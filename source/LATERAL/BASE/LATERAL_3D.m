@@ -20,7 +20,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         STATVAR % the state variables of the realization itself
         STATVAR2ALL %the state variables of the realization itself that should be sent to all other workers, not only the connected dones
         STATVAR_PRIVATE
-        ENSEMBLE %the state varaibles of the other ensemble members (cell aray)
+        ENSEMBLE %the state variables of the other ensemble members (cell aray)
     end
     
     methods
@@ -30,6 +30,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         
         
         function lateral = provide_PARA(lateral)
+            lateral.PARA.hill_slope = []; %0 or 1 
             lateral.PARA.ia_time_increment = [];
         end
         
@@ -65,7 +66,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             lateral.TOP = tile.TOP;
             lateral.BOTTOM = tile.BOTTOM;
             
-            %user-defined in the paraemter file
+            %user-defined in the parameter file
             for i=1:size(tile.PARA.lateral_IA_classes, 1)
                 lat_ia_class = tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.lateral_IA_classes{i,1});
                 lat_ia_class = lat_ia_class{tile.PARA.lateral_IA_classes_index, 1};
@@ -93,6 +94,8 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             lateral.PARA.num_realizations = tile.RUN_INFO.PARA.number_of_tiles;
             
             lateral.STATVAR.index = lateral.PARA.worker_number; % this is double, but it is necessary to store the index also in STATVAR
+        
+            %lateral.PARA.is_active = 1; %can be used to switch off lateral interactions temporarily
         end
 
  
@@ -159,7 +162,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         %recompute diagnostic step
         function lateral = interact(lateral, tile)
             t=tile.t;
-            if t>=lateral.IA_TIME
+            if t>=lateral.IA_TIME %lateral.PARA.is_active && 
                 if sum(lateral.ACTIVE) > 0
                     %disp(t-floor(t))
                     
@@ -239,7 +242,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
                
                lateral.ENSEMBLE ={};
                lateral.STATVAR2ALL = [];
-               lateral.IA_TIME = t + lateral.IA_TIME_INCREMENT;
+               lateral.IA_TIME = lateral.IA_TIME + lateral.IA_TIME_INCREMENT;
 
             end
         end
@@ -272,6 +275,44 @@ classdef LATERAL_3D < matlab.mixin.Copyable
                 if lateral.PARA.connected(lateral.STATVAR.index, lateral.ENSEMBLE{i,1}.index)
                     cell_1 = -lateral.STATVAR.(variable);
                     cell_2 = -lateral.ENSEMBLE{i,1}.(variable);
+                    
+                    lateral.ENSEMBLE{i,1}.(variable_out) = [];%zeros(size(cell_1,1)-1,size(cell_2,1)-1);
+                    
+                    if size(cell_1,1) > 1 && size(cell_2,1) > 1
+                        for i1=1:size(cell_1,1)-1
+                            i2=1;
+                            a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                            
+                            while a <= 0 && i2 < size(cell_2,1)-1
+                                %overlap2(i1,i2) = a;
+                                i2 = i2+1;
+                                a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                            end
+                            if a>0
+                                lateral.ENSEMBLE{i,1}.(variable_out) = [lateral.ENSEMBLE{i,1}.(variable_out);  [i1  i2 a]];
+                            end
+                            
+                            i2_start = i2;
+                            while a > 0 && i2 < size(cell_2,1)-1
+                                
+                                i2 = i2+1;
+                                a = max(0, - max(cell_1(i1,1), cell_2(i2,1)) + min(cell_1(i1+1,1), cell_2(i2+1,1)));
+                                if a>0
+                                    lateral.ENSEMBLE{i,1}.(variable_out) = [lateral.ENSEMBLE{i,1}.(variable_out);  [i1  i2 a]];
+                                end
+                            end
+                            i2 = i2_start;
+                        end
+                    end
+                end
+            end
+        end
+
+        function lateral = get_overlap_cells2(lateral, variable, variable_out) %no need to loop through stratigraphy, al the information should be in lateral
+            for i=1:size(lateral.ENSEMBLE,1)
+                if lateral.PARA.connected(lateral.STATVAR.index, lateral.ENSEMBLE{i,1}.index)
+                    cell_1 = -(lateral.STATVAR.(variable) - double(lateral.PARA.hill_slope) .* lateral.STATVAR.ground_surface_elevation);
+                    cell_2 = -(lateral.ENSEMBLE{i,1}.(variable) - double(lateral.PARA.hill_slope) .* lateral.ENSEMBLE{i,1}.ground_surface_elevation);
                     
                     lateral.ENSEMBLE{i,1}.(variable_out) = [];%zeros(size(cell_1,1)-1,size(cell_2,1)-1);
                     
