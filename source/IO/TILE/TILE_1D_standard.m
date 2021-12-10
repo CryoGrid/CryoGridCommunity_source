@@ -118,6 +118,8 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             %=========================================================================
             %TIME INTEGRATION
             %=========================================================================
+            tic
+            fprintf('\n')
             while tile.t < tile.FORCING.PARA.end_time
                 
                 
@@ -188,7 +190,8 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                 %model
                 tile = store_OUT_tile(tile);
             end
-            
+            fprintf('\n')
+            toc
         end
         
         
