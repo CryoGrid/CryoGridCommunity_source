@@ -85,9 +85,9 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
         
 
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+            %ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            %ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            %ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
 
             if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
                 ground.PARA.conductivity_function = 'conductivity_mixing_squares';

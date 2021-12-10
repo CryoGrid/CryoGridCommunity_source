@@ -35,6 +35,16 @@ classdef UNIT_CONVERSION_standard < matlab.mixin.Copyable
             ground.STATVAR.organic = ground.STATVAR.organic .* ground.STATVAR.layerThick .* ground.STATVAR.area;
 
         end
+
+
+        function ground = convert_normal_ubT_lbT(unit_converter, ground, tile)
+            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.layerThick .* 0;
+
+            ground.STATVAR.waterIce = ground.STATVAR.waterIce .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            ground.STATVAR.mineral = ground.STATVAR.mineral .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+            ground.STATVAR.organic = ground.STATVAR.organic .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+
+        end        
     end
 end
 

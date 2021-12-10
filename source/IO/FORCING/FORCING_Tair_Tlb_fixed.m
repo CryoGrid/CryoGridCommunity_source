@@ -1,29 +1,24 @@
 %========================================================================
-% CryoGrid FORCING class FORCING_tair_precip
-% simple model forcing for GROUND classes depending only on air temperature
-% and precipitation (rain or snow).
-% The data must be stored in a Matlab “.mat” file which contains 
-% a struct FORCING with field “data”, which contain the time series of the actual 
+% CryoGrid FORCING class FORCING_Tair_Tlb_fixed
+% simple model forcing for GROUND classes depending only on an upper
+% boundary temperature (Tair) forcing, and a fixed lower boundary
+% temperature.
+% The forcing data must be stored in a Matlab “.mat” file which contains 
+% a struct FORCING with field “DATA”, which contain the time series of the actual 
 % forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures. 
 % Have a look at the existing forcing files in the folder “forcing” and prepare 
 % new forcing files in the same way. 
 %
 % The mandatory forcing variables are:
 % Tair:      Air temperature (Tair, in degree Celsius)
-% rainfall:  Rainfall (rainfall, in mm/day), 
-% snowfall:  Snowfall (snowfall, in mm/day)
-% t_span:    Timestamp (t_span, in Matlab time / increment 1 corresponds to one day)
+% t_span:    Timestamp (as Matlab datenum / increment 1 corresponds to one day)
 %
-% IMPORTANT POINT: the time series must be equally spaced in time, and this must be 
-% really exact. When reading the timestamps from an existing data set (e.g. an Excel file),
-% rounding errors can result in small differences in the forcing timestep, often less 
-% than a second off. In this case, it is better to manually compile a new, equally spaced 
-% timestep in Matlab.
+% T_lb is specified in the parameter input file, not in the forcing mat file.
 %
-% T. Ingeman-Nielsen, S. Westermann, J. Scheer, December 2021
+% T. Ingeman-Nielsen, S. Westermann, December 2021
 %========================================================================
 
-classdef FORCING_tair_precip < matlab.mixin.Copyable
+classdef FORCING_Tair_Tlb_fixed < matlab.mixin.Copyable
     
     properties
         forcing_index
@@ -42,16 +37,9 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
 
             forcing.PARA.filename = [];       % filename of Matlab file containing forcing data
 			forcing.PARA.forcing_path = [];   % location (path) of forcing files
-            forcing.PARA.latitude = [];       % 
-            forcing.PARA.longitude = [];      % 
-            forcing.PARA.altitude = [];       % 
             forcing.PARA.start_time = [];     % start time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.end_time = [];       % end time of the simulations (must be within the range of data in forcing file)
-            forcing.PARA.rain_fraction = [];  % rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
-            forcing.PARA.snow_fraction = [];  % snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
-            forcing.PARA.heatFlux_lb = [];    % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
-            forcing.PARA.airT_height = [];    % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
-            
+            forcing.PARA.T_lb = [];           % Fixed temperature at lower boundary
         end
         
         function forcing = provide_CONST(forcing)
@@ -75,8 +63,6 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
 			temp = load([forcing.PARA.forcing_path forcing.PARA.filename], 'FORCING');
             
             forcing.DATA.Tair = temp.FORCING.data.Tair;
-            forcing.DATA.rainfall=temp.FORCING.data.rainfall.*forcing.PARA.rain_fraction;
-            forcing.DATA.snowfall=temp.FORCING.data.snowfall.*forcing.PARA.snow_fraction;
             forcing.DATA.timeForcing = temp.FORCING.data.t_span;
             
             if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1))>=1e-10
@@ -100,9 +86,8 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
             end
             
             %initialize TEMP
-            forcing.TEMP.snowfall=0;
-            forcing.TEMP.rainfall=0;
-            forcing.TEMP.Tair=0;
+            forcing.TEMP.Tair = 0;
+			forcing.TEMP.T_lb = forcing.PARA.T_lb;
             
         end
 
@@ -112,12 +97,8 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
             times = forcing.DATA.timeForcing;
             posit = floor((t-times(1,1))./(times(2,1)-times(1,1)))+1;
 
-            forcing.TEMP.snowfall = forcing.lin_interp(t, posit, times, forcing.DATA.snowfall);
-            forcing.TEMP.rainfall = forcing.lin_interp(t, posit, times, forcing.DATA.rainfall);
-            forcing.TEMP.Tair =     forcing.lin_interp(t, posit, times, forcing.DATA.Tair);
-
-            forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
-            forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
+            forcing.TEMP.Tair = forcing.lin_interp(t, posit, times, forcing.DATA.Tair);
+			forcing.TEMP.T_lb = forcing.PARA.T_lb;
             forcing.TEMP.t = t;
         end
 
@@ -130,10 +111,8 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
         function fig = plot(forcing)
             TT = timetable(datetime(forcing.DATA.timeForcing,'ConvertFrom','datenum'), ...
                            forcing.DATA.Tair, ...
-                           forcing.DATA.rainfall, ... 
-                           forcing.DATA.snowfall, ...
-                           'VariableNames', {'Tair', 'rainfall', 'snowfall'});
-            TT.Properties.VariableUnits = {'degC', 'mm', 'mm'};
+                           'VariableNames', {'Tair'});
+            TT.Properties.VariableUnits = {'degC'};
             stackedplot(TT);
             %hAx=gca;
             %hAx.TickLabelFormat='mm-yyyy';
