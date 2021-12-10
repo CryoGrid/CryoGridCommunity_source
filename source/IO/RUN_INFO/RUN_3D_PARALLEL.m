@@ -63,8 +63,16 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
             %end
 
             err_out = cell(run_info.PARA.number_of_tiles);
-
-            parpool([1 run_info.PARA.number_of_cores])
+            
+            this_pool = gcp('nocreate'); 
+            if isempty(this_pool)
+                this_pool = parpool([1 run_info.PARA.number_of_cores]);
+                disp(['Using new parpool with ' num2str(this_pool.NumWorkers) ' workers.'])
+            else
+                disp(['Using existing parpool with ' num2str(this_pool.NumWorkers) ' workers.'])
+            end
+                
+            
             parfor tile_id = 1:run_info.PARA.number_of_tiles
                 % make copy of template run_info, to modify in this process
                 this_run_info = copy(run_info);
@@ -102,8 +110,8 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
                                       err_out{tid}.run_info.PPROVIDER.PARA.run_name, ...
                                       '__tile_', num2str(err_out{tid}.tile_id), ...
                                       '.mat'];
-    
-                    save(error_log_file, '-struct', err_out{tid});
+                    info_out = err_out{tid};
+                    save(error_log_file, '-struct', 'info_out');
                 end
             end
 
