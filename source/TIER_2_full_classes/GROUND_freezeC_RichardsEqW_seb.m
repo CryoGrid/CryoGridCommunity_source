@@ -163,7 +163,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         function ground = get_boundary_condition_u(ground, tile)
             forcing = tile.FORCING;
             ground = surface_energy_balance(ground, forcing);
-            ground = get_boundary_condition_u_water(ground, forcing);
+            ground = get_boundary_condition_u_RichardsEq(ground, forcing);
         end
         
         function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features SW penetration

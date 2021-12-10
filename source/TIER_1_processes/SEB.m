@@ -283,8 +283,8 @@ classdef SEB < BASE
             Lstar = seb.STATVAR.Lstar;
             p = forcing.TEMP.p;
             
-            Tz=Tz+forcing.CONST.Tmfw;
-            TForcing=TForcing+forcing.CONST.Tmfw;
+            Tz=Tz+seb.CONST.Tmfw;
+            TForcing=TForcing+seb.CONST.Tmfw;
             rho = rho_air(seb, p, Tz);
             
             Q_h  = -rho.*cp.*kappa.* uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)) .* (Tz-TForcing)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
