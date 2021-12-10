@@ -82,7 +82,7 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
             end
             
             out.TEMP = struct();
-            
+            out.TEMP.first_step = true;
         end
         
         %---------------time integration-------------
@@ -106,7 +106,15 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
                 % It is time to collect output
                 % Store the current state of the model in the out structure.                
                 
-                disp([datestr(t)])
+                if ~out.TEMP.first_step
+                    fprintf(repmat('\b',1,19))
+                else
+                    fprintf('\n')
+                    out.TEMP.first_step = false;
+                end
+                fprintf(datestr(t, 'yyyy-mm-dd HH:MM:SS'))
+%                disp(datestr(t))
+                
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 CURRENT =TOP.NEXT;
