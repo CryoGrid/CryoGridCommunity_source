@@ -509,7 +509,53 @@ classdef IA_WATER < IA_BASE
             
         end
         
+        %---------- Vegetation ----------------------
         
+        function ia_seb_water = get_boundary_condition_RichardsEq_canopy_m(ia_seb_water, tile)
+            % Equivalent to get_boundary_condition_u_RichardsEq(...) in WATER_FLUXES
+            forcing = tile.FORCING;
+            
+            max_infiltration = max(0, ia_seb_water.NEXT.STATVAR.hydraulicConductivity(1,1).* ((0 - ia_seb_water.NEXT.STATVAR.waterPotential(1,1)) ./ (ia_seb_water.NEXT.STATVAR.layerThick(1,1) ./ 2) + 1) .* ia_seb_water.NEXT.STATVAR.area(1,1));
+            
+            rainfall = ia_seb_water.PREVIOUS.TEMP.rain_thru;  % throughfall from canopy
+
+            %partition already here in infiltration and surface runoff,
+            %considering ET losses and potentially external fluxes
+            saturation_first_cell = ia_seb_water.NEXT.STATVAR.waterIce(1)./ (ia_seb_water.NEXT.STATVAR.layerThick(1).*ia_seb_water.NEXT.STATVAR.area(1) - ia_seb_water.NEXT.STATVAR.mineral(1) - ia_seb_water.NEXT.STATVAR.organic(1));
+            saturation_first_cell = max(0,min(1,saturation_first_cell)); % 0 water at field capacity, 1: water at saturation
+            
+            evap = double(ia_seb_water.NEXT.TEMP.d_water_ET(1)<0).*ia_seb_water.NEXT.TEMP.d_water_ET(1);
+            condensation = double(ia_seb_water.NEXT.TEMP.d_water_ET(1)>0).*ia_seb_water.NEXT.TEMP.d_water_ET(1);
+            
+            rainfall = rainfall + condensation; %add condensation to rainfall to avoid overflowing of grid cell
+            excessRain = max(0, rainfall-max_infiltration);
+            rainfall = min(rainfall, max_infiltration);
+            
+            ia_seb_water.NEXT.TEMP.d_water_ET(1) = evap; %evaporation (water loss) subrtacted in get_derivative
+            
+            ia_seb_water.NEXT.TEMP.F_ub_water = double(rainfall <= -evap) .* rainfall + ...
+                double(rainfall > -evap) .* (-evap + (rainfall + evap) .* reduction_factor_in(saturation_first_cell, ia_seb_water));
+            ia_seb_water.NEXT.TEMP.surface_runoff = rainfall - ia_seb_water.NEXT.TEMP.F_ub_water + excessRain;
+            
+            ia_seb_water.NEXT.TEMP.T_rainWater =  max(0,forcing.TEMP.Tair);
+            ia_seb_water.NEXT.TEMP.F_ub_water_energy = ia_seb_water.NEXT.TEMP.F_ub_water .* ia_seb_water.NEXT.CONST.c_w .* ia_seb_water.NEXT.TEMP.T_rainWater;
+            
+            ia_seb_water.NEXT.TEMP.d_water(1) = ia_seb_water.NEXT.TEMP.d_water(1) + ia_seb_water.NEXT.TEMP.F_ub_water;
+            ia_seb_water.NEXT.TEMP.d_water_energy(1) = ia_seb_water.NEXT.TEMP.d_water_energy(1) + ia_seb_water.NEXT.TEMP.F_ub_water_energy;
+            
+        end
+        
+        function ia_seb_water = get_water_transpiration(ia_seb_water)
+            transp_water = ia_seb_water.PREVIOUS.TEMP.transp_sun+ia_seb_water.PREVIOUS.TEMP.transp_sha;
+            r = ia_seb_water.NEXT.STATVAR.f_root;
+            w = ia_seb_water.NEXT.TEMP.w;
+            beta_t = ia_seb_water.PREVIOUS.TEMP.beta_t;
+            
+            water_out = transp_water .* r.*w ./beta_t;
+            water_out(isnan(water_out)) = 0;
+            
+            ia_seb_water.NEXT.TEMP.d_water_ET = ia_seb_water.NEXT.TEMP.d_water_ET - water_out;
+        end
         
         %---service functions-----------------
         %redce in and outflow close to field capacity and full saturation,
