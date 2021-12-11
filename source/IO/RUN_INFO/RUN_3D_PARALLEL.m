@@ -51,19 +51,26 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
         
         
         
-        function [run_info, tile] = run_model(run_info)
+        function [run_info, tile] = run_model(run_info, run_flag)
             %this could first open spmd and assign run_number depending on
             %worker, then do another round of pprovider
             %it could also do a loop over different tile representing
             %different sections of the run, e.g. initial inial init, spin-up, actual run 
-
+            %
             % The run_info and tile instances returned are not the ones
             % actually used in the runs, it is the template instances
             % that were passed to the function.
+            %
+            % run_flag is a flag to indicate whether the model should be
+            % run or only initialized. Setting it to false is not very
+            % meaningful in this class, since initialization will be lost
+            % due to the parallelization. But in sequential mode, the last
+            % tile wil be returned in initialized state.
             
-            %for tile_id = 1:run_info.PARA.number_of_tiles
-            %    exceptions.(['TILE_', num2str(tile_id)]) = struct();
-            %end
+            if ~exist('run_flag', 'var')
+                % if run_flag is not passed, default to true
+                run_flag = true;
+            end
 
             err_out = cell(run_info.PARA.number_of_tiles);
             
@@ -90,7 +97,7 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
     
                     try
                         % initialize and run tile instance
-                        [out_run_info, out_tile] = kernel_run_model(this_run_info);
+                        [out_run_info, out_tile] = kernel_run_model(this_run_info, run_flag);
                     catch ME
                         % catch and store error for saving after pool completes
                         error_timestamp = now;
@@ -105,6 +112,8 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
                         % the information and save it after.
                     end
                 end
+                tile = run_info.TILE;
+
             elseif strcmpi(run_info.PARA.run_mode, 'sequential')
                 for tile_id = 1:run_info.PARA.number_of_tiles
                     this_run_info = copy(run_info);
@@ -116,7 +125,7 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
                     
                     try
                         % initialize and run tile instance
-                        [out_run_info, out_tile] = kernel_run_model(this_run_info);
+                        [out_run_info, out_tile] = kernel_run_model(this_run_info, run_flag);
                     catch ME
                         % catch and store error for saving after pool completes
                         error_timestamp = now;
@@ -128,8 +137,12 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
                         err_out{tile_id}.MException = ME;
                     end
                 end
+                
+                run_info = out_run_info;
+                tile = out_tile;
+
             end
-            
+
             deltatime = datetime(datestr(now))-tStart;
             fprintf('Elapsed time: ');
             disp(deltatime);
@@ -148,11 +161,10 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
                 end
             end                
 
-            tile = run_info.TILE;
         end
  
 
-        function [run_info, tile] = kernel_run_model(run_info)
+        function [run_info, tile] = kernel_run_model(run_info, run_flag)
             % This is the actual normal run_model method. It is extracted
             % in separate method to more easily enclose its execution in
             % a try-catch block in the new run_model method.
@@ -174,7 +186,9 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
 
             tile = finalize_init(tile);
             
-            tile = run_model(tile);  %time integration
+            if run_flag
+                tile = run_model(tile);  %time integration
+            end
         end
     
 
