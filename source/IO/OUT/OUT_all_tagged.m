@@ -155,11 +155,9 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
                     if ~(exist([result_path run_name])==7)
                         mkdir([result_path run_name])
                     end
-                    if isempty(out_tag) || all(isnan(out_tag))
-                        save([result_path run_name '/' run_name '_' datestr(t,'yyyymmdd') '.mat'], 'out')
-                    else
-                        save([result_path run_name '/' run_name '_' out_tag '_' datestr(t,'yyyymmdd') '.mat'], 'out')
-                    end
+                
+                    filename = get_filename(out, t, result_path, run_name);
+                    save(filename, 'out')
                     
                     % Clear the out structure
                     out.STRATIGRAPHY=[];
@@ -179,6 +177,31 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
             % XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
             
             xls_out = {'OUT','index',NaN,NaN;'OUT_all',1,NaN,NaN;'output_timestep',0.250000000000000,'[days]',NaN;'save_date','01.09.','provide in format dd.mm.',NaN;'save_interval',1,'[y]','if left empty, the entire output will be written out at the end';'OUT_END',NaN,NaN,NaN};
+        end
+
+        function filename = get_filename(out, t, result_path, run_name)
+            % compose and return out-filename
+
+            out_tag = out.PARA.tag;
+            
+            if isnumeric(t)
+               if length(t) == 3
+                   out_date = datestr(datetime(t(1), t(2), t(3)), 'yyyymmdd');
+               elseif length(t) == 1
+                   out_date = datestr(datetime(t), 'yyyymmdd');
+               else
+                   error(['Unknown date formate: ' t])
+               end
+            else
+               error(['Unknown date formate: ' t])
+            end
+            
+            if isempty(out_tag) || all(isnan(out_tag))
+                filename = [result_path run_name '/' run_name '_' out_date '.mat'];
+            else
+                filename = [result_path run_name '/' run_name '_' out_tag '_' out_date '.mat'];
+            end
+
         end
         
     end
