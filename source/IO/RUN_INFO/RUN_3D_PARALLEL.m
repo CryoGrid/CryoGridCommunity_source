@@ -20,6 +20,7 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
             run_info.PARA.number_of_cores = [];
             run_info.PARA.number_of_tiles = []; %3;
             run_info.PARA.param_file_number = []; %[1;2;3];
+            run_info.PARA.run_mode = 'parallel';   % or 'sequential'
 
             run_info.PARA.connected = [];
             run_info.PARA.contact_length = [];
@@ -43,7 +44,9 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
 %         end
         
         function run_info = finalize_init(run_info)
- 
+            if isempty(run_info.PARA.run_mode) || isnan(run_info.PARA.run_mode)
+                run_info.PARA.run_mode = 'parallel';
+            end
         end
         
         
@@ -64,42 +67,72 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
 
             err_out = cell(run_info.PARA.number_of_tiles);
             
-            this_pool = gcp('nocreate'); 
-            if isempty(this_pool)
-                this_pool = parpool([1 run_info.PARA.number_of_cores]);
-                disp(['Using new parpool with ' num2str(this_pool.NumWorkers) ' workers.'])
-            else
-                disp(['Using existing parpool with ' num2str(this_pool.NumWorkers) ' workers.'])
-            end
+            tStart = datetime(datestr(now));
+
+            if strcmpi(run_info.PARA.run_mode, 'parallel')
+                this_pool = gcp('nocreate'); 
+                if isempty(this_pool)
+                    this_pool = parpool([1 run_info.PARA.number_of_cores]);
+                    disp(['Using new parpool with ' num2str(this_pool.NumWorkers) ' workers.'])
+                else
+                    disp(['Using existing parpool with ' num2str(this_pool.NumWorkers) ' workers.'])
+                end
+                    
                 
-            
-            parfor tile_id = 1:run_info.PARA.number_of_tiles
-                % make copy of template run_info, to modify in this process
-                this_run_info = copy(run_info);
-
-                this_run_info.PARA.worker_number = tile_id; % assign id
-                
-                % prepare error collection in case of exceptions
-                err_out{tile_id}.tile_id = tile_id;
-                err_out{tile_id}.OK = true;
-
-                try
-                    % initialize and run tile instance
-                    [out_run_info, out_tile] = kernel_run_model(this_run_info);
-                catch ME
-                    % catch and store error for saving after pool completes
-                    error_timestamp = now;
-
+                parfor tile_id = 1:run_info.PARA.number_of_tiles
+                    % make copy of template run_info, to modify in this process
+                    this_run_info = copy(run_info);
+                        this_run_info.PARA.worker_number = tile_id; % assign id
+                    
+                    % prepare error collection in case of exceptions
                     err_out{tile_id}.tile_id = tile_id;
-                    err_out{tile_id}.OK = false;
-                    err_out{tile_id}.run_info = this_run_info;
-                    err_out{tile_id}.timestamp = error_timestamp;
-                    err_out{tile_id}.MException = ME;
-
-                    % we cannot use save inside parfor, so we have to store
-                    % the information and save it after.
+                    err_out{tile_id}.OK = true;
+    
+                    try
+                        % initialize and run tile instance
+                        [out_run_info, out_tile] = kernel_run_model(this_run_info);
+                    catch ME
+                        % catch and store error for saving after pool completes
+                        error_timestamp = now;
+    
+                        err_out{tile_id}.tile_id = tile_id;
+                        err_out{tile_id}.OK = false;
+                        err_out{tile_id}.run_info = this_run_info;
+                        err_out{tile_id}.timestamp = error_timestamp;
+                        err_out{tile_id}.MException = ME;
+    
+                        % we cannot use save inside parfor, so we have to store
+                        % the information and save it after.
+                    end
+                end
+            elseif strcmpi(run_info.PARA.run_mode, 'sequential')
+                for tile_id = 1:run_info.PARA.number_of_tiles
+                    this_run_info = copy(run_info);
+                    this_run_info.PARA.worker_number = tile_id; % assign id
+                    
+                    % prepare error collection in case of exceptions
+                    err_out{tile_id}.tile_id = tile_id;
+                    err_out{tile_id}.OK = true;
+                    
+                    try
+                        % initialize and run tile instance
+                        [out_run_info, out_tile] = kernel_run_model(this_run_info);
+                    catch ME
+                        % catch and store error for saving after pool completes
+                        error_timestamp = now;
+    
+                        err_out{tile_id}.tile_id = tile_id;
+                        err_out{tile_id}.OK = false;
+                        err_out{tile_id}.run_info = this_run_info;
+                        err_out{tile_id}.timestamp = error_timestamp;
+                        err_out{tile_id}.MException = ME;
+                    end
                 end
             end
+            
+            deltatime = datetime(datestr(now))-tStart;
+            fprintf('Elapsed time: ');
+            disp(deltatime);
 
             % now save any error logs
             for tid = 1:length(run_info.PARA.number_of_tiles)
@@ -113,7 +146,7 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
                     info_out = err_out{tid};
                     save(error_log_file, '-struct', 'info_out');
                 end
-            end
+            end                
 
             tile = run_info.TILE;
         end
