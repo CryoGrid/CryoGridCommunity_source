@@ -118,7 +118,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             %=========================================================================
             %TIME INTEGRATION
             %=========================================================================
-            tic
             while tile.t < tile.FORCING.PARA.end_time
                 
                 %interpolate focing data to time t
@@ -194,9 +193,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             % console window.
             fprintf('\n\n')
             
-            % print elapsed time since tic
-            toc
-            fprintf('\n')
         end
         
         
