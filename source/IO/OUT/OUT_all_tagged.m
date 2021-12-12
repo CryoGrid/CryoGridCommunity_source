@@ -157,7 +157,7 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
                     end
                 
                     filename = get_filename(out, t, result_path, run_name);
-                    save(filename, 'out')
+                    save(filename, 'out');
                     
                     % Clear the out structure
                     out.STRATIGRAPHY=[];
@@ -190,10 +190,10 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
                elseif length(t) == 1
                    out_date = datestr(t, 'yyyymmdd');
                else
-                   error(['Unknown date formate: ' t])
+                   error(['Unknown date formate: ' num2str(t)]);
                end
             else
-               error(['Unknown date formate: ' t])
+               error(['Unknown date formate: ' num2str(t)]);
             end
             
             if isempty(out_tag) || all(isnan(out_tag))
