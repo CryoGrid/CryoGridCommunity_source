@@ -188,7 +188,7 @@ classdef OUT_all_tagged < matlab.mixin.Copyable
                if length(t) == 3
                    out_date = datestr(datetime(t(1), t(2), t(3)), 'yyyymmdd');
                elseif length(t) == 1
-                   out_date = datestr(datetime(t), 'yyyymmdd');
+                   out_date = datestr(t, 'yyyymmdd');
                else
                    error(['Unknown date formate: ' t])
                end
