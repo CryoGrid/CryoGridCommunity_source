@@ -93,6 +93,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             
             snow.CONST.cp = [];  % specific heat capacity at constant pressure of air
             snow.CONST.g = [];   % gravitational acceleration Earth surface
+            snow.CONST.Tmfw = []; % Freezing temperature of water in C
             
             snow.CONST.rho_w = []; % water density
             snow.CONST.rho_i = []; % ice density

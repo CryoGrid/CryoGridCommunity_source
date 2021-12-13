@@ -51,9 +51,6 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.STATVAR.Lstar = []; %Obukhov length [m]
             ground.STATVAR.Qh = []; %sensible heat flux [W/m2]
             ground.STATVAR.Qe = []; % latent heat flux [W/m2]
-            % NEW STATVARS, not tested yet! RBZ Jun 2021
-            ground.STATVAR.evapotransp = []; % Evapotranspiation [m3]
-            ground.STATVAR.condensation = []; % Condensation [m3]
             
             ground.STATVAR.field_capacity = []; %field capacity in fraction of the total volume [-]
             ground.STATVAR.excessWater = 0;  %water volume overtopping first grid cell (i.e. surface water [m3]
@@ -107,16 +104,12 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.STATVAR.Qh = 0;
             ground.STATVAR.Qe = 0;
             ground.STATVAR.runoff = 0;
-            % NEW STATVARS, not tested yet! RBZ Jun 2021
-            ground.STATVAR.evapotransp = 0;
-            ground.STATVAR.condensation = 0;
             
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET_energy = ground.STATVAR.energy.*0;
-
         end
         
         function ground = finalize_init2(ground, tile)
@@ -165,9 +158,6 @@ classdef GROUND_freeW_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water; 
             %ground.STATVAR.waterIce = min(ground.STATVAR.waterIce, ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic); %prevent small rounding errors 
             ground.STATVAR.excessWater = ground.STATVAR.excessWater + timestep .* ground.TEMP.surface_runoff;
-            % NEW STATVARS, not tested yet! RBZ Jun 2021
-            ground.STATVAR.evapotransp = ground.STATVAR.evapotransp + timestep .* sum(ground.TEMP.d_water_ET).*double(sum(ground.TEMP.d_water_ET < 0));
-            ground.STATVAR.condensation = ground.STATVAR.condensation + timestep .* sum(ground.TEMP.d_water_ET).*double(sum(ground.TEMP.d_water_ET > 0));
         end
         
         function ground = compute_diagnostic_first_cell(ground, tile)

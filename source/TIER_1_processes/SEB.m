@@ -529,8 +529,8 @@ classdef SEB < BASE
             d1 = p1.*(u1-my_bar*h)./s1 - p2.*(u1+my_bar*h).*s1; % Eq. 3.46
             d2 = (u2 + my_bar.*h)./s1 - (u2 - my_bar*h).*s1; % Eq. 3.47
             h1 = -d.*p4 - c.*f; % Eq. 3.48
-            h2 = 1./d1.*( (d-h1./sigma.*p3).*(u1-my_bar.*h)./s1 - p2.*(d-c-h1/sigma.*(u1+my_bar.*K)).*s2 ); % Eq. 3.50
-            h3 = -1./d1.*( (d-h1./sigma.*p3).*(u1+my_bar.*h).*s1 - p1.*(d-c-h1/sigma.*(u1+my_bar.*K)).*s2 ); % Eq. 3.50
+            h2 = 1./d1.*( (d-h1./sigma.*p3).*(u1-my_bar.*h)./s1 - p2.*(d-c-h1./sigma.*(u1+my_bar.*K)).*s2 ); % Eq. 3.50
+            h3 = -1./d1.*( (d-h1./sigma.*p3).*(u1+my_bar.*h).*s1 - p1.*(d-c-h1./sigma.*(u1+my_bar.*K)).*s2 ); % Eq. 3.51
             h4 = -f.*p3 - c.*d; % Eq. 3.51
             h5 = -1./d2.*( h4.*(u2+my_bar.*h)./(sigma.*s1) + (u3-h4./sigma.*(u2-my_bar*K)).*s2 ); % Eq. 3.52
             h6 = 1./d2.*( h4./sigma.*(u2-my_bar.*h).*s1 + (u3-h4./sigma.*(u2 - my_bar.*K)).*s2 ); % Eq. 3.53
@@ -550,12 +550,6 @@ classdef SEB < BASE
             
             % Upwelling shortwave fluxes
             I_out_from_dir = (h1./sigma + h2 + h3);
-            if sun_angle > 25 && sun_angle < 45
-                I_out_from_dir(2) = 0.06;
-            end
-            if sun_angle > 30 && sun_angle < 50
-                I_out_from_dir(1) = 0.13;
-            end
             I_out_from_dir = I_out_from_dir*spectral_weights'; % Eq. 3.17
             I_out_from_dif = (h7 + h8)*spectral_weights'; % Eq. 3.18
             
@@ -694,7 +688,7 @@ classdef SEB < BASE
                     Sout = Sout + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!!
                 end
                 seb.TEMP.S_down = S_down;
-                seb.TEMP.S_up = seb.STATVAR.S_up;
+                seb.TEMP.S_up = S_up;
             end
             seb.STATVAR.Sin = Sin;
             seb.STATVAR.Sout = Sout;
