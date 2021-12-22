@@ -107,6 +107,30 @@ classdef FORCING_ubT < matlab.mixin.Copyable
         end
         
 
+                %-------------param file generation-----
+        function forcing = param_file_info(forcing)
+            forcing = provide_PARA(forcing);
+
+            forcing.PARA.STATVAR = [];
+            forcing.PARA.class_category = 'FORCING';
+            
+            forcing.PARA.comment.filename = {'filename of Matlab file containing forcing data'};
+            
+            forcing.PARA.default_value.forcing_path = {'forcing/'};
+            forcing.PARA.comment.forcing_path = {'path where forcing data file is located'};
+            
+            forcing.PARA.comment.start_time = {'start time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.start_time.name =  'H_LIST';
+            forcing.PARA.options.start_time.entries_x = {'year' 'month' 'day'};
+            
+            forcing.PARA.comment.end_time = {'end_time time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.end_time.name =  'H_LIST'; % 
+            forcing.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
+           
+            forcing.PARA.default_value.heatFlux_lb = {0.05};
+            forcing.PARA.comment.heatFlux_lb = {'heat flux at the lower boundary [W/m2] - positive values correspond to energy gain'};
+            
+        end
 
         
         

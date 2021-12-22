@@ -60,6 +60,19 @@ classdef GRID_user_defined < matlab.mixin.Copyable
         end
 
         
+        %-------------param file generation-----
+         function stratigraphy = param_file_info(stratigraphy)
+             stratigraphy = provide_PARA(stratigraphy);
+             %default
+             stratigraphy.PARA.default_value = [];
+             stratigraphy.PARA.STATVAR = [];
+             stratigraphy.PARA.comment = [];
+             stratigraphy.PARA.class_category = 'GRID';
+             stratigraphy.PARA.options.grid.name = 'V_MATRIX';
+             stratigraphy.PARA.options.grid.entries_x = {'upper' 'spacing' 'lower'}; %fill with STATVAR that are identified for initialization in GROUND classes
+             stratigraphy.PARA.options.grid.entries_matrix = {'0' '5e-2' '1'; '1' '1e-1' '2'; '2' '2e-1' '5'; '5' '5e-1' '30'; '30' '5' '100'};
+ 
+         end
                 
 % 		function self = populate_GRID(self, pprovider)
 % 			% POPULATE_GRID  Updates the PARA structure with values from pprovider. Assigns values from the PARA structure to the corresponding class properties.

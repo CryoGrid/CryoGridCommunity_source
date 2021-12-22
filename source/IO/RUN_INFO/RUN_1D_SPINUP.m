@@ -15,10 +15,6 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
         
         
         function run_info = provide_PARA(run_info)
-
-%             run_info.PARA.coordinates = [];
-%             run_info.PARA.crs = [];
-%             run_info.PARA.height_system = [];
             
             run_info.PARA.tile_class = [];
             run_info.PARA.tile_class_index = [];
@@ -92,7 +88,24 @@ classdef RUN_1D_SPINUP < matlab.mixin.Copyable
         end
         
         
-        
+        %-------------param file generation-----
+        function run_info = param_file_info(run_info)
+            run_info = provide_PARA(run_info);
+
+            run_info.PARA.STATVAR = [];
+            run_info.PARA.class_category = 'RUN_INFO';
+            run_info.PARA.default_value = [];
+            run_info.PARA.comment = [];
+            
+            run_info.PARA.options.tile_class.name =  'H_LIST';
+            run_info.PARA.options.tile_class.entries_x = {'TILE_1D_standard' 'TILE_1D_standard'};
+            
+            run_info.PARA.options.tile_class_index.name =  'H_LIST'; 
+            run_info.PARA.options.tile_class_index.entries_x = {1 2};
+            
+            run_info.PARA.options.number_of_runs_per_tile.name =  'H_LIST'; % 
+            run_info.PARA.options.number_of_runs_per_tile.entries_x = {1 1};
+        end
         
         
     end

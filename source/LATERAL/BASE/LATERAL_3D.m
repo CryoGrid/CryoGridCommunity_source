@@ -383,6 +383,20 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             end
         end
         
+        
+        %-------------param file generation-----
+        function lateral = param_file_info(lateral)
+             lateral = provide_PARA(lateral);
+             
+             lateral.PARA.class_category = 'LATERAL';
+             lateral.PARA.STATVAR = [];
+             lateral.PARA.default_value.hill_slope = {1};
+             lateral.PARA.comment.hill_slope = {'1: hillslope flow, cells connected with ground surface as reference; 0: cells connected with absolute elevation as reference'};
+             lateral.PARA.default_value.ia_time_increment = {0.25};
+             lateral.PARA.comment.ia_time_increment = {'minimum of constant timestep for lateral interaction classes, LATERAL_IA classes must have multiples of this one [day]'};
+             lateral.PARA.options = [];
+        end
+        
     end
 end
 

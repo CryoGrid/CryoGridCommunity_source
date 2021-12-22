@@ -75,10 +75,16 @@ classdef GROUND_freeW_seb_verticalWall < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LAT
             ground.CONST.rho_i = [];   %ice density
         end
         
+        function ground = convert_units(ground, tile)
+                unit_converter = str2func(tile.PARA.unit_conversion_class);
+                unit_converter = unit_converter();
+                ground = convert_normal(unit_converter, ground, tile);
+        end
+        
         function ground = finalize_init(ground, tile)
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+%             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
 
@@ -257,6 +263,35 @@ classdef GROUND_freeW_seb_verticalWall < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LAT
         
         function ground = lateral3D_push_heat(ground, lateral)
             ground = lateral3D_push_heat_simple(ground, lateral);
+        end
+        
+        
+                        %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             
+             ground.PARA.class_category = 'GROUND';
+             
+             %ground.PARA.options = [];
+             ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic'  'T'};
+             
+             ground.PARA.default_value.albedo = {0.2};
+             ground.PARA.comment.albedo = {'surface albedo [-]'};
+             
+             ground.PARA.default_value.epsilon = {0.99};
+             ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+             
+             ground.PARA.default_value.z0 = {0.01};
+             ground.PARA.comment.z0 = {'roughness length [m]'};
+             
+             ground.PARA.default_value.water_bucket_depth = {0.01};
+             ground.PARA.comment.water_bucket_depth = {'water holding capacity [m] of rock surface'}; 
+             
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
         end
 
     end

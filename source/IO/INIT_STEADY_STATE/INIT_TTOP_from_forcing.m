@@ -67,6 +67,32 @@ classdef INIT_TTOP_from_forcing < matlab.mixin.Copyable
 
         end
         
+        %-------------param file generation-----
+        function init = param_file_info(init)
+            init = provide_PARA(init);
+
+            init.PARA.STATVAR = [];
+            init.PARA.class_category = 'init_steady_state';
+
+            init.PARA.default_value.nf = {0.5};
+            init.PARA.comment.nf = {'winter n-factor'};
+            
+            init.PARA.default_value.nt = {1};  
+            init.PARA.comment.nt = {'summer n-factor'};
+
+            init.PARA.default_value.rk = {0.8};
+            init.PARA.comment.rk = {'thawed divided by frozen thermal conductivity active layer'};         
+
+            
+            init.PARA.comment.start_time = {'start time of initialization period (must be within the range of data in forcing file) - year month day'};
+            init.PARA.options.start_time.name =  'H_LIST';
+            init.PARA.options.start_time.entries_x = {'year' 'month' 'day'};
+            
+            init.PARA.comment.end_time = {'end_time time of initialization period (must be within the range of data in forcing file) - year month day'};
+            init.PARA.options.end_time.name =  'H_LIST'; % 
+            init.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
+
+        end
 
     end
 end

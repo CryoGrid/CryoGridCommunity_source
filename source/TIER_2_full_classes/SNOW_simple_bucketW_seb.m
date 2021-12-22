@@ -358,6 +358,53 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         function [snow, regridded_yesNo] = regrid_snow(snow, extensive_variables, intensive_variables, intensive_scaling_variable)
             [snow, regridded_yesNo] = regrid_snow@REGRID(snow, extensive_variables, intensive_variables, intensive_scaling_variable);
         end
+        
+        
+        %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             
+             ground.PARA.class_category = 'SNOW';
+             
+             ground.PARA.STATVAR = {''};
+             
+             
+             ground.PARA.default_value.max_albedo = {0.85};
+             ground.PARA.comment.max_albedo = {'maximum surface albedo (fresh snow) [-]'};
+             
+             ground.PARA.default_value.min_albedo = {0.5};
+             ground.PARA.comment.min_albedo = {'minimum surface albedo (old snow) [-]'};
+             
+             ground.PARA.default_value.tau_1 = {86400};
+             ground.PARA.comment.tau_1 = {'time constants for transient albedo'};
+             
+             ground.PARA.default_value.tau_a = {0.008};
+             ground.PARA.default_value.tau_f = {0.24};
+
+             ground.PARA.default_value.epsilon = {0.99};
+             ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+             
+             ground.PARA.default_value.z0 = {0.01};
+             ground.PARA.comment.z0 = {'roughness length [m]'};
+             
+             ground.PARA.default_value.density = {350};
+             ground.PARA.comment.density = {'(initial) snow density [kg/m3]'};
+             
+             ground.PARA.default_value.field_capacity = {0.05};
+             ground.PARA.comment.field_capacity = {'snow field capacity in fraction of available pore space [-] NOTE: the definition is different for GROUND_XX classes'};
+            
+             ground.PARA.default_value.hydraulicConductivity = {1e-4};
+             ground.PARA.comment.hydraulicConductivity = {'hydraulic conductivity of snow [m/sec]'};
+             
+             ground.PARA.default_value.swe_per_cell = {0.02};
+             ground.PARA.comment.swe_per_cell = {'target SWE per grid cell [m]'};
+            
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+        end
     end
     
 end

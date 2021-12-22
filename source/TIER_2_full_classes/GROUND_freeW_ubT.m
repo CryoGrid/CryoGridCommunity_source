@@ -93,12 +93,7 @@ classdef GROUND_freeW_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& FREEZ
 
         end
         
-        function ground = finalize_init2(ground, tile)
 
-            ground = get_E_freeW(ground);
-            ground = conductivity(ground);
-
-        end
         
         %---time integration------
         
@@ -160,6 +155,25 @@ classdef GROUND_freeW_ubT < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL %& FREEZ
             %ground = conductivity_mixing_squares(ground);
         end
         
+        
+        
+        %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             
+             ground.PARA.class_category = 'GROUND';
+             
+             ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'T'};
+
+             ground.PARA.default_value.conductivity_function = {'conductivity_mixing_squares'};
+             ground.PARA.comment.conductivity_function = {'function employed to calculate thermal conductivity, leave empty for default'};
+             
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+        end
         
 %         %-----LATERAL-------------------
 %         

@@ -118,6 +118,34 @@ classdef GROUND_TTOP_simple < BASE
            %do nothing 
         end
         
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE(ground);
+            
+            ground.PARA.class_category = 'GROUND';
+            
+            ground.PARA.STATVAR = {''};
+            
+            ground.PARA.default_value.nt = {1};
+            ground.PARA.comment.nt = {'thawing n-factor'};
+            
+            ground.PARA.default_value.nf = {0.5};
+            ground.PARA.comment.nf = {'freezing n-factor'};
+            
+            ground.PARA.default_value.rk = {0.8};
+            ground.PARA.comment.rk = {'ratio thawed to frozen thermal conductivity'};
+            
+            ground.PARA.default_value.number_of_years = {10};
+            ground.PARA.comment.number_of_years = {'number of years, if empty, accumulate until end of time series'};
+            
+            ground.PARA.default_value.surface_T_variable = {'Tair'};
+            ground.PARA.comment.surface_T_variable = {'variable in FORCING to be used as surfac temperature'};
+            
+            ground.PARA.default_value.timestep = {1.25};
+            ground.PARA.comment.timestep = {'timestep [days] to interpolate the forcing data'};
+            
+        end
 
     end
     

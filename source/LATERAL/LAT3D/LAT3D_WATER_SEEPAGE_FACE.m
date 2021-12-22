@@ -101,6 +101,35 @@ classdef LAT3D_WATER_SEEPAGE_FACE < BASE_LATERAL
             lateral.PARA.ia_time_next = t;
         end
         
+        
+                %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE_LATERAL(ground);
+            
+            ground.PARA.class_category = 'LATERAL_IA';
+            
+            ground.PARA.options = [];
+            ground.PARA.STATVAR = [];
+            
+            ground.PARA.default_value.upperElevation = {10000};
+            ground.PARA.comment.upperElevation = {'upper elevation of seepage face [meter a.s.l.]'};
+            
+            ground.PARA.default_value.lowerElevation = {0};
+            ground.PARA.comment.lowerElevation = {'lower elevation of seepage face [meter a.s.l.]'};
+            
+            ground.PARA.default_value.hardBottom_cutoff = {0.03};
+            ground.PARA.comment.hardBottom_cutoff = {'hard bottom  = no water flow if saturated and water content below [vol. water content, -]'};
+            
+            ground.PARA.default_value.distance_seepageFace = {1};
+            ground.PARA.comment.distance_seepageFace ={'distance to seepage face [m]'};
+            
+            ground.PARA.default_value.seepage_contact_length = {1};
+            ground.PARA.comment.seepage_contact_length = {'lateral contact length (=width) of seepage face [m]'};
+            
+            ground.PARA.default_value.ia_time_increment = {0.25};
+            ground.PARA.comment.ia_time_increment ={'time step [days], must be multiple of LATERAL class timestep'};
+        end
+        
     end
     
 end

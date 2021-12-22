@@ -28,14 +28,17 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.PARA.SW_spectral_range1 = []; %fraction of incoming short-wave radiation in first spectral band [-], see Vionnet et al.,2012
             snow.PARA.SW_spectral_range2 = []; %fraction of incoming short-wave radiation in second spectral band [-], fraction of third spectral band calculated automatically
             
+            snow.PARA.crocus_version = []; % 'normal' or 'arctic' (Royer et al., 2021) 
             snow.PARA.field_capacity = []; %snow field capacity in fraction of available pore space [-] NOTE: the definition is different for GROUND_XX classes
             snow.PARA.hydraulicConductivity = []; %hydraulic conductivity of snow [m/sec]
             snow.PARA.swe_per_cell = [];  %target SWE per grid cell [m]
             
             snow.PARA.slope = [];  %slope angle [-]
-            snow.PARA.timescale_winddrift = []; %timescale of snow compaction for wind drift [hours!!]
-            snow.PARA.max_wind_slab_density = [];
+            snow.PARA.timescale_winddrift = 48; %timescale of snow compaction for wind drift [hours!!]
+            snow.PARA.max_wind_slab_density = 350;
+            snow.PARA.wind_factor_fresh_snow = 26;
             
+            snow.PARA.conductivity_function = [];
             snow.PARA.dt_max = [];  %maximum possible timestep [sec]
             snow.PARA.dE_max = [];  %maximum possible energy change per timestep [J/m3]
         end
@@ -100,6 +103,25 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         
         
         function snow = finalize_init(snow, tile) %assign all variables, that must be calculated or assigned otherwise for initialization
+            if isempty(snow.PARA.conductivity_function) || sum(isnan(snow.PARA.conductivity_function))>0
+                snow.PARA.conductivity_function = 'conductivity_snow_Yen';
+            end
+            
+            if ~isempty(snow.PARA.crocus_version) || sum(isnan(snow.PARA.crocus_version))==0
+                if strcmp(snow.PARA.crocus_version, 'normal')
+                    snow.PARA.conductivity_function = 'conductivity_snow_Yen';
+                    snow.PARA.timescale_winddrift = 48; %timescale of snow compaction for wind drift [hours!!]
+                    snow.PARA.max_wind_slab_density = 350;
+                    snow.PARA.wind_factor_fresh_snow = 26;
+                elseif strcmp(snow.PARA.crocus_version, 'arctic')
+                    snow.PARA.conductivity_function = 'conductivity_snow_Sturm';
+                    snow.PARA.timescale_winddrift = 48./3; %timescale of snow compaction for wind drift [hours!!]
+                    snow.PARA.max_wind_slab_density = 600;
+                    snow.PARA.wind_factor_fresh_snow = 26.*2;
+                end
+            end
+            
+            
             snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
             
@@ -393,10 +415,15 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.F_ub;
         end
         
-        
+%         
+%         function snow = conductivity(snow)
+%             snow = conductivity_snow_Yen(snow);
+%         end
         
         function snow = conductivity(snow)
-            snow = conductivity_snow_Yen(snow);
+            conductivity_function = str2func(snow.PARA.conductivity_function);
+            snow = conductivity_function(snow);
+            
         end
         
         
@@ -533,6 +560,62 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         
         function [snow, regridded_yesNo] = regrid_snow(snow, extensive_variables, intensive_variables, intensive_scaling_variable)
             [snow, regridded_yesNo] = regrid_snow@REGRID(snow, extensive_variables, intensive_variables, intensive_scaling_variable);
+        end
+        
+        
+        %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             
+             ground.PARA.class_category = 'SNOW';
+             
+             ground.PARA.STATVAR = {''};
+             
+
+             ground.PARA.default_value.epsilon = {0.99};
+             ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+             
+             ground.PARA.default_value.z0 = {0.01};
+             ground.PARA.comment.z0 = {'roughness length [m]'};
+
+             ground.PARA.default_value.SW_spectral_range1 = {0.71};
+             ground.PARA.comment.SW_spectral_range1 = {'fraction of incoming short-wave radiation in first spectral band [-], see Vionnet et al.,2012'};
+             
+             ground.PARA.default_value.SW_spectral_range2 = {0.21};
+             ground.PARA.comment.SW_spectral_range2 = {'fraction of incoming short-wave radiation in second spectral band [-], fraction of third spectral band calculated automatically'};
+            
+             ground.PARA.default_value.crocus_version = {''};
+             ground.PARA.comment.crocus_version = {'normal or arctic (Royer et al., 2021), automatically selects timescale_winddrift, max_wind_slab_density,wind_factor_fresh_snow, and conductivity_fucntion'}; 
+             
+             ground.PARA.default_value.field_capacity = {0.05};
+             ground.PARA.comment.field_capacity = {'snow field capacity in fraction of available pore space [-] NOTE: the definition is different for GROUND_XX classes'};
+            
+             ground.PARA.default_value.hydraulicConductivity = {1e-4};
+             ground.PARA.comment.hydraulicConductivity = {'hydraulic conductivity of snow [m/sec]'};
+             
+             ground.PARA.default_value.swe_per_cell = {0.02};
+             ground.PARA.comment.swe_per_cell = {'target SWE per grid cell [m]'};
+             
+             ground.PARA.default_value.slope = {0};
+             ground.PARA.comment.slope = {'slope angle [-]'};
+             
+             ground.PARA.default_value.timescale_winddrift = {48};
+             ground.PARA.comment.timescale_winddrift = {'timescale of snow compaction for wind drift [hours!!]'};
+             
+             ground.PARA.default_value.max_wind_slab_density = {350};
+             ground.PARA.comment.max_wind_slab_density = {'maximum density achievable by wind compaction'};
+             
+             ground.PARA.default_value.wind_factor_fresh_snow = {26};
+             ground.PARA.comment.wind_factor_fresh_snow = {'factor for wind speed dependency in fresh snow density equation'};
+            
+             ground.PARA.default_value.conductivity_function = {'conductivity_snow_Yen'};
+             ground.PARA.comment.conductivity_function = {'function employed to calculate thermal conductivity, leave empty for default'};
+            
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
         end
     end
     

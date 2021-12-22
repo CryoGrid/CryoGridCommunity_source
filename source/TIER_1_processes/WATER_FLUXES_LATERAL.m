@@ -1495,7 +1495,7 @@ classdef WATER_FLUXES_LATERAL < BASE
         function ground = lateral3D_pull_water_overland_flow_LAKE(ground, lateral)
            
            lateral.PARENT.STATVAR.water_depth = ground.STATVAR.layerThick(1,1); 
-           lateral.PARENT.STATVAR.max_flow = max(0, ground.STATVAR.water(1,1) .* 0.25);
+           lateral.PARENT.STATVAR.max_flow = max(0, min(ground.STATVAR.area(1,1).* 0.05, ground.STATVAR.water(1,1) .* 0.25)); % do not loose more than 5cm water per timestep
            lateral.PARENT.STATVAR.area_flow = ground.STATVAR.area(1,1);
             
         end

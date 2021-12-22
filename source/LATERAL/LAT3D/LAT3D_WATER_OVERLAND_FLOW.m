@@ -84,6 +84,32 @@ classdef LAT3D_WATER_OVERLAND_FLOW < BASE_LATERAL
             lateral.PARA.ia_time_next = t;
         end
         
+        
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE_LATERAL(ground);
+            
+            ground.PARA.class_category = 'LATERAL_IA';
+            
+            ground.PARA.options = [];
+            ground.PARA.STATVAR = [];
+            
+            ground.PARA.default_value.gradient = {'0.01'};
+            ground.PARA.comment.gradient = {'gradient of surface [vertial m/ horizontal m]'};
+            
+            ground.PARA.default_value.GaMa_coefficient = {15};
+            ground.PARA.comment.GaMa_coefficient = {'Gauckler-Manning coefficient, https://en.wikipedia.org/wiki/Manning_formula'};
+            
+            ground.PARA.default_value.overland_flow_contact_length = {1};
+            ground.PARA.comment.overland_flow_contact_length = {'lateral contact length for overland flow = width of channel [m]'};
+            
+            ground.PARA.default_value.overflow_threshold_elevation = {0};
+            ground.PARA.comment.overflow_threshold_elevation = {'threshold elevation, no overland flow when water level is below [m a.s.l.]'};
+            
+            ground.PARA.default_value.ia_time_increment = {0.25};
+            ground.PARA.comment.ia_time_increment ={'time step [days]'};
+        end
     end
     
 end

@@ -217,7 +217,26 @@ classdef SNOW_simple_ubT <  HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL & REGR
         %-----LATERAL-------------------
         
         
-        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE(ground);
+            
+            ground.PARA.class_category = 'SNOW';
+            
+            ground.PARA.STATVAR = {''};
+            
+            ground.PARA.default_value.density = {350};
+            ground.PARA.comment.density = {'(initial) snow density [kg/m3]'};
+            
+            ground.PARA.default_value.swe_per_cell = {0.02};
+            ground.PARA.comment.swe_per_cell = {'target SWE per grid cell [m]'};
+            
+            ground.PARA.default_value.dt_max = {3600};
+            ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+            
+            ground.PARA.default_value.dE_max = {50000};
+            ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+        end
        
     end
     
