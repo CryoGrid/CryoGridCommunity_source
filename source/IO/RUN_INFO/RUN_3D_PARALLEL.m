@@ -50,7 +50,6 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
         end
         
         
-        
         function [run_info, tile] = run_model(run_info, run_flag)
             %this could first open spmd and assign run_number depending on
             %worker, then do another round of pprovider
@@ -163,13 +162,13 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
 
         end
  
-
-        function [run_info, tile] = kernel_run_model(run_info, run_flag)
-            % This is the actual normal run_model method. It is extracted
-            % in separate method to more easily enclose its execution in
-            % a try-catch block in the new run_model method.
-
+        
+        function [run_info, tile] = setup_run(run_info)
             %update the worker-specific name of the parameter file and the run
+            if ~isfield(run_info.PARA, 'worker_number')
+                run_info.PARA.worker_number = 1;
+            end
+            
             run_info.PPROVIDER = update_parameter_file(run_info.PPROVIDER, run_info.PARA.param_file_number(run_info.PARA.worker_number,1));
             run_info.PPROVIDER = update_run_name(run_info.PPROVIDER, run_info.PARA.worker_number);
                             
@@ -185,7 +184,16 @@ classdef RUN_3D_PARALLEL < matlab.mixin.Copyable
             run_info.TILE = tile;
 
             tile = finalize_init(tile);
-            
+        end
+
+
+        function [run_info, tile] = kernel_run_model(run_info, run_flag)
+            % This is the actual normal run_model method. It is extracted
+            % in separate method to more easily enclose its execution in
+            % a try-catch block in the new run_model method.
+
+            [run_info, tile] = setup_run(run_info);
+
             if run_flag
                 tile = run_model(tile);  %time integration
             end
