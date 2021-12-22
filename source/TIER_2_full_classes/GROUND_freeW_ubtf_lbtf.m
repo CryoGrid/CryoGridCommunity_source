@@ -1,12 +1,12 @@
 %========================================================================
-% CryoGrid GROUND class GROUND_freeW_ubft
-% heat conduction, free water freeze curve, upper boundary temperature
-% forcing
+% CryoGrid GROUND class GROUND_freeW_ubft_lbtf
+% heat conduction, free water freeze curve, upper and lower boundary 
+% temperature forcing
 % T.Ingeman-Nielsen, S. Westermann, December 2021
 %========================================================================
 
 
-classdef GROUND_freeW_ubtf < HEAT_CONDUCTION &  UB_TEMPERATURE_FORCING
+classdef GROUND_freeW_ubtf_lbtf < HEAT_CONDUCTION & HEAT_FLUXES_LATERAL & UB_TEMPERATURE_FORCING & LB_TEMPERATURE_FORCING
 
     
     methods
@@ -69,7 +69,7 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION &  UB_TEMPERATURE_FORCING
         function ground = convert_units(ground, tile)
                 unit_converter = str2func(tile.PARA.unit_conversion_class);
                 unit_converter = unit_converter();
-                ground = convert_normal_ubT(unit_converter, ground, tile);
+                ground = convert_normal_ubT_lbT(unit_converter, ground, tile);
         end
 
 
@@ -79,15 +79,25 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION &  UB_TEMPERATURE_FORCING
                 ground.PARA.conductivity_function = 'conductivity_mixing_squares';
             end            
 
-            ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
+            %ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
+            %ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            %ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);
+            ground = conductivity(ground);
 
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
-            
+            ground.TEMP.F_ub = 0;
+
         end
+
+        function ground = finalize_init2(ground, tile)
+
+            ground = get_E_freeW(ground);
+            ground = conductivity(ground);
+
+        end
+
                 
         %---time integration------
         
@@ -99,8 +109,7 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION &  UB_TEMPERATURE_FORCING
         
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
-            ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
-            ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
+            ground = get_boundary_condition_l@LB_TEMPERATURE_FORCING(ground, forcing);
         end
         
         function ground = get_derivatives_prognostic(ground, tile)
@@ -149,23 +158,6 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION &  UB_TEMPERATURE_FORCING
         
         function ground = lateral3D_push_heat(ground, lateral)
             ground = lateral3D_push_heat_simple(ground, lateral);
-        end
-        
-        
-        
-        %-------------param file generation-----
-         function ground = param_file_info(ground)
-             ground = param_file_info@BASE(ground);
-             
-             ground.PARA.class_category = 'GROUND';
-             
-             ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'T'};
-             
-             ground.PARA.default_value.dt_max = {3600};
-             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
-             
-             ground.PARA.default_value.dE_max = {50000};
-             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
         end
 
     end

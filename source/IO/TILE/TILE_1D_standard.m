@@ -120,7 +120,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             %=========================================================================
             while tile.t < tile.FORCING.PARA.end_time
                 
-                
                 %interpolate focing data to time t
                 tile = interpolate_forcing_tile(tile);
                 
@@ -188,6 +187,11 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                 %model
                 tile = store_OUT_tile(tile);
             end
+
+            % extra carriage return needed for OUT classes that use
+            % fprintf to print and overwrite step date output to 
+            % console window.
+            fprintf('\n\n')
             
         end
         

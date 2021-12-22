@@ -5,15 +5,15 @@
 % T. Ingeman-Nielsen, S. Westermann, December 2021
 %========================================================================
 
-classdef UB_TEMPERATURE_FORCING < BASE
+classdef LB_TEMPERATURE_FORCING < BASE
     
     methods
         %------boundary conditions-----
-        function ground = get_boundary_condition_u(ground, forcing)
+        function ground = get_boundary_condition_l(ground, forcing)
             % Calculate upper boundary flux and energy change due to
             % temperature forcing.
-            ground.TEMP.F_ub = -(forcing.TEMP.Tair - ground.STATVAR.T(1,1)).*ground.STATVAR.thermCond(1,1)./(ground.STATVAR.layerThick(1,1)/2); 
-            ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) - ground.TEMP.F_ub.*ground.STATVAR.area(1,1);
+            ground.TEMP.F_lb = -(ground.STATVAR.T(end,end)-forcing.TEMP.T_lb).*ground.STATVAR.thermCond(end,end)./(ground.STATVAR.layerThick(end,end)/2); 
+            ground.TEMP.d_energy(end,end) = ground.TEMP.d_energy(end,end) + ground.TEMP.F_lb.*ground.STATVAR.area(end,end);
         end        
         
     end
