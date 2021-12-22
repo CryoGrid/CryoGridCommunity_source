@@ -83,13 +83,6 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
         end
 
 
-        function ground = convert_units(ground, tile)
-            unit_converter = str2func(tile.PARA.unit_conversion_class);
-            unit_converter = unit_converter();
-            ground = convert_normal(unit_converter, ground, tile);
-        end
-        
-
         function ground = finalize_init(ground, tile)
 
             %ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
