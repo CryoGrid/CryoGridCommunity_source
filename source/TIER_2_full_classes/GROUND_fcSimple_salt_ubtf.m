@@ -8,7 +8,7 @@
 
 
 classdef GROUND_fcSimple_salt_ubtf < HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERAL & UB_TEMPERATURE_FORCING
-                                     
+
     
     
     methods
@@ -176,6 +176,25 @@ classdef GROUND_fcSimple_salt_ubtf < HEAT_CONDUCTION & SALT & HEAT_FLUXES_LATERA
         end
         %------------------------------
 
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE(ground);
+            
+            ground.PARA.class_category = 'GROUND';
+            
+            %ground.PARA.options = [];
+            ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'saltConc' 'T'};
+            
+            ground.PARA.default_value.tortuosity = {1.5};
+            ground.PARA.comment.tortuosity ={'tortuosity of soil for salt diffuson [-]'};
+            
+            ground.PARA.default_value.dt_max = {3600};
+            ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+            
+            ground.PARA.default_value.dE_max = {50000};
+            ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+        end
+        
     end
     
 end

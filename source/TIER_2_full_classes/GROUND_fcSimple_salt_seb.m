@@ -75,6 +75,12 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
             ground.CONST.rho_w = []; % water density
             ground.CONST.rho_i = []; %ice density
         end
+        
+        function ground = convert_units(ground, tile)
+                unit_converter = str2func(tile.PARA.unit_conversion_class);
+                unit_converter = unit_converter();
+                ground = convert_normal(unit_converter, ground, tile);
+        end
 
 
         function ground = convert_units(ground, tile)
@@ -85,10 +91,11 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
         
 
         function ground = finalize_init(ground, tile)
+
             %ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             %ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
             %ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
-
+            
             if isempty(ground.PARA.conductivity_function) || sum(isnan(ground.PARA.conductivity_function))>0
                 ground.PARA.conductivity_function = 'conductivity_mixing_squares';
             end
@@ -243,6 +250,43 @@ classdef GROUND_fcSimple_salt_seb < SEB & HEAT_CONDUCTION & SALT & HEAT_FLUXES_L
         function [ground, S_up] = penetrate_SW_no_transmission(ground, S_down)
             [ground, S_up] = penetrate_SW_no_transmission@SEB(ground, S_down);
         end
+        
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE(ground);
+            %ground = provide_PARA(ground);
+            
+            ground.PARA.class_category = 'GROUND';
+            
+            %ground.PARA.options = [];
+            ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'saltConc' 'T'};
+            
+            ground.PARA.default_value.albedo = {0.2};
+            ground.PARA.comment.albedo = {'surface albedo [-]'};
+            
+            ground.PARA.default_value.epsilon = {0.99};
+            ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+            
+            ground.PARA.default_value.z0 = {0.01};
+            ground.PARA.comment.z0 = {'roughness length [m]'};
+            
+            ground.PARA.default_value.rs = {0};
+            ground.PARA.comment.rs ={'surface resistance against evapotranspiration [sec/m]'};
+            
+            ground.PARA.default_value.tortuosity = {1.5};
+            ground.PARA.comment.tortuosity ={'tortuosity of soil for salt diffuson [-]'};
+            
+            ground.PARA.default_value.conductivity_function = {'conductivity_mixing_squares'};
+            ground.PARA.comment.conductivity_function = {'function employed to calculate thermal conductivity, leave empty for default'};
+            
+            ground.PARA.default_value.dt_max = {3600};
+            ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+            
+            ground.PARA.default_value.dE_max = {50000};
+            ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+        end
+        
     end
     
 end

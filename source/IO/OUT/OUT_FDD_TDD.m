@@ -115,6 +115,25 @@ classdef OUT_FDD_TDD < matlab.mixin.Copyable
             end
         end
 
+        
+                %-------------param file generation-----
+        function out = param_file_info(out)
+            out = provide_PARA(out);
+
+            out.PARA.STATVAR = [];
+            out.PARA.options = [];
+            out.PARA.class_category = 'OUT';
+           
+            out.PARA.default_value.output_timestep = {0.25};
+            out.PARA.comment.output_timestep = {'timestep of output [days]'};
+
+            out.PARA.default_value.max_depth = {'4'};
+            out.PARA.comment.max_depth = {'maximum depth checked for permafrost table'};
+            
+            out.PARA.default_value.cell_size = {2e-2};
+            out.PARA.comment.cell_size = {'interpolation grid'};
+            
+        end
 
     end
 end

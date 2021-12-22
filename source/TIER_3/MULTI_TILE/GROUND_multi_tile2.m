@@ -111,6 +111,13 @@ classdef GROUND_multi_tile2 < SEB  %put all required ground classes here
         
         function ground = get_boundary_condition_u(ground, tile)
             %ground = get_boundary_condition_u1(ground, tile);
+            height_of_class = [];
+            for ii = 1:size(ground.STATVAR.SUB_TILES_TOP,1)
+                CURRENT = ground.STATVAR.SUB_TILES_TOP{ii,1}.NEXT;
+                height = sum(CURRENT.STATVAR.layerThick,1);
+                while ~strcmp(
+            end
+            
             for ii = 1:size(ground.STATVAR.SUB_TILES_TOP,1)
                 ground.STATVAR.SUB_TILES_TOP{ii,1}.NEXT = get_boundary_condition_u(ground.STATVAR.SUB_TILES_TOP{ii,1}.NEXT, tile);
             end
@@ -137,6 +144,11 @@ classdef GROUND_multi_tile2 < SEB  %put all required ground classes here
         function ground = get_derivatives_prognostic(ground, tile)
             %ground = get_derivatives_prognostic1(ground, tile);
             for ii = 1:size(ground.STATVAR.SUB_TILES_TOP,1)
+                CURRENT = ground.STATVAR.SUB_TILES_TOP{ii,1}.NEXT;
+                while ~strcmp(class(CURRENT.NEXT), 'Bottom')
+                    get_boundary_condition_m(CURRENT.IA_NEXT, tile); %call interaction class function
+                    CURRENT = CURRENT.NEXT;
+                end
                 CURRENT = ground.STATVAR.SUB_TILES_TOP{ii,1};
                 while ~strcmp(class(CURRENT.NEXT), 'Bottom')
                     CURRENT= CURRENT.NEXT;

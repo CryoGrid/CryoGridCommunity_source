@@ -17,7 +17,16 @@ classdef BASE_LATERAL < matlab.mixin.Copyable
     end
     
     methods
-        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+             ground = provide_PARA(ground);
+             
+             ground.PARA.class_category = 'LATERAL_IA';
+             ground.PARA.STATVAR = [];
+             ground.PARA.default_value = [];
+             ground.PARA.comment = [];
+             ground.PARA.options = [];
+        end
 
     end
 end
