@@ -109,7 +109,63 @@ classdef FORCING_slope_forest_seb_readNc < FORCING_slope_seb_readNc %matlab.mixi
             
         end
         
+        %-------------param file generation-----
+        function forcing = param_file_info(forcing)
+            forcing = provide_PARA(forcing);
 
+            
+            forcing.PARA.STATVAR = [];
+            forcing.PARA.class_category = 'FORCING';
+            
+            forcing.PARA.comment.filename = {'filename of Matlab file containing forcing data'};
+            
+            forcing.PARA.default_value.forcing_path = {'forcing/'};
+            forcing.PARA.comment.forcing_path = {'path where forcing data file is located'};
+            
+            forcing.PARA.comment.start_time = {'start time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.start_time.name =  'H_LIST';
+            forcing.PARA.options.start_time.entries_x = {'year' 'month' 'day'};
+            
+            forcing.PARA.comment.end_time = {'end_time time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.end_time.name =  'H_LIST'; % 
+            forcing.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
+            
+            forcing.PARA.default_value.rain_fraction = {1};  
+            forcing.PARA.comment.rain_fraction = {'rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
+            
+            forcing.PARA.default_value.snow_fraction = {1};  
+            forcing.PARA.comment.snow_fraction = {'snowfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
+
+            forcing.PARA.default_value.all_rain_T = {0.5};
+            forcing.PARA.comment.all_rain_T = {'temperature above which all precip is rain'};
+                        
+            forcing.PARA.default_value.all_snow_T = {-0.5};
+            forcing.PARA.comment.all_snow_T = {'temperature below which all precip is snow'};
+            
+            forcing.PARA.default_value.slope_angle = {0}; 
+            forcing.PARA.comment.slope_angle = {'slope angle in degree'};
+            
+            forcing.PARA.default_value.aspect = {90}; 
+            forcing.PARA.comment.aspect = {'aspect of the slope in degrees'};
+            
+            forcing.PARA.default_value.albedo_surrounding_terrain = {0.2};
+            forcing.PARA.comment.albedo_surrounding_terrain = {'albedo of field of view from where solar radiation is reflected'};
+            
+            forcing.PARA.default_value.sky_view_factor ={1}; 
+            forcing.PARA.comment.sky_view_factor = {'sky view factor (0.5 for vertical rock walls)'};
+            
+            forcing.PARA.comment.canopy_height = {'in [m]'};
+            forcing.PARA.comment.emissivity_canopy = {'canopy emissivity'};
+            forcing.PARA.comment.fractional_canopy_covered_area = {'fractional canopy-covered area'};
+
+            
+            forcing.PARA.default_value.heatFlux_lb = {0.05};
+            forcing.PARA.comment.heatFlux_lb = {'heat flux at the lower boundary [W/m2] - positive values correspond to energy gain'};
+            
+            forcing.PARA.default_value.airT_height = {2};  
+            forcing.PARA.comment.airT_height = {'height above ground surface where air temperature from forcing data is applied'};
+
+        end
 
                 
         end

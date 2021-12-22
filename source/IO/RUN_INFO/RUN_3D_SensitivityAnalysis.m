@@ -87,7 +87,25 @@ classdef RUN_3D_SensitivityAnalysis < matlab.mixin.Copyable
         
         
         
-        
+        %-------------param file generation-----
+        function run_info = param_file_info(run_info)
+            run_info = provide_PARA(run_info);
+
+            run_info.PARA.STATVAR = [];
+            run_info.PARA.class_category = 'RUN_INFO';
+            
+            run_info.PARA.default_value.number_of_tiles = {3};
+            run_info.PARA.comment.number_of_tiles = {'number of tiles/cores'};
+            
+            run_info.PARA.options.param_file_number.name =  'H_LIST';
+            run_info.PARA.options.param_file_number.entries_x = {1 2 3};
+            
+            run_info.PARA.default_value.tile_class = {'TILE_1D_standard'};
+            run_info.PARA.comment.tile_class = {'TILE class'};
+            
+            run_info.PARA.default_value.tile_class_index = {1};
+            run_info.PARA.comment.tile_class_index = {'TILE class index'};
+        end
         
     end
 end

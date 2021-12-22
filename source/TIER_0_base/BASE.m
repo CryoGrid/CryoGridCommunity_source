@@ -19,6 +19,11 @@ classdef BASE < matlab.mixin.Copyable
     
     methods 
         
+        
+        function ground = convert_units(ground, tile)
+            %do nothing
+        end
+        
         %init_steady_state, makes a steady_state T profile
         function [ground, T_end, thermCond_end, layerThick_end, start_depth_steady_state] = init_T_steady_state_TOP_CLASS(ground, T_first_cell, start_depth_steady_state, heat_flux)
             ground = finalize_init2(ground);
@@ -136,6 +141,17 @@ classdef BASE < matlab.mixin.Copyable
             
         end
         
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+             ground = provide_PARA(ground);
+             
+             ground.PARA.class_category = [];
+             ground.PARA.STATVAR = [];
+             ground.PARA.default_value = [];
+             ground.PARA.comment = [];
+             ground.PARA.options = [];
+        end
+
         
 
     end

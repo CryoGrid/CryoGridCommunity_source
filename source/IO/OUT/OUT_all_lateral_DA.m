@@ -158,6 +158,27 @@ classdef OUT_all_lateral_DA < matlab.mixin.Copyable
                 end
             end
         end
+        
+        %-------------param file generation-----
+        function out = param_file_info(out)
+            out = provide_PARA(out);
+
+            out.PARA.STATVAR = [];
+            out.PARA.options = [];
+            out.PARA.class_category = 'OUT';
+           
+            out.PARA.default_value.output_timestep = {0.25};
+            out.PARA.comment.output_timestep = {'timestep of output [days]'};
+
+            out.PARA.default_value.save_date = {'01.09.'};
+            out.PARA.comment.save_date = {'date (dd.mm.) when output file is written'};
+            
+            out.PARA.default_value.save_interval = {1};
+            out.PARA.comment.save_interval = {'interval of output files [years]'};
+            
+%             out.PARA.default_value.tag = {''};
+%             out.PARA.comment.tag = {'additional tag added to file name'};
+        end
 
 %         function xls_out = write_excel(out)
 % 			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).

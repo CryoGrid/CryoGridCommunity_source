@@ -248,7 +248,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             %water overtopping first cell
             if isequal(class(ground.PREVIOUS), 'Top') && ground.STATVAR.Xwater(1) > ground.PARA.threshold_Xwater .* ground.STATVAR.area(1) % no snow cover and too much Xwater
                                 
-                if isempty(ground.PARA.threshold_Xwater_class) || isnan(ground.PARA.threshold_Xwater_class) %default, remove water from first cell, otherwise the Q_e calculation crashes
+                if isempty(ground.PARA.threshold_Xwater_class) || sum(isnan(ground.PARA.threshold_Xwater_class))>0 %default, remove water from first cell, otherwise the Q_e calculation crashes
                     remove_first_cell = max(0, ground.STATVAR.Xwater(1) - ground.PARA.threshold_Xwater .* ground.STATVAR.area(1));
                     ground.STATVAR.XwaterIce(1) = ground.STATVAR.XwaterIce(1) - remove_first_cell;
                     ground.STATVAR.layerThick(1) = ground.STATVAR.layerThick(1) - remove_first_cell ./ ground.STATVAR.area(1);
@@ -257,7 +257,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
                 else
                     
                     trigger_class = get_IA_class(ground.PARA.threshold_Xwater_class, class(ground));
-                    trigger_create_LAKE(trigger_class, ground, forcing); %creates a new class and does all the rearranging of the stratigraphy
+                    trigger_create_LAKE(trigger_class, ground, tile); %creates a new class and does all the rearranging of the stratigraphy
                     
                     trigger_yes_no = 1; %can be used to prevent several triggers ocurring in one timestep, like create a lake and create snow simulataneously
                 end
@@ -400,6 +400,70 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
         
         function ground = get_T_water_freeW(ground)
             ground = get_T_water_freeW@HEAT_CONDUCTION(ground);
+        end
+        
+        
+        %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             
+             ground.PARA.class_category = 'GROUND';
+             
+             ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'Xice' 'soil_type' 'field_capacity' 'satHydraulicConductivity' 'T'};
+             
+             ground.PARA.default_value.albedo = {0.2};
+             ground.PARA.comment.albedo = {'surface albedo [-]'};
+             
+             ground.PARA.default_value.epsilon = {0.99};
+             ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+             
+             ground.PARA.default_value.z0 = {0.01};
+             ground.PARA.comment.z0 = {'roughness length [m]'};
+             
+             ground.PARA.default_value.rootDepth = {0.1};
+             ground.PARA.comment.rootDepth = {'e-folding depth of transpiration reduction with depth [m]'};
+             
+             ground.PARA.default_value.evaporationDepth = {0.1};
+             ground.PARA.comment.evaporationDepth = {'e-folding constant of evaporation reduction reduction with depth [m]'};
+
+             ground.PARA.default_value.ratioET = {0.5};
+             ground.PARA.comment.ratioET = {'fraction of transpiration of total evapotranspiration [-]'};
+             
+             ground.PARA.default_value.conductivity_function = {''};
+             ground.PARA.comment.conductivity_function = {'function employed to calculate thermal conductivity, leave empty for default'};
+             
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+             
+             ground.PARA.default_value.LUT_size_waterIce = {1000};
+             ground.PARA.comment.LUT_size_waterIce = {'size of lookup table for the waterIce variable [-]'};
+             
+             ground.PARA.default_value.LUT_size_T = {1000};
+             ground.PARA.comment.LUT_size_T = {'size of lookup table for the (temperature) T variable [-]'};
+                 
+             ground.PARA.default_value.min_T = {-50};
+             ground.PARA.comment.min_T = {'minimum temperature for which the LUT is calculated (modeled temperatures must be above this value) [degree C]'};
+             
+             ground.PARA.default_value.min_waterIce = {0.05};
+             ground.PARA.comment.min_waterIce = {'minimum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be above this value) [-]'};
+             
+             ground.PARA.default_value.max_waterIce = {0.97};
+             ground.PARA.comment.max_waterIce = {'maximum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be below this value) [-]'};
+             
+             ground.PARA.default_value.min_mineral_organic = {0.03};
+             ground.PARA.comment.min_mineral_organic = {'maximum mineral plus organic content in volumetric fraction for which the LUT is calculated (mineral plus organic content must be below this value) [-]'};
+             
+             ground.PARA.default_value.threshold_Xwater = {0.1};
+             ground.PARA.comment.threshold_Xwater = {'excess water height in first grid cell for which a LAKE is triggered, or for which water is moved to the variable excessWater'};
+             
+             ground.PARA.default_value.threshold_Xwater_class = {''};
+             ground.PARA.comment.threshold_Xwater_class = {'LAKE class that is added by trigger, no LAKE triggered if empty. Must correspond to a sleeping class in the initialization!'};
+             
+             ground.PARA.default_value.threshold_Xwater_index = {''};
+             ground.PARA.comment.threshold_Xwater_index = {'index of LAKE class that is added by trigger'};
         end
     end
     

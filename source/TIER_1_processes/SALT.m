@@ -181,9 +181,11 @@ classdef SALT < BASE
             ground.STATVAR.water = water .*  ground.STATVAR.layerThick .* ground.STATVAR.area;
             ground.STATVAR.ice = ice .* ground.STATVAR.layerThick .* ground.STATVAR.area;
             
+
             %ground.STATVAR.waterIce = ground.STATVAR.waterIce .* ground.STATVAR.layerThick .* ground.STATVAR.area;
             %ground.STATVAR.mineral = ground.STATVAR.mineral .* ground.STATVAR.layerThick .* ground.STATVAR.area;
             %ground.STATVAR.organic = ground.STATVAR.organic .* ground.STATVAR.layerThick .* ground.STATVAR.area;
+
             ground.STATVAR.air = ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.waterIce - ground.STATVAR.mineral - ground.STATVAR.organic;
             
             ground.STATVAR.saltConc = N .* ground.STATVAR.layerThick .* ground.STATVAR.area;  % [mol]

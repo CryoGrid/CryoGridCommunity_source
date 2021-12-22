@@ -24,7 +24,8 @@ classdef FORCING_do_nothing < matlab.mixin.Copyable
         
         
         function forcing = provide_PARA(forcing)         
-
+            forcing.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
+            forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
         end
         
         
@@ -34,8 +35,7 @@ classdef FORCING_do_nothing < matlab.mixin.Copyable
         end
         
         function forcing = provide_STATVAR(forcing)
-            forcing.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
-            forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
+
         end
         
         
@@ -69,6 +69,24 @@ classdef FORCING_do_nothing < matlab.mixin.Copyable
             forcing.TEMP.t = t;
         end
 
+        
+        %-------------param file generation-----
+        function forcing = param_file_info(forcing)
+            forcing = provide_PARA(forcing);
+
+            forcing.PARA.STATVAR = [];
+            forcing.PARA.class_category = 'FORCING';
+            forcing.PARA.default_value = [];
+            
+            forcing.PARA.comment.start_time = {'start time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.start_time.name =  'H_LIST';
+            forcing.PARA.options.start_time.entries_x = {'year' 'month' 'day'};
+            
+            forcing.PARA.comment.end_time = {'end_time time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.end_time.name =  'H_LIST'; % 
+            forcing.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
+            
+        end
                 
     end
 end

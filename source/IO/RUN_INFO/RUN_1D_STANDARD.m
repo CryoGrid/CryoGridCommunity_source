@@ -34,10 +34,8 @@ classdef RUN_1D_STANDARD < matlab.mixin.Copyable
  
         end
         
-        
-        
-        function [run_info, tile] = run_model(run_info)
-            
+
+        function [run_info, tile] = setup_run(run_info)
             %run_info = customize(run_info)
             
             tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class){run_info.PARA.tile_class_index,1});
@@ -47,11 +45,17 @@ classdef RUN_1D_STANDARD < matlab.mixin.Copyable
             
             %do the run(s) 
             tile = finalize_init(tile);
-            tile = run_model(tile);  %time integration
-            
         end
  
         
+        
+        function [run_info, tile] = run_model(run_info)
+            %run_info = customize(run_info)
+            [run_info, tile] = setup_run(run_info);
+            tile = run_model(tile);  %time integration
+        end
+ 
+
         function run_info = customize(run_info)
             %FUNCTION TO BE EDITED BY USER - when inheriting from this class
             %here customizations can be done by directly writing pprovider
@@ -65,7 +69,21 @@ classdef RUN_1D_STANDARD < matlab.mixin.Copyable
         end
         
         
-        
+        %-------------param file generation-----
+        function out = param_file_info(out)
+            out = provide_PARA(out);
+
+            out.PARA.STATVAR = [];
+            out.PARA.options = [];
+            out.PARA.class_category = 'RUN_INFO';
+            
+            out.PARA.default_value.tile_class = {'TILE_1D_standard'};
+            out.PARA.comment.tile_class = {'TILE class'};
+            
+            out.PARA.default_value.tile_class_index = {1};
+            out.PARA.comment.tile_class_index = {'TILE class index'};
+            
+        end
         
         
     end

@@ -1,6 +1,6 @@
 %========================================================================
 % CryoGrid LATERAL_IA class LAT_OVERLAND_FLOW 
-% simulates overland flow accroding to Gauckler-Manning equation
+% simulates overland flow according to Gauckler-Manning equation
 % S. Westermann, June 2021
 %========================================================================
 
@@ -60,6 +60,29 @@ classdef LAT_OVERLAND_FLOW < BASE_LATERAL
         
         function lateral = pull(lateral, tile)
             
+        end
+        
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE_LATERAL(ground);
+            
+            ground.PARA.class_category = 'LATERAL_IA';
+            
+            ground.PARA.options = [];
+            ground.PARA.STATVAR = [];
+            
+            ground.PARA.default_value.gradient = {'0.01'};
+            ground.PARA.comment.gradient = {'gradient of surface [vertial m/ horizontal m]'};
+            
+            ground.PARA.default_value.GaMa_coefficient = {15};
+            ground.PARA.comment.GaMa_coefficient = {'Gauckler-Manning coefficient, https://en.wikipedia.org/wiki/Manning_formula'};
+            
+            ground.PARA.default_value.overland_flow_contact_length = {1};
+            ground.PARA.comment.overland_flow_contact_length = {'lateral contact length for overland flow = width of channel [m]'};
+            
+            ground.PARA.default_value.ia_time_increment = {0.25};
+            ground.PARA.comment.ia_time_increment ={'time step [days]'};
         end
     end
     

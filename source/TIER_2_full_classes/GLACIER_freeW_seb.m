@@ -248,15 +248,42 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
                       end
                   end
                 end
-         
-           end
-
-      end
+                
+          end
+          
+        end
         
         
         
         function ground = conductivity(ground)
             ground = conductivity_mixing_squares(ground);
+        end
+        
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE(ground);
+            %ground = provide_PARA(ground);
+            
+            ground.PARA.class_category = 'GLACIER';
+            
+            %ground.PARA.options = [];
+            ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'T'};
+            
+            ground.PARA.default_value.albedo = {0.6};
+            ground.PARA.comment.albedo = {'surface albedo [-]'};
+            
+            ground.PARA.default_value.epsilon = {0.99};
+            ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+            
+            ground.PARA.default_value.z0 = {0.01};
+            ground.PARA.comment.z0 = {'roughness length [m]'};
+            
+            ground.PARA.default_value.dt_max = {3600};
+            ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+            
+            ground.PARA.default_value.dE_max = {50000};
+            ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
         end
         
         %-----LATERAL-------------------

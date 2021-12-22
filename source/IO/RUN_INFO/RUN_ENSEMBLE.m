@@ -65,6 +65,24 @@ classdef RUN_ENSEMBLE < matlab.mixin.Copyable
         end
  
         
+        %-------------param file generation-----
+        function out = param_file_info(out)
+            out = provide_PARA(out);
+
+            out.PARA.STATVAR = [];
+            out.PARA.options = [];
+            out.PARA.class_category = 'RUN_INFO';
+            
+            out.PARA.default_value.number_of_tiles = {30};
+            out.PARA.comment.number_of_tiles = {'number of ensemble members/cores'};
+            
+            out.PARA.default_value.tile_class = {'TILE_1D_standard'};
+            out.PARA.comment.tile_class = {'TILE class'};
+            
+            out.PARA.default_value.tile_class_index = {1};
+            out.PARA.comment.tile_class_index = {'TILE class index'};
+            
+        end
         
     end
 end

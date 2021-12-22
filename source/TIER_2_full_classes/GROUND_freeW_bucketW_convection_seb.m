@@ -310,6 +310,48 @@ classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLU
         function ground = get_T_water_freeW(ground)
             ground = get_T_water_freeW@HEAT_CONDUCTION(ground);
         end
+        
+        
+        %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             
+             ground.PARA.class_category = 'GROUND';
+             
+             %ground.PARA.options = [];
+             ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'grain_size' 'field_capacity' 'T'};
+             
+             ground.PARA.default_value.albedo = {0.2};
+             ground.PARA.comment.albedo = {'surface albedo [-]'};
+             
+             ground.PARA.default_value.epsilon = {0.99};
+             ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+             
+             ground.PARA.default_value.z0 = {0.01};
+             ground.PARA.comment.z0 = {'roughness length [m]'};
+             
+             ground.PARA.default_value.rootDepth = {0.1};
+             ground.PARA.comment.rootDepth = {'e-folding depth of transpiration reduction with depth [m]'};
+             
+             ground.PARA.default_value.evaporationDepth = {0.1};
+             ground.PARA.comment.evaporationDepth = {'e-folding constant of evaporation reduction reduction with depth [m]'};
+
+             ground.PARA.default_value.ratioET = {0.5};
+             ground.PARA.comment.ratioET = {'fraction of transpiration of total evapotranspiration [-]'};
+             
+             ground.PARA.default_value.hydraulicConductivity = {1e-5};
+             ground.PARA.comment.hydraulicConductivity = {'saturated hydraulic conductivity [m/sec]'};
+             
+             ground.PARA.default_value.conductivity_function = {'conductivity_mixing_squares'};
+             ground.PARA.comment.conductivity_function = {'function employed to calculate thermal conductivity, leave empty for default'};
+             
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+        end
+        
     end
     
 end

@@ -62,6 +62,19 @@ classdef LAT3D_REMOVE_SURFACE_WATER < BASE_LATERAL
             lateral.PARA.ia_time_next = t;
         end
 
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE_LATERAL(ground);
+            
+            ground.PARA.class_category = 'LATERAL_IA';
+            
+            ground.PARA.options = [];
+            ground.PARA.STATVAR = [];
+            
+            ground.PARA.default_value.ia_time_increment = {0.25};
+            ground.PARA.comment.ia_time_increment ={'time step [days], must be multiple of of LATERAL class timestep'};
+        end
     end
 end
 
