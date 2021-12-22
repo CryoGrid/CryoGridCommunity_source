@@ -384,6 +384,74 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
         function ground = get_T_water_freeW(ground)
             ground = get_T_water_freeW@HEAT_CONDUCTION(ground);
         end
+        
+        
+                %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             
+             ground.PARA.class_category = 'GROUND';
+             
+             ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'Xice' 'soil_type' 'field_capacity' 'satHydraulicConductivity' 'T'};
+             
+             ground.PARA.default_value.albedo = {0.2};
+             ground.PARA.comment.albedo = {'surface albedo [-]'};
+             
+             ground.PARA.default_value.epsilon = {0.99};
+             ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+             
+             ground.PARA.default_value.z0 = {0.01};
+             ground.PARA.comment.z0 = {'roughness length [m]'};
+             
+             ground.PARA.default_value.rootDepth = {0.1};
+             ground.PARA.comment.rootDepth = {'e-folding depth of transpiration reduction with depth [m]'};
+             
+             ground.PARA.default_value.evaporationDepth = {0.1};
+             ground.PARA.comment.evaporationDepth = {'e-folding constant of evaporation reduction reduction with depth [m]'};
+
+             ground.PARA.default_value.ratioET = {0.5};
+             ground.PARA.comment.ratioET = {'fraction of transpiration of total evapotranspiration [-]'};
+             
+             ground.PARA.default_value.conductivity_function = {''};
+             ground.PARA.comment.conductivity_function = {'function employed to calculate thermal conductivity, leave empty for default'};
+             
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+             
+             ground.PARA.default_value.dWater_max = {0.005};
+             ground.PARA.comment.dWater_max = {'maximum possible volumteric water content change per timestep [-]'};
+             
+             ground.PARA.default_value.LUT_size_waterIce = {1000};
+             ground.PARA.comment.LUT_size_waterIce = {'size of lookup table for the waterIce variable [-]'};
+             
+             ground.PARA.default_value.LUT_size_T = {1000};
+             ground.PARA.comment.LUT_size_T = {'size of lookup table for the (temperature) T variable [-]'};
+                 
+             ground.PARA.default_value.min_T = {-50};
+             ground.PARA.comment.min_T = {'minimum temperature for which the LUT is calculated (modeled temperatures must be above this value) [degree C]'};
+             
+             ground.PARA.default_value.min_waterIce = {0.05};
+             ground.PARA.comment.min_waterIce = {'minimum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be above this value) [-]'};
+             
+             ground.PARA.default_value.max_waterIce = {0.97};
+             ground.PARA.comment.max_waterIce = {'maximum waterIce value in volumetric fraction for which the LUT is calculated (modeled waterIce must be below this value) [-]'};
+             
+             ground.PARA.default_value.min_mineral_organic = {0.03};
+             ground.PARA.comment.min_mineral_organic = {'maximum mineral plus organic content in volumetric fraction for which the LUT is calculated (mineral plus organic content must be below this value) [-]'};
+             
+             ground.PARA.default_value.threshold_Xwater = {0.1};
+             ground.PARA.comment.threshold_Xwater = {'excess water height in first grid cell for which a LAKE is triggered, or for which water is moved to the variable excessWater'};
+             
+             ground.PARA.default_value.threshold_Xwater_class = {''};
+             ground.PARA.comment.threshold_Xwater_class = {'LAKE class that is added by trigger, no LAKE triggered if empty. Must correspond to a sleeping class in the initialization!'};
+             
+             ground.PARA.default_value.threshold_Xwater_index = {''};
+             ground.PARA.comment.threshold_Xwater_index = {'index of LAKE class that is added by trigger'};
+         end
+        
     end
     
 end

@@ -180,7 +180,8 @@ classdef SNOW < BASE
                 T_fus=0;  %degree C
                 a_rho=109;  %kg/m3
                 b_rho=6; % kg/m3K
-                c_rho=26; % kg m7/2s1/2
+                %c_rho=26; % kg m7/2s1/2
+                c_rho = snow.PARA.wind_factor_fresh_snow; 
                 min_snowDensity=50; %kg/m3
                 
                 snow.TEMP.newSnow.STATVAR.density = max(min_snowDensity, a_rho+b_rho.*(T_air-T_fus)+ c_rho.*windspeed.^0.5);  %initial snow density

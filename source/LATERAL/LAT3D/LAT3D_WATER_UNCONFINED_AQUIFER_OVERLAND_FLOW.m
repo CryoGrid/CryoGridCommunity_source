@@ -259,6 +259,28 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
             lateral.PARA.ia_time_next = t;
         end
         
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE_LATERAL(ground);
+            
+            ground.PARA.class_category = 'LATERAL_IA';
+            
+            ground.PARA.options = [];
+            ground.PARA.STATVAR = [];
+            
+            ground.PARA.default_value.hardBottom_cutoff = {0.03};
+            ground.PARA.comment.hardBottom_cutoff = {'hard bottom  = no water flow if saturated and water content below [vol. water content, -]'};
+            
+            ground.PARA.default_value.GaMa_coefficient = {15};
+            ground.PARA.comment.GaMa_coefficient = {'Gauckler-Manning coefficient, https://en.wikipedia.org/wiki/Manning_formula'};
+            
+            ground.PARA.default_value.tortuosity = {1};
+            ground.PARA.comment.tortuosity = {'multiply direct distance with this factor to get flow path length'};
+            
+            ground.PARA.default_value.ia_time_increment = {0.25};
+            ground.PARA.comment.ia_time_increment ={'time step [days], must be multiple of LATERAL class timestep'};
+        end
     end
     
 end

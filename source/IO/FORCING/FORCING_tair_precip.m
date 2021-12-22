@@ -118,12 +118,12 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
             forcing.TEMP.t = t;
         end
-
-        function xls_out = write_excel(forcing)
-			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
-			error('This function is not implemented/updated for this specific class')
-            xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};
-        end
+% 
+%         function xls_out = write_excel(forcing)
+% 			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
+% 			error('This function is not implemented/updated for this specific class')
+%             xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};
+%         end
 
         function fig = plot(forcing)
             TT = timetable(datetime(forcing.DATA.timeForcing,'ConvertFrom','datenum'), ...
@@ -136,6 +136,40 @@ classdef FORCING_tair_precip < matlab.mixin.Copyable
             %hAx=gca;
             %hAx.TickLabelFormat='mm-yyyy';
             %datetick('x','mm-yyyy');
+        end
+        
+                %-------------param file generation-----
+        function forcing = param_file_info(forcing)
+            forcing = provide_PARA(forcing);
+
+            forcing.PARA.STATVAR = [];
+            forcing.PARA.class_category = 'FORCING';
+            
+            forcing.PARA.comment.filename = {'filename of Matlab file containing forcing data'};
+            
+            forcing.PARA.default_value.forcing_path = {'forcing/'};
+            forcing.PARA.comment.forcing_path = {'path where forcing data file is located'};
+            
+            forcing.PARA.comment.start_time = {'start time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.start_time.name =  'H_LIST';
+            forcing.PARA.options.start_time.entries_x = {'year' 'month' 'day'};
+            
+            forcing.PARA.comment.end_time = {'end_time time of the simulations (must be within the range of data in forcing file) - year month day'};
+            forcing.PARA.options.end_time.name =  'H_LIST'; % 
+            forcing.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
+            
+            forcing.PARA.default_value.rain_fraction = {1};  
+            forcing.PARA.comment.rain_fraction = {'rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
+            
+            forcing.PARA.default_value.snow_fraction = {1};  
+            forcing.PARA.comment.snow_fraction = {'snowfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
+
+            forcing.PARA.default_value.heatFlux_lb = {0.05};
+            forcing.PARA.comment.heatFlux_lb = {'heat flux at the lower boundary [W/m2] - positive values correspond to energy gain'};
+            
+            forcing.PARA.default_value.airT_height = {2};  
+            forcing.PARA.comment.airT_height = {'height above ground surface where air temperature from forcing data is applied'};
+
         end
 
     end

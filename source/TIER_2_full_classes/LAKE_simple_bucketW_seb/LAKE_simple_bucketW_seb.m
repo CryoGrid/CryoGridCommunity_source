@@ -330,6 +330,41 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground = regrid_split@REGRID(ground, variable_list);
         end
         
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE(ground);
+            
+            ground.PARA.class_category = 'LAKE';
+            
+            ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'T'};
+            
+            ground.PARA.default_value.albedo = {0.08};
+            ground.PARA.comment.albedo = {'surface albedo [-]'};
+            
+            ground.PARA.default_value.epsilon = {0.99};
+            ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+            
+            ground.PARA.default_value.z0 = {0.01};
+            ground.PARA.comment.z0 = {'roughness length [m]'};
+            
+            ground.PARA.default_value.SW_extinction = {2};
+            ground.PARA.comment.SW_extinction = {'e-folding constant of SW extinction [1/m]'};
+            
+            ground.PARA.default_value.dt_max = {3600};
+            ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+            
+            ground.PARA.default_value.dE_max = {50000};
+            ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+            
+            ground.PARA.default_value.next_season_lake_class = {'LAKE_simple_unfrozen_bucketW_seb'};
+            ground.PARA.comment.next_season_lake_class = {'LAKE class that is called by check_trigger, in this case unfozen LAKE class'};
+            
+            ground.PARA.default_value.threshold_water = {0.1};
+            ground.PARA.comment.threshold_water = {'lake depth below which a trigger is called. LAKE is generally removed, depending on GROUND class below'};
+            
+        end
+        
     end
     
 end

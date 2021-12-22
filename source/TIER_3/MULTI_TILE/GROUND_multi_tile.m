@@ -132,6 +132,12 @@ classdef GROUND_multi_tile < SEB  %put all required ground classes here
         function ground = get_derivatives_prognostic(ground, tile)
             %ground = get_derivatives_prognostic1(ground, tile);
             for ii = 1:size(ground.SUB_TILES_TOP,1)
+                CURRENT = ground.STATVAR.SUB_TILES_TOP{ii,1}.NEXT;
+                while ~strcmp(class(CURRENT.NEXT), 'Bottom')
+                    get_boundary_condition_m(CURRENT.IA_NEXT, tile); %call interaction class function
+                    CURRENT = CURRENT.NEXT;
+                end
+                
                 CURRENT = ground.SUB_TILES_TOP{ii,1};
                 while ~strcmp(class(CURRENT.NEXT), 'Bottom')
                     CURRENT= CURRENT.NEXT;

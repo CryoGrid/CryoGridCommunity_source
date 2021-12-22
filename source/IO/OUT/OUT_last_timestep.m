@@ -89,6 +89,21 @@ classdef OUT_last_timestep < matlab.mixin.Copyable
             end
             
         end
+        
+                %-------------param file generation-----
+        function out = param_file_info(out)
+            out = provide_PARA(out);
+
+            out.PARA.STATVAR = [];
+            out.PARA.options = [];
+            out.PARA.class_category = 'OUT';
+           
+            out.PARA.default_value.save_timestep = {''};
+            out.PARA.comment.save_timestep = {'in days, if empty save final state at the end of the run, so that it can serve as initial condition for new runs'};
+            
+            out.PARA.default_value.tag = {''};
+            out.PARA.comment.tag = {'additional tag added to file name'};
+        end
 
         
     end

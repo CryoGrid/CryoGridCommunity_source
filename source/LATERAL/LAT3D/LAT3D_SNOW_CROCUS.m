@@ -21,8 +21,8 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
             lateral.PARA.N_drift = []; %5;
             lateral.PARA.drift_loss_fraction = []; %0; %fraction of drifting snow that is lost from the system
             lateral.PARA.ia_time_increment = []; %0.05; %must be a multiple of the time increment of the main lateral class
-            lateral.PARA.ia_time_increment_min = []; %0.05;
-            lateral.PARA.ia_time_increment_max = []; %0.25;            
+%             lateral.PARA.ia_time_increment_min = []; %0.05;
+%             lateral.PARA.ia_time_increment_max = []; %0.25;            
             %lateral.PARA.ia_time_next = [];
         end
         
@@ -168,6 +168,26 @@ classdef LAT3D_SNOW_CROCUS < BASE_LATERAL
         
         function lateral = set_ia_time(lateral, t)
             lateral.PARA.ia_time_next = t;
+        end
+        
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE_LATERAL(ground);
+            
+            ground.PARA.class_category = 'LATERAL_IA';
+            
+            ground.PARA.options = [];
+            ground.PARA.STATVAR = [];
+
+            ground.PARA.default_value.N_drift = {5};
+            ground.PARA.comment.N_drift ={'factor translating CROCUS driftability index to snow removed per unit time'};
+            
+            ground.PARA.default_value.drift_loss_fraction = {0};
+            ground.PARA.comment.drift_loss_fraction ={'fraction of drifting snow that is lost from the system'};
+            
+            ground.PARA.default_value.ia_time_increment = {0.25};
+            ground.PARA.comment.ia_time_increment ={'time step [days], must be multiple of of LATERAL class timestep'};
         end
     end
     

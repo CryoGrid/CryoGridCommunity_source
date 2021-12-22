@@ -182,6 +182,39 @@ classdef GROUND_freeW_seb < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LATERAL
         end
         
         
+                 
+         %-------------param file generation-----
+         function ground = param_file_info(ground)
+             ground = param_file_info@BASE(ground);
+             %ground = provide_PARA(ground);
+             
+             ground.PARA.class_category = 'GROUND';
+             
+             %ground.PARA.options = [];
+             ground.PARA.STATVAR = {'waterIce' 'mineral' 'organic' 'T'};
+             
+             ground.PARA.default_value.albedo = {0.2};
+             ground.PARA.comment.albedo = {'surface albedo [-]'};
+             
+             ground.PARA.default_value.epsilon = {0.99};
+             ground.PARA.comment.epsilon = {'surface emissivity [-]'};
+             
+             ground.PARA.default_value.z0 = {0.01};
+             ground.PARA.comment.z0 = {'roughness length [m]'};
+             
+             ground.PARA.default_value.rs = {0};
+             ground.PARA.comment.rs ={'surface resistance against evapotranspiration [sec/m]'};
+             
+             ground.PARA.default_value.conductivity_function = {'conductivity_mixing_squares'};
+             ground.PARA.comment.conductivity_function = {'function employed to calculate thermal conductivity, leave empty for default'};
+             
+             ground.PARA.default_value.dt_max = {3600};
+             ground.PARA.comment.dt_max = {'maximum possible timestep [sec]'};
+             
+             ground.PARA.default_value.dE_max = {50000};
+             ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
+        end
+        
         %----inherited Tier 1 functions ------------
         
 %         function ground = get_derivative_energy(ground)

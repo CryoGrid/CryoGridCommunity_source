@@ -90,8 +90,41 @@ classdef RUN_3D_STANDARD < matlab.mixin.Copyable
         end
         
         
+        %-------------param file generation-----
+        function run_info = param_file_info(run_info)
+            run_info = provide_PARA(run_info);
+
+            run_info.PARA.STATVAR = [];
+            run_info.PARA.class_category = 'RUN_INFO';
+            
+            run_info.PARA.default_value.number_of_tiles = {3};
+            run_info.PARA.comment.number_of_tiles = {'number of tiles/cores'};
+            
+            run_info.PARA.options.param_file_number.name =  'H_LIST';
+            run_info.PARA.options.param_file_number.entries_x = {1 2 3};
+            
+
+            run_info.PARA.options.connected.name = 'MATRIX';
+            run_info.PARA.options.connected.entries_matrix = {'0' '1' '0'; '1' '0' '1'; '0' '1' '0'};
+            run_info.PARA.comment.connected = {'1 if connected'};
+            
+            run_info.PARA.options.contact_length.name = 'MATRIX';
+            run_info.PARA.options.contact_length.entries_matrix = {'0' '1' '0'; '1' '0' '1'; '0' '1' '0'};
+            run_info.PARA.comment.contact_length = {'lateral contact length between tiles'};
+
+            run_info.PARA.options.distance.name = 'MATRIX';
+            run_info.PARA.options.distance.entries_matrix = {'0' '1' '0'; '1' '0' '1'; '0' '1' '0'};
+            run_info.PARA.comment.distance = {'distance between tiles'};
+            
+            run_info.PARA.default_value.tile_class = {'TILE_1D_standard'};
+            run_info.PARA.comment.tile_class = {'TILE class'};
+            
+            run_info.PARA.default_value.tile_class_index = {1};
+            run_info.PARA.comment.tile_class_index = {'TILE class index'};
+        end
         
         
+
         
     end
 end

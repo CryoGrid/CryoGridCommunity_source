@@ -142,6 +142,29 @@ classdef HEAT_CONDUCTION < BASE
             
         end
         
+        function snow = conductivity_snow_Sturm(snow)
+            rho_snow = snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area .* snow.CONST.rho_i ./1000;
+            
+            snow.STATVAR.thermCond = double(rho_snow <0.156) .* (0.023 + 0.234 .* rho_snow) + ...
+                double(rho_snow >=0.156) .* (0.138 - 1.01 .* rho_snow + 3.233 .* rho_snow.^2);
+            snow.STATVAR.thermCond = min(snow.STATVAR.thermCond, 2.22 + snow.STATVAR.T ./-50 .* (2.76-2.22));
+            
+        end
+        
+        function snow = conductivity_snow_Sturm_Yen(snow)
+            rho_snow = snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area .* snow.CONST.rho_i ./1000;
+            ki = 2.22 + snow.STATVAR.T ./-50 .* (2.76-2.22);
+            
+            thermCond_Sturm = double(rho_snow <0.156) .* (0.023 + 0.234 .* rho_snow) + ...
+                double(rho_snow >=0.156) .* (0.138 - 1.01 .* rho_snow + 3.233 .* rho_snow.^2);
+            thermCond_Sturm = min(thermCond_Sturm, ki);
+            
+            thermCond_Yen = ki.*(snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area).^1.88;
+            
+            snow.STATVAR.thermCond = max(thermCond_Sturm, thermCond_Yen);
+            
+        end
+        
     end
 end
 
