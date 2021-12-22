@@ -9,6 +9,9 @@
 # default output directory
 ./results/*
 
+# mat-files
+*.mat
+
 # compliled UML diagrams
 ./UMLs/*.puml
 ./UMLs/*.svg
