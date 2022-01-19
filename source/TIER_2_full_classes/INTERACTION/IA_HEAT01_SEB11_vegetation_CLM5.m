@@ -16,16 +16,14 @@ classdef IA_HEAT01_SEB11_vegetation_CLM5 < IA_SEB & IA_WATER % & IA_HEAT
             
             % add fluxes to uppermost cell (ratiative fluxes are added by penetration)
             ia_seb_water.NEXT.TEMP.d_energy(1) = ia_seb_water.NEXT.TEMP.d_energy(1) + (-ia_seb_water.NEXT.STATVAR.Qh - ia_seb_water.NEXT.STATVAR.Qe) .* ia_seb_water.NEXT.STATVAR.area(1);
-            
-            ia_seb_water.NEXT.TEMP.d_water_ET(1) = ia_seb_water.NEXT.TEMP.d_water_ET(1) -  ia_seb_water.NEXT.STATVAR.evap.* ia_seb_water.NEXT.STATVAR.area(1); %in m3 water per sec, put everything in uppermost grid cell
-            ia_seb_water.NEXT.TEMP.d_water_ET_energy(1) = ia_seb_water.NEXT.TEMP.d_water_ET_energy(1) -  ia_seb_water.NEXT.STATVAR.evap_energy.* ia_seb_water.NEXT.STATVAR.area(1);
         end
         
         function z0 = get_z0_ground(ia_seb_water)
             z0 = ia_seb_water.NEXT.PARA.z0;
         end
         
-        function q_g = get_humidity_ground(ia_seb_water, forcing)
+        function q_g = get_humidity_ground(ia_seb_water, tile)
+            forcing = tile.FORCING;
             canopy = ia_seb_water.PREVIOUS;
             ground = ia_seb_water.NEXT;
             Tmfw = canopy.CONST.Tmfw; % Freezing T of water (K)
@@ -45,8 +43,9 @@ classdef IA_HEAT01_SEB11_vegetation_CLM5 < IA_SEB & IA_WATER % & IA_HEAT
             ground.STATVAR.q_g = q_g; % save for calculation of ground Qe
         end
         
-        function r_soil = ground_resistance_evap(ia_seb_water, forcing)
+        function r_soil = ground_resistance_evap(ia_seb_water, tile)
             % soil resistance to evapotranspiration - based on Dry Surface Layer parameterization in CLM5 / Swenson and Lawrence (2014)
+            forcing = tile.FORCING;
             canopy = ia_seb_water.PREVIOUS;
             ground = ia_seb_water.NEXT;
             Tmfw = forcing.CONST.Tmfw;
@@ -73,5 +72,60 @@ classdef IA_HEAT01_SEB11_vegetation_CLM5 < IA_SEB & IA_WATER % & IA_HEAT
             stratigraphy2.TEMP.w = w;
         end
             
+        function ia_seb_water = distribute_roots(ia_seb_water)
+%             biomass_root = ia_seb_water.PARA.biomass_root;
+%             density_root = ia_seb_water.PARA.density_root;
+%             r_root = ia_seb_water.PARA.r_root;
+            beta = ia_seb_water.PARA.beta_root;
+            dz = ia_seb_water.NEXT.STATVAR.layerThick;
+            z = cumsum(dz);
+           
+            % Root fraction per soil layer
+            f_root = beta.^([0; z(1:end-1)].*100) - beta.^(z*100); % Eq. 11.1
+            
+%             % Root spacing
+%             CA_root = pi.*r_root.^2; % Eq. 11.5, fine root cross sectional area
+%             B_root = biomass_root.*f_root./dz; % Eq. 11.4, root biomass density
+%             L_root = B_root./(density_root.*CA_root); % Eq. 11.3, root length density
+%             dx_root = (pi.*L_root).^(-1/2); 
+            
+%             ia_seb_water.NEXT.STATVAR.dx_root = dx_root;
+            ia_seb_water.NEXT.STATVAR.f_root = f_root;
+%             ia_seb_water.NEXT.TEMP.w = f_root.*0;
+
+tkjerht % Throw error!
+
+        end
+        
+        function ia_seb_water = canopy_drip(ia_seb_water, tile)
+            stratigraphy1 = ia_seb_water.PREVIOUS; %canopy
+            stratigraphy2 = ia_seb_water.NEXT; %ground
+            
+            water_capacity = stratigraphy1.PARA.Wmax*stratigraphy1.STATVAR.area*(stratigraphy1.STATVAR.LAI+stratigraphy1.STATVAR.SAI);
+            if stratigraphy1.STATVAR.waterIce > water_capacity
+                water_fraction = stratigraphy1.STATVAR.water./stratigraphy1.STATVAR.waterIce;
+                ice_fraction = stratigraphy1.STATVAR.ice./stratigraphy1.STATVAR.waterIce;
+                excess_waterIce = max(0,stratigraphy1.STATVAR.waterIce - water_capacity);
+                excess_water = excess_waterIce.*water_fraction;
+                excess_ice = excess_waterIce.*ice_fraction;
+                excess_water_energy = excess_water.*stratigraphy1.CONST.c_w.*stratigraphy1.STATVAR.T(1);
+                excess_ice_energy = excess_ice.*(stratigraphy1.CONST.c_i.*stratigraphy1.STATVAR.T(1)-stratigraphy2.CONST.L_f);
+                
+                stratigraphy1.STATVAR.waterIce = water_capacity;
+                stratigraphy1.STATVAR.energy = stratigraphy1.STATVAR.energy - excess_water_energy - excess_ice_energy;
+                
+                available_pore_space = stratigraphy2.STATVAR.layerThick(1).*stratigraphy2.STATVAR.area(1) - stratigraphy2.STATVAR.waterIce(1) - stratigraphy2.STATVAR.mineral(1) - stratigraphy2.STATVAR.organic(1);
+                if excess_water > 0 % only water can enter top cell for ground
+                    stratigraphy2.STATVAR.waterIce(1) = stratigraphy2.STATVAR.waterIce(1) + min(excess_water, available_pore_space);
+                    stratigraphy2.STATVAR.energy(1) = stratigraphy2.STATVAR.energy(1) + excess_water_energy.*min(excess_water, available_pore_space)./excess_water;
+                end
+                stratigraphy2.STATVAR.excessWater = stratigraphy2.STATVAR.excessWater + excess_ice + max(0,excess_water-available_pore_space); % excess ice is routed directly here
+
+                stratigraphy1 = get_T_water_vegetation(stratigraphy1);
+                stratigraphy2 = compute_diagnostic(stratigraphy2, tile);
+            end
+            
+        end
+        
     end
 end

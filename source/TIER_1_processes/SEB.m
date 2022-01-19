@@ -1,4 +1,4 @@
-%========================================================================
+ %========================================================================
 % CryoGrid TIER1 library class, functions related to surface energy balance
 % NOTE: also contains functions for penetration of short-wave radiation
 % S. Westermann, October 2020
@@ -9,6 +9,7 @@ classdef SEB < BASE
     
     methods
         
+% -------------- Monin - Obukhov similarity ------------------------------        
         %Obukhov length
         function seb = L_star(seb, forcing)
             uz = forcing.TEMP.wind;
@@ -39,7 +40,8 @@ classdef SEB < BASE
             seb.STATVAR.u_star = u_star;
         end
         
-        function seb = L_star_canopy(seb, forcing) % Same as L_star(..), but allowing z0 to be a variable
+        function seb = L_star_canopy(seb, tile) % Same as L_star(..), but allowing z0 to be a variable
+            forcing = tile.FORCING;
             uz = forcing.TEMP.wind;
             z =  seb.PARA.airT_height;
             z0 = seb.STATVAR.z0;
@@ -89,6 +91,7 @@ classdef SEB < BASE
             end
         end
         
+% ------------- Latent heat fluxes ---------------------------------------        
         %latent heat flux that can be adjusted using the empirical factor "resistance to evapotranspiration" rs
         function Q_e = Q_eq(seb, forcing)
             
@@ -150,7 +153,6 @@ classdef SEB < BASE
         
         %latent heat flux from evaporation (not transpiration!), CLM 4.5,
         %to be used with Richards Equation scheme
-        
         function seb = Q_evap_CLM4_5(seb, forcing)
             uz = forcing.TEMP.wind;
             p = forcing.TEMP.p;
@@ -198,7 +200,9 @@ classdef SEB < BASE
             seb.STATVAR.sublim_energy =  seb.STATVAR.sublim .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f);
         end
         
-        function seb = Q_e_CLM5(seb, forcing)
+        % Latent heat flux from evaporation + transpiration as in CLM5
+        function seb = Q_e_CLM5(seb, tile)
+            forcing = tile.FORCING;
             L = seb.STATVAR.LAI; % Leaf area index
             S = seb.STATVAR.SAI; % Stem area index
             Tmfw = forcing.CONST.Tmfw;
@@ -213,7 +217,7 @@ classdef SEB < BASE
             r_sun = seb.TEMP.r_sun;
             r_sha = seb.TEMP.r_sha;
             
-            q_g = get_humidity_ground(seb.IA_NEXT, forcing); % ground specific humidity
+            q_g = get_humidity_ground(seb.IA_NEXT, tile); % ground specific humidity
             e_v = double(Tv>=0).*satPresWater(seb,Tv+Tmfw) + double(Tv<0).*satPresIce(seb,Tv+Tmfw); % saturation water pressure of leafs
             qs_Tv = .622.*e_v./p; % saturation water vapor specific humidity at leaf temperature
             
@@ -267,9 +271,71 @@ classdef SEB < BASE
             
         end
         
-        %sensible heat flux
-        function Q_h = Q_h(seb, forcing)
+        % Latent heat from evaporation + transpiration as in CLM5, but with
+        % stomatal resistance from Stewart (1988)
+        function seb = Q_e_CLM5_Stewart(seb, tile)
+            % evaporation and transpiration following CLM5, but with
+            % simpler stomata/leaf resistance after Stewart (1988)
+            % R. B. Zweigel, December 2021
+            forcing = tile.FORCING;
+            L = seb.STATVAR.LAI; % Leaf area index
+            S = seb.STATVAR.SAI; % Stem area index
+            Tmfw = forcing.CONST.Tmfw;
+            Tv = seb.STATVAR.T(1); % leaf temperature
+            q_atm = forcing.TEMP.q; % atm. specific humidity
+            p = forcing.TEMP.p; % surface pressure
+            rho_atm = seb.TEMP.rho_atm; % air density 
+            f_wet = seb.STATVAR.f_wet; % wetted fraction of canopy
+            f_dry = seb.STATVAR.f_dry; % dry and transpiring fraction of leaves
             
+            % Resistance terms
+            r_aw = seb.TEMP.r_a; % aerodynamic resistance against water vapor transport canopy air - atmosphere
+            r_aw_prime = seb.TEMP.r_a_prime; % aerodynamic resistance against water vapor transport soil - canopy air
+            r_b = seb.TEMP.r_b; % leaf boudnary layer resitance against vapor transport
+            r_total = seb.TEMP.r_total;
+            r_soil = seb.TEMP.r_soil;
+            r_canopy = seb.TEMP.r_canopy;
+            
+            % Humidity
+            q_g = get_humidity_ground(seb.IA_NEXT, tile); % ground specific humidity
+            e_v = double(Tv>=0).*satPresWater(seb,Tv+Tmfw) + double(Tv<0).*satPresIce(seb,Tv+Tmfw); % saturation water pressure of leafs
+            qs_Tv = .622.*e_v./p; % saturation water vapor specific humidity at leaf temperature
+            ca = 1/r_aw;
+            cv = 1/r_total;
+            cg = 1./(r_aw_prime + r_soil);
+            
+            q_s = (q_atm.*ca + q_g.*cg + qs_Tv.*cv)./(ca + cv + cg); % Eq. 5.108, canopy air specific humidity
+            
+            seb.STATVAR.q_s = q_s;
+            seb.STATVAR.qs_TV = qs_Tv;
+            
+            water_fraction = seb.STATVAR.water(1) ./ seb.STATVAR.waterIce(1);
+            ice_fraction = seb.STATVAR.ice(1) ./ seb.STATVAR.waterIce(1);
+            water_fraction(seb.STATVAR.waterIce == 0) = double(Tv>=0);
+            ice_fraction(seb.STATVAR.waterIce == 0) = double(Tv<0);
+            
+            if seb.TEMP.Ev_pot > 0 % evaporation/transpiration in m3 water /(m2*s), not kg/(m2*s) as in CLM5
+                seb.TEMP.evap = -rho_atm.*(q_s - qs_Tv).* f_wet.*water_fraction.*(L+S) ./r_b ./seb.CONST.rho_w;
+                seb.TEMP.sublim = -rho_atm.*(q_s - qs_Tv).* f_wet.*ice_fraction.*(L+S) ./r_b ./seb.CONST.rho_w; % Is this correct? or use f_snow?
+                seb.TEMP.transp = -rho_atm.*(q_s - qs_Tv).* f_dry.* (L+S) ./ (r_b + r_canopy) ./ seb.CONST.rho_w;
+            else % condensation/deposition
+                seb.TEMP.evap = -rho_atm.*(q_s - qs_Tv).* water_fraction.*(L+S) ./r_b ./seb.CONST.rho_w;
+                seb.TEMP.sublim = -rho_atm.*(q_s - qs_Tv).* ice_fraction.*(L+S) ./r_b ./seb.CONST.rho_w;
+                seb.TEMP.transp = 0;
+            end
+            
+            seb.TEMP.Qe_evap = latent_heat_evaporation(seb, Tv+Tmfw).*seb.TEMP.evap.*seb.CONST.rho_w + latent_heat_sublimation(seb, Tv+Tmfw).*seb.TEMP.sublim.*seb.CONST.rho_w;
+            seb.TEMP.Qe_transp = latent_heat_evaporation(seb, Tv+Tmfw).*seb.TEMP.transp.*seb.CONST.rho_w;
+            
+            seb.STATVAR.Qe = seb.TEMP.Qe_evap + seb.TEMP.Qe_transp;
+            seb.TEMP.evap_energy = seb.TEMP.evap.*( double(Tv>=0).*seb.CONST.c_w.*Tv + double(Tv<0).*seb.CONST.c_i.*Tv);
+            seb.TEMP.sublim_energy = seb.TEMP.sublim .* (seb.CONST.c_i.*Tv - seb.CONST.L_f);
+            seb.TEMP.transp_energy = seb.TEMP.transp.*seb.CONST.c_w.*Tv; 
+        end
+        
+% -------------- Sensible heat fluxes ------------------------------------        
+        %sensible heat flux for ground surface
+        function Q_h = Q_h(seb, forcing)
             cp = seb.CONST.cp;
             kappa = seb.CONST.kappa;
             g = seb.CONST.g;
@@ -291,7 +357,9 @@ classdef SEB < BASE
             
         end
         
-        function seb = Q_h_CLM5(seb, forcing)
+        % Sensible heat flux for canopy as in CLM5
+        function seb = Q_h_CLM5(seb, tile)
+            forcing = tile.FORCING;
             cp = seb.CONST.cp;
             L = seb.STATVAR.LAI;
             S = seb.PARA.SAI;
@@ -314,7 +382,9 @@ classdef SEB < BASE
             
         end
         
-        function seb = get_canopy_resistances(seb, forcing)
+% -------------- Evaporation/transpiration resistances -------------------
+        function seb = canopy_resistances_CLM5(seb, tile)
+            forcing = tile.FORCING;
             p = forcing.TEMP.p; % surface pressure
             L = seb.STATVAR.LAI; % Leaf area index
             S = seb.STATVAR.SAI; % Stem area index
@@ -339,7 +409,7 @@ classdef SEB < BASE
             
             e_v = double(Tv>=forcing.CONST.Tmfw).*satPresWater(seb,Tv) + double(Tv<forcing.CONST.Tmfw).*satPresIce(seb,Tv); % saturation water pressure of leafs
             qs_Tv = .622.*e_v./p;
-            seb.TEMP.rho_atm = rho_air_moist(seb,forcing);
+            seb.TEMP.rho_atm = rho_air_moist(seb,tile);
             Cs_bare = kappa./.13.*(z0g.*u_star./ypsilon).^(-.45); % Eq.5.121 bare soil turbulent transfer coefficient
             W = exp(-(L+S));% Eq. 5.119
             Cs = Cs_bare.*W + Cs_dense.*(1-W); % Eq. 5.118 turbulent transfer coefficient between soil and canopy air
@@ -347,7 +417,7 @@ classdef SEB < BASE
             seb.TEMP.r_a = 1./(kappa^2.*u_star).*(log(z./z0v)- psi_M(seb, z./Lstar, z0v./Lstar)).*(log(z./z0v)- psi_H(seb, z./Lstar, z0v./Lstar)); % aerodynamic resistance to heat/water vapor fransper canopy air - atmosphere. From original CG3 publication
             seb.TEMP.r_b = 1./Cv*(u_star./d_leaf).^(-.5); % Eq. 5.122 leaf boundary layer resistance
             seb.TEMP.r_a_prime = 1/(Cs.*u_star); % Eq. 5.116 aerodynamic resistance to heat/water vapor transfer soil - canopy air
-            seb.TEMP.r_soil = ground_resistance_evap(seb.IA_NEXT, forcing); % resistance to water vapor flux within the soil matrix
+            seb.TEMP.r_soil = ground_resistance_evap(seb.IA_NEXT, tile); % resistance to water vapor flux within the soil matrix
             seb.TEMP.rr_dry = f_dry.*seb.TEMP.r_b./L .* (L_sun./(seb.TEMP.r_b+seb.TEMP.r_sun) + L_sha./(seb.TEMP.r_b+seb.TEMP.r_sha));
             seb.TEMP.Ev_pot = -seb.TEMP.rho_atm.*(q_s - qs_Tv)./seb.TEMP.r_b;
             seb.TEMP.rr = double(seb.TEMP.Ev_pot<=0) + double(seb.TEMP.Ev_pot>0).*(f_wet + double(beta_t>0).*seb.TEMP.rr_dry);
@@ -355,6 +425,56 @@ classdef SEB < BASE
                 seb.TEMP.r_total = seb.TEMP.r_b./(seb.TEMP.rr.*(L+S));
             else % No leaves - no transpiration
                 seb.TEMP.r_total = seb.TEMP.r_b./S;
+            end
+        end
+        
+        function seb = canopy_resistances_CLM5_Stewart(seb, tile)
+            % similar to canopy_resistances_CLM5(), but with resistances 
+            % against transpiration from Stewart (1988) as in Dingman (2015)     
+            forcing = tile.FORCING;
+            p = forcing.TEMP.p; % surface pressure
+            L = seb.STATVAR.LAI; % Leaf area index
+            S = seb.STATVAR.SAI; % Stem area index
+            q_s = seb.STATVAR.q_s; % canopy air specific humidity (last timestep)
+            f_dry = seb.STATVAR.f_dry; % dry fraction of canopy
+            f_wet = seb.STATVAR.f_wet; % wet fraction of canopy
+            Tv = seb.STATVAR.T(1)+forcing.CONST.Tmfw; % leaf temperature
+            kappa = seb.CONST.kappa; % van Karman constant
+            u_star = seb.STATVAR.u_star; % from Monin-Ubukhov
+            Lstar = seb.STATVAR.Lstar; % Monin-Ubukhov length
+            Cv = seb.PARA.Cv; % Turbulent transfer coefficient canopy surface - canopy air
+            d_leaf = seb.PARA.d_leaf; % characteristic dimension of the leaves in the direction of wind flow [m]
+            ypsilon = seb.CONST.ypsilon; % kinematic viscosity of air
+            Cs_dense = seb.PARA.Cs_dense; %  dense canopy turbulent transfer coefficient
+            z = forcing.PARA.airT_height; % height above ground for measurements
+            z0v = seb.STATVAR.z0; % roughness length of vegetation
+            z0g = get_z0_ground(seb.IA_NEXT); % Roughness lenght of ground
+            z = z + sum(seb.STATVAR.layerThick); % adjust so forcing height is above canopy
+%             beta_t = seb.TEMP.beta_t; % soil moisture stress function
+            k_s = seb.PARA.k_shelter; % canopy sheltering coefficient
+            
+            e_v = double(Tv>=forcing.CONST.Tmfw).*satPresWater(seb,Tv) + double(Tv<forcing.CONST.Tmfw).*satPresIce(seb,Tv); % saturation water pressure of leafs
+            qs_Tv = .622.*e_v./p;
+            seb.TEMP.rho_atm = rho_air_moist(seb,tile);
+            Cs_bare = kappa./.13.*(z0g.*u_star./ypsilon).^(-.45); % Eq.5.121 bare soil turbulent transfer coefficient
+            W = exp(-(L+S));% Eq. 5.119
+            Cs = Cs_bare.*W + Cs_dense.*(1-W); % Eq. 5.118 turbulent transfer coefficient between soil and canopy air
+            seb.TEMP.C_leaf = leaf_conductance_Stewart(seb, tile);
+            
+            seb.TEMP.r_a = 1./(kappa^2.*u_star).*(log(z./z0v)- psi_M(seb, z./Lstar, z0v./Lstar)).*(log(z./z0v)- psi_H(seb, z./Lstar, z0v./Lstar)); % aerodynamic resistance to heat/water vapor fransper canopy air - atmosphere. From original CG3 publication
+            seb.TEMP.r_b = 1./Cv*(u_star./d_leaf).^(-.5); % Eq. 5.122 leaf boundary layer resistance
+            seb.TEMP.r_a_prime = 1/(Cs.*u_star); % Eq. 5.116 aerodynamic resistance to heat/water vapor transfer soil - canopy air
+            seb.TEMP.r_soil = ground_resistance_evap(seb.IA_NEXT, tile); % resistance to water vapor flux within the soil matrix
+            if seb.STATVAR.LAI > 0 % Transpiring leaves present
+                seb.TEMP.r_canopy = 1./(seb.TEMP.C_leaf.*k_s);
+            else % No leaves -> no transpiration
+                seb.TEMP.r_canopy = Inf;
+            end
+            seb.TEMP.Ev_pot = -seb.TEMP.rho_atm.*(q_s - qs_Tv)./seb.TEMP.r_b;
+            if seb.TEMP.Ev_pot <= 0 % Condensation -> on whole leaf + stem area, NO transpiration
+                seb.TEMP.r_total = seb.TEMP.r_b./(L+S);
+            elseif seb.TEMP.Ev_pot > 0 % evaporation + transpiration
+                seb.TEMP.r_total = (L+S) ./ ( f_wet./seb.TEMP.r_b + f_dry./(seb.TEMP.r_b + seb.TEMP.r_canopy) ) ;               
             end
         end
         
@@ -378,11 +498,48 @@ classdef SEB < BASE
             beta = 1 + double(reduce) .* (-1 +  0.25 .* (1-(cos(pi .* water_cont_surf ./ field_capacity))).^2);
         end
         
+        function C_leaf = leaf_conductance_Stewart(seb, tile)
+            forcing = tile.FORCING;
+            C_leaf_max = seb.PARA.C_leaf_max;
+            Sin = forcing.TEMP.Sin;
+            p = forcing.TEMP.p;
+            q_s = seb.STATVAR.q_s;
+            Tmfw = seb.CONST.Tmfw;
+            rho_air = rho_air_moist(seb, tile);
+            T_leaf = max(0,min(40,seb.STATVAR.T(1))); % only valid for 0 <= T_leaf <= 40
+            
+            moisture_stress = get_soil_moisture_stress(seb); % change to GROUND !!!!!!!!!
+            
+            e_sat = satPresWater(seb,seb.STATVAR.Ts+Tmfw); 
+            rho_v_saturated = e_sat./p.*rho_air;
+            rho_v_actual = q_s.*rho_air;
+            Delta_rho_v = rho_v_saturated - rho_v_actual;
+            
+            f_Sin = 1.1046.*Sin./(Sin+104.4);
+            f_Sin = max(0,min(f_Sin,1)); % limit to [0 1]
+            f_rho_v = 1 - 66.6.*Delta_rho_v;  
+            f_rho_v = max(0.233,min(f_rho_v,1));
+            f_T_leaf = T_leaf.*(40-T_leaf).^1.18 ./ 691;
+            f_T_leaf = max(0,min(f_T_leaf,1));
+            f_psi_soil = 1 - .00119.*exp(.81.*8.4.*moisture_stress);
+            f_psi_soil = max(0,min(f_psi_soil,1));
+            
+            C_leaf = C_leaf_max.*f_Sin.*f_rho_v.*f_T_leaf.*f_psi_soil;
+            
+            seb.TEMP.Delta_rho_v = Delta_rho_v;
+            seb.TEMP.f_Sin = f_Sin;
+            seb.TEMP.f_rho_v = f_rho_v;
+            seb.TEMP.f_T_leaf = f_T_leaf;
+            seb.TEMP.f_psi_soil = f_psi_soil;
+        end
+        
+% -------------- Support functions ---------------------------------------        
         function rho = rho_air(seb, p, T) %air density [kg m^(-3)]
             rho = p./(287.058.*T);
         end
         
-        function rho = rho_air_moist(seb, forcing)
+        function rho = rho_air_moist(seb, tile)
+            forcing = tile.FORCING;
             R_da = seb.CONST.R_spec; % gas constant for dry air = 287.0423 (CLM5 documentation)
             p = forcing.TEMP.p;
             Tz= forcing.TEMP.Tair+forcing.CONST.Tmfw;
@@ -408,7 +565,7 @@ classdef SEB < BASE
             p= 6.112.* 100.* exp(22.46.*(T-273.15)./(272.61-273.15+T)); % Removed the factor .622 to give actual vapor pressure, RBZ Nov. 2021
         end
         
-        % ---------- penetration of LW ----------------------------------
+%--------------- penetration of LW --------------------------------------
         function [seb, Lout] = penetrate_LW_no_transmission(seb, Lin)
             % Lin is in W, not W/m2!
             Lout = (1-seb.PARA.epsilon) .* Lin + seb.PARA.epsilon .* seb.CONST.sigma .* (seb.STATVAR.T(1)+ seb.CONST.Tmfw).^4 .*seb.STATVAR.area(1);
@@ -467,7 +624,7 @@ classdef SEB < BASE
             seb.TEMP.L_up = L_up; % STATVARS are assigned in canopy_energy_balance
         end
         
-        % --------- penetration of short-wave radiation ----------------
+% -------------- Penetration of short-wave radiation ---------------------
         function [seb, Sout] = penetrate_SW_no_transmission(seb, Sin) % called recursively by surfaceEnergyBalance-function of TOP_CLASS, "hard" surface absorbing all SW-radiation in 1st cell
             seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (1 - seb.PARA.albedo) .* sum(Sin); %in [W], not [W/m2]
             Sout = seb.PARA.albedo .* Sin;
@@ -560,8 +717,8 @@ classdef SEB < BASE
             seb.TEMP.S_down = S_down;
             seb.TEMP.S_up = S_up;
             
-            seb.TEMP.L_sun = (1-exp(-K*(L)))./K; % Eq. 4.7, changed to provide sunlit LEAF area (not PLANT area), compliant with use in further calculatuions
-            seb.TEMP.L_sha = L - seb.TEMP.L_sun; % shaded LEAF area
+%             seb.TEMP.L_sun = (1-exp(-K*(L)))./K; % Eq. 4.7, changed to provide sunlit LEAF area (not PLANT area), compliant with use in further calculatuions
+%             seb.TEMP.L_sha = L - seb.TEMP.L_sun; % shaded LEAF area
             
             if I_out_from_dir > 1 | I_out_from_dir < 0
                 error('Unphysical values of reflected SW')
@@ -694,6 +851,7 @@ classdef SEB < BASE
             seb.STATVAR.Sout = Sout;
         end
         
+% -------------- Water fluxes from evapotranspiration --------------------
         %calculates derivatives of water (i.e. water fluxes) due to evapotranspiration
         function seb = calculateET(seb)
             L_v = latent_heat_evaporation(seb, seb.STATVAR.T(1)+273.15);

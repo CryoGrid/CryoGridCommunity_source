@@ -49,7 +49,7 @@ classdef IA_SEB < IA_BASE
             stratigraphy1 = ia_seb_water.PREVIOUS; % vegetation
             stratigraphy2 = ia_seb_water.NEXT; % ground
             Tg = stratigraphy2.STATVAR.T(1)+tile.FORCING.CONST.Tmfw;
-            Cp = stratigraphy1.CONST.cp; 
+            Cp = stratigraphy1.CONST.cp;
             Ts = stratigraphy1.STATVAR.Ts+tile.FORCING.CONST.Tmfw; % canopy air temperature (K)
             rho_atm = stratigraphy1.TEMP.rho_atm; % moist air density
             r_ah_prime = stratigraphy1.TEMP.r_a_prime; % aerodynamic resistance to heat transfer soil - canopy air
@@ -75,11 +75,15 @@ classdef IA_SEB < IA_BASE
             
             stratigraphy2.STATVAR.Qe = -rho_atm.*latent_heat.*(q_s-q_g)./(r_aw_prime+r_soil);
             
-            stratigraphy2.STATVAR.evap = water_fraction .* stratigraphy2.STATVAR.Qe ./ (latent_heat .* stratigraphy2.CONST.rho_w);
-            stratigraphy2.STATVAR.sublim = ice_fraction .* stratigraphy2.STATVAR.Qe ./ (latent_heat .* stratigraphy2.CONST.rho_w);
-            stratigraphy2.STATVAR.evap_energy =  stratigraphy2.STATVAR.evap.*  (double(Tg>=0) .* stratigraphy2.CONST.c_w .* Tg + ...
+            stratigraphy2.TEMP.evap = water_fraction .* stratigraphy2.STATVAR.Qe ./ (latent_heat .* stratigraphy2.CONST.rho_w);
+            stratigraphy2.TEMP.sublim = ice_fraction .* stratigraphy2.STATVAR.Qe ./ (latent_heat .* stratigraphy2.CONST.rho_w);
+            stratigraphy2.TEMP.evap_energy =  stratigraphy2.TEMP.evap.*  (double(Tg>=0) .* stratigraphy2.CONST.c_w .* Tg + ...
                 double(Tg<0) .* stratigraphy2.CONST.c_i .* Tg);
-            stratigraphy2.STATVAR.sublim_energy =  stratigraphy2.STATVAR.sublim .* (stratigraphy2.CONST.c_i .* stratigraphy2.STATVAR.T(1,1) - stratigraphy2.CONST.L_f);
+            stratigraphy2.TEMP.sublim_energy =  stratigraphy2.TEMP.sublim .* (stratigraphy2.CONST.c_i .* stratigraphy2.STATVAR.T(1,1) - stratigraphy2.CONST.L_f);
+            
+            stratigraphy2.TEMP.d_water_ET(1) = stratigraphy2.TEMP.d_water_ET(1) - (stratigraphy2.TEMP.evap + stratigraphy2.TEMP.sublim).*stratigraphy2.STATVAR.area(1);
+            stratigraphy2.TEMP.d_water_ET_energy(1) = stratigraphy2.TEMP.d_water_ET_energy(1) - (stratigraphy2.TEMP.evap_energy + stratigraphy2.TEMP.sublim_energy).*stratigraphy2.STATVAR.area(1);
+                        
         end
         
     end

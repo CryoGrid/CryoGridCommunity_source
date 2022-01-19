@@ -80,28 +80,6 @@ classdef VEGETATION < BASE
             z0 = exp( V.*log(z_top.*R_z0) + (1-V).*log(z0g) ); % Eq. 5.125
         end
         
-        function canopy = distribute_roots(canopy)
-            biomass_root = canopy.PARA.biomass_root;
-            density_root = canopy.PARA.density_root;
-            r_root = canopy.PARA.r_root;
-            beta = canopy.PARA.beta_root;
-            dz = canopy.NEXT.STATVAR.layerThick;
-            z = cumsum(dz);
-           
-            % Root fraction per soil layer
-            f_root = beta.^([0; z(1:end-1)].*100) - beta.^(z*100); % Eq. 11.1
-            
-            % Root spacing
-            CA_root = pi.*r_root.^2; % Eq. 11.5, fine root cross sectional area
-            B_root = biomass_root.*f_root./dz; % Eq. 11.4, root biomass density
-            L_root = B_root./(density_root.*CA_root); % Eq. 11.3, root length density
-            dx_root = (pi.*L_root).^(-1/2); 
-            
-            canopy.NEXT.STATVAR.dx_root = dx_root;
-            canopy.NEXT.STATVAR.f_root = f_root;
-            canopy.NEXT.TEMP.w = f_root.*0;
-        end
-        
         function canopy = add_canopy(canopy)
             canopy.STATVAR.LAI = canopy.PARA.LAI;
             canopy.STATVAR.emissivity = 1 - exp(-canopy.STATVAR.LAI-canopy.STATVAR.SAI);
@@ -116,19 +94,24 @@ classdef VEGETATION < BASE
             canopy = get_E_water_vegetation(canopy); % derive energy from temperature
         end
         
-        function canopy = canopy_drip(canopy)
-            water_capacity = canopy.PARA.Wmax*canopy.STATVAR.area*(canopy.STATVAR.LAI+canopy.STATVAR.SAI);
-            if canopy.STATVAR.waterIce > water_capacity
-                excess_water = max(0,canopy.STATVAR.waterIce - water_capacity);
-                excess_water_energy = excess_water.*(double(canopy.STATVAR.T(1)>=0) .* canopy.CONST.c_w .* canopy.STATVAR.T(1) + ...
-                    double(canopy.STATVAR.T(1)<0) .* canopy.CONST.c_i .* canopy.STATVAR.T(1));
-                canopy.STATVAR.waterIce = water_capacity;
-                canopy.STATVAR.energy = canopy.STATVAR.energy - excess_water_energy;
-                
-                canopy.NEXT.STATVAR.waterIce(1) = canopy.NEXT.STATVAR.waterIce(1) + excess_water;
-                canopy.NEXT.STATVAR.energy(1) = canopy.NEXT.STATVAR.energy(1) + excess_water_energy;
-            end
+        function canopy = distribute_roots(canopy)
+            beta = canopy.PARA.beta_root;
+            dz = canopy.GROUND.STATVAR.layerThick;
+            z = cumsum(dz);
+           
+            % Root fraction per soil layer
+            f_root = beta.^([0; z(1:end-1)].*100) - beta.^(z*100); % Eq. 11.1
             
+            canopy.GROUND.STATVAR.f_root = f_root;
+        end
+        
+        function stresses = get_soil_moisture_stress(canopy)
+            psi = canopy.GROUND.STATVAR.waterPotential;
+            f_root = canopy.GROUND.STATVAR.f_root;
+%             layerThick = ia_seb_water.NEXT.STATVAR.layerThick;
+            psi_wilt = canopy.PARA.psi_wilt;
+            
+            stresses = sum(f_root.*min(1,(psi./psi_wilt)));
         end
     end
 end

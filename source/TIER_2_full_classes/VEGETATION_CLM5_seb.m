@@ -9,6 +9,9 @@
 %========================================================================
 
 classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
+    properties
+        GROUND
+    end
     
     methods
         
@@ -40,6 +43,9 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.PARA.biomass_root = [];
             canopy.PARA.density_root = [];
             canopy.PARA.r_root = [];
+            canopy.PARA.C_leaf_max = [];
+            canopy.PARA.k_shelter = [];
+            canopy.PARA.psi_wilt = [];
         end
         
         function canopy = provide_STATVAR(canopy)
@@ -103,8 +109,9 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy = get_heat_capacity_canopy(canopy);
             
             canopy = get_E_water_vegetation(canopy); % update to better represent leaf heat capacity
-            distribute_roots(canopy);
-            
+            canopy.GROUND = canopy.NEXT;
+            canopy = distribute_roots(canopy);
+
             canopy.PARA.airT_height = tile.FORCING.PARA.airT_height; % why tranfer this parameter to ground/canopy, and not use forcing directly?
             canopy.STATVAR.z0 = get_z0_vegetation(canopy); % z0 changes according to leaf area index
             
@@ -114,10 +121,11 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.STATVAR.Lstar = -100;
             canopy.STATVAR.u_star = 0.1;
             canopy.STATVAR.q_s = 0.007;
+            canopy.STATVAR.Ts = canopy.STATVAR.T;
             canopy.STATVAR.Qh = 0;
             canopy.STATVAR.Qe = 0;
             canopy.STATVAR.f_wet = 0;
-            canopy.STATVAR.f_dry = 1;
+            canopy.STATVAR.f_dry = 0;
             canopy.STATVAR.f_snow = 0;
             
             canopy.TEMP.excess_water = 0;
@@ -134,9 +142,8 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = get_boundary_condition_u(canopy, tile)
             forcing = tile.FORCING;
-            canopy = canopy_energy_balance(canopy,forcing);
-            
-            canopy = canopy_water_balance(canopy,forcing);
+            canopy = canopy_energy_balance(canopy,tile); % change to tile
+            canopy = canopy_water_balance(canopy,tile);
         end
         
         function [canopy, L_up] = penetrate_LW(canopy, L_down)  %mandatory function when used with class that features LW penetration
@@ -168,15 +175,13 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         end
         
         function canopy = compute_diagnostic_first_cell(canopy, tile)
-            forcing = tile.FORCING;
-            canopy = L_star_canopy(canopy, forcing);
+            canopy = L_star_canopy(canopy, tile);
         end
         
         function canopy = compute_diagnostic(canopy, tile)
             canopy = get_T_water_vegetation(canopy);
             canopy.STATVAR.z0 = get_z0_vegetation(canopy);
-            canopy.TEMP.beta_t = get_soil_water_stress(canopy.IA_NEXT);
-            canopy = canopy_drip(canopy);
+            canopy.IA_NEXT = canopy_drip(canopy.IA_NEXT, tile);
             
             canopy.TEMP.d_energy = canopy.STATVAR.energy.*0;
             canopy.TEMP.d_water = canopy.STATVAR.energy.*0;
@@ -187,9 +192,9 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = check_trigger(canopy, tile)
             
-            if ismember(month(tile.t),6:9) && canopy.STATVAR.LAI == 0
+            if ismember(month(tile.t),5:9) && canopy.STATVAR.LAI == 0
                 add_canopy(canopy);
-            elseif ~ismember(month(tile.t),6:9) && canopy.STATVAR.LAI ~= 0
+            elseif ~ismember(month(tile.t),5:9) && canopy.STATVAR.LAI ~= 0
                 remove_canopy(canopy);
             end
 
@@ -198,7 +203,8 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         %---------------non-mandatory functions----------------------------
         %==================================================================
         
-        function canopy = canopy_energy_balance(canopy,forcing)
+        function canopy = canopy_energy_balance(canopy,tile)
+            forcing = tile.FORCING;
             % 1. Longwave penetration
             [canopy, L_up] = penetrate_LW(canopy, forcing.TEMP.Lin .* canopy.STATVAR.area(1));
             canopy.STATVAR.Lout = L_up./canopy.STATVAR.area(1);
@@ -214,32 +220,20 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.STATVAR.Lin = forcing.TEMP.Lin;
             
             % 3. Sensible and latent heat
-            canopy = get_canopy_resistances(canopy, forcing);
-            canopy = Q_h_CLM5(canopy,forcing);
-            canopy = Q_e_CLM5(canopy, forcing);
+%             canopy = canopy_resistances_CLM5(canopy, forcing);
+            canopy = canopy_resistances_CLM5_Stewart(canopy, tile);
+            canopy = Q_h_CLM5(canopy, tile);
+%             canopy = Q_e_CLM5(canopy, forcing);
+            canopy = Q_e_CLM5_Stewart(canopy, tile);
             
             canopy.TEMP.d_energy = canopy.TEMP.d_energy - (canopy.STATVAR.Qh + canopy.STATVAR.Qe).*canopy.STATVAR.area;
             canopy.TEMP.d_water_ET = canopy.TEMP.d_water_ET - (canopy.TEMP.evap + canopy.TEMP.sublim).*canopy.STATVAR.area; % transpired water is removed from soil, not canopy
             canopy.TEMP.d_water_ET_energy = canopy.TEMP.d_water_ET_energy - (canopy.TEMP.evap_energy + canopy.TEMP.sublim_energy).*canopy.STATVAR.area; %  + canopy.STATVAR.transp_energy
         end
         
-        function canopy = canopy_water_balance(canopy,forcing)
-            canopy = get_boundary_condition_u_water_canopy(canopy, forcing);
+        function canopy = canopy_water_balance(canopy,tile)
+            canopy = get_boundary_condition_u_water_canopy(canopy, tile);
         end
-        %-----------------inherited Tier 1 functions ----------------------
-        %==================================================================
-        
-        function [canopy, L_up] = penetrate_LW_CLM5(canopy,L_down)
-            [canopy, L_up] = penetrate_LW_CLM5@SEB(canopy,L_down);
-        end
-        
-        function [canopy, S_up] = penetrate_SW_CLM5(canopy,S_down)
-            [canopy, S_up] = penetrate_SW_CLM5@SEB(canopy,S_down);
-        end
-        
-        function timestep = get_timestep_canopy_T(canopy)
-            timestep = get_timestep_canopy_T@VEGETATION(canopy);
-        end
-        
+    
     end
 end

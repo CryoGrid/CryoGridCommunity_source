@@ -546,15 +546,19 @@ classdef IA_WATER < IA_BASE
         end
         
         function ia_seb_water = get_water_transpiration(ia_seb_water)
-            transp_water = ia_seb_water.PREVIOUS.TEMP.transp_sun+ia_seb_water.PREVIOUS.TEMP.transp_sha;
-            r = ia_seb_water.NEXT.STATVAR.f_root;
-            w = ia_seb_water.NEXT.TEMP.w;
-            beta_t = ia_seb_water.PREVIOUS.TEMP.beta_t;
+            stratigraphy1 = ia_seb_water.PREVIOUS; % vegetation
+            stratigraphy2 = ia_seb_water.NEXT; % ground
+            transp_water = stratigraphy1.TEMP.transp;
+            f_root = stratigraphy2.STATVAR.f_root;
+            psi = stratigraphy2.STATVAR.waterPotential;
+            psi_wilt = stratigraphy1.PARA.psi_wilt;
             
-            water_out = transp_water .* r.*w ./beta_t;
+            water_out = transp_water .* f_root.*max(0,(psi_wilt-psi)./psi_wilt) ./sum(f_root.*max(0,(psi_wilt-psi)./psi_wilt));
             water_out(isnan(water_out)) = 0;
+            water_out_energy = water_out .* stratigraphy2.STATVAR.T .* (double(stratigraphy2.STATVAR.T>=0).*stratigraphy2.CONST.c_w + double(stratigraphy2.STATVAR.T<0).*stratigraphy2.CONST.c_i);
             
-            ia_seb_water.NEXT.TEMP.d_water_ET = ia_seb_water.NEXT.TEMP.d_water_ET - water_out;
+            stratigraphy2.TEMP.d_water_ET = stratigraphy2.TEMP.d_water_ET - water_out;
+            stratigraphy2.TEMP.d_water_ET_energy = stratigraphy2.TEMP.d_water_ET_energy - water_out_energy;
         end
         
         %---service functions-----------------

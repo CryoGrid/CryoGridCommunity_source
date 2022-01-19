@@ -1,34 +1,10 @@
 %========================================================================
-% CryoGrid FORCING class FORCING_slope_seb
-% simple model forcing for GROUND classes computing the surface energy balance 
-% (keyword “seb”). The data must be stored in a Matlab “.mat” file which contains 
-% a struct FORCING with field “data”, which contain the time series of the actual 
-% forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures. 
-% Have a look at the existing forcing files in the folder “forcing” and prepare 
-% new forcing files in the same way. The mandatory forcing variables are air temperature 
-% (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2), 
-% incoming short-.wave radiation (Sin, in W/m2), absolute humidity (q, in 
-% kg water vapor / kg air), wind speed (wind, in m/sec), rainfall (rainfall, in mm/day), 
-% snowfall (snowfall, in mm/day) and timestamp (t_span, 
-% in Matlab time / increment 1 corresponds to one day). 
-% IMPORTANT POINT: the time series must be equally spaced in time, and this must be 
-% really exact. When reading the timestamps from an existing data set (e.g. an Excel file),
-% rounding errors can result in small differences in the forcing timestep, often less 
-% than a second off. In this case, it is better to manually compile a new, equally spaced 
-% timestep in Matlab.
-% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
-% Edited (changes for slopes) were made by J. Schmidt, December 2020
-% The forcing data need in addition for the slope:
-%       S_TOA: Short-wave radiation at the top of the atmosphere
-%       albedo_foot: albedo at the foot of the slope (can vary in time for
-%           example with a snow layer
-%   Not-mandatory (just applicable if there is a water body at the foot of
-%   the slope):
-%       seaT: seawater temperature
-%       seaIce: 0 = time steps without sea ice; 1 = time steps with sea ice
+% Same as FORCING_slope_seb_readNC, with small adaptations to fit with 
+% Vegetation classes.
+% R. B. Zweigel, August 2021
 %========================================================================
 
-classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
+classdef FORCING_slope_seb_readNc2 < SEB %matlab.mixin.Copyable
     
     properties
         DATA            % forcing data time series
@@ -167,7 +143,10 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             % Additional forcing data for slopes:
             forcing.TEMP.S_TOA=0;
             forcing.TEMP.albedo_foot=0;
-
+            forcing.TEMP.Sin_dif = 0;
+            forcing.TEMP.Sin_dir = 0;
+            forcing.TEMP.sunElevation = 0;
+            
             % Non-mandatory forcing data for slopes:
 %             if isfield(temp.FORCING.data,'seaT') == 1
 %                 forcing.TEMP.seaT=0;
@@ -204,6 +183,10 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
             
+            forcing.TEMP.Sin_dif=forcing.DATA.Sin_dif(posit,1)+(forcing.DATA.Sin_dif(posit+1,1)-forcing.DATA.Sin_dif(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            forcing.TEMP.Sin_dir=forcing.DATA.Sin_dir(posit,1)+(forcing.DATA.Sin_dir(posit+1,1)-forcing.DATA.Sin_dir(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            forcing.TEMP.sunElevation=forcing.DATA.sunElevation(posit,1)+(forcing.DATA.sunElevation(posit+1,1)-forcing.DATA.sunElevation(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+
             forcing.TEMP.t = t;
             
         end

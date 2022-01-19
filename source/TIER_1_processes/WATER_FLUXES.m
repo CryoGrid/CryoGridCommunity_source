@@ -7,7 +7,8 @@ classdef WATER_FLUXES < BASE
 
     methods
         
-        function canopy = get_boundary_condition_u_water_canopy(canopy, forcing)
+        function canopy = get_boundary_condition_u_water_canopy(canopy, tile)
+            forcing = tile.FORCING;
             rain = forcing.TEMP.rainfall ./ 1000 ./ 24 ./3600 .* canopy.STATVAR.area(1); % mm/day -> m/s
             Tair = forcing.TEMP.Tair;
             L = canopy.PARA.LAI;
@@ -17,7 +18,7 @@ classdef WATER_FLUXES < BASE
             f_intr_rain = tanh(L+S);
             rain_intr = f_intr_rain.*rain; 
             
-            energy_intr = rain_intr.*canopy.CONST.c_w.*Tair;
+            energy_intr = rain_intr.*canopy.CONST.c_w.*max(0,Tair);
             
             % throughfall
             rain_thru = rain.*(1-f_intr_rain);
@@ -809,7 +810,7 @@ classdef WATER_FLUXES < BASE
         end
         
         function timestep = get_timestep_water_vegetation(canopy)
-           timestep(canopy.TEMP.d_water ~= 0) = double(canopy.TEMP.d_water < 0).* canopy.STATVAR.water ./ -canopy.TEMP.d_water + ...
+           timestep(canopy.TEMP.d_water ~= 0) = double(canopy.TEMP.d_water < 0).* canopy.STATVAR.waterIce ./ -canopy.TEMP.d_water + ...
                double(canopy.TEMP.d_water > 0).* 0.1 .* canopy.PARA.Wmax.*canopy.STATVAR.area ./ canopy.TEMP.d_water;
            timestep(canopy.TEMP.d_water == 0) = canopy.PARA.dt_max;
             timestep(timestep<=0) = canopy.PARA.dt_max;
@@ -822,7 +823,7 @@ classdef WATER_FLUXES < BASE
              timestep =  double(ground.TEMP.d_water <0) .* ground.STATVAR.water ./ -ground.TEMP.d_water ./10 + ...
                  double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water; %[m3 / (m3/sec) = sec]
            
-rand_factor = 1e-6 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
+            rand_factor = 1e-6 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
              timestep = double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce + rand_factor > ground.STATVAR.field_capacity .* ...
                  ground.STATVAR.layerThick .* ground.STATVAR.area) .* (ground.STATVAR.waterIce - ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) ./ -ground.TEMP.d_water + ...
                  double(ground.TEMP.d_water <0 & ground.STATVAR.waterIce +  rand_factor <= ground.STATVAR.field_capacity .* ground.STATVAR.layerThick .* ground.STATVAR.area) .* ground.STATVAR.water ./ -ground.TEMP.d_water./10 + ...
