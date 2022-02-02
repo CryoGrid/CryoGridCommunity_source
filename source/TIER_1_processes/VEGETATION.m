@@ -69,15 +69,19 @@ classdef VEGETATION < BASE
             timestep = canopy.PARA.dT_max ./ ( abs(d_energy)./(c_leaf + cp_waterIce) );
         end
         
-        function z0 = get_z0_vegetation(canopy) % roughness length of vegetated surface (CLM5)
+        function canopy = get_z0_d_vegetation(canopy) % roughness length of vegetated surface (CLM5)
             L = canopy.STATVAR.LAI; % Leaf area index
             S = canopy.PARA.SAI; % Stem area index
             z0g = canopy.NEXT.PARA.z0; % Roughness lenght of ground
             R_z0 = canopy.PARA.R_z0; % Ratio of momentum roughness length to canopy height
+            R_d = canopy.PARA.R_d; % Ratio of displacement height to canopy height
             z_top = sum(canopy.STATVAR.layerThick); % canopy height
             
-            V = ( 1-exp(-1.*min(L+S,2)) ./ (1-exp(-2)) ); % Eq. 5.127
+            V = ( 1-exp(-1.*min(L+S,2))) ./ (1-exp(-2)); % Eq. 5.127
             z0 = exp( V.*log(z_top.*R_z0) + (1-V).*log(z0g) ); % Eq. 5.125
+            d = z_top.*R_d.*V; % Eq. 5.126
+            canopy.STATVAR.z0 = z0;
+            canopy.STATVAR.d = d;
         end
         
         function canopy = add_canopy(canopy)

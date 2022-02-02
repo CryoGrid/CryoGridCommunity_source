@@ -37,6 +37,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.PARA.d_leaf = [];
             canopy.PARA.Cs_dense = [];
             canopy.PARA.R_z0 = [];
+            canopy.PARA.R_d = [];
             canopy.PARA.Dmax = [];
             canopy.PARA.Wmax = []; % Assume one water holding capacity for snow and water for now
             canopy.PARA.beta_root = [];
@@ -46,6 +47,8 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.PARA.C_leaf_max = [];
             canopy.PARA.k_shelter = [];
             canopy.PARA.psi_wilt = [];
+            canopy.PARA.zeta_m = [];
+            canopy.PARA.zeta_h = [];
         end
         
         function canopy = provide_STATVAR(canopy)
@@ -71,6 +74,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.STATVAR.Qe = [];     % latent heat flux [W/m2]
             
             canopy.STATVAR.z0 = []; % roughness length [m]
+            canopy.STATVAR.d = []; % displacement height
             canopy.STATVAR.f_wet = []; % wetted fraction of canopy
             canopy.STATVAR.f_dry = []; % dry and transpiring fraction of canopy
             canopy.STATVAR.f_snow = []; % snow-covered fraction of canopy
@@ -113,7 +117,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy = distribute_roots(canopy);
 
             canopy.PARA.airT_height = tile.FORCING.PARA.airT_height; % why tranfer this parameter to ground/canopy, and not use forcing directly?
-            canopy.STATVAR.z0 = get_z0_vegetation(canopy); % z0 changes according to leaf area index
+            canopy = get_z0_d_vegetation(canopy); % z0 changes according to leaf area index
             
             canopy.TEMP.r_sun = 0.01; % mimnimum value, just for testing
             canopy.TEMP.r_sha = 0.01; % ---- " ----
@@ -141,7 +145,6 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         %==================================================================
         
         function canopy = get_boundary_condition_u(canopy, tile)
-            forcing = tile.FORCING;
             canopy = canopy_energy_balance(canopy,tile); % change to tile
             canopy = canopy_water_balance(canopy,tile);
         end
@@ -180,7 +183,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = compute_diagnostic(canopy, tile)
             canopy = get_T_water_vegetation(canopy);
-            canopy.STATVAR.z0 = get_z0_vegetation(canopy);
+            canopy = get_z0_d_vegetation(canopy);
             canopy.IA_NEXT = canopy_drip(canopy.IA_NEXT, tile);
             
             canopy.TEMP.d_energy = canopy.STATVAR.energy.*0;
@@ -205,6 +208,8 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = canopy_energy_balance(canopy,tile)
             forcing = tile.FORCING;
+            L = canopy.STATVAR.LAI;
+            S = canopy.STATVAR.SAI;
             % 1. Longwave penetration
             [canopy, L_up] = penetrate_LW(canopy, forcing.TEMP.Lin .* canopy.STATVAR.area(1));
             canopy.STATVAR.Lout = L_up./canopy.STATVAR.area(1);
@@ -228,7 +233,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             
             canopy.TEMP.d_energy = canopy.TEMP.d_energy - (canopy.STATVAR.Qh + canopy.STATVAR.Qe).*canopy.STATVAR.area;
             canopy.TEMP.d_water_ET = canopy.TEMP.d_water_ET - (canopy.TEMP.evap + canopy.TEMP.sublim).*canopy.STATVAR.area; % transpired water is removed from soil, not canopy
-            canopy.TEMP.d_water_ET_energy = canopy.TEMP.d_water_ET_energy - (canopy.TEMP.evap_energy + canopy.TEMP.sublim_energy).*canopy.STATVAR.area; %  + canopy.STATVAR.transp_energy
+            canopy.TEMP.d_water_ET_energy = canopy.TEMP.d_water_ET_energy - (canopy.TEMP.evap_energy + canopy.TEMP.sublim_energy).*canopy.STATVAR.area;
         end
         
         function canopy = canopy_water_balance(canopy,tile)
