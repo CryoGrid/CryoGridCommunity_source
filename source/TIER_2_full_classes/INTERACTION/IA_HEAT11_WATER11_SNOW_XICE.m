@@ -31,7 +31,9 @@ classdef IA_HEAT11_WATER11_SNOW_XICE < IA_WATER & IA_HEAT
             ia_heat_water.NEXT.STATVAR.XwaterIce(1) = ia_heat_water.NEXT.STATVAR.XwaterIce(1) + Xwater_in;
             ia_heat_water.NEXT.STATVAR.Xwater(1) = ia_heat_water.NEXT.STATVAR.Xwater(1) + Xwater_in;
             ia_heat_water.NEXT.STATVAR.layerThick(1) = ia_heat_water.NEXT.STATVAR.layerThick(1) + Xwater_in ./ ia_heat_water.NEXT.STATVAR.area(1);
+            ia_heat_water.NEXT.STATVAR.energy(1,1) = ia_heat_water.NEXT.STATVAR.energy(1,1) + ia_heat_water.PREVIOUS.STATVAR.excessWater_energy;
             ia_heat_water.PREVIOUS.STATVAR.excessWater = 0;
+            ia_heat_water.PREVIOUS.STATVAR.excessWater_energy = 0;
         end
         
     end

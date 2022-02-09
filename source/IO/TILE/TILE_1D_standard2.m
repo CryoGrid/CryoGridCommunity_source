@@ -17,6 +17,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
         GRID
         OUT
         STORE
+        TEMP
         
         t        
         timestep
@@ -556,6 +557,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             %tile.OUT = finalize_init(tile.OUT, tile);   
         
             %10. assign time, etc.
+            tile.TEMP.time_difference = tile.RUN_INFO.TILE.t - tile.FORCING.PARA.start_time; %Used to correct time variables in subsurface classes
             tile.t = tile.FORCING.PARA.start_time;
             
             %reset IA time
@@ -564,7 +566,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             %reset time for BGC class (do mothing if no BGC class exists)
             CURRENT = tile.TOP.NEXT;
             while ~isequal(CURRENT.NEXT, tile.BOTTOM)
-                CURRENT = reset_time_BGC(CURRENT, tile);
+                CURRENT = reset_timestamps(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
             
@@ -630,6 +632,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             end
         
             %10. assign time, etc.
+            tile.TEMP.time_difference = tile.RUN_INFO.TILE.t-tile.FORCING.PARA.start_time; %Used to correct time variables in subsurface classes
             tile.t = tile.FORCING.PARA.start_time;
             
             %reset IA time
@@ -638,7 +641,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             %reset time for BGC class (do mothing if no BGC class exists)
             CURRENT = tile.TOP.NEXT;
             while ~isequal(CURRENT.NEXT, tile.BOTTOM)
-                CURRENT = reset_time_BGC(CURRENT, tile);
+                CURRENT = reset_timestamps(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
             

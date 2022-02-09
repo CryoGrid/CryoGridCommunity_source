@@ -409,6 +409,11 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow.STATVAR.layerThickSnowFirstCell = snow.STATVAR.layerThick(1); %set this to be ready for the the non-CHILD phase
             
             remove_excessWater_CHILD(snow.PARENT.IA_CHILD);  % depends on next class, coded in IA class; 
+            
+            if snow.STATVAR.ice == 0 %takes care of rare occasion that CHILD phase is jumped over and only water is left in the CHILD
+                snow.PARENT.IA_CHILD = 0;
+                snow = 0;
+            end
         end
         
         
@@ -416,7 +421,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             trigger_yes_no = 0;
             
             if ~trigger_yes_no
-                snow = make_SNOW_CHILD(snow);
+                snow = make_SNOW_CHILD2(snow, tile);
             end
             
         end
@@ -444,6 +449,11 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         function snow = conductivity(snow)
             conductivity_function = str2func(snow.PARA.conductivity_function);
             snow = conductivity_function(snow);
+        end
+        
+        %reset timestamp when changing TILES
+        function snow = reset_timestamps(snow, tile)
+            snow.STATVAR.time_snowfall = snow.STATVAR.time_snowfall - tile.TEMP.time_difference;
         end
         
         

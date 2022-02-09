@@ -173,7 +173,8 @@ classdef FORCING_seb_loop < matlab.mixin.Copyable
             
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
-            forcing.TEMP.t = t;
+            
+            forcing.TEMP.t = tile.t; %CHANGED SEBASTIAN
         end
         
         

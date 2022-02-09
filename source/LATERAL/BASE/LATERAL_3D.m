@@ -228,11 +228,18 @@ classdef LATERAL_3D < matlab.mixin.Copyable
                         end
                     end
                     
-                    CURRENT = lateral.TOP.NEXT;
-                    while ~(strcmp(class(CURRENT), 'Bottom'))
+                    CURRENT = lateral.BOTTOM.PREVIOUS;
+                    while ~(strcmp(class(CURRENT), 'Top'))
                         CURRENT = compute_diagnostic(CURRENT, tile);
-                        CURRENT = CURRENT.NEXT;
+                        CURRENT = check_trigger(CURRENT, tile);
+                        CURRENT = CURRENT.PREVIOUS;
                     end
+%                     CURRENT = lateral.TOP.NEXT;
+%                     while ~(strcmp(class(CURRENT), 'Bottom'))
+%                         CURRENT = compute_diagnostic(CURRENT, tile);
+%                         CURRENT = check_trigger(CURRENT, tile);
+%                         CURRENT = CURRENT.NEXT;
+%                     end
                 end
               
                %set ACTIVE for next timestep

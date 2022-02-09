@@ -173,5 +173,14 @@ classdef LAKE_simple_seb_snow < LAKE_simple_seb
             dummy = check_trigger@LAKE_simple_seb(ground, tile);
         end
         
+                
+        %----------
+        %reset timestamp when changing TILES
+        function ground = reset_timestamps(ground, tile)
+            if ground.CHILD ~= 0
+                ground.CHILD = reset_timestamps(ground.CHILD, tile);
+            end
+        end
+        
     end
 end

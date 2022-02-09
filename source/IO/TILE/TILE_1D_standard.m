@@ -12,6 +12,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
         GRID
         OUT        
         STORE
+        TEMP
         
         t        
         timestep
@@ -168,6 +169,18 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     CURRENT = CURRENT.PREVIOUS;
                 end
                 
+                CURRENT = TOP.NEXT;
+                while ~isequal(CURRENT, BOTTOM)
+                    if sum(isnan(CURRENT.STATVAR.layerThick))>0 || (strcmp(class(CURRENT), 'GROUND_freezeC_bucketW_Xice_seb_snow') && sum(isnan(CURRENT.STATVAR.XwaterIce))>0) || sum(isnan(CURRENT.STATVAR.waterIce))>0 || sum(isnan(CURRENT.STATVAR.energy))>0
+                        disp('Hallo1')
+                        disp(class(CURRENT))
+                        save('dump1.mat')
+                        a=0;
+                        a(-1)=12;
+                    end
+                    CURRENT = CURRENT.NEXT;
+                end
+                
                 %triggers
                 CURRENT = TOP.NEXT;
                 while ~isequal(CURRENT, BOTTOM)
@@ -175,7 +188,35 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     CURRENT = CURRENT.NEXT;
                 end
                 
+                                
+                CURRENT = TOP.NEXT;
+                while ~isequal(CURRENT, BOTTOM)
+                    if sum(isnan(CURRENT.STATVAR.layerThick))>0 || (strcmp(class(CURRENT), 'GROUND_freezeC_bucketW_Xice_seb_snow') && sum(isnan(CURRENT.STATVAR.XwaterIce))>0)   || sum(isnan(CURRENT.STATVAR.waterIce))>0 || sum(isnan(CURRENT.STATVAR.energy))>0
+                        disp('Hallo2')
+                        disp(class(CURRENT))
+                        save('dump2.mat')
+                        a=0;
+                        a(-1)=12;
+                        
+                    end
+                    CURRENT = CURRENT.NEXT;
+                end
+                
+                
                 tile = interact_lateral(tile);
+                
+                                
+                CURRENT = TOP.NEXT;
+                while ~isequal(CURRENT, BOTTOM)
+                    if sum(isnan(CURRENT.STATVAR.layerThick))>0 || (strcmp(class(CURRENT), 'GROUND_freezeC_bucketW_Xice_seb_snow') && sum(isnan(CURRENT.STATVAR.XwaterIce))>0)  || sum(isnan(CURRENT.STATVAR.waterIce))>0 || sum(isnan(CURRENT.STATVAR.energy))>0
+                        disp('Hallo3')
+                        disp(class(CURRENT))
+                        save('dump3.mat')
+                        a=0;
+                        a(-1)=12;
+                    end
+                    CURRENT = CURRENT.NEXT;
+                end
                 
                 %set TOP_CLASS and BOTTOM_CLASS for convenient access
                 tile.TOP_CLASS = TOP.NEXT;
@@ -569,15 +610,20 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             tile.FORCING = finalize_init(tile.FORCING, tile); 
             tile.OUT = finalize_init(tile.OUT, tile);           
             %10. assign time, etc.
+            tile.TEMP.time_difference = tile.RUN_INFO.TILE.t - tile.FORCING.PARA.start_time; %Used to correct time variables in subsurface classes 
             tile.t = tile.FORCING.PARA.start_time;
             
             %reset IA time
             tile.LATERAL.IA_TIME = tile.t + tile.LATERAL.IA_TIME_INCREMENT;
             
             %reset time for BGC class (do mothing if no BGC class exists)
+            %-> MAKE THIS A GENERAL RESET_TIME OR ADJUST_TIME FUNCTION THAT
+            %IS DEFINED IN BASE AND OVERWRITTEN IN ALL FUNCTIONS THAT
+            %ACTUALLY HAVE A TIME VARIABLE - CALCULATE TIME OFFSET BETWEEN
+            %OLD AND NEW FORCING, I.E LAST TIMESTAMP OF OLD RUN AND FIRST TIMESTAMP OF NEW RUN 
             CURRENT = tile.TOP.NEXT;
             while ~isequal(CURRENT.NEXT, tile.BOTTOM)
-                CURRENT = reset_time_BGC(CURRENT, tile);
+                CURRENT = reset_timestamps(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
             

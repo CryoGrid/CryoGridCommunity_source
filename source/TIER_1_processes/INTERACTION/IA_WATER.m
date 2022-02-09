@@ -344,6 +344,7 @@ classdef IA_WATER < IA_BASE
             
             saturation_next = ia_heat_water.NEXT.STATVAR.waterIce(1,1) ./ (ia_heat_water.NEXT.STATVAR.layerThick(1,1).*ia_heat_water.NEXT.STATVAR.area(1,1) - ia_heat_water.NEXT.STATVAR.mineral(1,1) - ia_heat_water.NEXT.STATVAR.organic(1,1));
             saturation_next = max(0,min(1,saturation_next)); % 0 water at field capacity, 1: water at saturation
+            saturation_next(saturation_next >= (1 - 1e-9)) = 1;
             
             %outflow
             %d_water_out = ia_heat_water.NEXT.PARA.hydraulicConductivity .* ia_heat_water.PREVIOUS.STATVAR.water(end) ./ ia_heat_water.PREVIOUS.STATVAR.layerThick(end); % area cancels out; make this depended on both involved cells?
@@ -386,6 +387,7 @@ classdef IA_WATER < IA_BASE
             
             saturation_next = ia_heat_water.NEXT.STATVAR.waterIce(1,1) ./ (ia_heat_water.NEXT.STATVAR.layerThick(1,1).*ia_heat_water.NEXT.STATVAR.area(1,1) - ia_heat_water.NEXT.STATVAR.mineral(1,1) - ia_heat_water.NEXT.STATVAR.organic(1,1));
             saturation_next = max(0,min(1,saturation_next)); % 0 water at field capacity, 1: water at saturation
+            saturation_next(saturation_next >= (1 - 1e-9)) = 1;
             
             %outflow
             d_water_out = ia_heat_water.PREVIOUS.STATVAR.hydraulicConductivity(end) .* ia_heat_water.PREVIOUS.STATVAR.area(end); 

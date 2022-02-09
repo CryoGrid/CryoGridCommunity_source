@@ -164,12 +164,19 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
                         %flow that would lead to the same water level in
                         %both tiles
                         max_flow2same_level = lateral.PARENT.STATVAR.area_flow .* lateral.PARENT.ENSEMBLE{j,1}.area_flow .* (lateral.PARENT.STATVAR.depths(1,1) - lateral.PARENT.ENSEMBLE{j,1}.depths(1,1)) ./ (lateral.PARENT.STATVAR.area_flow + lateral.PARENT.ENSEMBLE{j,1}.area_flow) ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec);
-                        flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(min(flow, lateral.PARENT.STATVAR.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)), lateral.PARENT.ENSEMBLE{j,1}.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
-%                         if gradient < 0
-%                            T_water =  lateral.PARENT.STATVAR.T_water(1,1);
-%                         elseif gradient > 0
-%                             T_water = lateral.PARENT.ENSEMBLE{j,1}.T_water(1,1);
-%                         end
+                        
+                        %TEST Sebastian                        
+                        %flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(min(flow, lateral.PARENT.STATVAR.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)), lateral.PARENT.ENSEMBLE{j,1}.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
+
+
+                        if gradient < 0 %own realization higher, looses water
+                            flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(flow, lateral.PARENT.STATVAR.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
+                        else
+                            flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(flow, lateral.PARENT.ENSEMBLE{j,1}.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
+                        end
+                    %end TEST Sebastian
+                    
+                    
                         flow_energy = flow .* lateral.PARENT.CONST.c_w .* T_water;
                         
                         flux(1,1) = flux(1,1) + flow;

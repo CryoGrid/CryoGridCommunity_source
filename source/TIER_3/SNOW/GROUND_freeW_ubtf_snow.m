@@ -176,5 +176,14 @@ classdef GROUND_freeW_ubtf_snow < GROUND_freeW_ubtf
             end
         end
         
+                
+        %----------
+        %reset timestamp when changing TILES
+        function ground = reset_timestamps(ground, tile)
+            if ground.CHILD ~= 0
+                ground.CHILD = reset_timestamps(ground.CHILD, tile);
+            end
+        end
+        
     end
 end

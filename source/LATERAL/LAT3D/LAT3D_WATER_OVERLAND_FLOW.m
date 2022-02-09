@@ -46,7 +46,7 @@ classdef LAT3D_WATER_OVERLAND_FLOW < BASE_LATERAL
             %could be necessary to  limit flow for numerical stability?
             
             if lateral.PARENT.STATVAR.water_depth >1e-6 && ~isempty(lateral.PARENT.STATVAR.T_water) && lateral.PARENT.STATVAR.depths(1,1)>lateral.PARA.overflow_threshold_elevation
-                water_depth = min(lateral.PARENT.STATVAR.water_depth, lateral.PARENT.STATVAR.depths(1,1) - lateral.PARA.overflow_threshold_elevation);
+                water_depth = min(lateral.PARENT.STATVAR.water_depth, max(0, lateral.PARENT.STATVAR.depths(1,1) - lateral.PARA.overflow_threshold_elevation));
                 velocity = lateral.PARA.GaMa_coefficient .* real(water_depth.^(2/3) .* abs(lateral.PARA.gradient).^0.5);
                 flow = -velocity .* water_depth .* lateral.PARA.overland_flow_contact_length; %negative, outflow only
                 flow = max(flow, -lateral.PARENT.STATVAR.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec));
