@@ -128,6 +128,8 @@ classdef LAT3D_SNOW_CROCUS_snow_dump < BASE_LATERAL
                         lateral.STATVAR.ds.s = 0;
                         lateral.STATVAR.ds.gs = 0;
                         lateral.STATVAR.ds.time_snowfall = 0;
+                        lateral.STATVAR.ds.top_snow_date = 0;
+                        lateral.STATVAR.ds.bottom_snow_date = 0;
                         volume=0;
                         for j=1:size(lateral.PARENT.ENSEMBLE,1)
                             
@@ -143,6 +145,9 @@ classdef LAT3D_SNOW_CROCUS_snow_dump < BASE_LATERAL
                                     lateral.STATVAR.ds.gs = lateral.STATVAR.ds.gs - exposure(j+1,1).* lateral.STATVAR.ratio_receiving_total_area .* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_gs;
                                     lateral.STATVAR.ds.time_snowfall = lateral.STATVAR.ds.time_snowfall - exposure(j+1,1).* lateral.STATVAR.ratio_receiving_total_area .* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_time_snowfall;
                                     
+                                    lateral.STATVAR.ds.top_snow_date = lateral.STATVAR.ds.top_snow_date - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_top_snow_date;
+                                    lateral.STATVAR.ds.bottom_snow_date = lateral.STATVAR.ds.bottom_snow_date - exposure(j+1,1).* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_bottom_snow_date;
+                                    
                                 %elseif lateral.PARENT.ENSEMBLE{j,1}.snow_drift >0 && exposure(j+1,1) > 0  %all the gaining cells ->
                                     %area_acc = area_acc + area(j+1,1) .* exposure(j+1,1);
                                 end
@@ -156,6 +161,11 @@ classdef LAT3D_SNOW_CROCUS_snow_dump < BASE_LATERAL
                         lateral.STATVAR.ds.gs(isnan(lateral.STATVAR.ds.gs)) = 0;
                         lateral.STATVAR.ds.time_snowfall = lateral.STATVAR.ds.time_snowfall ./ lateral.STATVAR.ds.waterIce;
                         lateral.STATVAR.ds.time_snowfall(isnan(lateral.STATVAR.ds.time_snowfall)) = 0;
+                        
+                        lateral.STATVAR.ds.top_snow_date = lateral.STATVAR.ds.top_snow_date./ lateral.STATVAR.ds.waterIce;
+                        lateral.STATVAR.ds.top_snow_date(isnan(lateral.STATVAR.ds.top_snow_date)) = 0;
+                        lateral.STATVAR.ds.bottom_snow_date = lateral.STATVAR.ds.bottom_snow_date./ lateral.STATVAR.ds.waterIce;
+                        lateral.STATVAR.ds.bottom_snow_date(isnan(lateral.STATVAR.ds.bottom_snow_date)) = 0;
                         
                         gain_fraction = area(1,1) .* exposure(1,1) .*weighting_factor(1,1) ./ normalization_deposition;
                         volume = volume .* gain_fraction;

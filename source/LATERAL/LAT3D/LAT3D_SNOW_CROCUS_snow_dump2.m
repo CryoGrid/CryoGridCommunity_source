@@ -94,8 +94,10 @@ classdef LAT3D_SNOW_CROCUS_snow_dump2 < BASE_LATERAL
                     exposure2(isnan(exposure2)) = 0;
                     if sum(double(exposure2~=0))==0 
                         exposure2 =exposure2 - lateral.PARA.weighting_factor_snow_dump;
+                        all_loose = 1;
                         %lateral.STATVAR.ratio_receiving_total_area = 1;
                     else
+                        all_loose = 0;
                         %lateral.STATVAR.ratio_receiving_total_area = sum(double(exposure2>0) .* area .*weighting_factor) ./ sum(area .* weighting_factor); %needed for ablation, must be a STATVAR ratio of receiving to total area
                     end
                     lateral.STATVAR.ratio_receiving_total_area = 1;
@@ -123,71 +125,73 @@ classdef LAT3D_SNOW_CROCUS_snow_dump2 < BASE_LATERAL
                     %gaining cell and if one exceeds the mean elevation,
                     %adjust exposure of all loosing cells.
                     %NEW
-                    total_area = lateral.PARENT.STATVAR2ALL.ds_area;
-                    average_altitude = lateral.PARENT.STATVAR2ALL.upperPos .* lateral.PARENT.STATVAR2ALL.ds_area;
-                    for j=1:size(lateral.PARENT.ENSEMBLE,1)
-                        if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 0
-                            total_area = total_area + lateral.PARENT.ENSEMBLE{j,1}.ds_area;
-                            average_altitude = average_altitude + lateral.PARENT.ENSEMBLE{j,1}.ds_area .* lateral.PARENT.ENSEMBLE{j,1}.upperPos;
+                    if all_loose == 0
+                        total_area = lateral.PARENT.STATVAR2ALL.ds_area;
+                        average_altitude = lateral.PARENT.STATVAR2ALL.upperPos .* lateral.PARENT.STATVAR2ALL.ds_area;
+                        for j=1:size(lateral.PARENT.ENSEMBLE,1)
+                            if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 0
+                                total_area = total_area + lateral.PARENT.ENSEMBLE{j,1}.ds_area;
+                                average_altitude = average_altitude + lateral.PARENT.ENSEMBLE{j,1}.ds_area .* lateral.PARENT.ENSEMBLE{j,1}.upperPos;
+                            end
                         end
-                    end
-                    average_altitude = average_altitude ./ total_area;
-                    
-                    if lateral.PARENT.STATVAR2ALL.snow_drift > 1 && lateral.STATVAR.exposure < 0 %own realization loses snow, do not allow ablation beyond average_altitude
-                        elevation_change = - exposure(1,1) .* lateral.PARENT.STATVAR2ALL.ds_volume ./ lateral.PARENT.STATVAR2ALL.ds_area;
-                        fraction = (lateral.PARENT.STATVAR2ALL.upperPos - average_altitude) ./ elevation_change;
-                        fraction(isnan(fraction)) = 0;
-                        fraction(fraction <0) = 0;
-                        adjustment_factor = min(1, fraction);
-                        exposure(1,1) = exposure(1,1) .* adjustment_factor;
-                        lateral.STATVAR.exposure = exposure(1,1); %own exposure
+                        average_altitude = average_altitude ./ total_area;
                         
-                        volume = - exposure(1,1) .* lateral.PARENT.STATVAR2ALL.ds_volume;
-                    else
-                        volume = 0;
-                    end
-
-                    for j=1:size(lateral.PARENT.ENSEMBLE,1) %calulate total removed snow pool
-                        if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 1 && exposure(j+1,1) < 0 %all the loosing cells 
-                            elevation_change = - exposure(j+1,1) .* lateral.PARENT.ENSEMBLE{j,1}.ds_volume ./ lateral.PARENT.ENSEMBLE{j,1}.ds_area;
-                            fraction = (lateral.PARENT.ENSEMBLE{j,1}.upperPos - average_altitude) ./ elevation_change;
+                        if lateral.PARENT.STATVAR2ALL.snow_drift > 1 && lateral.STATVAR.exposure < 0 %own realization loses snow, do not allow ablation beyond average_altitude
+                            elevation_change = - exposure(1,1) .* lateral.PARENT.STATVAR2ALL.ds_volume ./ lateral.PARENT.STATVAR2ALL.ds_area;
+                            fraction = (lateral.PARENT.STATVAR2ALL.upperPos - average_altitude) ./ elevation_change;
                             fraction(isnan(fraction)) = 0;
                             fraction(fraction <0) = 0;
                             adjustment_factor = min(1, fraction);
-                            exposure(j+1,1) = exposure(j+1,1) .* adjustment_factor;
+                            exposure(1,1) = exposure(1,1) .* adjustment_factor;
+                            lateral.STATVAR.exposure = exposure(1,1); %own exposure
                             
-                            volume = volume - exposure(j+1,1) .* lateral.PARENT.ENSEMBLE{j,1}.ds_volume;
+                            volume = - exposure(1,1) .* lateral.PARENT.STATVAR2ALL.ds_volume;
+                        else
+                            volume = 0;
                         end
-                    end
-                    
-                    %prevent tiles from receiving too much snow
-                    adjustment_factor = 1;
-                    if lateral.STATVAR.exposure > 0
-                        elevation_change = exposure(1,1) ./ normalization_deposition .* volume;
-                        fraction = (average_altitude - lateral.PARENT.STATVAR2ALL.upperPos) ./ elevation_change;
-                        fraction(isnan(fraction)) = 0;
-                        fraction(fraction <0) = 0;
-                        adjustment_factor = min(adjustment_factor, fraction);
-                    end
-                    
-                    for j=1:size(lateral.PARENT.ENSEMBLE,1) %calulate total removed snow pool
-                        if exposure(j+1,1) > 0 %all the loosing cells 
-                            elevation_change = exposure(j+1,1) ./ normalization_deposition .* volume;
-                            fraction = (average_altitude - lateral.PARENT.ENSEMBLE{j,1}.upperPos) ./ elevation_change;
+                        
+                        for j=1:size(lateral.PARENT.ENSEMBLE,1) %calulate total removed snow pool
+                            if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 1 && exposure(j+1,1) < 0 %all the loosing cells
+                                elevation_change = - exposure(j+1,1) .* lateral.PARENT.ENSEMBLE{j,1}.ds_volume ./ lateral.PARENT.ENSEMBLE{j,1}.ds_area;
+                                fraction = (lateral.PARENT.ENSEMBLE{j,1}.upperPos - average_altitude) ./ elevation_change;
+                                fraction(isnan(fraction)) = 0;
+                                fraction(fraction <0) = 0;
+                                adjustment_factor = min(1, fraction);
+                                exposure(j+1,1) = exposure(j+1,1) .* adjustment_factor;
+                                
+                                volume = volume - exposure(j+1,1) .* lateral.PARENT.ENSEMBLE{j,1}.ds_volume;
+                            end
+                        end
+                        
+                        %prevent tiles from receiving too much snow
+                        adjustment_factor = 1;
+                        if lateral.STATVAR.exposure > 0
+                            elevation_change = exposure(1,1) ./ normalization_deposition .* volume;
+                            fraction = (average_altitude - lateral.PARENT.STATVAR2ALL.upperPos) ./ elevation_change;
                             fraction(isnan(fraction)) = 0;
                             fraction(fraction <0) = 0;
                             adjustment_factor = min(adjustment_factor, fraction);
                         end
-                    end
-                    
-                    if lateral.PARENT.STATVAR2ALL.snow_drift >1 && lateral.STATVAR.exposure < 0
-                        exposure(1,1) = exposure(1,1) .* adjustment_factor;
-                        lateral.STATVAR.exposure = exposure(1,1); %own exposure
-                    end
                         
-                    for j=1:size(lateral.PARENT.ENSEMBLE,1) %calulate total removed snow pool
-                        if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 1 && exposure(j+1,1) < 0 %all the loosing cells 
-                            exposure(j+1,1) = exposure(j+1,1) .* adjustment_factor;
+                        for j=1:size(lateral.PARENT.ENSEMBLE,1) %calulate total removed snow pool
+                            if exposure(j+1,1) > 0 %all the loosing cells
+                                elevation_change = exposure(j+1,1) ./ normalization_deposition .* volume;
+                                fraction = (average_altitude - lateral.PARENT.ENSEMBLE{j,1}.upperPos) ./ elevation_change;
+                                fraction(isnan(fraction)) = 0;
+                                fraction(fraction <0) = 0;
+                                adjustment_factor = min(adjustment_factor, fraction);
+                            end
+                        end
+                        
+                        if lateral.PARENT.STATVAR2ALL.snow_drift >1 && lateral.STATVAR.exposure < 0
+                            exposure(1,1) = exposure(1,1) .* adjustment_factor;
+                            lateral.STATVAR.exposure = exposure(1,1); %own exposure
+                        end
+                        
+                        for j=1:size(lateral.PARENT.ENSEMBLE,1) %calulate total removed snow pool
+                            if lateral.PARENT.ENSEMBLE{j,1}.snow_drift > 1 && exposure(j+1,1) < 0 %all the loosing cells
+                                exposure(j+1,1) = exposure(j+1,1) .* adjustment_factor;
+                            end
                         end
                     end
                     
@@ -204,6 +208,10 @@ classdef LAT3D_SNOW_CROCUS_snow_dump2 < BASE_LATERAL
                         lateral.STATVAR.ds.s = 0;
                         lateral.STATVAR.ds.gs = 0;
                         lateral.STATVAR.ds.time_snowfall = 0;
+                        
+                        lateral.STATVAR.ds.top_snow_date = 0;
+                        lateral.STATVAR.ds.bottom_snow_date = 0;
+                        
                         volume=0;
                         for j=1:size(lateral.PARENT.ENSEMBLE,1)
                             
@@ -219,6 +227,9 @@ classdef LAT3D_SNOW_CROCUS_snow_dump2 < BASE_LATERAL
                                     lateral.STATVAR.ds.gs = lateral.STATVAR.ds.gs - exposure(j+1,1).* lateral.STATVAR.ratio_receiving_total_area .* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_gs;
                                     lateral.STATVAR.ds.time_snowfall = lateral.STATVAR.ds.time_snowfall - exposure(j+1,1).* lateral.STATVAR.ratio_receiving_total_area .* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_time_snowfall;
                                     
+                                    lateral.STATVAR.ds.top_snow_date = lateral.STATVAR.ds.top_snow_date - exposure(j+1,1).*  lateral.STATVAR.ratio_receiving_total_area .*lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_top_snow_date;
+                                    lateral.STATVAR.ds.bottom_snow_date = lateral.STATVAR.ds.bottom_snow_date - exposure(j+1,1).*  lateral.STATVAR.ratio_receiving_total_area .* lateral.PARENT.ENSEMBLE{j,1}.ds_waterIce .* lateral.PARENT.ENSEMBLE{j,1}.ds_bottom_snow_date;
+                                   
                                 %elseif lateral.PARENT.ENSEMBLE{j,1}.snow_drift >0 && exposure(j+1,1) > 0  %all the gaining cells ->
                                     %area_acc = area_acc + area(j+1,1) .* exposure(j+1,1);
                                 end
@@ -232,6 +243,11 @@ classdef LAT3D_SNOW_CROCUS_snow_dump2 < BASE_LATERAL
                         lateral.STATVAR.ds.gs(isnan(lateral.STATVAR.ds.gs)) = 0;
                         lateral.STATVAR.ds.time_snowfall = lateral.STATVAR.ds.time_snowfall ./ lateral.STATVAR.ds.waterIce;
                         lateral.STATVAR.ds.time_snowfall(isnan(lateral.STATVAR.ds.time_snowfall)) = 0;
+                        
+                        lateral.STATVAR.ds.top_snow_date = lateral.STATVAR.ds.top_snow_date./ lateral.STATVAR.ds.waterIce;
+                        lateral.STATVAR.ds.top_snow_date(isnan(lateral.STATVAR.ds.top_snow_date)) = 0;
+                        lateral.STATVAR.ds.bottom_snow_date = lateral.STATVAR.ds.bottom_snow_date./ lateral.STATVAR.ds.waterIce;
+                        lateral.STATVAR.ds.bottom_snow_date(isnan(lateral.STATVAR.ds.bottom_snow_date)) = 0;
                         
                         gain_fraction = area(1,1) .* exposure(1,1) ./ normalization_deposition;
                         volume = volume .* gain_fraction;

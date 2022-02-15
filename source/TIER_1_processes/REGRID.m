@@ -158,7 +158,7 @@ classdef REGRID < BASE
                     end
                     i=i+1;
                 end
-                %last cell, i = size(snow.STATVAR.layerThick,1)
+                i = size(snow.STATVAR.layerThick,1);
                 if i > 1 && snow.STATVAR.ice(end,1) < 0.5 .* snow.PARA.swe_per_cell.*snow.STATVAR.area(end,1)
                     snow = merge_cells_intensive(snow, i-1, i, intensive_variables, intensive_scaling_variable);
                     snow = merge_cells_extensive(snow, i-1, i, extensive_variables);
@@ -195,7 +195,7 @@ classdef REGRID < BASE
                     end
                     i=i+1;
                 end
-                %last cell, i = size(snow.STATVAR.layerThick,1)
+                i = size(snow.STATVAR.layerThick,1);
                 if i > 1 && snow.STATVAR.ice(end,1) < 0.5 .* snow.PARA.swe_per_cell.*snow.STATVAR.area(end,1)
                     snow = merge_cells_intensive(snow, i-1, i, intensive_variables, intensive_scaling_variable);
                     snow = merge_cells_extensive(snow, i-1, i, extensive_variables);
@@ -359,8 +359,10 @@ classdef REGRID < BASE
         end
         
         function snow = merge_cells_snowfall_times2(snow, pos, snow2, pos2) %specific function merginging bottom and top snow dates
-            snow.STATVAR.top_snow_date(pos,1) = max(snow.STATVAR.top_snow_date(pos,1), snow2.STATVAR.top_snow_date(pos2,1));
-            snow.STATVAR.bottom_snow_date(pos,1) = min(snow.STATVAR.bottom_snow_date(pos,1), snow2.STATVAR.bottom_snow_date(pos2,1));
+            if snow2.STATVAR.waterIce(pos2,1) > 0
+                snow.STATVAR.top_snow_date(pos,1) = max(snow.STATVAR.top_snow_date(pos,1), snow2.STATVAR.top_snow_date(pos2,1));
+                snow.STATVAR.bottom_snow_date(pos,1) = min(snow.STATVAR.bottom_snow_date(pos,1), snow2.STATVAR.bottom_snow_date(pos2,1));
+            end
         end
         
     end

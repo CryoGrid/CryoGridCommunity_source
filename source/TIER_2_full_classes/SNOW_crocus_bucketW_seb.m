@@ -164,7 +164,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow = get_snow_properties_crocus(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
             
             snow = surface_energy_balance(snow, forcing); %this works including penetration of SW radiation through the CHILD snow
-            snow = get_sublimation(snow, forcing);
+         %   snow = get_sublimation(snow, forcing);
             
             snow.TEMP.wind = forcing.TEMP.wind;
             snow.TEMP.wind_surface = forcing.TEMP.wind;
@@ -390,7 +390,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             T_before = snow.STATVAR.T;
             snow = get_T_water_freeW(snow);
             melt_fraction = 1- max(0, min(1, snow.STATVAR.ice(1,1)./ice_before));
-            if melt_fraction <1-1e-6
+            if melt_fraction > 0
                 snow = split_first_cell_snowfall_times(snow, melt_fraction, 'reduce');
             end
             
@@ -401,7 +401,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             
             snow = subtract_water2(snow);
             
-            [snow, regridded_yesNo] = regrid_snow_crocus(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
+            [snow, regridded_yesNo] = regrid_snow_crocus(snow, {'waterIce'; 'energy'; 'layerThick'; 'mineral'; 'organic'; 'ice'}, {'area'; 'target_density'; 'd'; 's'; 'gs'; 'time_snowfall'}, 'ice');
             if regridded_yesNo
                 snow = get_T_water_freeW(snow);
             end
@@ -425,7 +425,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             ice_before = max(1e-12, snow.STATVAR.ice);
             snow = get_T_water_freeW(snow);
             melt_fraction = 1- max(0, min(1, snow.STATVAR.ice./ice_before));
-            if melt_fraction <1-1e-6
+            if melt_fraction >0
                 snow = split_first_cell_snowfall_times(snow, melt_fraction, 'reduce');
             end
             
