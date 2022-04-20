@@ -88,6 +88,12 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION &  UB_TEMPERATURE_FORCING
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             
         end
+        
+        function ground = finalize_init2(ground, tile)
+            
+            ground = get_E_freeW(ground);
+            
+        end
                 
         %---time integration------
         

@@ -325,6 +325,9 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             
             %store "old" density - ice is updated for new snowfall and sublimation losses
             snow.STATVAR.target_density = min(1, snow.STATVAR.ice ./ snow.STATVAR.layerThick ./ snow.STATVAR.area);
+            
+            %add surface runoff from non infiltrating surface runoff to precip 
+            snow.STATVAR.excessWater = snow.STATVAR.excessWater + snow.TEMP.surface_runoff .* timestep;
         end
         
         
@@ -377,6 +380,9 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             %adjust layerThick, so that exactly 0.5 .* snow.PARA.swe_per_cell is contained
             snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ snow.STATVAR.target_density;
             snow.STATVAR.area = snow.STATVAR.volume ./ snow.STATVAR.layerThick;
+            
+%             %add surface runoff from non infiltrating surface runoff to precip
+%             snow.STATVAR.excessWater = snow.STATVAR.excessWater + snow.TEMP.surface_runoff .* timestep;
         end
         
         function snow = compute_diagnostic_first_cell(snow, tile)

@@ -231,6 +231,10 @@ classdef PEAT_ACCUMULATION < BASE
             
             peat.STATVAR.annual_NPP = peat.PARA.NPP_max .* exp(-a);
 
+            
+            %ERC MODEL; REMOVE LATER
+            peat.STATVAR.annual_NPP = peat.STATVAR.annual_NPP ./10;
+            %END REMOVE
         end
         
         %not sure these functions are required at some stage

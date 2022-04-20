@@ -162,7 +162,7 @@ classdef SEB < BASE
                 seb.STATVAR.evap = - Qe_evap ./(seb.CONST.rho_w .* L_w) .* seb.STATVAR.area(1);
                 seb.TEMP.evap_energy = seb.STATVAR.evap .* seb.STATVAR.T(1) .* seb.CONST.c_w;
                 
-                Q_e = evap_fraction .* Qe_evap + sublim_fraction .* sublim_fraction;
+                Q_e = evap_fraction .* Qe_evap + sublim_fraction .* Qe_sublim;
             end
         end
         

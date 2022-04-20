@@ -47,6 +47,11 @@ classdef PEAT_DECOMPOSE < BASE
 %                 peat.STATVAR.cato=[];
 %             end
             peat.STATVAR.cato(isnan(peat.STATVAR.cato)) = 0; %if totalpeatC_originalMass = 0 
+            
+            %ERC MODEL; REMOVE LATER
+            peat.STATVAR.cato = peat.STATVAR.cato ./10;
+            %END REMOVE
+            
             peat.STATVAR.catm  = peat.STATVAR.cato .* repmat(peat.STATVAR.tempModifier,1,size(peat.PARA.initial_decomposability,2)) .* ...
                 repmat(peat.STATVAR.waterModifier,1,size(peat.PARA.initial_decomposability,2)) .* peat.PARA.BGC_timestep; 
              

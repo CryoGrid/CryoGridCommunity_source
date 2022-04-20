@@ -166,5 +166,16 @@ classdef GROUND_freeW_seb_snow < GROUND_freeW_seb
             end
         end
         
+        %-----LATERAL-------------------
+        
+        %-----LAT_REMOVE_SURFACE_WATER-----
+        function ground = lateral_push_remove_surfaceWater(ground, lateral)
+            if ground.CHILD ~=0
+                ground.CHILD = lateral_push_remove_surfaceWater(ground.CHILD, lateral);
+            end
+            ground = lateral_push_remove_surfaceWater@GROUND_freeW_seb(ground, lateral);
+            
+        end
+        
     end
 end

@@ -191,5 +191,17 @@ classdef GROUND_freezeC_bucketW_seb_snow < GROUND_freezeC_bucketW_seb
             end
         end
         
+        
+        %-----LATERAL-------------------
+        
+        %-----LAT_REMOVE_SURFACE_WATER-----
+        function ground = lateral_push_remove_surfaceWater(ground, lateral)
+            if ground.CHILD ~=0
+                ground.CHILD = lateral_push_remove_surfaceWater(ground.CHILD, lateral);
+            end
+            ground = lateral_push_remove_surfaceWater@GROUND_freezeC_bucketW_seb(ground, lateral);
+            
+        end
+        
     end
 end

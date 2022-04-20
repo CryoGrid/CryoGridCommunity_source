@@ -147,7 +147,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         function snow = get_boundary_condition_u(snow, tile) 
             forcing = tile.FORCING;
             snow = get_boundary_condition_SNOW_u(snow, forcing);
-            snow = get_boundary_condition_u_water_SNOW(snow, forcing);
+            snow = get_boundary_condition_u_water_SNOW2(snow, forcing);
             
             snow = get_snow_properties_crocus(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
             
@@ -162,7 +162,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         function snow = get_boundary_condition_u_CHILD(snow, tile)
             forcing = tile.FORCING;
             snow = get_boundary_condition_allSNOW_rain_u(snow, forcing); %add full snow, but rain only for snow-covered part
-            snow = get_boundary_condition_u_water_SNOW(snow, forcing);
+            snow = get_boundary_condition_u_water_SNOW2(snow, forcing);
             
             snow = get_snow_properties_crocus(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
             

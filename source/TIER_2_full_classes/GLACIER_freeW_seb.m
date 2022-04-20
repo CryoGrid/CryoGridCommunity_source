@@ -165,7 +165,7 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             
             ground = get_T_water_freeW(ground);
             
-            ground.STATVAR.runoff = ground.STATVAR.water;
+            ground.STATVAR.runoff = ground.STATVAR.runoff + sum(ground.STATVAR.water);
             ground.STATVAR.waterIce = ground.STATVAR.waterIce - ground.STATVAR.water;
             ground.STATVAR.waterIce = max(0, ground.STATVAR.waterIce);
             ground.STATVAR.water = ground.STATVAR.water .* 0;

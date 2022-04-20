@@ -29,7 +29,8 @@ classdef SNOW_MELTFACTOR < BASE
         
         %--boundary conditions--------
         
-        function snow = get_boundary_condition_SNOW_meltFactor(snow, tile, forcing)
+        function snow = get_boundary_condition_SNOW_meltFactor(snow, tile)
+            forcing = tile.FORCING;
             % Calculates the meltfactor and assoicated energy contribution 
             % We assume a melt factor (in range 2-12 mm/day) which is
             % scaled by the length of day and maximum sun angle.
@@ -42,12 +43,13 @@ classdef SNOW_MELTFACTOR < BASE
             c_i = snow.CONST.c_i;  % volumetric heat capacity of ice [J/m3/K]
             
             % calculate the melt factor [mm/day/degC] from timestamp and location
-            snow.TEMP.melt_factor = SNOW_MELTFACTOR.MeltFactorsFromDayLenAndSunAngle(tile.t, tile.latitude);
+            snow.TEMP.melt_factor = SNOW_MELTFACTOR.MeltFactorsFromDayLenAndSunAngle(tile.t, tile.PARA.latitude);
                         
             % calculate the melt rate [m3/s] for the current time interval
             % melt_rate is given in snow water equivalents
             snow.TEMP.melt_rate = (snow.TEMP.melt_factor./1000./snow.CONST.day_sec) .* ...
                 (forcing.TEMP.Tair - snow.PARA.melt_threshold) .* snow.STATVAR.area(1,1);
+            snow.TEMP.melt_rate = max(0,snow.TEMP.melt_rate);
             % 1000 mm/m is the length conversion factor
             % snow.CONST.day_sec is the factor used to convert from days to seconds
             % snow.PARA.melt_threshold is the threshold air temperature above which snow melt occurs [degC]

@@ -169,17 +169,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     CURRENT = CURRENT.PREVIOUS;
                 end
                 
-                CURRENT = TOP.NEXT;
-                while ~isequal(CURRENT, BOTTOM)
-                    if sum(isnan(CURRENT.STATVAR.layerThick))>0 || (strcmp(class(CURRENT), 'GROUND_freezeC_bucketW_Xice_seb_snow') && sum(isnan(CURRENT.STATVAR.XwaterIce))>0) || sum(isnan(CURRENT.STATVAR.waterIce))>0 || sum(isnan(CURRENT.STATVAR.energy))>0
-                        disp('Hallo1')
-                        disp(class(CURRENT))
-                        save('dump1.mat')
-                        a=0;
-                        a(-1)=12;
-                    end
-                    CURRENT = CURRENT.NEXT;
-                end
                 
                 %triggers
                 CURRENT = TOP.NEXT;
@@ -187,37 +176,10 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     CURRENT = check_trigger(CURRENT, tile);
                     CURRENT = CURRENT.NEXT;
                 end
-                
-                                
-                CURRENT = TOP.NEXT;
-                while ~isequal(CURRENT, BOTTOM)
-                    if sum(isnan(CURRENT.STATVAR.layerThick))>0 || (strcmp(class(CURRENT), 'GROUND_freezeC_bucketW_Xice_seb_snow') && sum(isnan(CURRENT.STATVAR.XwaterIce))>0)   || sum(isnan(CURRENT.STATVAR.waterIce))>0 || sum(isnan(CURRENT.STATVAR.energy))>0
-                        disp('Hallo2')
-                        disp(class(CURRENT))
-                        save('dump2.mat')
-                        a=0;
-                        a(-1)=12;
-                        
-                    end
-                    CURRENT = CURRENT.NEXT;
-                end
-                
-                
+
+                %lateral interactions
                 tile = interact_lateral(tile);
-                
                                 
-                CURRENT = TOP.NEXT;
-                while ~isequal(CURRENT, BOTTOM)
-                    if sum(isnan(CURRENT.STATVAR.layerThick))>0 || (strcmp(class(CURRENT), 'GROUND_freezeC_bucketW_Xice_seb_snow') && sum(isnan(CURRENT.STATVAR.XwaterIce))>0)  || sum(isnan(CURRENT.STATVAR.waterIce))>0 || sum(isnan(CURRENT.STATVAR.energy))>0
-                        disp('Hallo3')
-                        disp(class(CURRENT))
-                        save('dump3.mat')
-                        a=0;
-                        a(-1)=12;
-                    end
-                    CURRENT = CURRENT.NEXT;
-                end
-                
                 %set TOP_CLASS and BOTTOM_CLASS for convenient access
                 tile.TOP_CLASS = TOP.NEXT;
                 tile.BOTTOM_CLASS = BOTTOM.PREVIOUS;

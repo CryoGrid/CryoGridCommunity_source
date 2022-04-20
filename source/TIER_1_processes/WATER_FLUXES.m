@@ -182,6 +182,20 @@ classdef WATER_FLUXES < BASE
             ground.TEMP.d_water_energy(1) = ground.TEMP.d_water_energy(1) + ground.TEMP.F_ub_water_energy;
         end
         
+        
+        function ground = get_boundary_condition_u_water_SNOW2(ground, forcing) %infiltrate all water
+            rainfall = forcing.TEMP.rainfall ./ 1000 ./ 24 ./3600 .* ground.STATVAR.area(1);  
+
+            ground.TEMP.F_ub_water = rainfall ;
+            
+            ground.TEMP.T_rainWater =  max(0,forcing.TEMP.Tair);
+            ground.TEMP.F_ub_water_energy = ground.TEMP.F_ub_water .* ground.CONST.c_w .* ground.TEMP.T_rainWater;
+            
+            ground.TEMP.d_water(1) = ground.TEMP.d_water(1) + ground.TEMP.F_ub_water;
+            ground.TEMP.d_water_energy(1) = ground.TEMP.d_water_energy(1) + ground.TEMP.F_ub_water_energy;
+        end
+        
+        
         %LAKE unfrozen
         function ground = get_boundary_condition_u_water_LAKE(ground, forcing)
             rainfall = forcing.TEMP.rainfall ./ 1000 ./ 24 ./3600 .* ground.STATVAR.area(1);  
@@ -900,8 +914,8 @@ rand_factor = 1e-6 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
         
         function timestep = get_timestep_water_SNOW(ground)
             %outflow + inflow
-            remaining_pore_space = ground.STATVAR.layerThick.* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.ice;
-            
+%             remaining_pore_space = ground.STATVAR.layerThick.* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.ice;
+%             remaining_pore_space = max(remaining_pore_space,0);
             %timestep = ( double(ground.TEMP.d_water <0) .* (ground.STATVAR.waterIce - ground.PARA.field_capacity .* remaining_pore_space) ./ -ground.TEMP.d_water + ...
             %     double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water); %[m3 / (m3/sec) = sec]
 %             timestep = ( double(ground.TEMP.d_water <0 & ground.STATVAR.water > ground.PARA.field_capacity .* remaining_pore_space ) .* (ground.STATVAR.water - ground.PARA.field_capacity .* remaining_pore_space) ./ -ground.TEMP.d_water + ...
@@ -909,8 +923,9 @@ rand_factor = 1e-6 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
 %                 double(ground.TEMP.d_water <0 & ground.STATVAR.water <= ground.PARA.field_capacity .* remaining_pore_space ) .*ground.STATVAR.water ./ -ground.TEMP.d_water ./10; %[m3 / (m3/sec) = sec]
 %             
             timestep = double(ground.TEMP.d_water <0) .* ground.STATVAR.water ./ -ground.TEMP.d_water ./10 + ...
-                double(ground.TEMP.d_water > 0) .* (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water;
-            
+                double(ground.TEMP.d_water > 0) .* double(1-(ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.waterIce)./(ground.STATVAR.layerThick .* ground.STATVAR.area)>1e-11) .* ...
+                (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic - ground.STATVAR.waterIce ) ./ ground.TEMP.d_water;
+
             timestep(timestep<=0) = ground.PARA.dt_max;
             timestep=nanmin(timestep);
             
@@ -979,7 +994,7 @@ rand_factor = 1e-6 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
             
             T = max(0,ground.STATVAR.T)+273.15;
             
-            %from Wikepedia
+            %from Wikipedia, https://en.wikipedia.org/wiki/Temperature_dependence_of_viscosity#cite_note-Reid1987-13
             A = 1.856e-14;
             B = 4209;
             C = 0.04527;

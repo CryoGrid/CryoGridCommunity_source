@@ -716,8 +716,10 @@ classdef WATER_FLUXES_LATERAL < BASE
                 
                 lateral.STATVAR.flow_energy = flow .* lateral.CONST.c_w .* ground.STATVAR.T(1,1);
                 
-                lateral.STATVAR.surface_flow = lateral.STATVAR.surface_flow - lateral.STATVAR.flow;
-                
+                %lateral.STATVAR.surface_flow = lateral.STATVAR.surface_flow - lateral.STATVAR.flow;
+            else 
+                lateral.STATVAR.flow = 0;
+                lateral.STATVAR.flow_energy = 0;
             end
         end
         

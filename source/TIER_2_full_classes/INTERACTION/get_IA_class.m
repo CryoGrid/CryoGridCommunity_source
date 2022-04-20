@@ -30,8 +30,6 @@ end
 
 
 
-
-
 if strcmp(above_class, 'GROUND_freeW_seb')
     if strcmp(below_class, 'GROUND_freeW_seb') || strcmp(below_class, 'GROUND_freezeC_seb')
         ia_class = IA_HEAT11();
@@ -428,7 +426,6 @@ elseif strcmp(above_class, 'SNOW_simple_ubT')
 end
 
 if ia_class == 0
-    
     switch above_class
         case {'GROUND_fcSimple_salt_ubtf', 'GROUND_fcSimple_salt_ubtf_snow',...
                 'GROUND_fcSimple_salt_ubT', 'GROUND_fcSimple_salt_ubT_snow',...
@@ -464,6 +461,8 @@ if ia_class == 0
                         'GROUND_fcSimple_salt_ubT',...
                         'GROUND_fcSimple_salt_seb'}
                     ia_class = IA_HEAT11_SALT01();
+                case {'GROUND_freeW_ubtf_snow'}
+                    ia_class = IA_HEAT11();
             end
     end
     

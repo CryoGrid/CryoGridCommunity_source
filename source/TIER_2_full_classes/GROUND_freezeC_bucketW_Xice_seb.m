@@ -215,7 +215,10 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             
             ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_Xwater ./ ground.STATVAR.area;
             ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.XwaterIce)./ ground.STATVAR.area);
+            
             ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, ground.STATVAR.layerThick_wo_Xice);
+            
+            %do not add
             %ground.STATVAR.layerThick = ground.STATVAR.layerThick + correction_minus./ ground.STATVAR.area;
 
         end
@@ -237,6 +240,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             
             ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, ...
                 (ground.STATVAR.XwaterIce + ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ ground.STATVAR.area);  %prevent rounding errors, would lead to wrong sign of water fluxes in next prognostic step
+           
             ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, ground.STATVAR.layerThick_wo_Xice);
             
             ground = get_T_water_freezeC_Xice(ground);
