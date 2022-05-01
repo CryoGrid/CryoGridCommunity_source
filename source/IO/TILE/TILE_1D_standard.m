@@ -1,4 +1,17 @@
-% base class build a model tile
+%========================================================================
+% CryoGrid TILE class TILE_1D_standard
+% TILE class designed for multi-physics simulations with a stratigraphy of
+% connected CryoGrid stratigraphy classes. TILE_1D_standard represents all 
+% aspects of a single model simulation, with model forcing, storage of
+% model output, etc. It supports both lateral coupling to external
+% environments and between different TILE_1D_standard classes in a parallel
+% fashion
+% The initialization procedure is determined by the choice of the 
+% TILE_BUILDER class (set by PARA "builder") which also determines the 
+% paramter set which must be defined by the users. 
+
+% S. Westermann, Dec 2020
+%========================================================================
 
 classdef TILE_1D_standard < matlab.mixin.Copyable
     

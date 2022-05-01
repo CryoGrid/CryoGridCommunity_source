@@ -1,6 +1,6 @@
 %========================================================================
 % CryoGrid GROUND class SNOW_simple_ubtf_mf
-% Simple snow scheme with upper boundary temperature forcing (dirichlet
+% Simple snow scheme with upper boundary temperature forcing (Dirichlet
 % boundary condition) and snow melt based on melt factors.
 % See TIER1 class SNOW_MELTFACTOR for description of snow melt scheme.
 %

@@ -1,3 +1,14 @@
+%========================================================================
+% CryoGrid TLE_BUILDER class new_init
+% CryoGrid TLE_BUILDER class which accomplishes the initialization of the
+% TILE class based only on user-defined profiles of mode state avraibles. 
+% Note that the code (i.e. what the TILE_BUILDER class actually does in in
+% the respective TILE classes which the TILE_BUILDER class is compatible
+% with
+% S. Westermann, Jan 2021
+%========================================================================
+
+
 classdef new_init
     
     properties

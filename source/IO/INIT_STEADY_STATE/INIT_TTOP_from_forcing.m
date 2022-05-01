@@ -1,6 +1,11 @@
 %========================================================================
-% CryoGrid class
-% S. Westermann December 2021
+% CryoGrid INIT_STEADY_STATE class INIT_TTOP_from_forcing
+% CryoGrid INIT_STEADY_STATE class used in conjcntion with the TILE_BUILDER
+% class new_init_steady_state; calculates the temperature on the top of 
+% permafrost (TTOP) from the model forcing (air temperatures) with the 
+% TTOP approach. It is used in the accelerated spin-up procedure.
+
+% S. Westermann, Jan 2022
 %========================================================================
 
 

@@ -1,9 +1,10 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freezeC_bucketW_Xice_seb
-% heat conduction, bucket water scheme, freeze curve based on
-% freezing=drying assumption, surface energy balance, excess ice
+% heat conduction, bucket water scheme, Painter and Karra (2014) 
+% freeze curve, surface energy balance, excess ground ice
 % S. Westermann, October 2020
 %========================================================================
+
 
 classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL 
 

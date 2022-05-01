@@ -1,7 +1,9 @@
 %========================================================================
 % CryoGrid LATERAL_IA class LAT_HEAT 
+% LAT_HEAT simulates lateral heat transfer with an external reservoir at
+% constant temperature located a defined altitudinal interval
 
-% S. Westermann, Oct 2020
+% S. Westermann, Aug 2021
 %========================================================================
 
 
@@ -13,9 +15,6 @@ classdef LAT_HEAT < BASE_LATERAL
         %----mandatory functions---------------
         %----initialization--------------------
         
-%         function lateral = LAT_SEEPAGE_FACE_WATER(index, pprovider, cprovider)
-%             lateral@BASE_LATERAL(index, pprovider, cprovider);
-%         end
 
         function lateral = provide_CONST(lateral)
             lateral.CONST.day_sec = [];

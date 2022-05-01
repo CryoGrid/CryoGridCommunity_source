@@ -1,9 +1,10 @@
+
 %========================================================================
-% CryoGrid STRATIGRAPHY class STRAT_layers defines the initial stratigraphy
-% state variables as seperate layers with constant values. The depth
-% below the surface for the top position of each layer must be provided,
-% and the last layer is assumed to reach until the bottom of the model
-% domain.
+% CryoGrid STRATIGRAPHYSTATVAR class STRAT_layers 
+% STRAT_layers defines the initial stratigraphy of model state variables 
+% as seperate layers with constant values. The depth below the surface 
+% for the top position of each layer must be provided, and the last 
+% layer is assumed to reach until the bottom of the model domain.
 % S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
 %========================================================================
 

@@ -1,7 +1,9 @@
 %========================================================================
-% CryoGrid LATERAL_IA class which removes all surface water overtopping the first grid cell for GROUND classses
-% This can for example prevent the formation of a LAKE in some GROUND
-% classes.
+% CryoGrid LATERAL_IA class LAT_REMOVE_SURFACE_WATER
+% LAT_REMOVE_SURFACE_WATER which removes all surface water overtopping 
+% the first grid cell for GROUND classses
+% This can for example prevent the triggering of a LAKE in some GROUND
+% classes, or to analyze the water balance.
 % S. Westermann, Oct 2020
 %========================================================================
 

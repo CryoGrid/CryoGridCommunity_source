@@ -3,7 +3,7 @@
 % CROCUS snow model Vionnet et al., 2012, but with simpler layer splitting and regridding scheme compared to CROCUS 
 % temperature and windspeed-dependent initial snow density, snow microstructure (dendricity, sphericity, grain size), 
 % compaction, sublimation, water flow, refreezing, variable albedo.
-% SNOW_crocus2_bucketW_seb is specifically designed to work with Xice class. Xwater takes up excess water when the
+% SNOW_crocus2_bucketW_seb is specifically designed to work with an Xice GROUND class. Xwater takes up excess water when the
 % snow is a CHILD. If the snow is a full class, excess water pools up above the snow pack, and unless removed by a LATERAL class, 
 % it is passed on to the Xice class (when SNOW becomes a CHILD), where eventually a LAKE is
 % triggered - in this case the CHILD stage is skipped and the snow energy and water is mixed with the LAKE

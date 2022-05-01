@@ -1,5 +1,14 @@
-% base class build a model tile
+%========================================================================
+% CryoGrid RUN_INFO class RUN_1D_SPINUP
+% RUN_INFO class which runs several TILE class sequentially
+% can be used for model spin-up when using TILE_BUILDER classes which
+% initialize subsequent TILE classesbased on the results of the previous
+% TILE
+% can also be used for seuqntial runs of several independent TILE classes,
+% e.g. for a sensitivity analysis
 
+% S. Westermann, Jan 2021
+%========================================================================
 classdef RUN_1D_SPINUP < matlab.mixin.Copyable
     
     properties

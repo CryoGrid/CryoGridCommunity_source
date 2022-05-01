@@ -1,4 +1,18 @@
-% base class build a model tile
+%========================================================================
+% CryoGrid RUN_INFO class RUN_3D_STANDARD
+% RUN_INFO class designed to run several TILE class in parallel, including
+% the possibility for laterally coupled TILE classes with the LATERAL class
+% LATERAL_3D. The topological relationships between the TILE classes are
+% provided in this class
+% RUN_3D_STANDARD can also be used for parallel runs of several independent
+% TILE classes, e.g. for a sensitivity analysis. Note that RUN_3D_STANDARD
+% does not offer the possibility to combine parallel and sequential
+% simulations of TILE classes, which would be required to run a large number 
+% of TILE classes
+% Matlab parallel computing toolbox is required!
+
+% S. Westermann, Jan 2021
+%========================================================================
 
 classdef RUN_3D_STANDARD < matlab.mixin.Copyable
     
@@ -8,7 +22,7 @@ classdef RUN_3D_STANDARD < matlab.mixin.Copyable
         CONST
         STATVAR
         TILE
-        %pprovider
+
     end
     
     

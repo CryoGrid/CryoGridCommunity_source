@@ -1,6 +1,7 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freezeC_seb forced by surface temperature
-% heat conduction, constant water+ice, freeze curve 
+% boundary condition, constant water+ice water balance, Painter and Karra (2014) 
+% freeze curve
 % S. Westermann, October 2020
 %========================================================================
 

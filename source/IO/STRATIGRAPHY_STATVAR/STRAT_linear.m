@@ -1,5 +1,6 @@
 %========================================================================
-% CryoGrid STRATIGRAPHY class STRAT_linear defines the initial stratigraphy
+% CryoGrid STRATIGRAPHY_STATVAR class STRAT_linear 
+% STRAT_linear defines the initial stratigraphy of model
 % state variables by linearly interpolating between values at depths
 % provided. Depths must be given as depth below the ground surface, and the
 % final depth value must extend below the depth of the model domain.

@@ -1,4 +1,5 @@
 %========================================================================
+% CryoGrid OUT class OUT_all_lateral
 % CryoGrid OUT class defining storage format of the output 
 % OUT_all_lateral stores identical copies of all GROUND classses (including STATVAR, TEMP, PARA) in the
 % stratigraphy for each output timestep and copies of all LATERAL classes.

@@ -1,11 +1,7 @@
 %========================================================================
-% CryoGrid OUT class defining storage format of the output 
-% OUT_all stores identical copies of all GROUND classses (including STATVAR, TEMP, PARA) in the
-% stratigraphy for each output timestep, while lateral classes are not stored.
-% The user can specify the save date and the save interval (e.g. yearly
-% files), as well as the output timestep (e.g. 6 hourly). The output files
-% are in Matlab (".mat") format.
-% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+% CryoGrid OUT class OUT_do_nothing
+% does not store any output, generally used during model spin-up
+% S. Westermann, Jan 2021
 %========================================================================
 
 
@@ -29,12 +25,6 @@ classdef OUT_do_nothing < matlab.mixin.Copyable
     
     methods
 		
-        %initialization
-        
-%         function out = initialize_excel(out)
-%             
-%         end
-        
         
         function out = provide_PARA(out)         
             out.PARA.display_timestep = [];

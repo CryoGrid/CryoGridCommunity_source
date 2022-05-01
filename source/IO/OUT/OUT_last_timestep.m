@@ -1,5 +1,12 @@
 %========================================================================
-% CryoGrid OUT class
+% CryoGrid OUT class OUT_last_timestep
+% can be used to periodically store the entire CryoGrid stratigraphy, with 
+% the ouput file getting overwritten each time. This is useful for being 
+% able to recover and restart simulations (e.g. when the cluster is shut 
+% down due to maintenances) in case of a long runtime. It is also posisble 
+% to only store the final state of the CryoGrid stratigraphy, e.g. to run
+% ensembles starting from the final state of an existing TILE class. Use
+% TILE_BUILDER class "restart_OUT_last_timestep" to restart simulations.
 % S. Westermann, October 2020
 %========================================================================
 

@@ -1,4 +1,10 @@
+%========================================================================
+% CryoGrid RUN_INFO class RUN_1D_STANDARD
+% RUN_INFO class which runs a single TILE class only
+% used for simplest possible simulation setup with only a single model run 
 
+% S. Westermann, Jan 2021
+%========================================================================
 classdef RUN_1D_STANDARD < matlab.mixin.Copyable
     
     properties

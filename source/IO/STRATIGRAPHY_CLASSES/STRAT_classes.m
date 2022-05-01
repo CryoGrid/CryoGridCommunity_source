@@ -1,15 +1,14 @@
 %========================================================================
-% CryoGrid STRATIGRAPHY class STRAT_classes defines the initial CryoGrid stratigraphy of
-% GROUND classes, which makes it different from all other STRATIGRAPHY classes which
-% define the stratigraphies of state variables (STATVARs).
-% Each GROUND class is identified by its name and a class_index (integer number)
-% which makes it possible to define the same GROUND classs everal times with different parameters.
-% For GROUND classes interacting with a cover, a SNOW class must be
-% defined.
-% Sleeping classes are defined within the stratigraphy, but leaving the
-% depth field empty. They are initialized, but not included in the initial
-% CryoGrid stratigraphy. Instead, they are added to the Top-class, where
-% they can be accessed when requested by a trigger.
+% CryoGrid STRATIGRAPHY_CLASSES class STRAT_classes 
+% STRAT_classes defines the initial CryoGrid stratigraphy of stratigraphy 
+% classes.
+% Each stratigraphy class is identified by its name and a class_index 
+% (integer number)  which makes it possible to define the same stratigraphy
+% classs everal times with different parameters. For stratigraphy classes 
+% interacting with a snow cover, a SNOW class must be % defined.
+% Sleeping classes are defined within the stratigraphy are initialized, 
+% but not included in the initial CryoGrid stratigraphy. Instead, they 
+% are made accessible when requested by a trigger.
 % An example is the formation of a lake on initially dry ground. A LAKE
 % class is initialized as sleeping class, and added on top of the
 % stratigraphy when sufficient water has accumulated.

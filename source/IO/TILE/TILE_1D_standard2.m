@@ -1,14 +1,19 @@
-% base class to build a model tile
-% TILE_1D_standard2 requires an array of OUT classes instead of a single
-% one for TILE_1D_standard2. It can be used to save model output with OUT_all_... and the
-% final state with OUT_last_timestep so that simulations can be restarted from the final point.
+%========================================================================
+% CryoGrid TILE class TILE_1D_standard2
+% identical to TILE_1D_standard, but TILE_1D_standard2 allows providing an 
+% array of OUT classes instead of a single one as in TILE_1D_standard. 
+% It can be used to save model output with any OUT_all_... class, and the
+% final state with OUT_last_timestep so that simulations can be restarted 
+% from the final point.
+
+% S. Westermann, July 2021
+%========================================================================
 
 classdef TILE_1D_standard2 < matlab.mixin.Copyable
     
     properties
         
-%         RUN_NUMBER
-%         RESULT_PATH
+
         BUILDER
         PARA
         RUN_INFO

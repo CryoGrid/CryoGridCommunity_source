@@ -1,11 +1,11 @@
 %========================================================================
 % CryoGrid LATERAL_IA class LAT_WATER_RESERVOIR 
-% simulates lateral water flow between a static water reservoir at defined
-% elevation (absolute elevation, not relative to the surface!), 
+% LAT_WATER_RESERVOIR simulates lateral water flow between a static water
+% reservoir at defined  elevation (absolute elevation, not relative to the surface!), 
 % as well as contact lengths (i.e. width) and distance from the GROUND column.
 % Water temperatures of the reservoir can have a defined constant
 % temperature (only relevant for inflow), otherwise inflow at grid cell temperature is assumed. 
-% NOTE: THIS CLASS IS KNOWN TO CRASH IN SOME CASES, USE WITH CARE! 
+
 % S. Westermann, Oct 2020
 %========================================================================
 

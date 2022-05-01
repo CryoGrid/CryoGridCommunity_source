@@ -1,7 +1,7 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_TTOP_simple2
-% CAUTION: this class takes unnecessary long time to run! It is best used
-% with OUT_last_timestep
+% GROUND_TTOP_simple2 computes MAAT, MAGST and MAAT based on the equilibrium
+% TTOP approach.
 % S. Westermann, October 2020
 %========================================================================
 
@@ -37,6 +37,7 @@ classdef GROUND_TTOP_simple2 < BASE
             %ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             timestamp = tile.FORCING.DATA.timeForcing;
             surface_T = tile.FORCING.DATA.(ground.PARA.surface_T_variable);
+            ground.STATVAR.layerThick = 0;
             
             if tile.FORCING.PARA.start_time<= datenum([datestr(tile.FORCING.PARA.start_time, 'yyyy') ground.PARA.start_date], 'yyyymmdd')
                 start_time = datenum([datestr(tile.FORCING.PARA.start_time, 'yyyy') ground.PARA.start_date], 'yyyymmdd');

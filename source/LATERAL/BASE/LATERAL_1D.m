@@ -148,34 +148,34 @@ classdef LATERAL_1D < matlab.mixin.Copyable
                     end
                     
                     
-                    labBarrier;
-                    %PACK AND SEND -  only send a single data package to all connected workers
-                    if lateral.PARA.num_realizations > 1
-                        data_package_out = pack(lateral, 'STATVAR');
-                        if ~isempty(lateral.STATVAR2ALL)
-                            lateral.STATVAR2ALL.index=lateral.STATVAR.index;
-                            data_package_out_all = pack(lateral, 'STATVAR2ALL');
-                        else
-                            data_package_out_all = [];
-                        end
-                        %add the STATVAR2ALL info
-                        for i = 1:lateral.PARA.num_realizations
-                            if lateral.PARA.connected(lateral.STATVAR.index, i)
-                                labSend([data_package_out_all; data_package_out], i, 1);
-                            elseif i~=lateral.STATVAR.index
-                                labSend(data_package_out_all, i, 1);
-                            end
-                        end
-                        for i = 1:lateral.PARA.num_realizations
-                            if lateral.PARA.connected(lateral.STATVAR.index, i) || i~=lateral.STATVAR.index
-                                data_package_in = labReceive(i, 1);
-                                if ~isempty(data_package_in)
-                                    lateral = unpack(lateral, data_package_in); %read received column vector and transform into STATVAR
-                                end
-                            end
-                        end
-                    end
-                    labBarrier;
+%                     labBarrier;
+%                     %PACK AND SEND -  only send a single data package to all connected workers
+%                     if lateral.PARA.num_realizations > 1
+%                         data_package_out = pack(lateral, 'STATVAR');
+%                         if ~isempty(lateral.STATVAR2ALL)
+%                             lateral.STATVAR2ALL.index=lateral.STATVAR.index;
+%                             data_package_out_all = pack(lateral, 'STATVAR2ALL');
+%                         else
+%                             data_package_out_all = [];
+%                         end
+%                         %add the STATVAR2ALL info
+%                         for i = 1:lateral.PARA.num_realizations
+%                             if lateral.PARA.connected(lateral.STATVAR.index, i)
+%                                 labSend([data_package_out_all; data_package_out], i, 1);
+%                             elseif i~=lateral.STATVAR.index
+%                                 labSend(data_package_out_all, i, 1);
+%                             end
+%                         end
+%                         for i = 1:lateral.PARA.num_realizations
+%                             if lateral.PARA.connected(lateral.STATVAR.index, i) || i~=lateral.STATVAR.index
+%                                 data_package_in = labReceive(i, 1);
+%                                 if ~isempty(data_package_in)
+%                                     lateral = unpack(lateral, data_package_in); %read received column vector and transform into STATVAR
+%                                 end
+%                             end
+%                         end
+%                     end
+%                     labBarrier;
                     
                     
                     %calculate all derivatives/fluxes

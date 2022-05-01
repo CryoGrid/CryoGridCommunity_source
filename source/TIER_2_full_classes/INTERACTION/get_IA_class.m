@@ -256,6 +256,16 @@ elseif strcmp(above_class, 'LAKE_simple_unfrozen_bucketW_seb')
         ia_class = IA_LAKE_simple_frozen_unfrozen();
     end
     
+    
+     %TTOP as upper boundary condition
+elseif strcmp(above_class, 'GROUND_TTOP_simple2')
+    if strcmp(below_class, 'GROUND_freeW_seb_snow') || strcmp(below_class, 'GROUND_freeW_seb') || strcmp(below_class, 'GROUND_freezeC_seb_snow')  || strcmp(below_class, 'GROUND_freezeC_seb') ...
+            || strcmp(below_class, 'GROUND_freeW_bucketW_seb_snow') || strcmp(below_class, 'GROUND_freeW_bucketW_seb') || strcmp(below_class, 'GROUND_freezeC_bucketW_seb_snow') || strcmp(below_class, 'GROUND_freezeC_bucketW_seb') ...
+            || strcmp(below_class, 'GROUND_freezeC_bucketW_Xice_seb_snow') || strcmp(below_class, 'GROUND_freezeC_bucketW_Xice_seb')
+        ia_class = IA_HEAT_TTOP();
+    end
+        
+    %SNOW classes
 elseif strcmp(above_class, 'SNOW_simple_seb')
     if strcmp(below_class, 'GROUND_freeW_seb_snow') || strcmp(below_class, 'GROUND_freezeC_seb_snow') || strcmp(below_class, 'GROUND_fcSimple_salt_seb_snow') || strcmp(below_class, 'LAKE_simple_seb_snow') || strcmp(below_class, 'GLACIER_freeW_seb_snow')
         ia_class = IA_HEAT11();
