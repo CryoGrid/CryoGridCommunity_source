@@ -93,8 +93,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC_FLIP_FLOP < GROUND_freezeC_buc
             ground = switch2read_STATVAR_flip_flop_BGC(ground, tile);
         end
         
-        function ground = reset_time_BGC(ground, tile) %used e.g. with TILE_BUILDER update_forcing_out
-            ground = reset_time_BGC@GROUND_freezeC_bucketW_Xice_seb_snow_BGC(ground, tile);
+        function ground = reset_timestamps(ground, tile) %used e.g. with TILE_BUILDER update_forcing_out
+            ground = reset_timestamps@GROUND_freezeC_bucketW_Xice_seb_snow_BGC(ground, tile);
             ground = finalize_init_flip_flop(ground, tile);            
         end
         

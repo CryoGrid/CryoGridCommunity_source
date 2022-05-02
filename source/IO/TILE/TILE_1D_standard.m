@@ -1,4 +1,17 @@
-% base class build a model tile
+%========================================================================
+% CryoGrid TILE class TILE_1D_standard
+% TILE class designed for multi-physics simulations with a stratigraphy of
+% connected CryoGrid stratigraphy classes. TILE_1D_standard represents all 
+% aspects of a single model simulation, with model forcing, storage of
+% model output, etc. It supports both lateral coupling to external
+% environments and between different TILE_1D_standard classes in a parallel
+% fashion
+% The initialization procedure is determined by the choice of the 
+% TILE_BUILDER class (set by PARA "builder") which also determines the 
+% paramter set which must be defined by the users. 
+
+% S. Westermann, Dec 2020
+%========================================================================
 
 classdef TILE_1D_standard < matlab.mixin.Copyable
     
@@ -12,6 +25,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
         GRID
         OUT        
         STORE
+        TEMP
         
         t        
         timestep
@@ -168,15 +182,17 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     CURRENT = CURRENT.PREVIOUS;
                 end
                 
+                
                 %triggers
                 CURRENT = TOP.NEXT;
                 while ~isequal(CURRENT, BOTTOM)
                     CURRENT = check_trigger(CURRENT, tile);
                     CURRENT = CURRENT.NEXT;
                 end
-                
+
+                %lateral interactions
                 tile = interact_lateral(tile);
-                
+                                
                 %set TOP_CLASS and BOTTOM_CLASS for convenient access
                 tile.TOP_CLASS = TOP.NEXT;
                 tile.BOTTOM_CLASS = BOTTOM.PREVIOUS;
@@ -569,15 +585,20 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             tile.FORCING = finalize_init(tile.FORCING, tile); 
             tile.OUT = finalize_init(tile.OUT, tile);           
             %10. assign time, etc.
+            tile.TEMP.time_difference = tile.RUN_INFO.TILE.t - tile.FORCING.PARA.start_time; %Used to correct time variables in subsurface classes 
             tile.t = tile.FORCING.PARA.start_time;
             
             %reset IA time
             tile.LATERAL.IA_TIME = tile.t + tile.LATERAL.IA_TIME_INCREMENT;
             
             %reset time for BGC class (do mothing if no BGC class exists)
+            %-> MAKE THIS A GENERAL RESET_TIME OR ADJUST_TIME FUNCTION THAT
+            %IS DEFINED IN BASE AND OVERWRITTEN IN ALL FUNCTIONS THAT
+            %ACTUALLY HAVE A TIME VARIABLE - CALCULATE TIME OFFSET BETWEEN
+            %OLD AND NEW FORCING, I.E LAST TIMESTAMP OF OLD RUN AND FIRST TIMESTAMP OF NEW RUN 
             CURRENT = tile.TOP.NEXT;
             while ~isequal(CURRENT.NEXT, tile.BOTTOM)
-                CURRENT = reset_time_BGC(CURRENT, tile);
+                CURRENT = reset_timestamps(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
             

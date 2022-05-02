@@ -37,6 +37,11 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 lateral.PARENT.STATVAR2ALL.ds_gs(isnan(lateral.PARENT.STATVAR2ALL.ds_gs)) = 0;
                 lateral.PARENT.STATVAR2ALL.ds_time_snowfall = sum(fraction_mobile .* snow.STATVAR.waterIce .* snow.STATVAR.time_snowfall) ./ lateral.PARENT.STATVAR2ALL.ds_waterIce;
                 lateral.PARENT.STATVAR2ALL.ds_time_snowfall(isnan(lateral.PARENT.STATVAR2ALL.ds_time_snowfall)) = 0;
+                
+                lateral.PARENT.STATVAR2ALL.ds_top_snow_date = sum(fraction_mobile .* snow.STATVAR.waterIce .* snow.STATVAR.top_snow_date) ./ lateral.PARENT.STATVAR2ALL.ds_waterIce;
+                lateral.PARENT.STATVAR2ALL.ds_top_snow_date(isnan(lateral.PARENT.STATVAR2ALL.ds_top_snow_date)) = 0;
+                lateral.PARENT.STATVAR2ALL.ds_bottom_snow_date = sum(fraction_mobile .* snow.STATVAR.waterIce .* snow.STATVAR.bottom_snow_date) ./ lateral.PARENT.STATVAR2ALL.ds_waterIce;
+                lateral.PARENT.STATVAR2ALL.ds_bottom_snow_date(isnan(lateral.PARENT.STATVAR2ALL.ds_bottom_snow_date)) = 0;
             else
                 lateral.PARENT.STATVAR2ALL.snow_drift = 1; 
             end
@@ -75,6 +80,11 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 lateral.PARENT.STATVAR2ALL.ds_gs(isnan(lateral.PARENT.STATVAR2ALL.ds_gs)) = 0;
                 lateral.PARENT.STATVAR2ALL.ds_time_snowfall = sum(fraction_mobile .* snow.STATVAR.waterIce .* snow.STATVAR.time_snowfall) ./ lateral.PARENT.STATVAR2ALL.ds_waterIce;
                 lateral.PARENT.STATVAR2ALL.ds_time_snowfall(isnan(lateral.PARENT.STATVAR2ALL.ds_time_snowfall)) = 0;
+                
+                lateral.PARENT.STATVAR2ALL.ds_top_snow_date = sum(fraction_mobile .* snow.STATVAR.waterIce .* snow.STATVAR.top_snow_date) ./ lateral.PARENT.STATVAR2ALL.ds_waterIce;
+                lateral.PARENT.STATVAR2ALL.ds_top_snow_date(isnan(lateral.PARENT.STATVAR2ALL.ds_top_snow_date)) = 0;
+                lateral.PARENT.STATVAR2ALL.ds_bottom_snow_date = sum(fraction_mobile .* snow.STATVAR.waterIce .* snow.STATVAR.bottom_snow_date) ./ lateral.PARENT.STATVAR2ALL.ds_waterIce;
+                lateral.PARENT.STATVAR2ALL.ds_bottom_snow_date(isnan(lateral.PARENT.STATVAR2ALL.ds_bottom_snow_date)) = 0;
             else
                 lateral.PARENT.STATVAR2ALL.snow_drift = 1; 
             end
@@ -90,12 +100,14 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 snow.STATVAR.water = remaining_fraction.* snow.STATVAR.water;
                 snow.STATVAR.ice = remaining_fraction.* snow.STATVAR.ice;
                 snow.STATVAR.layerThick = remaining_fraction.* snow.STATVAR.layerThick;
-
+                %in principle to_snow_date should be changed as well, but
+                %probably not critical
             elseif lateral.STATVAR.snow_drift_yes_no && lateral.STATVAR.exposure > 0 %gain snow
                 new_snow.STATVAR = lateral.STATVAR.ds;
                 
                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'; 'target_density';}, 'ice');
                 snow = merge_cells_extensive2(snow, 1, new_snow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'; 'water'});
+                snow = merge_cells_snowfall_times2(snow, 1, new_snow, 1); %specific function merginging bottom and top snow dates
             end
         end
         
@@ -117,6 +129,7 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 
                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'}, 'ice');
                 snow = merge_cells_extensive2(snow, 1, new_snow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'});
+                snow = merge_cells_snowfall_times2(snow, 1, new_snow, 1); %specific function merginging bottom and top snow dates
                 
                 snow.STATVAR.layerThickSnowFirstCell = snow.STATVAR.layerThick(1);
                 snow.STATVAR.target_density(1) = snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1) ./ snow.STATVAR.area(1);
@@ -143,6 +156,7 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 
                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'; 'target_density';}, 'ice');
                 snow = merge_cells_extensive2(snow, 1, new_snow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'; 'water'});
+                snow = merge_cells_snowfall_times2(snow, 1, new_snow, 1); %specific function merginging bottom and top snow dates
             end
         end
         
@@ -177,6 +191,7 @@ classdef SNOW_FLUXES_LATERAL < BASE
                 
                 snow = merge_cells_intensive2(snow, 1, new_snow, 1, {'d'; 's'; 'gs'; 'time_snowfall'}, 'ice');
                 snow = merge_cells_extensive2(snow, 1, new_snow, 1, {'waterIce'; 'energy'; 'layerThick'; 'ice'});
+                snow = merge_cells_snowfall_times2(snow, 1, new_snow, 1); %specific function merginging bottom and top snow dates
                 
                 snow.STATVAR.layerThickSnowFirstCell = snow.STATVAR.layerThick(1);
                 snow.STATVAR.target_density(1) = snow.STATVAR.ice(1) ./ snow.STATVAR.layerThick(1) ./ snow.STATVAR.area(1);

@@ -125,7 +125,7 @@ classdef OUT_all_lateral_vegetation < matlab.mixin.Copyable
                 
                     if isprop(CURRENT, 'CHILD') && CURRENT.CHILD ~= 0
                         res=copy(CURRENT.CHILD);
-                        res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  res.PARENT = []; %cut all dependencies
+                        res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_PREVIOUS=[];  res.PARENT = []; %cut all dependencies
                         result=[result; {res}];
                     end
                     res = copy(CURRENT);
@@ -138,7 +138,7 @@ classdef OUT_all_lateral_vegetation < matlab.mixin.Copyable
                     if isprop(res, 'READ_OUT')
                         res.READ_OUT =[];  %remove look-up tables, runs out of memory otherwise
                     end
-                    res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  %cut all dependencies
+                    res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_PREVIOUS=[];  %cut all dependencies
                     if isprop(res, 'CHILD')
                         res.CHILD = [];
                         res.IA_CHILD =[];

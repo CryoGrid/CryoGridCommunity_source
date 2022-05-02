@@ -1,7 +1,7 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freezeC_RichardsEqW_seb
-% heat conduction, Richards equation water scheme, freeze curve based on
-% freezing=drying assumption, surface energy balance
+% heat conduction, Richards equation water balance, Painter and Karra (2014) 
+% freeze curve, surface energy balance
 % S. Westermann, October 2020
 %========================================================================
 

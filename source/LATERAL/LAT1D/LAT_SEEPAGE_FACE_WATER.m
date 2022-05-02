@@ -1,9 +1,12 @@
 %========================================================================
 % CryoGrid LATERAL_IA class LAT_SEEPAGE_FACE_WATER 
-% simulates lateral water flow through a seepage face with defined upper
-% and lower elevation (absolute elevation, not relative to the surface!), 
-%  as well as contact lengths (i.e. width) and distance from the GROUND column.
-% At the seepage face, air pressure is assumed.
+% LAT_SEEPAGE_FACE_WATER simulates lateral water flow through a seepage 
+% face with defined upper and lower elevations (absolute elevation, 
+% not relative to the surface!), as well as contact lengths (i.e. width) 
+% and distance from the subsurface class.
+% At the seepage face, air pressure is assumed, while the water pressure 
+% in the stratigraphy corepsonds to the hydrostatic pressure, i.e. water
+% flow only occurs from a saturated zone.
 % S. Westermann, Oct 2020
 %========================================================================
 

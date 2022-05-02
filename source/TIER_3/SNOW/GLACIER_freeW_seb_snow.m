@@ -160,5 +160,14 @@ classdef GLACIER_freeW_seb_snow < GLACIER_freeW_seb
             end
         end
         
+                
+        %----------
+        %reset timestamp when changing TILES
+        function ground = reset_timestamps(ground, tile)
+            if ground.CHILD ~= 0
+                ground.CHILD = reset_timestamps(ground.CHILD, tile);
+            end
+        end
+        
     end
 end

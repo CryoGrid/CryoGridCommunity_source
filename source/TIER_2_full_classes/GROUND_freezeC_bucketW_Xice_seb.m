@@ -1,9 +1,10 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freezeC_bucketW_Xice_seb
-% heat conduction, bucket water scheme, freeze curve based on
-% freezing=drying assumption, surface energy balance, excess ice
+% heat conduction, bucket water scheme, Painter and Karra (2014) 
+% freeze curve, surface energy balance, excess ground ice
 % S. Westermann, October 2020
 %========================================================================
+
 
 classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_KarraPainter & WATER_FLUXES & WATER_FLUXES_LATERAL & HEAT_FLUXES_LATERAL 
 
@@ -147,6 +148,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             ground = conductivity(ground);
             ground = calculate_hydraulicConductivity_Xice(ground); 
             
+            ground.STATVAR.layerThick_wo_Xice = ground.STATVAR.layerThick - ground.STATVAR.XwaterIce./ground.STATVAR.area;
+            
             ground = create_LUT_freezeC(ground);
 
             ground.STATVAR.Lstar = -100;
@@ -212,6 +215,11 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             %ground.STATVAR.XwaterIce = ground.STATVAR.XwaterIce + correction_minus;
             
             ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_Xwater ./ ground.STATVAR.area;
+            ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic + ground.STATVAR.XwaterIce)./ ground.STATVAR.area);
+            
+            ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, ground.STATVAR.layerThick_wo_Xice);
+            
+            %do not add
             %ground.STATVAR.layerThick = ground.STATVAR.layerThick + correction_minus./ ground.STATVAR.area;
 
         end
@@ -233,6 +241,8 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             
             ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, ...
                 (ground.STATVAR.XwaterIce + ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ ground.STATVAR.area);  %prevent rounding errors, would lead to wrong sign of water fluxes in next prognostic step
+           
+            ground.STATVAR.layerThick = max(ground.STATVAR.layerThick, ground.STATVAR.layerThick_wo_Xice);
             
             ground = get_T_water_freezeC_Xice(ground);
             

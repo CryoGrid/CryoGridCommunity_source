@@ -41,14 +41,14 @@ classdef GROUND_freeW_ubtf_snow < GROUND_freeW_ubtf
                 if forcing.TEMP.snowfall > 0  
                     % If snowfall in this timestep, create child class
                     
-                    % go to Top() and get the stored SNOW class
-                    CURRENT = ground.PREVIOUS;  
-                    while ~strcmp(class(CURRENT), 'Top')
-                        CURRENT = CURRENT.PREVIOUS;
-                    end
-                    
+%                     % go to Top() and get the stored SNOW class
+%                     CURRENT = ground.PREVIOUS;  
+%                     while ~strcmp(class(CURRENT), 'Top')
+%                         CURRENT = CURRENT.PREVIOUS;
+%                     end
+%                     
                     % set pointers between classes
-                    ground.CHILD = copy(CURRENT.STORE.SNOW);
+                    ground.CHILD = copy(tile.STORE.SNOW);
                     ground.CHILD.PARENT = ground;
                     ground.CHILD.NEXT = ground; 
                     
@@ -159,20 +159,43 @@ classdef GROUND_freeW_ubtf_snow < GROUND_freeW_ubtf
                     ground.CHILD.STATVAR.area = ground.STATVAR.area(1,1);
                     ground.CHILD.STATVAR.layerThick = snow_volume ./ ground.CHILD.STATVAR.area;
                    
-                    % transfer the snow class from a CHILD of the ground 
-                    % to a part of the ordinary stratigraphy
-                    snow_class = ground.CHILD;
-                    snow_class.PARENT = 0;
-                    snow_class.PREVIOUS = ground.PREVIOUS;
-                    snow_class.NEXT = ground;
-                    ground.PREVIOUS.NEXT = snow_class;
+%                     % transfer the snow class from a CHILD of the ground 
+%                     % to a part of the ordinary stratigraphy
+%                     snow_class = ground.CHILD;
+%                     snow_class.PARENT = 0;
+%                     snow_class.PREVIOUS = ground.PREVIOUS;
+%                     snow_class.NEXT = ground;
+%                     ground.PREVIOUS.NEXT = snow_class;
+%                     ground.CHILD = 0;
+%                     
+%                     % adjust interactions accordingly
+%                     ground.IA_PREVIOUS = ground.IA_CHILD; 
+%                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
+%                     ground.IA_CHILD = 0;
+%                     
+
+                   
+                    %make snow a real class
+                    ground.CHILD.PARENT = 0;
+                    ground.CHILD.PREVIOUS = ground.PREVIOUS;
+                    ground.CHILD.NEXT = ground;
+                    ground.PREVIOUS.NEXT = ground.CHILD;
+                    ground.PREVIOUS = ground.CHILD;
                     ground.CHILD = 0;
-                    
-                    % adjust interactions accordingly
                     ground.IA_PREVIOUS = ground.IA_CHILD; 
                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
                     ground.IA_CHILD = 0;
+                    
                 end
+            end
+        end
+        
+                
+        %----------
+        %reset timestamp when changing TILES
+        function ground = reset_timestamps(ground, tile)
+            if ground.CHILD ~= 0
+                ground.CHILD = reset_timestamps(ground.CHILD, tile);
             end
         end
         

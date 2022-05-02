@@ -1,6 +1,12 @@
 %========================================================================
-% CryoGrid class
-% S. Westermann December 2021
+% CryoGrid INIT_STEADY_STATE class INIT_TTOP_from_out
+% CryoGrid INIT_STEADY_STATE class used in conjcntion with the TILE_BUILDER
+% class new_init_steady_state; reads the temperature on the top of 
+% permafrost (TTOP) and the maximum depth of the permafrost table from an 
+% existing OUT file written by the class OUT_TDD_FDD. 
+% It is used in the accelerated spin-up procedure.
+
+% S. Westermann, Jan 2022
 %========================================================================
 
 

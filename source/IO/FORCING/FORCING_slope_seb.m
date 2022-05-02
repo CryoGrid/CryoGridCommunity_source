@@ -7,7 +7,7 @@
 % Have a look at the existing forcing files in the folder “forcing” and prepare
 % new forcing files in the same way. The mandatory forcing variables are air temperature
 % (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2),
-% incoming short-.wave radiation (Sin, in W/m2), absolute humidity (q, in
+% incoming short-wave radiation (Sin, in W/m2), absolute humidity (q, in
 % kg water vapor / kg air), wind speed (wind, in m/sec), rainfall (rainfall, in mm/day),
 % snowfall (snowfall, in mm/day) and timestamp (t_span,
 % in Matlab time / increment 1 corresponds to one day).
@@ -56,7 +56,7 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             forcing.PARA.slope_angle = []; %slope angle in degrees
             forcing.PARA.aspect = []; %aspect of the slope in degrees
             forcing.PARA.sky_view_factor = []; %sky view factor (0.5 for vertical rock walls)
-            forcing.PARA.albedo = []; %Albedo of the slope
+            forcing.PARA.albedo = []; %Albedo of the surrounding terrain, only used if no time series albedo_foot provided in forcing file
             forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
         end
@@ -96,6 +96,9 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             end
             if isfield(temp.FORCING.data,'seaIce') == 1
                 forcing.DATA.seaIce = temp.FORCING.data.seaIce; %time steps with (1) or without (0) sea ice
+            end
+            if ~isfield(temp.FORCING.data,'albedo_foot')
+                forcing.DATA.albedo_foot = forcing.PARA.albedo; 
             end
             
             if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1))~=0
@@ -183,12 +186,6 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             
         end
         
-        
-        function xls_out = write_excel(forcing)
-            % XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
-            
-            xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};
-        end
         
         
         % non-mandatory functions
@@ -423,7 +420,7 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             forcing.PARA.comment.aspect = {'aspect of the slope in degrees'};
             
             forcing.PARA.default_value.albedo = {0.2};
-            forcing.PARA.comment.albedo = {'albedo of field of view from where solar radiation is reflected'};
+            forcing.PARA.comment.albedo = {'albedo of field of view from where solar radiation is reflected, only used if no time series albedo_foot provided in forcing file'};
             
             forcing.PARA.default_value.sky_view_factor ={1};
             forcing.PARA.comment.sky_view_factor = {'sky view factor (0.5 for vertical rock walls)'};

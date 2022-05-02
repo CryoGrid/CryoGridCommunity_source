@@ -222,8 +222,12 @@ classdef LAKE_simple_unfrozen_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
         end
 
-        %-----LATERAL-------------------
-        %seepage face not yet implemented
+        %-----LATERAL------------------
+        
+         %----LAT_SEEPAGE_FACE----------              
+        function ground = lateral_push_remove_water_seepage(ground, lateral)
+            ground = lateral_push_remove_water_seepage_lake_unfrozen(ground, lateral);
+        end
         
         %----LAT_WATER_RESERVOIR-----------        
         function ground = lateral_push_water_reservoir(ground, lateral)

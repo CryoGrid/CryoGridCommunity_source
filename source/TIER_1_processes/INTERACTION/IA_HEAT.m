@@ -51,5 +51,20 @@ classdef IA_HEAT < IA_BASE
             stratigraphy1.TEMP.d_energy(end) = stratigraphy1.TEMP.d_energy(end) - flux;
             stratigraphy2.TEMP.d_energy(1) = stratigraphy2.TEMP.d_energy(1) + flux;
         end
+        
+        %heat conduction with GROUND_TTOP_SIMPLE2
+        function ia_heat = get_boundary_condition_HEAT_TTOP_m(ia_heat) 
+            stratigraphy1 = ia_heat.PREVIOUS;
+            stratigraphy2 = ia_heat.NEXT;
+            flux = (stratigraphy1.STATVAR.MAGT - stratigraphy2.STATVAR.T(1)) .* stratigraphy2.STATVAR.thermCond(1) ./stratigraphy2.STATVAR.layerThick(1) ;
+            
+            flux = flux .* stratigraphy2.STATVAR.area(1);
+            
+%             stratigraphy1.TEMP.F_lb = -flux;
+%             stratigraphy2.TEMP.F_ub = flux;
+%             stratigraphy1.TEMP.d_energy(end) = stratigraphy1.TEMP.d_energy(end) - flux;
+            stratigraphy2.TEMP.d_energy(1) = stratigraphy2.TEMP.d_energy(1) + flux;
+        end
+        
     end
 end

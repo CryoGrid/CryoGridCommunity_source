@@ -1,14 +1,19 @@
-% base class to build a model tile
-% TILE_1D_standard2 requires an array of OUT classes instead of a single
-% one for TILE_1D_standard2. It can be used to save model output with OUT_all_... and the
-% final state with OUT_last_timestep so that simulations can be restarted from the final point.
+%========================================================================
+% CryoGrid TILE class TILE_1D_standard2
+% identical to TILE_1D_standard, but TILE_1D_standard2 allows providing an 
+% array of OUT classes instead of a single one as in TILE_1D_standard. 
+% It can be used to save model output with any OUT_all_... class, and the
+% final state with OUT_last_timestep so that simulations can be restarted 
+% from the final point.
+
+% S. Westermann, July 2021
+%========================================================================
 
 classdef TILE_1D_standard2 < matlab.mixin.Copyable
     
     properties
         
-%         RUN_NUMBER
-%         RESULT_PATH
+
         BUILDER
         PARA
         RUN_INFO
@@ -17,6 +22,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
         GRID
         OUT
         STORE
+        TEMP
         
         t        
         timestep
@@ -556,6 +562,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             %tile.OUT = finalize_init(tile.OUT, tile);   
         
             %10. assign time, etc.
+            tile.TEMP.time_difference = tile.RUN_INFO.TILE.t - tile.FORCING.PARA.start_time; %Used to correct time variables in subsurface classes
             tile.t = tile.FORCING.PARA.start_time;
             
             %reset IA time
@@ -564,7 +571,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             %reset time for BGC class (do mothing if no BGC class exists)
             CURRENT = tile.TOP.NEXT;
             while ~isequal(CURRENT.NEXT, tile.BOTTOM)
-                CURRENT = reset_time_BGC(CURRENT, tile);
+                CURRENT = reset_timestamps(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
             
@@ -630,6 +637,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             end
         
             %10. assign time, etc.
+            tile.TEMP.time_difference = tile.RUN_INFO.TILE.t-tile.FORCING.PARA.start_time; %Used to correct time variables in subsurface classes
             tile.t = tile.FORCING.PARA.start_time;
             
             %reset IA time
@@ -638,7 +646,7 @@ classdef TILE_1D_standard2 < matlab.mixin.Copyable
             %reset time for BGC class (do mothing if no BGC class exists)
             CURRENT = tile.TOP.NEXT;
             while ~isequal(CURRENT.NEXT, tile.BOTTOM)
-                CURRENT = reset_time_BGC(CURRENT, tile);
+                CURRENT = reset_timestamps(CURRENT, tile);
                 CURRENT = CURRENT.NEXT;
             end
             

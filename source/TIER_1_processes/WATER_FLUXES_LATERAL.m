@@ -175,6 +175,31 @@ classdef WATER_FLUXES_LATERAL < BASE
                 end
             end
         end
+        
+        
+        function ground = lateral_push_remove_water_seepage_lake_unfrozen(ground, lateral)
+            %water removed and added instantaneously
+            head_lake = ground.STATVAR.upperPos;
+            average_head_cross_section = 0.5 .*(min(lateral.PARA.upperElevation, ground.STATVAR.upperPos) + max(lateral.PARA.lowerElevation, ground.STATVAR.upperPos - ground.STATVAR.layerThick(1)));
+             
+            height_cross_section = min(lateral.PARA.upperElevation, ground.STATVAR.upperPos) - max(lateral.PARA.lowerElevation, ground.STATVAR.upperPos - ground.STATVAR.layerThick(1));
+            cross_section = max(height_cross_section.* lateral.PARA.seepage_contact_length, 0);
+            %set hydraulic conductivity of 1e-4 m2/sec
+            flux = 1e-4 .* (head_lake-average_head_cross_section) ./ lateral.PARA.distance_seepageFace .* cross_section;
+            
+            water_removed = min(flux .* lateral.PARENT.IA_TIME_INCREMENT .* lateral.CONST.day_sec, ...
+                0.5.* max(0, ground.STATVAR.upperPos - max(lateral.PARA.lowerElevation, ground.STATVAR.upperPos - ground.STATVAR.layerThick(1,1))) .* ground.STATVAR.area(1,1));
+            
+            
+            ground.STATVAR.waterIce(1,1) = ground.STATVAR.waterIce(1,1) - water_removed;
+            ground.STATVAR.water(1,1) = ground.STATVAR.water(1,1) - water_removed;
+            ground.STATVAR.layerThick(1,1) = ground.STATVAR.layerThick(1,1) - water_removed ./ ground.STATVAR.area(1,1);
+
+            ground.STATVAR.energy(1,1) = ground.STATVAR.energy(1,1) - water_removed .* ground.STATVAR.T(1,1) .* ground.CONST.c_w;
+            
+            lateral.STATVAR.subsurface_run_off = lateral.STATVAR.subsurface_run_off + water_removed;
+            
+        end
  
         
         %--LAT_WATER_RESERVOIR - coupling to water reservoir at constant altitude 
@@ -691,8 +716,10 @@ classdef WATER_FLUXES_LATERAL < BASE
                 
                 lateral.STATVAR.flow_energy = flow .* lateral.CONST.c_w .* ground.STATVAR.T(1,1);
                 
-                lateral.STATVAR.surface_flow = lateral.STATVAR.surface_flow - lateral.STATVAR.flow;
-                
+                %lateral.STATVAR.surface_flow = lateral.STATVAR.surface_flow - lateral.STATVAR.flow;
+            else 
+                lateral.STATVAR.flow = 0;
+                lateral.STATVAR.flow_energy = 0;
             end
         end
         
@@ -772,12 +799,18 @@ classdef WATER_FLUXES_LATERAL < BASE
                         i=i-1; %counter at the last cell of the saturated zone
                         water_table_bottom_cell = i;
                         lateral.TEMP.open_system = 0;
-                        if i == size(ground.STATVAR.layerThick,1) && ~hardBottom(i+1,1)
+%                         if i == size(ground.STATVAR.layerThick,1) && ~hardBottom(i+1,1)
+                        if i == size(ground.STATVAR.layerThick,1) && ~hardBottom(i+1,1) && saturated(i+1,1) %CHANGED Sebastian: no open system if first cell of next class is unsaturated, do not go any further down in this case
                             lateral.TEMP.open_system = 1;
                         end
                     else
                         water_table_bottom_cell = i;
                         water_table_elevation = [];
+                        if saturated(i,1)
+                            lateral.TEMP.open_system = 0; %ADDED SEBASTIAN ERROR, relevant if the very first cell is saturated and the next cell unsaturated, so that the bottom of the bucket is reached
+                            water_table_elevation = depths(i,1);                            
+                            %first_cell_saturated = 1;
+                        end
                     end
                 else
                     lateral.TEMP.open_system = 0;
@@ -915,7 +948,8 @@ classdef WATER_FLUXES_LATERAL < BASE
                         i=i-1; %counter at the last cell of the saturated zone
                         water_table_bottom_cell = i;
                         lateral.TEMP.open_system = 0;
-                        if i == size(ground.STATVAR.layerThick,1) && ~hardBottom(i+1,1)
+%                         if i == size(ground.STATVAR.layerThick,1) && ~hardBottom(i+1,1)
+                         if i == size(ground.STATVAR.layerThick,1) && ~hardBottom(i+1,1) && saturated(i+1,1) %CHANGED Sebastian: no open system if first cell of next class is unsaturated, do not go any further down in this case
                             lateral.TEMP.open_system = 1;
                         end
                     else
@@ -986,8 +1020,10 @@ classdef WATER_FLUXES_LATERAL < BASE
                     Xwater_flux_fraction = -Xwater_flux./(lateral.PARENT.STATVAR.water_flux(end,1));
                     Xwater_flux_fraction(isnan(Xwater_flux_fraction)) = 0;
                     ground.STATVAR.XwaterIce(i,1) = max(0,ground.STATVAR.XwaterIce(i,1) - Xwater_flux);
-                    ground.STATVAR.layerThick(i,1) = max(ground.STATVAR.layerThick(i,1) - Xwater_flux ./ ground.STATVAR.area(1,1), ...
-                        (ground.STATVAR.waterIce(i,1) + ground.STATVAR.mineral(i,1) + ground.STATVAR.organic(i,1)) ./ ground.STATVAR.area(i,1));
+                    ground.STATVAR.Xwater(i,1) = max(0,ground.STATVAR.Xwater(i,1) - Xwater_flux);
+                    ground.STATVAR.layerThick(i,1) = max(ground.STATVAR.layerThick(i,1) - Xwater_flux ./ ground.STATVAR.area(i,1), ...
+                        (ground.STATVAR.waterIce(i,1) + ground.STATVAR.XwaterIce(i,1) + ground.STATVAR.mineral(i,1) + ground.STATVAR.organic(i,1)) ./ ground.STATVAR.area(i,1));
+                    ground.STATVAR.layerThick(i,1) = max(ground.STATVAR.layerThick(i,1), ground.STATVAR.layerThick_wo_Xice(i,1));
                     ground.STATVAR.energy(i,1) = ground.STATVAR.energy(i,1) + lateral.PARENT.STATVAR.water_flux_energy(end,1) .* Xwater_flux_fraction;
                     lateral.PARENT.STATVAR.water_flux(end,1) = lateral.PARENT.STATVAR.water_flux(end,1) + Xwater_flux;
                     lateral.PARENT.STATVAR.water_flux_energy(end,1) = lateral.PARENT.STATVAR.water_flux_energy(end,1) .*(1-Xwater_flux_fraction);
@@ -1008,7 +1044,8 @@ classdef WATER_FLUXES_LATERAL < BASE
             if strcmp(class(ground.PREVIOUS), 'Top')
                ground.STATVAR.XwaterIce(1,1) = ground.STATVAR.XwaterIce(1,1) + lateral.PARENT.STATVAR.water_up;
                %lateral.PARENT.STATVAR.water_up = 0;
-               ground.STATVAR.layerThick(1,1) = ground.STATVAR.layerThick(1,1) + lateral.PARENT.STATVAR.water_up ./ ground.STATVAR.area(1,1);
+               ground.STATVAR.layerThick(1,1) = max(ground.STATVAR.layerThick(1,1) + lateral.PARENT.STATVAR.water_up ./ ground.STATVAR.area(1,1), ...
+                    (ground.STATVAR.waterIce(1,1) + ground.STATVAR.XwaterIce(1,1) + ground.STATVAR.mineral(1,1) + ground.STATVAR.organic(1,1)) ./ ground.STATVAR.area(1,1));
                lateral.PARENT.STATVAR.water_up = 0;
                ground.STATVAR.energy(1,1) = ground.STATVAR.energy(1,1) + lateral.PARENT.STATVAR.water_up_energy;
                lateral.PARENT.STATVAR.water_up_energy = 0;
@@ -1077,12 +1114,18 @@ classdef WATER_FLUXES_LATERAL < BASE
                         i=i-1; %counter at the last cell of the saturated zone
                         water_table_bottom_cell = i;
                         lateral.TEMP.open_system = 0;
-                        if i == size(snow.STATVAR.layerThick,1) && ~hardBottom(i+1,1)
+%                         if i == size(snow.STATVAR.layerThick,1) && ~hardBottom(i+1,1)
+                        if i == size(snow.STATVAR.layerThick,1) && ~hardBottom(i+1,1) && saturated(i+1,1) %CHANGED Sebastian: no open system if first cell of next class is unsaturated, do not go any further down in this case
                             lateral.TEMP.open_system = 1;
                         end
                     else
                         water_table_bottom_cell = i;
                         water_table_elevation = [];
+                        if saturated(i,1)
+                            lateral.TEMP.open_system = 0; %ADDED SEBASTIAN ERROR, relevant if the very first cell is saturated and the next cell unsaturated, so that the bottom of the bucket is reached
+                            water_table_elevation = depths(i,1);                            
+                            %first_cell_saturated = 1;
+                        end
                     end
                 else
                     lateral.TEMP.open_system = 0;

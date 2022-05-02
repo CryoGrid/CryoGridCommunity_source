@@ -105,7 +105,7 @@ classdef GROUND_freezeC_bucketW_Xice_seb_snow_BGC < GROUND_freezeC_bucketW_Xice_
             ground.BGC = check_trigger(ground.BGC, tile);
         end
     
-        function ground = reset_time_BGC(ground, tile) %used e.g. with TILE_BUILDER update_forcing_out
+        function ground = reset_timestamps(ground, tile) %used e.g. with TILE_BUILDER update_forcing_out
             ground.BGC = reset_time(ground.BGC, tile);
         end
         

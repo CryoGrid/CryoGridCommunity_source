@@ -165,7 +165,7 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             
             ground = get_T_water_freeW(ground);
             
-            ground.STATVAR.runoff = ground.STATVAR.water;
+            ground.STATVAR.runoff = ground.STATVAR.runoff + sum(ground.STATVAR.water);
             ground.STATVAR.waterIce = ground.STATVAR.waterIce - ground.STATVAR.water;
             ground.STATVAR.waterIce = max(0, ground.STATVAR.waterIce);
             ground.STATVAR.water = ground.STATVAR.water .* 0;
@@ -213,12 +213,12 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
           if ground.STATVAR.ice(1) < 0.99*ground.PARA.target_layerThick(1) % move up mass
                     sf = (ground.PARA.target_layerThick(1) - ground.STATVAR.ice(1))./ground.STATVAR.ice;
                                      
-                    ground.STATVAR.waterIce = ground.STATVAR.waterIce + [ground.STATVAR.waterIce(2:end).*sf(2:end); 0] - [0; ground.STATVAR.waterIce(2:end).*sf(2:end)];
-                    ground.STATVAR.energy = ground.STATVAR.energy + [ground.STATVAR.energy(2:end).*sf(2:end); 0] - [0; ground.STATVAR.energy(2:end).*sf(2:end)]; 
-                    ground.STATVAR.layerThick = ground.STATVAR.layerThick + [ground.STATVAR.layerThick(2:end).*sf(2:end); 0] - [0; ground.STATVAR.layerThick(2:end).*sf(2:end)];
+                    ground.STATVAR.waterIce = ground.STATVAR.waterIce + [ground.STATVAR.waterIce(2:end).*sf(2:end); 0] - [0; ground.STATVAR.waterIce(2:end-1).*sf(2:end-1); 0];
+                    ground.STATVAR.energy = ground.STATVAR.energy + [ground.STATVAR.energy(2:end).*sf(2:end); 0] - [0; ground.STATVAR.energy(2:end-1).*sf(2:end-1); 0]; 
+                    ground.STATVAR.layerThick = ground.STATVAR.layerThick + [ground.STATVAR.layerThick(2:end).*sf(2:end); 0] - [0; ground.STATVAR.layerThick(2:end-1).*sf(2:end-1); 0];
 
-                    ground.STATVAR.mineral = ground.STATVAR.mineral + [ground.STATVAR.mineral(2:end).*sf(2:end); 0] - [0; ground.STATVAR.mineral(2:end).*sf(2:end)];
-                    ground.STATVAR.organic = ground.STATVAR.organic + [ground.STATVAR.organic(2:end).*sf(2:end); 0] - [0; ground.STATVAR.organic(2:end).*sf(2:end)]; 
+                    ground.STATVAR.mineral = ground.STATVAR.mineral + [ground.STATVAR.mineral(2:end).*sf(2:end); 0] - [0; ground.STATVAR.mineral(2:end-1).*sf(2:end-1);0];
+                    ground.STATVAR.organic = ground.STATVAR.organic + [ground.STATVAR.organic(2:end).*sf(2:end); 0] - [0; ground.STATVAR.organic(2:end-1).*sf(2:end-1); 0]; 
                    % ground.STATVAR.air = ground.STATVAR.air + [ground.STATVAR.air(2:end).*sf(2:end); 0] - [0; ground.STATVAR.air(2:end).*sf(2:end)]; 
 
           end

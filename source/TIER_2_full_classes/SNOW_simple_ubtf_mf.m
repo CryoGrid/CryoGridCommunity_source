@@ -1,6 +1,6 @@
 %========================================================================
 % CryoGrid GROUND class SNOW_simple_ubtf_mf
-% Simple snow scheme with upper boundary temperature forcing (dirichlet
+% Simple snow scheme with upper boundary temperature forcing (Dirichlet
 % boundary condition) and snow melt based on melt factors.
 % See TIER1 class SNOW_MELTFACTOR for description of snow melt scheme.
 %
@@ -74,7 +74,7 @@ classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW &
         function snow = finalize_init(snow, tile) 
             snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
-            snow.PARA.latitude = tile.FORCING.PARA.latitude;
+            snow.PARA.latitude = tile.PARA.latitude;
             
             snow = initialize_zero_snow_BASE(snow); 
             snow.STATVAR.excessWater = 0;
@@ -94,7 +94,7 @@ classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW &
             snow = get_boundary_condition_SNOW_u(snow, forcing); % inherited from SNOW
             
             % calculate snowmelt from air temperature forcing
-            snow = get_boundary_condition_SNOW_meltFactor(snow, tile, forcing); % inherited from SNOW
+            snow = get_boundary_condition_SNOW_meltFactor(snow, tile); % inherited from SNOW
         end
         
         
@@ -107,7 +107,7 @@ classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW &
             snow = get_boundary_condition_allSNOW_rain_u(snow, forcing); %add full snow, but rain only for snow-covered part
             
             % calculate snowmelt from air temperature forcing
-            snow = get_boundary_condition_SNOW_meltFactor(snow, forcing); % inherited from SNOW
+            snow = get_boundary_condition_SNOW_meltFactor(snow, tile); % inherited from SNOW
         end
         
         

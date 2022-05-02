@@ -348,7 +348,7 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground.PARA.default_value.z0 = {0.01};
             ground.PARA.comment.z0 = {'roughness length [m]'};
             
-            ground.PARA.default_value.SW_extinction = {2};
+            ground.PARA.default_value.SW_extinction = {1};
             ground.PARA.comment.SW_extinction = {'e-folding constant of SW extinction [1/m]'};
             
             ground.PARA.default_value.dt_max = {3600};

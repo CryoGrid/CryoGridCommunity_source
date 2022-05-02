@@ -147,7 +147,7 @@ classdef REGRID < BASE
             regridded_yesNo = 0;
             
             %reduce
-            if sum(double(snow.STATVAR.ice < 0.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area)) > 0
+            if size(snow.STATVAR.layerThick,1) >1 && sum(double(snow.STATVAR.ice < 0.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area)) > 0
                 regridded_yesNo = 1;
                 i=1;
                 while i<size(snow.STATVAR.layerThick,1)
@@ -158,7 +158,7 @@ classdef REGRID < BASE
                     end
                     i=i+1;
                 end
-                %last cell, i = size(snow.STATVAR.layerThick,1)
+                i = size(snow.STATVAR.layerThick,1);
                 if i > 1 && snow.STATVAR.ice(end,1) < 0.5 .* snow.PARA.swe_per_cell.*snow.STATVAR.area(end,1)
                     snow = merge_cells_intensive(snow, i-1, i, intensive_variables, intensive_scaling_variable);
                     snow = merge_cells_extensive(snow, i-1, i, extensive_variables);
@@ -177,6 +177,45 @@ classdef REGRID < BASE
             end  
         end
         
+        function [snow, regridded_yesNo] = regrid_snow_crocus(snow, extensive_variables, intensive_variables, intensive_scaling_variable)
+            
+            %replaces:  snow = modify_grid(snow)
+            regridded_yesNo = 0;
+            
+            %reduce
+            if size(snow.STATVAR.layerThick,1) >1 && sum(double(snow.STATVAR.ice < 0.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area)) > 0
+                regridded_yesNo = 1;
+                i=1;
+                while i<size(snow.STATVAR.layerThick,1)
+                    if snow.STATVAR.ice(i,1) < 0.5.* snow.PARA.swe_per_cell.*snow.STATVAR.area(i,1)
+                        snow = merge_cells_intensive(snow, i, i+1, intensive_variables, intensive_scaling_variable);
+                        snow = merge_cells_extensive(snow, i, i+1, extensive_variables);
+                        snow = merge_cells_snowfall_times(snow, i, i+1);
+                        %rest is done by diagostic step, get_T_water
+                    end
+                    i=i+1;
+                end
+                i = size(snow.STATVAR.layerThick,1);
+                if i > 1 && snow.STATVAR.ice(end,1) < 0.5 .* snow.PARA.swe_per_cell.*snow.STATVAR.area(end,1)
+                    snow = merge_cells_intensive(snow, i-1, i, intensive_variables, intensive_scaling_variable);
+                    snow = merge_cells_extensive(snow, i-1, i, extensive_variables);
+                    snow = merge_cells_snowfall_times(snow, i-1, i);       
+                    %rest is done by diagostic step, get_T_water
+                end
+            end
+            %expand, check only first cell
+            if snow.STATVAR.ice(1) > 1.5.*snow.PARA.swe_per_cell.*snow.STATVAR.area(1)  
+               
+                regridded_yesNo = 1;
+                split_fraction = snow.STATVAR.ice(1) ./ (snow.PARA.swe_per_cell.*snow.STATVAR.area(1)); %e.g. 1.6
+                split_fraction = (split_fraction-1)./split_fraction;
+                snow = split_cell_intensive(snow, 1, intensive_variables);
+                snow = split_cell_extensive(snow, 1, split_fraction, extensive_variables);
+                snow.STATVAR.time_snowfall = snow.STATVAR.time_snowfall(2:end,1);
+                snow = split_first_cell_snowfall_times(snow, split_fraction, 'append');
+                %rest is done by diagostic step, get_T_water
+            end  
+        end
         
         %--------service functions---------------
         %service function to split cells for extensive variables
@@ -235,6 +274,94 @@ classdef REGRID < BASE
                 ground.STATVAR.(variable_list{i,1})(pos,1) = (ground.STATVAR.(variable_list{i,1})(pos,1) .* ground.STATVAR.(scaling_variable)(pos,1) + ...
                     ground2.STATVAR.(variable_list{i,1})(pos2,1) .* ground2.STATVAR.(scaling_variable)(pos2,1)) ./ ...
                     (ground.STATVAR.(scaling_variable)(pos,1) + ground2.STATVAR.(scaling_variable)(pos2,1));
+            end
+        end
+        
+        
+        %snowfall_times
+        
+        function snow = split_first_cell_snowfall_times(snow, split_fraction, mode)
+            
+            top_snow_date = snow.STATVAR.top_snow_date(1,1);
+            time_snowfall = snow.STATVAR.time_snowfall(1,1);
+            bottom_snow_date = snow.STATVAR.bottom_snow_date(1,1);
+            
+            
+            if top_snow_date > bottom_snow_date +1
+                
+                split_fraction_sf = 0.5;
+                dec=0;
+                factor = 0.25;
+                N=0;
+                while dec == 0 && N<20
+                    
+                    snow_date_at_kink = 2.*time_snowfall - (1-split_fraction_sf) .* bottom_snow_date - split_fraction_sf .* top_snow_date;
+                    if snow_date_at_kink> top_snow_date
+                        split_fraction_sf = split_fraction_sf + factor;
+                        factor = factor./2;
+                    elseif snow_date_at_kink < bottom_snow_date
+                        split_fraction_sf = split_fraction_sf - factor;
+                        factor = factor./2;
+                    else
+                        dec = 1;
+                    end
+                    N=N+1;
+                end
+                split_fraction_sf = max(0, min(1,split_fraction_sf));
+                
+                %split cell in two
+                if split_fraction <= split_fraction_sf
+                    top_snow_date_new = top_snow_date;
+                    bottom_snow_date_new = top_snow_date + split_fraction .* (snow_date_at_kink - top_snow_date) ./ split_fraction_sf;
+                    time_snowfall_new = (top_snow_date_new + bottom_snow_date_new)./2;
+                    
+                    time_snowfall_new = [time_snowfall_new;  ((split_fraction_sf - split_fraction) .*(bottom_snow_date_new+snow_date_at_kink)./2 + (1 - split_fraction_sf) .* (snow_date_at_kink+bottom_snow_date)./2)./(1-split_fraction)];
+                    top_snow_date_new = [top_snow_date_new; bottom_snow_date_new];
+                    bottom_snow_date_new = [bottom_snow_date_new; bottom_snow_date];
+                    
+                else
+                    bottom_snow_date_new = bottom_snow_date;
+                    top_snow_date_new = bottom_snow_date + (1-split_fraction) .* (snow_date_at_kink - bottom_snow_date) ./ (1 - split_fraction_sf);
+                    time_snowfall_new = (top_snow_date_new + bottom_snow_date_new)./2;
+                    
+                    time_snowfall_new = [((split_fraction - split_fraction_sf) .*(top_snow_date_new+snow_date_at_kink)./2 + split_fraction_sf .* (snow_date_at_kink + top_snow_date)./2)./split_fraction; time_snowfall_new];
+                    bottom_snow_date_new = [top_snow_date_new; bottom_snow_date_new];
+                    top_snow_date_new = [top_snow_date; top_snow_date_new];
+                end
+            else %normal intensive duplication if all times are equal
+                time_snowfall_new = [time_snowfall; time_snowfall];
+                bottom_snow_date_new = [bottom_snow_date; bottom_snow_date];
+                top_snow_date_new = [top_snow_date; top_snow_date];
+            end
+            
+            if strcmp(mode, 'reduce')
+                snow.STATVAR.top_snow_date(1,1) = top_snow_date_new(2,1);
+                snow.STATVAR.time_snowfall(1,1) = time_snowfall_new(2,1);
+                snow.STATVAR.bottom_snow_date(1,1) = bottom_snow_date_new(2,1);
+            elseif strcmp(mode, 'append')
+                snow.STATVAR.top_snow_date = [top_snow_date_new; snow.STATVAR.top_snow_date(2:end,1)];
+                snow.STATVAR.time_snowfall = [time_snowfall_new; snow.STATVAR.time_snowfall(2:end,1)];
+                snow.STATVAR.bottom_snow_date = [bottom_snow_date_new; snow.STATVAR.bottom_snow_date(2:end,1)];
+            end
+            
+        end
+        
+        function ground = merge_cells_snowfall_times(ground, pos1,  pos2) %specific function merginging bottom and top snow dates
+            dummy = ground.STATVAR.top_snow_date(pos2,1);
+            ground.STATVAR.top_snow_date(pos2,:) = [];
+            ground.STATVAR.top_snow_date = [ground.STATVAR.top_snow_date(1:pos1-1,1); max(ground.STATVAR.top_snow_date(pos1,1), dummy); ...
+                ground.STATVAR.top_snow_date(pos1+1:end,1)];
+            
+            dummy = ground.STATVAR.bottom_snow_date(pos2,1);
+            ground.STATVAR.bottom_snow_date(pos2,:) = [];
+            ground.STATVAR.bottom_snow_date = [ground.STATVAR.bottom_snow_date(1:pos1-1,1); min(ground.STATVAR.bottom_snow_date(pos1,1), dummy); ...
+                ground.STATVAR.bottom_snow_date(pos1+1:end,1)];
+        end
+        
+        function snow = merge_cells_snowfall_times2(snow, pos, snow2, pos2) %specific function merginging bottom and top snow dates
+            if snow2.STATVAR.waterIce(pos2,1) > 0
+                snow.STATVAR.top_snow_date(pos,1) = max(snow.STATVAR.top_snow_date(pos,1), snow2.STATVAR.top_snow_date(pos2,1));
+                snow.STATVAR.bottom_snow_date(pos,1) = min(snow.STATVAR.bottom_snow_date(pos,1), snow2.STATVAR.bottom_snow_date(pos2,1));
             end
         end
         

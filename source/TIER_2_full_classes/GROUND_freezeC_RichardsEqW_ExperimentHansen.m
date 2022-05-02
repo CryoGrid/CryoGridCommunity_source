@@ -1,7 +1,8 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freezeC_RichardsEqW_seb
-% heat conduction, Richards equation water scheme, freeze curve based on
-% freezing=drying assumption, surface energy balance
+% heat conduction, Richards equation water scheme, Painter and Karra (2014) 
+% freeze curve, surface energy balance, designed to reproduce Mizoguchi
+% (1990) experiment as documented in Hansson et al., 2004
 % S. Westermann, October 2020
 %========================================================================
 
@@ -53,7 +54,8 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
             ground.STATVAR.organic = [];   % total volume of organics [m3]
             ground.STATVAR.energy = [];    % total internal energy [J]
             ground.STATVAR.soil_type = []; % integer code for soil_type; 1: sand; 2: silt: 3: clay: 4: peat; 5: water (i.e. approximation of free water, very large-pore ground material).
-                        
+            ground.STATVAR.permeability = [];            
+            
             ground.STATVAR.T = [];  % temperature [degree C]
             ground.STATVAR.water = [];  % total volume of water [m3]
             ground.STATVAR.waterPotential = []; %soil water potential [Pa]
@@ -153,13 +155,16 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
             ground.TEMP.surface_runoff = 0;
         end
         
+        % Good solution with original config, square behaviour of ub, no
+        % flux lb, no start delay, mixing_squares
+        
         %---time integration------
         
         function ground = get_boundary_condition_u(ground, tile)
             %Experiment Hanssen et al., 2004
-            %if tile.t>=tile.FORCING.PARA.start_time+3
+            %if tile.t>=tile.FORCING.PARA.start_time+0.5
                 %ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - 28.*(ground.STATVAR.T(1)+6)  ;
-                ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - (40 - 30/16 .* max(-4, min(0, ground.STATVAR.T(1))).^2).*(ground.STATVAR.T(1)+6) ;
+                ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) - (40 - 30/16 .* max(-4, min(0, ground.STATVAR.T(1))).^2).*(ground.STATVAR.T(1)+6);
             %end
         end
         
@@ -173,7 +178,7 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
             
             ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) + ground.TEMP.F_lb;
             
-            %ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) - 6.*(ground.STATVAR.T(1) - 6.7); %modification by Painter Marsflo
+            %ground.TEMP.d_energy(end) = ground.TEMP.d_energy(end) - 3.*(ground.STATVAR.T(1) - 6.7); %modification by Painter Marsflo with hc = 6, they suggets 3 in original paper, but are not sure
             
             ground = get_boundary_condition_l_water2(ground);  %if flux not zero, check that the water flowing out is available! Not implemented here.
         end
@@ -241,6 +246,7 @@ classdef GROUND_freezeC_RichardsEqW_ExperimentHansen < SEB & HEAT_CONDUCTION & F
         
         function ground = conductivity(ground)
             ground = conductivity_mixing_squares(ground);
+            %ground = thermalConductivity_CLM4_5(ground);
         end
         
         %-----LATERAL-------------------

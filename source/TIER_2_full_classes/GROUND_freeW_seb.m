@@ -1,6 +1,7 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freeW_bucketW_seb
-% heat conduction, free water freeze curve, surface energy balance
+% heat conduction, free water freeze curve, constant water + ice water balance, 
+% surface energy balance
 % S. Westermann, October 2020
 %========================================================================
 

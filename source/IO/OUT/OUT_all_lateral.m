@@ -1,4 +1,5 @@
 %========================================================================
+% CryoGrid OUT class OUT_all_lateral
 % CryoGrid OUT class defining storage format of the output 
 % OUT_all_lateral stores identical copies of all GROUND classses (including STATVAR, TEMP, PARA) in the
 % stratigraphy for each output timestep and copies of all LATERAL classes.
@@ -105,7 +106,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                 while ~isequal(CURRENT, BOTTOM)
                     if isprop(CURRENT, 'CHILD') && CURRENT.CHILD ~= 0
                         res=copy(CURRENT.CHILD);
-                        res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_NEXT=[];  res.PARENT = []; %cut all dependencies
+                        res.NEXT =[]; res.PREVIOUS=[]; res.IA_NEXT=[]; res.IA_PREVIOUS=[];  res.PARENT = []; %cut all dependencies
                         result=[result; {res}];
                     end
                     res = copy(CURRENT);

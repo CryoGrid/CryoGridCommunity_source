@@ -1,6 +1,8 @@
 %========================================================================
 % CryoGrid LATERAL_IA class LAT_OVERLAND_FLOW 
-% simulates overland flow according to Gauckler-Manning equation
+% LAT_OVERLAND_FLOW simulates lateral overland flow according to 
+% Gauckler-Manning equation, used with stratigraphy classes representing
+% standing surface water
 % S. Westermann, June 2021
 %========================================================================
 

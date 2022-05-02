@@ -7,7 +7,7 @@
 % Have a look at the existing forcing files in the folder “forcing” and prepare 
 % new forcing files in the same way. The mandatory forcing variables are air temperature 
 % (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2), 
-% incoming short-.wave radiation (Sin, in W/m2), absolute humidity (q, in 
+% incoming short-wave radiation (Sin, in W/m2), absolute humidity (q, in 
 % kg water vapor / kg air), wind speed (wind, in m/sec), rainfall (rainfall, in mm/day), 
 % snowfall (snowfall, in mm/day) and timestamp (t_span, 
 % in Matlab time / increment 1 corresponds to one day). 

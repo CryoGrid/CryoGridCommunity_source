@@ -1,7 +1,7 @@
 %========================================================================
 % CryoGrid GROUND class GROUND_freezeC_seb
-% heat conduction, constant water  +ice, freeze curve based on
-% freezing=drying assumption, surface energy balance
+% heat conduction, constant water+ice water balance, Painter and Karra (2014) 
+% freeze curve, surface energy balance
 % S. Westermann, October 2020
 %========================================================================
 

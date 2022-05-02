@@ -121,6 +121,51 @@ classdef SEB < BASE
             end
         end
         
+        %latent heat flux for potential evapotranspiration
+        function Q_e = Q_eq_potET_snow(seb, forcing) 
+            
+            uz = forcing.TEMP.wind;
+            p = forcing.TEMP.p;
+            q = forcing.TEMP.q;
+            Tz = forcing.TEMP.Tair;
+            
+            z =  seb.PARA.airT_height;
+            z0 = seb.PARA.z0;
+            kappa = seb.CONST.kappa;
+            
+            water_fraction = seb.STATVAR.water(1,1) ./ seb.STATVAR.waterIce(1,1);
+            ice_fraction = seb.STATVAR.ice(1,1) ./ seb.STATVAR.waterIce(1,1);
+                        
+            TForcing = seb.STATVAR.T(1);
+            Lstar = seb.STATVAR.Lstar;
+            
+            Tz=Tz+273.15;
+            TForcing=TForcing+273.15;
+            rho = rho_air(seb, p, Tz);
+            L_w = latent_heat_evaporation(seb, TForcing); % 1e3.*(2500.8 - 2.36.*(TForcing-273.15));  %latent heat of evaporation of water
+            L_i = latent_heat_sublimation(seb, TForcing); % 1e3.*2834.1; %latent heat of sublimation
+
+            if TForcing<273.15 || water_fraction <= 0
+                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                seb.STATVAR.sublimation = -Q_e ./(seb.CONST.rho_w .* seb.CONST.L_s) .* seb.STATVAR.area(1);
+                seb.TEMP.sublimation_energy = seb.STATVAR.sublimation .* (seb.STATVAR.T(1) .* seb.CONST.c_i - seb.CONST.L_f);
+                seb.STATVAR.evap = 0;
+                seb.STATVAR.evap_energy = 0;
+            else
+                evap_fraction = max(0, min(water_fraction./0.1,1));
+                sublim_fraction = 1 - evap_fraction;
+                Qe_sublim = -sublim_fraction .* rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Qe_evap = -evap_fraction .* rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                
+                seb.STATVAR.sublimation = - Qe_sublim ./(seb.CONST.rho_w .* L_i) .* seb.STATVAR.area(1);
+                seb.TEMP.sublimation_energy = seb.STATVAR.sublimation .* (seb.STATVAR.T(1) .* seb.CONST.c_i - seb.CONST.L_f);
+                seb.STATVAR.evap = - Qe_evap ./(seb.CONST.rho_w .* L_w) .* seb.STATVAR.area(1);
+                seb.TEMP.evap_energy = seb.STATVAR.evap .* seb.STATVAR.T(1) .* seb.CONST.c_w;
+                
+                Q_e = evap_fraction .* Qe_evap + sublim_fraction .* Qe_sublim;
+            end
+        end
+        
         
         %latent heat flux from evaporation (not transpiration!), CLM 4.5,
         %to be used with Richards Equation scheme
@@ -224,7 +269,7 @@ classdef SEB < BASE
             %S_up and S_down can in principle be spectrally resolved when provided as
             %row array, using e.g. spectral_ranges = [0.71 0.21 0.08]; 
             %SW extinction is assumed constant throughout class 
-            cut_off = 0.1; %[W/m2], radiation is not penetrated further if cutoff is reached
+            cut_off = 0.1.* seb.STATVAR.area(1,1); %[W/m2], radiation is not penetrated further if cutoff is reached
             
             S_up = seb.PARA.albedo .* S_down;
             S_down = (1 - seb.PARA.albedo) .* S_down;
@@ -252,7 +297,7 @@ classdef SEB < BASE
                 end
                 if sum(S_up2) < cut_off  %all radiation absorbed, only S_up goes out
                     i = max(i, 1);
-                    seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_down); % .* seb.STATVAR.area(i,1);
+                    seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_up2); % .* seb.STATVAR.area(i,1);
                 else
                     S_up = S_up + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!! 
                 end
@@ -265,7 +310,7 @@ classdef SEB < BASE
             %S_up and S_down are spectrally resolved when provided as
             %row array, using e.g. spectral_ranges = [0.71 0.21 0.08]; 
             %SW extinction is assumed constant throughout class 
-            cut_off = 0.1; %[W/m2], radiation is not penetrated further if cutoff is reached
+            cut_off = 0.1.* seb.STATVAR.area(1,1); %[W/m2], radiation is not penetrated further if cutoff is reached
             
             S_up = seb.TEMP.spectral_albedo .* S_down;
             S_down = (1 - seb.TEMP.spectral_albedo) .* S_down;
@@ -293,7 +338,7 @@ classdef SEB < BASE
                 end
                 if sum(S_up2) < cut_off  %all radiation absorbed, only S_up goes out
                     i = max(i, 1);
-                    seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_down); % .* seb.STATVAR.area(i,1);
+                    seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_up2); % .* seb.STATVAR.area(i,1);
                 else
                     S_up = S_up + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!! 
                 end
@@ -311,10 +356,12 @@ classdef SEB < BASE
 
                 depth_weighting_E = exp(-1./seb.PARA.evaporationDepth .* cumsum(seb.STATVAR.layerThick));  %exponential decrease with depth
                 depth_weighting_E(depth_weighting_E<0.05) = 0;
+                depth_weighting_E(1,1) = depth_weighting_E(1,1) + double(depth_weighting_E(1,1) == 0); %ADDED Sebastian, prevents depth_weighting to become all zero and NaN in the next line when first grid cell is very thick
                 depth_weighting_E = depth_weighting_E .* seb.STATVAR.layerThick ./ sum(depth_weighting_E .* seb.STATVAR.layerThick,1); %normalize
                                
                 depth_weighting_T = exp(-1./seb.PARA.rootDepth .* cumsum(seb.STATVAR.layerThick));
                 depth_weighting_T(depth_weighting_T<0.05) = 0;
+                depth_weighting_T(1,1) = depth_weighting_T(1,1) + double(depth_weighting_T(1,1) == 0); %ADDED Sebastian, prevents depth_weighting to become all zero and NaN in the next line when first grid cell is very thick
                 depth_weighting_T = depth_weighting_T .* seb.STATVAR.layerThick ./ sum(depth_weighting_T .* seb.STATVAR.layerThick,1);
 
                 fraction_ET = fraction_T .* depth_weighting_T .* seb.PARA.ratioET + fraction_E .* depth_weighting_E .* (1-seb.PARA.ratioET); %make this dependent on area?
@@ -342,10 +389,12 @@ classdef SEB < BASE
 
                 depth_weighting_E = exp(-1./seb.PARA.evaporationDepth .* cumsum(seb.STATVAR.layerThick));  %exponential decrease with depth
                 depth_weighting_E(depth_weighting_E<0.05) = 0;
+                depth_weighting_E(1,1) = depth_weighting_E(1,1) + double(depth_weighting_E(1,1) == 0); %ADDED Sebastian, prevents depth_weighting to become all zero and NaN in the next line when first grid cell is very thick
                 depth_weighting_E = depth_weighting_E .* seb.STATVAR.layerThick ./ sum(depth_weighting_E .* seb.STATVAR.layerThick,1); %normalize
                                
                 depth_weighting_T = exp(-1./seb.PARA.rootDepth .* cumsum(seb.STATVAR.layerThick));
                 depth_weighting_T(depth_weighting_T<0.05) = 0;
+                depth_weighting_T(1,1) = depth_weighting_T(1,1) + double(depth_weighting_T(1,1) == 0); %ADDED Sebastian, prevents depth_weighting to become all zero and NaN in the next line when first grid cell is very thick
                 depth_weighting_T = depth_weighting_T .* seb.STATVAR.layerThick ./ sum(depth_weighting_T .* seb.STATVAR.layerThick,1);
 
                 fraction_ET = fraction_T .* depth_weighting_T .* seb.PARA.ratioET + fraction_E .* depth_weighting_E .* (1-seb.PARA.ratioET); %make this dependent on area?
@@ -369,7 +418,7 @@ classdef SEB < BASE
             %waterC = seb.STATVAR.waterIce ./ seb.STATVAR.layerThick ./ max(1e-20, seb.STATVAR.area); %area can get zero if the area of SNOW CHILD is 100%
             waterC = seb.STATVAR.waterIce ./ seb.STATVAR.layerThick ./ seb.STATVAR.area;
             waterC(isnan(waterC)) = 0;
-            fraction=double(seb.STATVAR.T>0).*double(seb.STATVAR.T(1)>0).*(double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
+            fraction=double(seb.STATVAR.T>0).*double(seb.STATVAR.T(1)>0).*double(waterC > 0.03) .* (double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
 
         end
 
@@ -378,7 +427,7 @@ classdef SEB < BASE
             waterC = seb.STATVAR.waterIce ./ (seb.STATVAR.layerThick .* seb.STATVAR.area - seb.STATVAR.XwaterIce);
             %waterC = seb.STATVAR.waterIce ./ max(1e-20,seb.STATVAR.layerThick .* seb.STATVAR.area - seb.STATVAR.XwaterIce);
             waterC(isnan(waterC)) = 0;
-            fraction=double(seb.STATVAR.T>0).*double(seb.STATVAR.T(1)>0).*(double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
+            fraction=double(seb.STATVAR.T>0).*double(seb.STATVAR.T(1)>0).*double(waterC > 0.03).*(double(waterC >= seb.STATVAR.field_capacity) + double(waterC < seb.STATVAR.field_capacity).*0.25.*(1-cos(pi().*waterC./seb.STATVAR.field_capacity)).^2);
         end
         
         %evaporation for water body
