@@ -315,7 +315,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             end
         end
 
-        function lateral = get_overlap_cells2(lateral, variable, variable_out) %no need to loop through stratigraphy, al the information should be in lateral
+        function lateral = get_overlap_cells2(lateral, variable, variable_out) %no need to loop through stratigraphy, all the information should be in lateral
             for i=1:size(lateral.ENSEMBLE,1)
                 if lateral.PARA.connected(lateral.STATVAR.index, lateral.ENSEMBLE{i,1}.index)
                     cell_1 = -(lateral.STATVAR.(variable) - double(lateral.PARA.hill_slope) .* lateral.STATVAR.ground_surface_elevation);

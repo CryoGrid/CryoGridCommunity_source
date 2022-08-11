@@ -112,6 +112,10 @@ classdef BASE < matlab.mixin.Copyable
             
         end
         
+        function ground = lateral3D_pull_water_unconfined_aquifer_RichardsEq(ground, lateral)
+   
+        end
+        
         function ground = lateral3D_pull_water_general_aquifer(ground, lateral)
             lateral.TEMP.open_system = 0;
         end

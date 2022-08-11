@@ -8,7 +8,26 @@
 %========================================================================
 
 
-classdef LAT3D_WATER_UNCONFINED_AQUIFER2 < BASE_LATERAL
+% Required variables:
+% Depths: absolute elevation of each grid cell
+% Gravitational_potential: same as depth for unsaturated, hydrostatic potential for saturated, based on water_table_elevation, or the first saturated cell in case of Richards Eq class
+% When getting to unsaturated cell, go back to depth and start new (assumes that water can always drain, also below a hard bottom)
+% Water_potential: zero when saturated, and for classes w.o. water potential in hydrology
+% Make two variables out of water-status
+% Water_available: water available for drainage in a cell
+% Water_deficit: max water that can be taken up in a cell 
+% Hydraulic conductivity: always has a value, set to zero when frozen/hard_bottom
+% Ground_surface_elevation: as before;
+% 
+% Potential = Gravitational_potential – depths + Water_potential.
+% Flux = -hyd_cond * (potential1+ ground_surface_elevation1 - potential2-ground_surface_elevation2) / distance .* cross_section;
+% Then reduce with the two water variables
+% 
+% To push: take out/add water flux
+
+
+
+classdef LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ < BASE_LATERAL
 
     
     methods
@@ -23,10 +42,8 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER2 < BASE_LATERAL
         
         function lateral = provide_PARA(lateral)
             lateral.PARA.hardBottom_cutoff = []; %0.03; %hard bottom if saturated and water content below
-            %lateral.PARA.distance_reservoir = []; %2; 
-           % lateral.PARA.reservoir_contact_length = []; %1;
             lateral.PARA.ia_time_increment = []; %0.25; %must be a multiple of the time increment of the main lateral class
-            %lateral.PARA.ia_time_next = [];
+            
         end
         
         function lateral = provide_STATVAR(lateral)
@@ -42,20 +59,20 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER2 < BASE_LATERAL
         %--- time integration---------------
         
         function lateral = pull(lateral, tile)
-            
-            lateral.PARENT.STATVAR.depths = [];
+            %calculate as in ground = lateral_push_water_reservoir_RichardsEq_simple(ground, lateral)
+            lateral.PARENT.STATVAR.depths = []; %not sure if needed?
             lateral.PARENT.STATVAR.water_status = [];
             lateral.PARENT.STATVAR.hydraulicConductivity = [];
-            lateral.PARENT.STATVAR.water_table_elevation = [];
-            lateral.PARENT.STATVAR.water_available = 0;
+            lateral.PARENT.STATVAR.matric_potential_head = [];
+            lateral.PARENT.STATVAR.hydrostatic_head = 0;
             lateral.PARENT.STATVAR.T_water = [];
-            lateral.PARENT.STATVAR.water_table_top_cell = 0;         
+            lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
             
             lateral.TEMP.open_system = 1; %start with open system
 
             CURRENT = lateral.PARENT.TOP.NEXT;
             while ~(strcmp(class(CURRENT), 'Bottom')) && lateral.TEMP.open_system == 1
-                CURRENT = lateral3D_pull_water_unconfined_aquifer(CURRENT, lateral);
+                CURRENT = lateral3D_pull_water_unconfined_aquifer_RichardsEq(CURRENT, lateral);
                 CURRENT = CURRENT.NEXT;
             end
         end
@@ -80,52 +97,20 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER2 < BASE_LATERAL
                         hydraulicConductivity(isnan(hydraulicConductivity)) = 0;
 
                         flux_i = contact_length .* lateral.PARENT.ENSEMBLE{j,1}.overlap(i,3) .* hydraulicConductivity .* ...
-                            -(lateral.PARENT.STATVAR.water_table_elevation - lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation);
+                            -(lateral.PARENT.STATVAR.matric_potential_head(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,1),1) - lateral.PARENT.ENSEMBLE{j,1}.matric_potential_head(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,2),1) + ...
+                            lateral.PARENT.STATVAR.hydrostatic_head(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,1),1) - lateral.PARENT.ENSEMBLE{j,1}.hydrostatic_head(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,2),1) + ...
+                            double(lateral.PARENT.PARA.hill_slope) .* (lateral.PARENT.STATVAR.ground_surface_elevation - lateral.PARENT.ENSEMBLE{j,1}.ground_surface_elevation)); 
+                            
                         flux(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,1),1) = flux(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,1),1) + flux_i;
                         flux_energy(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,1),1) = flux_energy(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,1),1) + flux_i .* lateral.PARENT.CONST.c_w .* ...
                             (double(flux_i<0).*lateral.PARENT.STATVAR.T_water(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,1),1) + ...
                             double(flux_i>=0) .* lateral.PARENT.ENSEMBLE{j,1}.T_water(lateral.PARENT.ENSEMBLE{j,1}.overlap(i,2),1));
-                        
+                        %flux <0 outflow of own worker
+                        %flux >0 inflow into own worker
                     end
-                    %seepage flow of saturated cells above other cell's water table
-                    if lateral.PARENT.STATVAR.water_available || lateral.PARENT.ENSEMBLE{j,1}.water_available
-                        if lateral.PARENT.STATVAR.water_table_elevation < lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation %inflow
-                            depth_rel2surface = lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation - lateral.PARENT.ENSEMBLE{j,1}.depths;
-                            depth2other_worker_water_table = lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation - lateral.PARENT.STATVAR.water_table_elevation;
-                            depth_rel2surface = max(0,depth_rel2surface);
-                            depth_rel2surface = min(depth2other_worker_water_table,depth_rel2surface);
-                            %head = (depth_rel2surface(1:end-1,1) + depth_rel2surface(2:end,1))/2;
-                            head = lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation - lateral.PARENT.STATVAR.water_table_elevation;
-                            contact_height = -(depth_rel2surface(1:end-1,1) - depth_rel2surface(2:end,1));
-                            seepage_flux =   contact_length .* contact_height .* lateral.PARENT.ENSEMBLE{j,1}.hydraulicConductivity .* head ./ distance; %inflow!
-                            
-                            seepage_flux_energy = sum(seepage_flux .* lateral.PARENT.CONST.c_w .* lateral.PARENT.ENSEMBLE{j,1}.T_water,1);
-                            seepage_flux = sum(seepage_flux, 1);
-                            %put water in uppmost saturated cell
-                            if lateral.PARENT.STATVAR.water_available
-                                top_cell_saturated = find(lateral.PARENT.STATVAR.water_status(:,1)>0, 1);
-                                flux(top_cell_saturated,1) = flux(top_cell_saturated,1) + seepage_flux;
-                                flux_energy(top_cell_saturated,1) = flux_energy(top_cell_saturated,1) + seepage_flux_energy;
-                            elseif ~isempty(lateral.PARENT.STATVAR.water_status)  %lateral.PARENT.STATVAR.water_table_top_cell > 0
-                                flux(end,1) = flux(end,1) + seepage_flux;
-                                flux_energy(end,1) = flux_energy(end,1) + seepage_flux_energy;
-                            else
-                                lateral.STATVAR.surface_runoff = lateral.STATVAR.surface_runoff + flux;
-                            end
-                            
-                        elseif lateral.PARENT.STATVAR.water_table_elevation > lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation %outflow
-                            depth_rel2surface = lateral.PARENT.STATVAR.water_table_elevation - lateral.PARENT.STATVAR.depths;
-                            depth2other_worker_water_table = lateral.PARENT.STATVAR.water_table_elevation - lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation;
-                            depth_rel2surface = max(0,depth_rel2surface);
-                            depth_rel2surface = min(depth2other_worker_water_table,depth_rel2surface);
-                            %head = (depth_rel2surface(1:end-1,1) + depth_rel2surface(2:end,1))/2;
-                            head = lateral.PARENT.STATVAR.water_table_elevation - lateral.PARENT.ENSEMBLE{j,1}.water_table_elevation;
-                            contact_height = -(depth_rel2surface(1:end-1,1) - depth_rel2surface(2:end,1));
-                            seepage_flux =  - contact_length .* contact_height .* lateral.PARENT.STATVAR.hydraulicConductivity .* head ./ distance; %outflow!
-                            flux = flux + seepage_flux;
-                            flux_energy = flux_energy + seepage_flux .* lateral.PARENT.CONST.c_w .* lateral.PARENT.STATVAR.T_water;
-                        end
-                    end
+                    
+                    %in the end add calculation of overland flow here, when Xice Ricrds Eq class exists!
+                    
                 end
             end
             
@@ -147,30 +132,12 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER2 < BASE_LATERAL
             lateral.PARENT.STATVAR.water_flux_energy = flux_energy .* lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec;
             lateral.STATVAR.subsurface_run_off = sum(lateral.PARENT.STATVAR.water_flux);
             
-             %modified Sep2020, moved to push
-%             if ~isempty(lateral.PARENT.STATVAR.water_flux)
-%                 if lateral.PARENT.STATVAR.water_table_top_cell>0
-%                     lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell,1) = lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell,1) + lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell+1,1);
-%                     lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell+1,:) = [];
-%                     lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell,1) = lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell,1) + lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell+1,1);
-%                     lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell+1,:) = [];
-%                     
-%                 end
-%             end
+
             
         end
 
         function lateral = push(lateral, tile)
             if ~isempty(lateral.PARENT.STATVAR.water_flux)
-                
-                %modified Sep2020
-                if lateral.PARENT.STATVAR.water_table_top_cell>0
-                    lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell,1) = lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell,1) + lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell+1,1);
-                    lateral.PARENT.STATVAR.water_flux(lateral.PARENT.STATVAR.water_table_top_cell+1,:) = [];
-                    lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell,1) = lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell,1) + lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell+1,1);
-                    lateral.PARENT.STATVAR.water_flux_energy(lateral.PARENT.STATVAR.water_table_top_cell+1,:) = [];
-                    
-                end
                 
                 lateral.PARENT.STATVAR.water_up = 0;
                 lateral.PARENT.STATVAR.water_up_energy = 0;

@@ -79,32 +79,33 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             end
             temp.time = ncread([forcing.PARA.forcing_path 't2m.nc'], 'time');
             
-            temp.info = ncinfo([forcing.PARA.forcing_path 't2m.nc']);
-            Index1 = find(contains({temp.info.Variables.Name},'time'));
-            Index2 = find(contains({temp.info.Variables(Index1).Attributes.Name},'units'));
-            reference = split(temp.info.Variables(Index1).Attributes(Index2).Value);
-            reference = reference(3);
-            reference_date = split(reference,"-");
-            reference_date = str2double(reference_date);
-            forcing.DATA.timeForcing = datenum(reference_date(1),reference_date(2),reference_date(3)) + double(temp.time)./24;
+%             temp.info = ncinfo([forcing.PARA.forcing_path 't2m.nc']);
+%             Index1 = find(contains({temp.info.Variables.Name},'time'));
+%             Index2 = find(contains({temp.info.Variables(Index1).Attributes.Name},'units'));
+%             reference = split(temp.info.Variables(Index1).Attributes(Index2).Value);
+%             reference = reference(3);
+%             reference_date = split(reference,"-");
+%             reference_date = str2double(reference_date);
+%             forcing.DATA.timeForcing = datenum(reference_date(1),reference_date(2),reference_date(3)) + double(temp.time)./24;
             
-            %forcing.DATA.timeForcing = datenum(1900,1,1) + double(temp.time)./24;
+            forcing.DATA.timeForcing = datenum(1900,1,1) + double(temp.time)./24;
             forcing.DATA.Tair = temp.t2m - forcing.CONST.Tmfw;
             forcing.DATA.wind = sqrt(temp.u10.^2 + temp.u10.^2);
             forcing.DATA.Sin = temp.ssrd./3600;
-            %forcing.DATA.Sin = [0;0;forcing.DATA.Sin];
+            forcing.DATA.Sin = [0;0;forcing.DATA.Sin];
             forcing.DATA.Lin = temp.strd./3600;
-            %forcing.DATA.Lin = [0;0;forcing.DATA.Lin];
+            forcing.DATA.Lin = [0;0;forcing.DATA.Lin];
             forcing.DATA.p = temp.sp; %in [Pa]!900.*100 + forcing.DATA.Tair.*0;
             forcing.DATA.q = (double(forcing.DATA.Tair<0).*satPresIce(forcing, temp.d2m) + double(forcing.DATA.Tair>=0).*satPresWater(forcing, temp.d2m))./ forcing.DATA.p;
             
             forcing.DATA.S_TOA = temp.tisr ./ 3600;
-            %forcing.DATA.S_TOA = [0;0;forcing.DATA.S_TOA];
+            forcing.DATA.S_TOA = [0;0;forcing.DATA.S_TOA];
             
             %             size(temp.tp)
             %             size(forcing.DATA.Tair)
             
-            %temp.tp = [0;0; temp.tp]; %append missing first two timesteps
+            temp.tp = [0;0; temp.tp]; %append missing first two timesteps
+            
             forcing.DATA.snowfall = temp.tp .*24.*1000 .* (double(forcing.DATA.Tair <= forcing.PARA.all_snow_T)  + ...
                 double(forcing.DATA.Tair > forcing.PARA.all_snow_T & forcing.DATA.Tair <= forcing.PARA.all_rain_T) .* ...
                 (forcing.DATA.Tair - forcing.PARA.all_snow_T) ./ max(1e-12, (forcing.PARA.all_rain_T - forcing.PARA.all_snow_T)));
