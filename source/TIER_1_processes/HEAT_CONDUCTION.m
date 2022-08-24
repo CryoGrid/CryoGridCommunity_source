@@ -138,8 +138,35 @@ classdef HEAT_CONDUCTION < BASE
             k1 = -0.06023;
             k2 = 2.5425;
             k3 = 289.99-273.15;
-            snow.STATVAR.thermCond + snow.STATVAR.thermCond +  max(0,k1-k2./(snow.STATVAR.T-k3));% tile.FORCING.TEMP.p ./ 1.05e5 .*
+            snow.STATVAR.thermCond = snow.STATVAR.thermCond +  max(0,k1-k2./(snow.STATVAR.T-k3));% tile.FORCING.TEMP.p ./ 1.05e5 .*
             
+        end
+        
+        function snow = conductivity_snow_Jordan(snow)
+            % Alternative snow conductivity parameterization, based on
+            % "Jordan, R. (1991). A one-dimensional temperature model for a snow cover" 
+            % R. B. Zweigel, July 2022
+            k_ice = snow.CONST.k_i;
+            k_air = snow.CONST.k_a;
+            rho_ice = snow.CONST.rho_i;
+            
+            rho = rho_ice .* snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area;
+            snow.STATVAR.thermCond = k_air + (7.75e-5.*rho + 1.105e-6*rho.^2)*(k_ice-k_air);
+            % Note that k_ice in Yen's parameteruization is made
+            % temperature dependent!
+        end
+        
+        function snow = conductivity_snow_Sturm(snow)
+            % Alternative snow conductivity parameterization, based on
+            % "Sturm et al. (1997) Thermal conductivity of seasonal snow, doi:10.3189/s0022143000002781" 
+            % R. B. Zweigel, July 2022
+            rho_ice = snow.CONST.rho_i;
+            rho_water = snow.CONST.rho_w;
+            
+            rho = rho_ice./rho_water .* snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area;
+            snow.STATVAR.thermCond = double(rho<.156).*(.023 + .234.*rho) ...
+                + double(rho>=.156 & rho<=.6).*(.138 - 1.01*rho + 3.233.*rho.^2) ...
+                + double(rho>.6).*(.138 - 1.01*.6 + 3.233.*.6.^2);
         end
         
     end

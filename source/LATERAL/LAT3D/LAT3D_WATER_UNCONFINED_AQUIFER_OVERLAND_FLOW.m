@@ -64,7 +64,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
         
         function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
 
-            lateral.PARENT = get_overlap_cells(lateral.PARENT, 'depths', 'overlap');
+            lateral.PARENT = get_overlap_cells2(lateral.PARENT, 'depths', 'overlap');
             
             %calculate fluxes
             flux = lateral.PARENT.STATVAR.hydraulicConductivity .* 0;
@@ -164,12 +164,19 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
                         %flow that would lead to the same water level in
                         %both tiles
                         max_flow2same_level = lateral.PARENT.STATVAR.area_flow .* lateral.PARENT.ENSEMBLE{j,1}.area_flow .* (lateral.PARENT.STATVAR.depths(1,1) - lateral.PARENT.ENSEMBLE{j,1}.depths(1,1)) ./ (lateral.PARENT.STATVAR.area_flow + lateral.PARENT.ENSEMBLE{j,1}.area_flow) ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec);
-                        flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(min(flow, lateral.PARENT.STATVAR.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)), lateral.PARENT.ENSEMBLE{j,1}.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
-%                         if gradient < 0
-%                            T_water =  lateral.PARENT.STATVAR.T_water(1,1);
-%                         elseif gradient > 0
-%                             T_water = lateral.PARENT.ENSEMBLE{j,1}.T_water(1,1);
-%                         end
+                        
+                        %TEST Sebastian                        
+                        %flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(min(flow, lateral.PARENT.STATVAR.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)), lateral.PARENT.ENSEMBLE{j,1}.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
+
+
+                        if gradient < 0 %own realization higher, looses water
+                            flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(flow, lateral.PARENT.STATVAR.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
+                        else
+                            flow = sign(gradient) .* min(abs(max_flow2same_level./8), min(flow, lateral.PARENT.ENSEMBLE{j,1}.max_flow ./ (lateral.PARA.ia_time_increment .* lateral.PARENT.CONST.day_sec)));
+                        end
+                    %end TEST Sebastian
+                    
+                    
                         flow_energy = flow .* lateral.PARENT.CONST.c_w .* T_water;
                         
                         flux(1,1) = flux(1,1) + flow;
@@ -259,8 +266,28 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
             lateral.PARA.ia_time_next = t;
         end
         
+        
+        %-------------param file generation-----
+        function ground = param_file_info(ground)
+            ground = param_file_info@BASE_LATERAL(ground);
+            
+            ground.PARA.class_category = 'LATERAL_IA';
+            
+            ground.PARA.options = [];
+            ground.PARA.STATVAR = [];
+            
+            ground.PARA.default_value.hardBottom_cutoff = {0.03};
+            ground.PARA.comment.hardBottom_cutoff = {'hard bottom  = no water flow if saturated and water content below [vol. water content, -]'};
+            
+            ground.PARA.default_value.GaMa_coefficient = {15};
+            ground.PARA.comment.GaMa_coefficient = {'Gauckler-Manning coefficient, https://en.wikipedia.org/wiki/Manning_formula'};
+            
+            ground.PARA.default_value.tortuosity = {1};
+            ground.PARA.comment.tortuosity = {'multiply direct distance with this factor to get flow path length'};
+            
+            ground.PARA.default_value.ia_time_increment = {0.25};
+            ground.PARA.comment.ia_time_increment ={'time step [days], must be multiple of LATERAL class timestep'};
+        end
     end
     
 end
-
-

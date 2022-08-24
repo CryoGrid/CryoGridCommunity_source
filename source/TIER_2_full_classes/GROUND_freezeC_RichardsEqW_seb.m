@@ -285,6 +285,14 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             %ground = conductivity_mixing_squares(ground);
         end
         
+        function albedo = get_albedo(ground)
+            albedo = ground.PARA.albedo;
+        end
+        
+        function Tg = get_surface_T(ground, tile)
+            Tg = ground.STATVAR.T(1);
+        end
+        
         %-----LATERAL-------------------
         
         %-----LAT_REMOVE_SURFACE_WATER-----
@@ -304,7 +312,8 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         
         %----LAT_WATER_RESERVOIR------------
         function ground = lateral_push_water_reservoir(ground, lateral)
-            ground = lateral_push_water_reservoir_simple(ground, lateral);
+            %ground = lateral_push_water_reservoir_simple(ground, lateral);
+            ground = lateral_push_water_reservoir_RichardsEq_simple(ground, lateral);
         end
         
 
@@ -312,7 +321,12 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         function ground = lateral_push_heat(ground, lateral)
             ground = lateral_push_heat_simple(ground, lateral);
         end
-
+        
+        %----LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ------------
+        function ground = lateral3D_pull_water_unconfined_aquifer_RichardsEq(ground, lateral)
+            ground = lateral3D_pull_water_unconfined_aquifer_RichardsEq_simple(ground, lateral);
+        end
+        
         %----LAT3D_WATER_UNCONFINED_AQUIFER------------         
 
         function ground = lateral3D_pull_water_unconfined_aquifer(ground, lateral)

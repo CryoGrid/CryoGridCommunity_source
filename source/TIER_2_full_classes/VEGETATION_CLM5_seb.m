@@ -3,19 +3,24 @@
 %
 % Surface energy and water balance of vegetated surfaces as in CLM5
 %
-% Radiation added in September 2021
-% Sensible heat exchange in October 2021
 % R. B. Zweigel, September 2021
 %========================================================================
 
 classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
     properties
         GROUND
+        IA_GROUND
     end
     
     methods
         
         function canopy = provide_PARA(canopy)
+            canopy.PARA.t_leafsprout = [];
+            canopy.PARA.t_leaffall = [];
+            canopy.PARA.kv = [];
+            canopy.PARA.D_bh = [];
+            canopy.PARA.N_tree = [];
+            canopy.PARA.rho_wood = [];
             canopy.PARA.SLA = [];
             canopy.PARA.f_carbon = [];
             canopy.PARA.f_water = [];
@@ -41,9 +46,6 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.PARA.Dmax = [];
             canopy.PARA.Wmax = []; % Assume one water holding capacity for snow and water for now
             canopy.PARA.beta_root = [];
-            canopy.PARA.biomass_root = [];
-            canopy.PARA.density_root = [];
-            canopy.PARA.r_root = [];
             canopy.PARA.C_leaf_max = [];
             canopy.PARA.k_shelter = [];
             canopy.PARA.psi_wilt = [];
@@ -77,7 +79,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.STATVAR.d = []; % displacement height
             canopy.STATVAR.f_wet = []; % wetted fraction of canopy
             canopy.STATVAR.f_dry = []; % dry and transpiring fraction of canopy
-            canopy.STATVAR.f_snow = []; % snow-covered fraction of canopy
+%             canopy.STATVAR.f_snow = []; % snow-covered fraction of canopy
             
         end
         
@@ -85,7 +87,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
             canopy.CONST.Tmfw = []; % freezing temperature of free water [K]
             canopy.CONST.sigma = []; % Stefan-Boltzmann constant
             canopy.CONST.R_spec = []; % gas constant for dry air [J/K kg]
-            canopy.CONST.ypsilon = []; % [kg/(m sec)]
+            canopy.CONST.ypsilon = []; % Kinematic viscosity of air [kg/(m sec)]
             canopy.CONST.cp = []; % Specific heat capacity of air
             canopy.CONST.kappa = []; % von Karman constant
             canopy.CONST.Gamma_dry = []; %negative of dry adiabatic lapse rate
@@ -105,32 +107,33 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         function canopy = finalize_init(canopy, tile)
             canopy.STATVAR.area = tile.PARA.area + canopy.STATVAR.layerThick .* 0;
             canopy.STATVAR.SAI = canopy.PARA.SAI;
-            if ismember(month(tile.FORCING.PARA.start_time),6:10)
+            
+            % Construct canopy -  add/remove LAI, calc. energy, heat capacity, z0, etc. accordingly
+            doy_start = tile.FORCING.PARA.start_time - datenum(year(tile.FORCING.PARA.start_time),1,1); % DayOfYear
+            if doy_start >= canopy.PARA.t_leafsprout && doy_start < canopy.PARA.t_leaffall
                 canopy = add_canopy(canopy);
             else
                 canopy = remove_canopy(canopy);
             end
-            canopy = get_heat_capacity_canopy(canopy);
-            
-            canopy = get_E_water_vegetation(canopy); % update to better represent leaf heat capacity
-            canopy.GROUND = canopy.NEXT;
-            canopy = distribute_roots(canopy);
 
             canopy.PARA.airT_height = tile.FORCING.PARA.airT_height; % why tranfer this parameter to ground/canopy, and not use forcing directly?
-            canopy = get_z0_d_vegetation(canopy); % z0 changes according to leaf area index
             
-            canopy.TEMP.r_sun = 0.01; % mimnimum value, just for testing
-            canopy.TEMP.r_sha = 0.01; % ---- " ----
-            canopy.TEMP.beta_t = 0;
+            % assign ground for canopy-soil interactions
+            canopy.GROUND = canopy.NEXT;
+            canopy.IA_GROUND = IA_VEGETATION_CLM5();
+            canopy.IA_GROUND.PREVIOUS = canopy;
+            canopy.IA_GROUND.NEXT = canopy.NEXT;
+            canopy.IA_GROUND = distribute_roots_CLM5(canopy.IA_GROUND);
+
+%             canopy.TEMP.beta_t = 0;
             canopy.STATVAR.Lstar = -100;
             canopy.STATVAR.u_star = 0.1;
-            canopy.STATVAR.q_s = 0.007;
+            canopy.STATVAR.q_s = .622*satPresWater(canopy,canopy.STATVAR.T+canopy.CONST.Tmfw)/101300; 
             canopy.STATVAR.Ts = canopy.STATVAR.T;
             canopy.STATVAR.Qh = 0;
             canopy.STATVAR.Qe = 0;
             canopy.STATVAR.f_wet = 0;
             canopy.STATVAR.f_dry = 0;
-            canopy.STATVAR.f_snow = 0;
             
             canopy.TEMP.excess_water = 0;
             canopy.TEMP.excess_water_energy = 0;
@@ -158,7 +161,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         end
         
         function canopy = get_boundary_condition_l(canopy, tile)
-            
+            % MUST be used with soil class below - No lower boundary condition
         end
         
         function canopy = get_derivatives_prognostic(canopy, tile)
@@ -172,7 +175,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = advance_prognostic(canopy, tile)
             timestep = tile.timestep;
-            canopy.STATVAR.energy = canopy.STATVAR.energy + timestep .* canopy.TEMP.d_energy;
+            canopy.STATVAR.energy = canopy.STATVAR.energy + timestep .* canopy.TEMP.d_energy + timestep.*canopy.TEMP.d_water_energy;
             canopy.STATVAR.waterIce = canopy.STATVAR.waterIce + timestep .* canopy.TEMP.d_water;
             canopy.STATVAR.waterIce = max(0,canopy.STATVAR.waterIce); % Avoid rounding errors
         end
@@ -195,9 +198,10 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = check_trigger(canopy, tile)
             
-            if ismember(month(tile.t),5:9) && canopy.STATVAR.LAI == 0
+            doy = tile.t - datenum(year(tile.t),1,1);
+            if doy >= canopy.PARA.t_leafsprout && doy < canopy.PARA.t_leaffall && canopy.STATVAR.LAI == 0
                 add_canopy(canopy);
-            elseif ~ismember(month(tile.t),5:9) && canopy.STATVAR.LAI ~= 0
+            elseif doy >= canopy.PARA.t_leaffall && canopy.STATVAR.LAI ~= 0
                 remove_canopy(canopy);
             end
 
@@ -208,27 +212,24 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = canopy_energy_balance(canopy,tile)
             forcing = tile.FORCING;
-            L = canopy.STATVAR.LAI;
-            S = canopy.STATVAR.SAI;
+
             % 1. Longwave penetration
             [canopy, L_up] = penetrate_LW(canopy, forcing.TEMP.Lin .* canopy.STATVAR.area(1));
-            canopy.STATVAR.Lout = L_up./canopy.STATVAR.area(1);
+%             canopy.STATVAR.Lout = L_up./canopy.STATVAR.area(1);
             
             % 2. Shortwave penetration
             canopy.TEMP.sun_angle = forcing.TEMP.sunElevation * double(forcing.TEMP.sunElevation > 0);
             canopy.TEMP.Sin_dir_fraction = forcing.TEMP.Sin_dir ./ forcing.TEMP.Sin;
             canopy.TEMP.Sin_dir_fraction(isnan(canopy.TEMP.Sin_dir_fraction)) = 0;
             [canopy, S_up] = penetrate_SW(canopy, forcing.TEMP.Sin .* canopy.STATVAR.area(1));
-            canopy.STATVAR.Sout = sum(S_up) ./ canopy.STATVAR.area(1);
-            
-            canopy.STATVAR.Sin = forcing.TEMP.Sin;
-            canopy.STATVAR.Lin = forcing.TEMP.Lin;
+%             canopy.STATVAR.Sout = sum(S_up) ./ canopy.STATVAR.area(1);
+%             
+%             canopy.STATVAR.Sin = forcing.TEMP.Sin;
+%             canopy.STATVAR.Lin = forcing.TEMP.Lin;
             
             % 3. Sensible and latent heat
-%             canopy = canopy_resistances_CLM5(canopy, forcing);
             canopy = canopy_resistances_CLM5_Stewart(canopy, tile);
             canopy = Q_h_CLM5(canopy, tile);
-%             canopy = Q_e_CLM5(canopy, forcing);
             canopy = Q_e_CLM5_Stewart(canopy, tile);
             
             canopy.TEMP.d_energy = canopy.TEMP.d_energy - (canopy.STATVAR.Qh + canopy.STATVAR.Qe).*canopy.STATVAR.area;
@@ -238,6 +239,7 @@ classdef VEGETATION_CLM5_seb < SEB & WATER_FLUXES & VEGETATION
         
         function canopy = canopy_water_balance(canopy,tile)
             canopy = get_boundary_condition_u_water_canopy(canopy, tile);
+            canopy.IA_GROUND = get_water_transpiration(canopy.IA_GROUND);
         end
     
     end

@@ -87,6 +87,8 @@ classdef FORCING_slope_seb_readNc2 < SEB %matlab.mixin.Copyable
             forcing.DATA.rainfall = temp.tp .*24.*1000 .* (double(forcing.DATA.Tair >= forcing.PARA.all_rain_T)  + ...
                 double(forcing.DATA.Tair > forcing.PARA.all_snow_T & forcing.DATA.Tair < forcing.PARA.all_rain_T) .* ...
                 (1 - (forcing.DATA.Tair - forcing.PARA.all_snow_T) ./ max(1e-12, (forcing.PARA.all_rain_T - forcing.PARA.all_snow_T))));
+            forcing.DATA.rainfall = forcing.DATA.rainfall .* forcing.PARA.rain_fraction.*cosd(forcing.PARA.slope_angle);
+            forcing.DATA.snowfall = forcing.DATA.snowfall .* forcing.PARA.snow_fraction.*cosd(forcing.PARA.slope_angle);
             
             forcing.DATA.albedo_foot = forcing.PARA.albedo_surrounding_terrain; %Albedo at the foot of the slope
 

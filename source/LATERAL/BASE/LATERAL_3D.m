@@ -228,11 +228,18 @@ classdef LATERAL_3D < matlab.mixin.Copyable
                         end
                     end
                     
-                    CURRENT = lateral.TOP.NEXT;
-                    while ~(strcmp(class(CURRENT), 'Bottom'))
+                    CURRENT = lateral.BOTTOM.PREVIOUS;
+                    while ~(strcmp(class(CURRENT), 'Top'))
                         CURRENT = compute_diagnostic(CURRENT, tile);
-                        CURRENT = CURRENT.NEXT;
+                        CURRENT = check_trigger(CURRENT, tile);
+                        CURRENT = CURRENT.PREVIOUS;
                     end
+%                     CURRENT = lateral.TOP.NEXT;
+%                     while ~(strcmp(class(CURRENT), 'Bottom'))
+%                         CURRENT = compute_diagnostic(CURRENT, tile);
+%                         CURRENT = check_trigger(CURRENT, tile);
+%                         CURRENT = CURRENT.NEXT;
+%                     end
                 end
               
                %set ACTIVE for next timestep
@@ -308,7 +315,7 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             end
         end
 
-        function lateral = get_overlap_cells2(lateral, variable, variable_out) %no need to loop through stratigraphy, al the information should be in lateral
+        function lateral = get_overlap_cells2(lateral, variable, variable_out) %no need to loop through stratigraphy, all the information should be in lateral
             for i=1:size(lateral.ENSEMBLE,1)
                 if lateral.PARA.connected(lateral.STATVAR.index, lateral.ENSEMBLE{i,1}.index)
                     cell_1 = -(lateral.STATVAR.(variable) - double(lateral.PARA.hill_slope) .* lateral.STATVAR.ground_surface_elevation);
@@ -383,6 +390,19 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             end
         end
         
+        
+        %-------------param file generation-----
+        function lateral = param_file_info(lateral)
+             lateral = provide_PARA(lateral);
+             
+             lateral.PARA.class_category = 'LATERAL';
+             lateral.PARA.STATVAR = [];
+             lateral.PARA.default_value.hill_slope = {1};
+             lateral.PARA.comment.hill_slope = {'1: hillslope flow, cells connected with ground surface as reference; 0: cells connected with absolute elevation as reference'};
+             lateral.PARA.default_value.ia_time_increment = {0.25};
+             lateral.PARA.comment.ia_time_increment = {'minimum of constant timestep for lateral interaction classes, LATERAL_IA classes must have multiples of this one [day]'};
+             lateral.PARA.options = [];
+        end
+        
     end
 end
-

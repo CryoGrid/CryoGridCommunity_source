@@ -50,6 +50,7 @@ classdef FORCING_seb < matlab.mixin.Copyable
             forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
 %             forcing.PARA.area = [];         % area of the grid cell [m2] 
+            forcing.PARA.slope_angle = [];
         end
         
         

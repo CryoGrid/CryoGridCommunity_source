@@ -52,7 +52,7 @@ classdef SEB < BASE
             Qh = seb.STATVAR.Qh+seb.NEXT.STATVAR.Qh; % Qh of whole system (canopy + ground)
             Qe = seb.STATVAR.Qe+seb.NEXT.STATVAR.Qe;
             
-            rho = rho_air(seb, p, Tz);
+            rho = rho_air_moist(seb, tile);
             cp = seb.CONST.cp;
             kappa = seb.CONST.kappa; %0.4;
             g = seb.CONST.g; %9.81;
@@ -66,6 +66,8 @@ classdef SEB < BASE
             u_star = real(uz.*kappa./(log(z./z0)- psi_M_CLM5(seb, z./Lstar, z0./Lstar)));
             L_star = real(-rho.*cp.*Tz./kappa./g.*u_star.^3./(Qh + 0.61.*cp./L.*Tz.*Qe));
             L_star=(abs(L_star)<1e-7).*L_star./abs(L_star).*1e-7 + (abs(L_star)>=1e-7).*L_star;  %limits Lstar
+            
+            L_star(Qh == 0 && Qe == 0) = 1e10; % avoid L_star = NaN for zero turbulent fluxes
             
             seb.STATVAR.Lstar = L_star;
             seb.STATVAR.u_star = u_star;
@@ -252,12 +254,8 @@ classdef SEB < BASE
             q_atm = forcing.TEMP.q; % atm. specific humidity
             p = forcing.TEMP.p; % surface pressure
             rho_atm = seb.TEMP.rho_atm; % air density
-            L_sun = seb.TEMP.L_sun;
-            L_sha = seb.TEMP.L_sha;
             f_dry = seb.STATVAR.f_dry;
             f_wet = seb.STATVAR.f_wet;
-            r_sun = seb.TEMP.r_sun;
-            r_sha = seb.TEMP.r_sha;
             
             q_g = get_humidity_ground(seb.IA_NEXT, tile); % ground specific humidity
             e_v = double(Tv>=0).*satPresWater(seb,Tv+Tmfw) + double(Tv<0).*satPresIce(seb,Tv+Tmfw); % saturation water pressure of leafs
@@ -339,7 +337,7 @@ classdef SEB < BASE
             r_canopy = seb.TEMP.r_canopy;
             
             % Humidity
-            q_g = get_humidity_ground(seb.IA_NEXT, tile); % ground specific humidity
+            q_g = get_humidity_surface(seb.IA_NEXT, tile); % ground/snow surface specific humidity
             e_v = double(Tv>=0).*satPresWater(seb,Tv+Tmfw) + double(Tv<0).*satPresIce(seb,Tv+Tmfw); % saturation water pressure of leafs
             qs_Tv = .622.*e_v./p; % saturation water vapor specific humidity at leaf temperature
             ca = 1/r_aw;
@@ -357,7 +355,7 @@ classdef SEB < BASE
             water_fraction(seb.STATVAR.waterIce == 0) = double(Tv>=0);
             ice_fraction(seb.STATVAR.waterIce == 0) = double(Tv<0);
             
-            if seb.TEMP.Ev_pot > 0 % evaporation/transpiration in m3 water /(m2*s), not kg/(m2*s) as in CLM5
+            if q_s - qs_Tv < 0 % evaporation/transpiration in m3 water /(m2*s), not kg/(m2*s) as in CLM5
                 seb.TEMP.evap = -rho_atm.*(q_s - qs_Tv).* f_wet.*water_fraction.*(L+S) ./r_b ./seb.CONST.rho_w;
                 seb.TEMP.sublim = -rho_atm.*(q_s - qs_Tv).* f_wet.*ice_fraction.*(L+S) ./r_b ./seb.CONST.rho_w; % Is this correct? or use f_snow?
                 seb.TEMP.transp = -rho_atm.*(q_s - qs_Tv).* f_dry.*(L+S) ./ (r_b + r_canopy) ./ seb.CONST.rho_w;
@@ -407,7 +405,7 @@ classdef SEB < BASE
             L = seb.STATVAR.LAI;
             S = seb.PARA.SAI;
             Tv = seb.STATVAR.T(1)+forcing.CONST.Tmfw;
-            Tg = seb.NEXT.STATVAR.T(1)+forcing.CONST.Tmfw; % ground temperature
+%             Tg = seb.NEXT.STATVAR.T(1)+forcing.CONST.Tmfw; % ground temperature
             Tz = forcing.TEMP.Tair+forcing.CONST.Tmfw; % air temperature in Kelvin
             z = forcing.PARA.airT_height; % height above ground for measurements
             z = z + sum(seb.STATVAR.layerThick); % adjust so forcing height is above canopy
@@ -417,16 +415,19 @@ classdef SEB < BASE
             r_ah_prime = seb.TEMP.r_a_prime;
             rho_atm = seb.TEMP.rho_atm; % air density
             Tz_pot = Tz+Gamma.*z; % Eq. 5.7 potential temperature
+            Tg = get_surface_T(seb.NEXT, tile); % ground/surface temperature
+            Tg = Tg + forcing.CONST.Tmfw;
             
-            Ts = (Tz_pot./r_ah + Tg./r_ah_prime + Tv.*(L+S)./r_b)./(1./r_ah + 1/r_ah_prime + (L+S)./r_b); % Eq. 5.93 canopy air temperature
+            Ts = (Tz_pot./r_ah + Tg./r_ah_prime + Tv.*2*(L+S)./r_b)./(1./r_ah + 1/r_ah_prime + 2*(L+S)./r_b); % Eq. 5.93 canopy air temperature
             
             seb.STATVAR.Ts = Ts - forcing.CONST.Tmfw;
-            seb.STATVAR.Qh = -rho_atm.*cp.*(Ts-Tv).*(L+S)./r_b; % Eq. 5.88   
+            seb.STATVAR.Qh = -rho_atm.*cp.*(Ts-Tv).*2*(L+S)./r_b; % Eq. 5.88   
             seb.TEMP.Tair = forcing.TEMP.Tair;
         end
         
 % -------------- Evaporation/transpiration resistances -------------------
         function seb = canopy_resistances_CLM5(seb, tile)
+            Throw error
             forcing = tile.FORCING;
             p = forcing.TEMP.p; % surface pressure
             L = seb.STATVAR.LAI; % Leaf area index
@@ -491,7 +492,7 @@ classdef SEB < BASE
             Cs_dense = seb.PARA.Cs_dense; %  dense canopy turbulent transfer coefficient
             z = forcing.PARA.airT_height + sum(seb.STATVAR.layerThick); % height above ground for measurements
             z0v = seb.STATVAR.z0; % roughness length of vegetation
-            z0g = get_z0_ground(seb.IA_NEXT); % Roughness lenght of ground
+            z0g = get_z0_surface(seb.NEXT); % Roughness lenght of ground
             d = seb.STATVAR.d; % displacement heigh
             k_s = seb.PARA.k_shelter; % canopy sheltering coefficient
             
@@ -516,13 +517,14 @@ classdef SEB < BASE
             end
             seb.TEMP.Ev_pot = -seb.TEMP.rho_atm.*(q_s - qs_Tv)./seb.TEMP.r_b;
             if seb.TEMP.Ev_pot <= 0 % Condensation -> on whole leaf + stem area, NO transpiration
-                seb.TEMP.r_total = seb.TEMP.r_b./(L+S);
+                seb.TEMP.r_total = seb.TEMP.r_b./(2*(L+S));
             elseif seb.TEMP.Ev_pot > 0 % evaporation + transpiration
-                seb.TEMP.r_total = seb.TEMP.r_b./(L+S) ./ ( f_wet + f_dry.*seb.TEMP.r_b./(seb.TEMP.r_b + seb.TEMP.r_canopy) ) ;  
+                seb.TEMP.r_total = seb.TEMP.r_b./(2*(L+S)) ./ ( f_wet + f_dry.*seb.TEMP.r_b./(seb.TEMP.r_b + seb.TEMP.r_canopy) ) ;  
             end
         end
         
         function beta = soil_resistance_beta(seb, forcing)
+            error
             uz = forcing.TEMP.wind;
             kappa = seb.CONST.kappa;
             field_capacity = seb.STATVAR.field_capacity(1);
@@ -549,10 +551,8 @@ classdef SEB < BASE
             p = forcing.TEMP.p;
             q_s = seb.STATVAR.q_s;
             Tmfw = seb.CONST.Tmfw;
-            rho_air = rho_air_moist(seb, tile);
+            rho_air = seb.TEMP.rho_atm;
             T_leaf = max(0,min(40,seb.STATVAR.T(1))); % only valid for 0 <= T_leaf <= 40
-            
-            moisture_stress = get_soil_moisture_stress(seb); % change to GROUND !!!!!!!!!
             
             e_sat = satPresWater(seb,seb.STATVAR.Ts+Tmfw); 
             rho_v_saturated = e_sat./p.*rho_air;
@@ -565,7 +565,7 @@ classdef SEB < BASE
             f_rho_v = max(0.233,min(f_rho_v,1));
             f_T_leaf = T_leaf.*(40-T_leaf).^1.18 ./ 691;
             f_T_leaf = max(0,min(f_T_leaf,1));
-            f_psi_soil = 1 - .00119.*exp(.81.*8.4.*moisture_stress);
+            f_psi_soil = get_soil_moisture_stress(seb.IA_GROUND);
             f_psi_soil = max(0,min(f_psi_soil,1));
             
             C_leaf = C_leaf_max.*f_Sin.*f_rho_v.*f_T_leaf.*f_psi_soil;
@@ -578,6 +578,12 @@ classdef SEB < BASE
         end
         
 % -------------- Support functions ---------------------------------------        
+
+        
+        function z0 = get_z0_surface(seb)
+            z0 = seb.PARA.z0;
+        end
+        
         function rho = rho_air(seb, p, T) %air density [kg m^(-3)]
             rho = p./(287.058.*T);
         end
@@ -614,8 +620,19 @@ classdef SEB < BASE
             % Lin is in W, not W/m2!
             Lout = (1-seb.PARA.epsilon) .* Lin + seb.PARA.epsilon .* seb.CONST.sigma .* (seb.STATVAR.T(1)+ seb.CONST.Tmfw).^4 .*seb.STATVAR.area(1);
             seb.TEMP.L_abs = Lin - Lout;
-            seb.STATVAR.Lin = Lin;
-            seb.STATVAR.Lout = Lout;
+            seb.STATVAR.Lin = Lin./seb.STATVAR.area(1);
+            seb.STATVAR.Lout = Lout./seb.STATVAR.area(1);
+            seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + seb.TEMP.L_abs;
+        end
+        
+        function [seb, Lout] = penetrate_LW_no_transmission_GROUND_snow(seb, Lin)
+            % For GROUND that is below a snow in CHILD phase
+            % Lin is in W, not W/m2!
+            ground_area = seb.STATVAR.area(1) - seb.CHILD.STATVAR.area;
+            Lout = (1-seb.PARA.epsilon) .* Lin + seb.PARA.epsilon .* seb.CONST.sigma .* (seb.STATVAR.T(1)+ seb.CONST.Tmfw).^4 .*ground_area;
+            seb.TEMP.L_abs = Lin - Lout;
+            seb.STATVAR.Lin = Lin./seb.STATVAR.area(1);
+            seb.STATVAR.Lout = Lout./seb.STATVAR.area(1);
             seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + seb.TEMP.L_abs;
         end
         
@@ -641,10 +658,12 @@ classdef SEB < BASE
                 + Lin * (1 - canopy_emissivity) * fractional_canopy_cover + L_up.*(1-canopy_emissivity)*fractional_canopy_cover;
             % Last term is upward LW reflected by the base of the canopy, which is added to Lout because multiple backstattering is not considered.
             
-            seb.TEMP.L_abs = (Lin + L_up.*canopy_emissivity*fractional_canopy_cover - L_down - Lout)./seb.STATVAR.area; % L_up which is reflected by the canopy is discarded
+            seb.TEMP.L_abs = (Lin + L_up.*canopy_emissivity*fractional_canopy_cover - L_down - Lout); % L_up which is reflected by the canopy is discarded
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.L_abs;
-            seb.TEMP.L_down = L_down./seb.STATVAR.area;
-            seb.TEMP.L_up = L_up./seb.STATVAR.area;
+            seb.TEMP.L_down = L_down./seb.STATVAR.area(1);
+            seb.TEMP.L_up = L_up./seb.STATVAR.area(1);
+            seb.STATVAR.Lin = Lin./seb.STATVAR.area(1);
+            seb.STATVAR.Lout = Lout./seb.STATVAR.area(1);
         end
         
         function [seb, Lout] = penetrate_LW_CLM5(seb,Lin)
@@ -664,17 +683,27 @@ classdef SEB < BASE
             
             seb.TEMP.L_abs = Lin + L_up - Lout - L_down;
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.L_abs;
-            seb.TEMP.L_down = L_down;
-            seb.TEMP.L_up = L_up; % STATVARS are assigned in canopy_energy_balance
+            seb.TEMP.L_down = L_down./seb.STATVAR.area(1);
+            seb.TEMP.L_up = L_up./seb.STATVAR.area(1); 
+            seb.STATVAR.Lin = Lin./seb.STATVAR.area(1);
+            seb.STATVAR.Lout = Lout./seb.STATVAR.area(1);
         end
         
 % -------------- Penetration of short-wave radiation ---------------------
         function [seb, Sout] = penetrate_SW_no_transmission(seb, Sin) % called recursively by surfaceEnergyBalance-function of TOP_CLASS, "hard" surface absorbing all SW-radiation in 1st cell
             seb.TEMP.d_energy(1,1) = seb.TEMP.d_energy(1,1) + (1 - seb.PARA.albedo) .* sum(Sin); %in [W], not [W/m2]
             Sout = seb.PARA.albedo .* Sin;
-            seb.STATVAR.Sin = Sin;
-            seb.STATVAR.Sout = Sout;
-            seb.TEMP.S_abs = (1 - seb.PARA.albedo) .* sum(Sin);
+            
+            if seb.TEMP.SW_split == 0 % First time this function is called
+                seb.STATVAR.Sin = sum(Sin)./seb.STATVAR.area(1);
+                seb.STATVAR.Sout = sum(Sout)./seb.STATVAR.area(1);
+                seb.TEMP.S_abs = (1 - seb.PARA.albedo) .* sum(Sin);
+            else % SW is penetrated below child, and these variables are already populated
+                seb.STATVAR.Sin = seb.STATVAR.Sin + sum(Sin)./seb.STATVAR.area(1);
+                seb.STATVAR.Sout = seb.STATVAR.Sout + sum(Sout)./seb.STATVAR.area(1);
+                seb.TEMP.S_abs = seb.TEMP.S_abs + (1 - seb.PARA.albedo) .* sum(Sin);
+            end
+            
         end
         
         function [seb, Sout] = penetrate_SW_CLM5(seb, Sin)
@@ -693,7 +722,7 @@ classdef SEB < BASE
             tau_leaf = [seb.PARA.tau_leaf_nir seb.PARA.tau_leaf_vis]; % leaf transmittances
             tau_stem = [seb.PARA.tau_stem_nir seb.PARA.tau_stem_vis]; % stem transmittances
             Khi_L = seb.PARA.Khi_L; % departure of leaf angles from a random distribution
-            alpha_g = seb.NEXT.PARA.albedo; % ground albedo, direct and diffuse
+            alpha_g = get_albedo(seb.NEXT); % ground albedo, direct and diffuse
             
             w_leaf = L/(L+S); % leaf weighting
             w_stem = S/(L+S); % stem weighting
@@ -748,6 +777,7 @@ classdef SEB < BASE
             S_down =  Sin_dir*(I_down_from_dir + I_transmitted) + Sin_dif*I_down_from_dif;
             
             [seb.NEXT, S_up] = penetrate_SW(seb.NEXT, S_down);
+            S_up = sum(S_up); % snow crocus resolves SW spectraly
             
             % Upwelling shortwave fluxes
             I_out_from_dir = (h1./sigma + h2 + h3);
@@ -758,17 +788,10 @@ classdef SEB < BASE
             
             seb.TEMP.S_abs = Sin + S_up - S_down - Sout;
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.S_abs;
-            seb.TEMP.S_down = S_down;
-            seb.TEMP.S_up = S_up;
-            
-%             seb.TEMP.L_sun = (1-exp(-K*(L)))./K; % Eq. 4.7, changed to provide sunlit LEAF area (not PLANT area), compliant with use in further calculatuions
-%             seb.TEMP.L_sha = L - seb.TEMP.L_sun; % shaded LEAF area
-            
-            if I_out_from_dir > 1 | I_out_from_dir < 0
-                error('Unphysical values of reflected SW')
-            elseif I_down_from_dir > 1 | I_down_from_dir < 0
-                error('Unphysical values of transmitted SW')
-            end
+            seb.TEMP.S_down = S_down./seb.STATVAR.area(1);
+            seb.TEMP.S_up = S_up./seb.STATVAR.area(1);
+            seb.STATVAR.Sin = Sin./seb.STATVAR.area(1);
+            seb.STATVAR.Sout = Sout./seb.STATVAR.area(1);
         end
         
         function [seb, Sout] = penetrate_SW_simpleShading(seb, Sin)
@@ -803,8 +826,10 @@ classdef SEB < BASE
             seb.TEMP.S_abs = Sin + S_up - S_down - Sout;
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.S_abs;
             seb.TEMP.S_backscat_discarded = albedo*fractional_canopy_cover*S_up;
-            seb.TEMP.S_down = S_down./seb.STATVAR.area;
-            seb.TEMP.S_up = S_up./seb.STATVAR.area;
+            seb.TEMP.S_down = S_down./seb.STATVAR.area(1);
+            seb.TEMP.S_up = S_up./seb.STATVAR.area(1);
+            seb.STATVAR.Sin = Sin./seb.STATVAR.area(1);
+            seb.STATVAR.Sout = Sout./seb.STATVAR.area(1);
         end
         
         function [seb, Sout] = penetrate_SW_transmission_bulk(seb, Sin)  %used with fixed albedo and SW extinction coefficient
@@ -813,8 +838,8 @@ classdef SEB < BASE
             %SW extinction is assumed constant throughout class
             cut_off = 0.1*seb.STATVAR.area(1); % = 0.1 W/m2, radiation is not penetrated further if cutoff is reached
             
-            Sout = seb.PARA.albedo .* Sin;
-            S_down = (1 - seb.PARA.albedo) .* Sin;
+            Sout = seb.STATVAR.albedo .* Sin;
+            S_down = (1 - seb.STATVAR.albedo) .* Sin;
             
             i=1;
             while i<=size(seb.STATVAR.layerThick,1) && sum(S_down) >= cut_off
@@ -844,17 +869,20 @@ classdef SEB < BASE
                 else
                     Sout = Sout + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!!
                 end
-                seb.TEMP.S_down = S_down;
-                seb.TEMP.S_up = S_up;
+                seb.TEMP.S_down = S_down./seb.STATVAR.area(1);
+                seb.TEMP.S_up = S_up./seb.STATVAR.area(1);
             end
-            seb.STATVAR.Sin = Sin;
-            seb.STATVAR.Sout = Sout;
+            seb.STATVAR.Sin = Sin./seb.STATVAR.area(1);
+            seb.STATVAR.Sout = Sout./seb.STATVAR.area(1);
         end
         
         function [seb, Sout] = penetrate_SW_transmission_spectral(seb, Sin)  %used with variable albedo and SW exticntion coefficient
             %S_up and S_down are spectrally resolved when provided as
             %row array, using e.g. spectral_ranges = [0.71 0.21 0.08];
             %SW extinction is assumed constant throughout class
+            
+            Sin = sum(Sin) .* seb.PARA.spectral_ranges; % Moved this here to allow for use with abovelying classes, ie. vegetation. RBZ 25022022
+            
             cut_off = 0.1*seb.STATVAR.area(1); % = 0.1 W/m2, radiation is not penetrated further if cutoff is reached
             
             Sout = seb.TEMP.spectral_albedo .* Sin;
@@ -888,11 +916,11 @@ classdef SEB < BASE
                 else
                     Sout = Sout + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!!
                 end
-                seb.TEMP.S_down = S_down;
-                seb.TEMP.S_up = S_up;
+                seb.TEMP.S_down = sum(S_down)./seb.STATVAR.area(1);
+                seb.TEMP.S_up = sum(S_up)./seb.STATVAR.area(1);
             end
-            seb.STATVAR.Sin = Sin;
-            seb.STATVAR.Sout = Sout;
+            seb.STATVAR.Sin = sum(Sin)./seb.STATVAR.area(1);
+            seb.STATVAR.Sout = sum(Sout)./seb.STATVAR.area(1);
         end
         
 % -------------- Water fluxes from evapotranspiration --------------------

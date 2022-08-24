@@ -87,7 +87,7 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             snow.TEMP.d_energy = snow.STATVAR.energy.*0;
         end
         
-        
+
         %---time integration------
         %separate functions for CHILD pphase of snow cover
         
