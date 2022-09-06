@@ -19,8 +19,6 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
 
-            ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
-
             ground.PARA.conductivity_function = [];
             
             ground.PARA.dt_max = []; %maximum possible timestep [sec]
@@ -174,6 +172,10 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
+        end  
+        
+        function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features SW penetration
+            [ground, L_up] = penetrate_LW_no_transmission(ground, L_down);
         end
         
         function ground = get_boundary_condition_l(ground, tile)
