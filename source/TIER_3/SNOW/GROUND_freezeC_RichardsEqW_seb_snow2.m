@@ -32,10 +32,11 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
        function ground = finalize_init(ground, tile)
            ground = finalize_init@GROUND_freezeC_RichardsEqW_seb(ground, tile);
            ground.CHILD = 0; % no snow
-           ground.IA_CHILD = 0;           
+           ground.IA_CHILD = 0;
            ground.TEMP.SW_split = 0;
        end
-
+                
+        
        
         %---time integration------
         
@@ -75,9 +76,8 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
                 ground.STATVAR.ice = ground.STATVAR.ice .* reduction;
                 ground.STATVAR.mineral = ground.STATVAR.mineral .* reduction;
                 ground.STATVAR.organic = ground.STATVAR.organic .* reduction;
-                                
+                
                 ground.TEMP.SW_split = 1; % To avoind calling SW of snow CHILD twice
-
                 %-------------
                 
                 ground.CHILD.STATVAR.Lstar = ground.STATVAR.Lstar;
@@ -104,6 +104,7 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
                 
             end
         end
+        
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
             
@@ -219,16 +220,9 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
                 end
             end
         end
-        
-                
-        %----------
-        %reset timestamp when changing TILES
-        function ground = reset_timestamps(ground, tile)
-            if ground.CHILD ~= 0
-                ground.CHILD = reset_timestamps(ground.CHILD, tile);
-            end
-        end
-        
+% 
+% --------- Service functions ---------
+
         function z0 = get_z0_surface(ground)
             if ground.CHILD ~= 0 % Snow is a CHILD
                 z0g = ground.PARA.z0;
