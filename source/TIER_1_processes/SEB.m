@@ -214,6 +214,41 @@ classdef SEB < BASE
             seb.STATVAR.sublim_energy =  seb.STATVAR.sublim .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f); 
         end
         
+        function seb = Q_evap_CLM4_5_Xice(seb, forcing)
+            uz = forcing.TEMP.wind;
+            p = forcing.TEMP.p;
+            q = forcing.TEMP.q;
+            Tz = forcing.TEMP.Tair;
+            Lstar = seb.STATVAR.Lstar;
+            
+            z =  seb.PARA.airT_height;
+            z0 = seb.PARA.z0;
+            kappa = seb.CONST.kappa; 
+            
+            water_fraction = (seb.STATVAR.water(1,1)+seb.STATVAR.Xwater(1,1) ) ./ (seb.STATVAR.waterIce(1,1) + seb.STATVAR.XwaterIce(1,1));
+            ice_fraction = (seb.STATVAR.ice(1,1) + seb.STATVAR.Xice(1,1)) ./ (seb.STATVAR.waterIce(1,1) + seb.STATVAR.XwaterIce(1,1));
+            
+            rho = rho_air(seb, p, seb.STATVAR.T(1)+273.15);
+            sat_pressure_first_cell = water_fraction .* satPresWater(seb, seb.STATVAR.T(1)+273.15) + ice_fraction .* satPresWater(seb, seb.STATVAR.T(1)+273.15);
+            latent_heat = water_fraction .* latent_heat_evaporation(seb, seb.STATVAR.T(1)+273.15) + ice_fraction .* latent_heat_sublimation(seb, seb.STATVAR.T(1)+273.15);
+
+            saturation_fraction_air_first_cell = exp(seb.STATVAR.waterPotential(1,1) .* seb.CONST.g ./ ((seb.CONST.R./ seb.CONST.molar_mass_w) .*(seb.STATVAR.T(1)+273.15)));
+            
+%             saturation_fraction_air_first_cell
+            %this might be wrong if the ground is frozen?
+            q_first_cell = sat_pressure_first_cell .* saturation_fraction_air_first_cell ./ p;
+            
+            vol_water_first_cell = seb.STATVAR.water(1,1) ./ (seb.STATVAR.layerThick(1,1) .* seb.STATVAR.area(1,1) - seb.STATVAR.XwaterIce(1,1)); 
+            reduce_yes_no = vol_water_first_cell < seb.STATVAR.field_capacity(1,1) && forcing.TEMP.q < q_first_cell && ~(seb.STATVAR.XwaterIce(1,1) > 1e-5.*seb.STATVAR.area(1,1));
+            betaCLM4_5 = 1 +  double(reduce_yes_no) .* (-1 +  0.25 .* (1-(cos(pi() .* vol_water_first_cell ./ seb.STATVAR.field_capacity(1,1)))).^2);
+
+            seb.STATVAR.Qe = -rho.*latent_heat.*betaCLM4_5.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q - q_first_cell)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+            seb.STATVAR.evap = water_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
+            seb.STATVAR.sublim = ice_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
+            seb.STATVAR.evap_energy =  seb.STATVAR.evap.*  (double(seb.STATVAR.T(1,1)>=0) .* seb.CONST.c_w .* seb.STATVAR.T(1,1) + ...
+                double(seb.STATVAR.T(1,1)<0) .* seb.CONST.c_i .* seb.STATVAR.T(1,1)); 
+            seb.STATVAR.sublim_energy =  seb.STATVAR.sublim .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f); 
+        end
         
         %sensible heat flux
         function Q_h = Q_h(seb, forcing)

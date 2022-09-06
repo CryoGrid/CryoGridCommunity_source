@@ -19,7 +19,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
 
-            ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
+%             ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
 
             ground.PARA.conductivity_function = [];
             
