@@ -34,7 +34,8 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
        function ground = finalize_init(ground, tile)
            ground = finalize_init@GROUND_freezeC_RichardsEqW_Xice_seb(ground, tile);
            ground.CHILD = 0; % no snow
-           ground.IA_CHILD = 0;
+           ground.IA_CHILD = 0;  
+           ground.TEMP.SW_split = 0;
        end
 
        
@@ -190,7 +191,51 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                     ground.IA_PREVIOUS = ground.IA_CHILD; 
                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
                     ground.IA_CHILD = 0;
+                    
+                    if ~isequal(tile.TOP_CLASS,ground.PREVIOUS) % Snow is not top, need to find IA between snow and top_class
+                        % Copied and adapted from tile builder
+                        ia_class = get_IA_class(class(tile.TOP_CLASS), class(ground.PREVIOUS));
+                        tile.TOP_CLASS.IA_NEXT = ia_class;
+                        tile.TOP_CLASS.IA_NEXT.PREVIOUS = tile.TOP_CLASS;
+                        tile.TOP_CLASS.IA_NEXT.NEXT = tile.TOP_CLASS.NEXT;
+                        tile.TOP_CLASS.NEXT.IA_PREVIOUS = tile.TOP_CLASS.IA_NEXT;
+                        
+                        finalize_init(tile.TOP_CLASS.IA_NEXT, tile);
+                    end
                 end
+            end
+        end
+        
+        function z0 = get_z0_surface(ground)
+            if ground.CHILD ~= 0 % Snow is a CHILD
+                z0g = ground.PARA.z0;
+                z0s = ground.CHILD.PARA.z0;
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                z0 = z0g*(1-snow_fraction) + z0s*snow_fraction;
+            else
+                z0 = ground.PARA.z0;
+            end
+        end
+        
+        function albedo = get_albedo(ground)
+            if ground.CHILD ~= 0 % combined albedo from ground and snowCHILD
+                a_g = get_albedo@GROUND_freezeC_RichardsEqW_Xice_seb(ground);
+                a_s = get_albedo(ground.CHILD);
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                albedo = a_s*snow_fraction + a_g*(1-snow_fraction);
+            else
+                albedo = get_albedo@GROUND_freezeC_RichardsEqW_Xice_seb(ground);
+            end
+        end
+        
+        function T = get_surface_T(ground, tile)
+            if ground.CHILD ~= 0
+                Tg = get_surface_T@GROUND_freezeC_RichardsEqW_Xice_seb(ground, tile);
+                Ts = get_surface_T(ground.CHILD, tile);
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                T = Ts*snow_fraction + Tg*(1-snow_fraction);
+            else
+                T = get_surface_T@GROUND_freezeC_RichardsEqW_Xice_seb(ground, tile);
             end
         end
         

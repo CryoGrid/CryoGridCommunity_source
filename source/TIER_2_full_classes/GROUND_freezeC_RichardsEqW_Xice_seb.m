@@ -304,6 +304,13 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             ground = conductivity_function(ground);
         end
         
+        function albedo = get_albedo(ground)
+            albedo = ground.PARA.albedo;
+        end
+        
+        function Tg = get_surface_T(ground, tile)
+            Tg = ground.STATVAR.T(1);
+        end
         
         %-----LATERAL-------------------
         
@@ -469,3 +476,4 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
         end
         
     end
+end

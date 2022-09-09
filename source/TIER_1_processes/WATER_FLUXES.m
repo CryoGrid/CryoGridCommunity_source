@@ -1138,16 +1138,11 @@ classdef WATER_FLUXES < BASE
             ice_saturation = ground.STATVAR.ice ./ ground.STATVAR.waterIce; %Changed Sebastian Hansen et al., 2004
             ice_saturation = max(0,min(1,ice_saturation));
             n = ground.STATVAR.n;
-            %ground.STATVAR.hydraulicConductivity = ground.PARA.hydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
-
+            
             ground = calculate_viscosity_water(ground);
             hydr_cond = ground.STATVAR.permeability ./ ground.STATVAR.viscosity_water .* ground.CONST.rho_w .* ground.CONST.g; 
             ground.STATVAR.hydraulicConductivity = hydr_cond .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico 
 
-            ground.STATVAR.hydraulicConductivity = min(2e-6, ground.STATVAR.hydraulicConductivity);
-      
-            %SEBAS CHANGED
-           % ground.STATVAR.hydraulicConductivity(ground.STATVAR.T<0) = 0;
         end
         
         function ground = calculate_hydraulicConductivity_RichardsEq_Xice(ground) %hydraulic conductivity of the matrix part of the cell
