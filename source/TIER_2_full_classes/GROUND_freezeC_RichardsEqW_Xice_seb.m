@@ -341,7 +341,7 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
         
         %----LAT_WATER_RESERVOIR------------   
         function ground = lateral_push_water_reservoir(ground, lateral)
-            ground = lateral_push_water_reservoir_RichardsEq_Xice(ground, lateral);
+            ground = lateral_push_water_reservoir_RichardsEq_Xice2(ground, lateral);
         end
         
         %---LAT_OVERLAND_FLOW----------
