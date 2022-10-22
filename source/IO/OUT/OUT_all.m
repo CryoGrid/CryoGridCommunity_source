@@ -164,6 +164,7 @@ classdef OUT_all < matlab.mixin.Copyable
                         out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
                         % If save_interval is not defined, we will save at the very end of the model run
                         % and thus do not need to update SAVE_TIME (update would fail because save_interval is nan)
+                        out.OUTPUT_TIME = min(out.SAVE_TIME, out.OUTPUT_TIME + out.PARA.output_timestep); % OUTPUT_TIME is equal to SAVE_TIME when saving, need to update to avoid duplicating out of SAVE_TIME
 					end
 
                 end
