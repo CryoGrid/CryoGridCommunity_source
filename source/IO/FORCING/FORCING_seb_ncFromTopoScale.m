@@ -49,6 +49,8 @@ classdef FORCING_seb_ncFromTopoScale < matlab.mixin.Copyable
             variables = {'time'; 'Tair'; 'wind'; 'q'; 'Sin'; 'Lin'; 'p'; 'snowfall'; 'rainfall'};
             for i=1:size(variables,1)
                 temp.(variables{i,1}) = double(ncread([forcing.PARA.forcing_path forcing.PARA.filename], variables{i,1}));
+                interm = temp.(variables{i,1});
+                temp.(variables{i,1}) = interm(1:3:size(temp.(variables{i,1}),1), 1);
             end
             temp.reference_time = ncinfo([forcing.PARA.forcing_path forcing.PARA.filename], 'reference_time');
             temp.reference_time=temp.reference_time.Attributes(1).Value;
