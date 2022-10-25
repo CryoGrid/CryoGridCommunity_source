@@ -3,7 +3,7 @@
 %reads single nc-file produced by Python version of TopoScale
 %========================================================================
 
-classdef FORCING_seb_ncFromTopoScale < matlab.mixin.Copyable
+classdef FORCING_seb_nc_PCCH < matlab.mixin.Copyable
     
     properties
         forcing_index
@@ -48,19 +48,24 @@ classdef FORCING_seb_ncFromTopoScale < matlab.mixin.Copyable
             %variables = {'t2m'; 'd2m'; 'u10'; 'v10'; 'ssrd'; 'strd'; 'tp'};
             variables = {'time'; 'Tair'; 'wind'; 'q'; 'Sin'; 'Lin'; 'p'; 'snowfall'; 'rainfall'};
             for i=1:size(variables,1)
-                temp.(variables{i,1}) = double(ncread([forcing.PARA.forcing_path forcing.PARA.filename], variables{i,1}));
-                interm = temp.(variables{i,1});
-                temp.(variables{i,1}) = interm(1:3:size(temp.(variables{i,1}),1), 1);
+                temp.(variables{i,1}) = double(squeeze(ncread([forcing.PARA.forcing_path forcing.PARA.filename], variables{i,1})));
             end
-            temp.reference_time = ncinfo([forcing.PARA.forcing_path forcing.PARA.filename], 'reference_time');
-            temp.reference_time=temp.reference_time.Attributes(1).Value;
+            temp.reference_time = ncinfo([forcing.PARA.forcing_path forcing.PARA.filename]);
+            temp.reference_time =temp.reference_time.Variables(1).Attributes(3).Value(12:12+9);
+%             temp.reference_time=temp.reference_time.Attributes(1).Value;
 %             temp.reference_time =
 %             datenum(temp.reference_time(end-18:end), 'yyyy-mm-dd
 %             HH:MM:SS'); Still a problem in Simon's files, format seems to
 %             change
-            temp.reference_time = datenum(temp.reference_time(end-10:end), 'yyyy-mm-dd');
+            temp.reference_time = datenum(temp.reference_time, 'yyyy-mm-dd');
+           
+            temp.timeForcing = temp.reference_time + temp.time - temp.time(1) +0.25;
             
-            temp.timeForcing = temp.reference_time + temp.time./24;
+            temp.Tair = temp.Tair-273.15;
+            temp.snowfall = temp.snowfall * 8;
+            temp.rainfall = temp.rainfall * 8;
+            temp.Lin = temp.Lin./3600./3;
+            temp.Sin = temp.Sin./3600./3;
             temp.time = [];
             
             forcing.DATA = temp;

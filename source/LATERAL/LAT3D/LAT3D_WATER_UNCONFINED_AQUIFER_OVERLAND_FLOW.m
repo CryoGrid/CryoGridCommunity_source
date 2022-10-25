@@ -64,7 +64,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
         
         function lateral = get_derivatives(lateral, tile) %no need to loop through stratigraphy, all the information is in lateral.PARENT
 
-            lateral.PARENT = get_overlap_cells(lateral.PARENT, 'depths', 'overlap');
+            lateral.PARENT = get_overlap_cells2(lateral.PARENT, 'depths', 'overlap');
             
             %calculate fluxes
             flux = lateral.PARENT.STATVAR.hydraulicConductivity .* 0;

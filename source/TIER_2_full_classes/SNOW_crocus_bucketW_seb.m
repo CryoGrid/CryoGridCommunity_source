@@ -519,6 +519,11 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_snow(snow, lateral);
         end
         
+        %----LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ------------
+        function snow = lateral3D_pull_water_unconfined_aquifer_RichardsEq(snow, lateral)
+            snow = lateral3D_pull_water_unconfined_aquifer_RichardsEq_snow(snow, lateral);
+        end
+        
         %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
         
         %----LAT3D_HEAT------------

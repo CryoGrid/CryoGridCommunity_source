@@ -128,6 +128,32 @@ classdef HEAT_CONDUCTION < BASE
             
         end
         
+        function ground = thermalConductivity_CLM4_5_Xice(ground)
+            
+            k_dry_organic = 0.05; %slightly nonsense...
+                        
+            waterIce = (ground.STATVAR.waterIce+ground.STATVAR.XwaterIce)./ground.STATVAR.layerThick ./ ground.STATVAR.area;
+            water = (ground.STATVAR.water+ground.STATVAR.Xwater)./ground.STATVAR.layerThick ./ ground.STATVAR.area;
+            ice = (ground.STATVAR.ice+ground.STATVAR.Xice) ./ ground.STATVAR.layerThick./ ground.STATVAR.area;
+            mineral = ground.STATVAR.mineral./ground.STATVAR.layerThick./ ground.STATVAR.area;
+            organic = ground.STATVAR.organic./ground.STATVAR.layerThick./ ground.STATVAR.area;
+            porosity = 1 - mineral - organic;
+            organic_fraction = organic ./ (mineral + organic);
+            saturation = waterIce./porosity;
+            
+            k_solids = organic_fraction .* ground.CONST.k_o + (1- organic_fraction) .* ground.CONST.k_m;
+            k_sat = k_solids.^(1-porosity) .* ground.CONST.k_w .^(water./waterIce.* porosity) .* ground.CONST.k_i .^(ice./waterIce.* porosity);
+            
+            bulk_density = 2700 .* (1-porosity);
+            k_dry_mineral = (0.135 .* bulk_density + 64.7) ./ (2700 - 0.947 .* bulk_density);
+            k_dry = organic_fraction .* k_dry_organic + (1- organic_fraction) .* k_dry_mineral;
+
+            Kersten_number = double(ground.STATVAR.T>=0) .* max(0, log(saturation) ./ log(10) + 1) +  double(ground.STATVAR.T<0) .* saturation;
+            
+            ground.STATVAR.thermCond = Kersten_number .* k_sat + (1- Kersten_number) .* k_dry;
+            
+        end
+        
         function snow = conductivity_snow_Yen(snow)
             
             %ki = 2.2196 - 0.0062489 .* snow.STATVAR.T + 0.00010154.*snow.STATVAR.T.^2;

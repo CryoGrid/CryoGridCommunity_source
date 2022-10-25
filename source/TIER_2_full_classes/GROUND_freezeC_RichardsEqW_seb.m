@@ -19,7 +19,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
 
-            ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
+%             ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
 
             ground.PARA.conductivity_function = [];
             
@@ -290,7 +290,8 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         
         %----LAT_WATER_RESERVOIR------------          
         function ground = lateral_push_water_reservoir(ground, lateral)
-            ground = lateral_push_water_reservoir_simple(ground, lateral);
+            %ground = lateral_push_water_reservoir_simple(ground, lateral);
+            ground = lateral_push_water_reservoir_RichardsEq_simple(ground, lateral);
         end
         
         %----LAT_HEAT------------
@@ -310,6 +311,13 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         function [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell(ground, lateral)
             [saturated_next, hardBottom_next] = get_saturated_hardBottom_first_cell_simple(ground, lateral);
         end
+        
+        %----LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ------------
+        function ground = lateral3D_pull_water_unconfined_aquifer_RichardsEq(ground, lateral)
+            ground = lateral3D_pull_water_unconfined_aquifer_RichardsEq_simple(ground, lateral);
+        end
+        
+
         
         %LAT3D_WATER_RESERVOIR and LAT3D_WATER_SEEPAGE_FACE do not require specific functions
          
