@@ -37,7 +37,7 @@ classdef PROVIDER < PROVIDER_EXCEL & PROVIDER_EXCEL3D & PROVIDER_MAT & PROVIDER_
                 provider = read_parameters_excel(provider);
             elseif strcmp(provider.PARA.init_format, 'EXCEL3D')
                 provider = read_parameters_excel3d(provider);
-			elseif strcmp(provider.PARA.init_format, 'YAML')
+            elseif strcmp(provider.PARA.init_format, 'YAML')
                 provider = read_parameters_yaml(provider);
             elseif strcmp(provider.PARA.init_format, 'YAML3D')
                 provider = read_parameters_yaml3d(provider);       
