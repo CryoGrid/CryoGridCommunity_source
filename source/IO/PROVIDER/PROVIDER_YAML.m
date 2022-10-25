@@ -95,34 +95,11 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                                 end
                             elseif isstruct(contents)
                                 % it is a structure
+                                % which means it is some sort of composit
+                                % data type, like a STRAT_MATRIX, V_MATRIX
+                                % or similar.
                                 if isfield(contents,'type') 
-                                    if strcmp(contents.type,'V_MATRIX')
-                                        % it is a V_MATRIX, a table with columnar data
-
-                                        % If matrix contains any string values,
-                                        % it is read as a 1D cell array of 1D cell arrays.
-                                        if size(contents.values,1) == 1 && iscell(contents.values{1})                                
-                                            % this matrix contains some text data
-                                            % handle this special case
-                                            contents.values = vertcat(contents.values{:});
-                                            % now it has same format as numeric matrix
-                                        end
-
-                                        for kk = 1:length(contents.names)
-                                            cname = contents.names{kk};
-
-                                            % check type, just to be sure
-                                            if isnumeric(contents.values{1,kk})
-                                                % it is a numeric type, so convert
-                                                % to matrix
-                                                new_class.PARA.(fieldname).(cname) = cell2mat(contents.values(:,kk));
-                                            else
-                                                % it contains text, keep as cell array
-                                                new_class.PARA.(fieldname).(cname) = contents.values(:,kk);
-                                            end
-                                        end
-                                        
-                                    elseif strcmp(contents.type,'STRAT_MATRIX')
+                                    if strcmp(contents.type,'STRAT_MATRIX')
                                         % it is a STRAT_MATRIX, a table
                                         % with columnar data, which must
                                         % have 'depth' in the first column
@@ -152,6 +129,52 @@ classdef PROVIDER_YAML < BASE_PROVIDER
                                                 % it contains text, keep as cell array
                                                 new_class.PARA.(fieldname).(cname) = contents.values(:,kk);
                                             end
+                                        end
+                                    elseif strcmp(contents.type,'V_MATRIX')
+                                        % it is a V_MATRIX, a table with columnar data
+
+                                        % If matrix contains any string values,
+                                        % it is read as a 1D cell array of 1D cell arrays.
+                                        if size(contents.values,1) == 1 && iscell(contents.values{1})                                
+                                            % this matrix contains some text data
+                                            % handle this special case
+                                            contents.values = vertcat(contents.values{:});
+                                            % now it has same format as numeric matrix
+                                        end
+
+                                        for kk = 1:length(contents.names)
+                                            cname = contents.names{kk};
+
+                                            % check type, just to be sure
+                                            if isnumeric(contents.values{1,kk})
+                                                % it is a numeric type, so convert
+                                                % to matrix
+                                                new_class.PARA.(fieldname).(cname) = cell2mat(contents.values(:,kk));
+                                            else
+                                                % it contains text, keep as cell array
+                                                new_class.PARA.(fieldname).(cname) = contents.values(:,kk);
+                                            end
+                                        end
+                                    elseif strcmp(contents.type,'MATRIX')
+                                        % it is a MATRIX, a table with columnar data
+                                        % but it has no headers/column
+                                        % names
+
+                                        % NB THIS CODE IS NOT TESTED!!!!
+
+                                        % If matrix contains any string values,
+                                        % it is read as a 1D cell array of 1D cell arrays.
+                                        if size(contents.values,1) == 1 && iscell(contents.values{1})                                
+                                            % this matrix contains some text data
+                                            % handle this special case
+                                            contents.values = vertcat(contents.values{:});
+                                            % now it has same format as numeric matrix
+                                        end
+                                        
+                                        if isnumeric(contents.values{1,1})
+                                            new_class.PARA.(fieldname) = cell2mat(contents.values);
+                                        else
+                                            new_class.PARA.(fieldname) = contents.values;
                                         end
                                     else
                                         warning(['Parameter type "' contents.type '" not recognized. Parameter "' fieldname '" in class "' class(new_class) '" not populated.'])
