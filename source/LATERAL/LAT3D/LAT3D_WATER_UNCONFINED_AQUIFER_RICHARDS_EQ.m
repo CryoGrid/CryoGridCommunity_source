@@ -19,7 +19,7 @@
 % Hydraulic conductivity: always has a value, set to zero when frozen/hard_bottom
 % Ground_surface_elevation: as before;
 % 
-% Potential = Gravitational_potential – depths + Water_potential.
+% Potential = Gravitational_potential â€“ depths + Water_potential.
 % Flux = -hyd_cond * (potential1+ ground_surface_elevation1 - potential2-ground_surface_elevation2) / distance .* cross_section;
 % Then reduce with the two water variables
 % 
@@ -189,5 +189,3 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ < BASE_LATERAL
     end
     
 end
-
-

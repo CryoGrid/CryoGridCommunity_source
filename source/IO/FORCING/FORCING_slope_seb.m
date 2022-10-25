@@ -1,10 +1,10 @@
 %========================================================================
 % CryoGrid FORCING class FORCING_slope_seb
 % simple model forcing for GROUND classes computing the surface energy balance
-% (keyword ìsebî). The data must be stored in a Matlab ì.matî file which contains
-% a struct FORCING with field ìdataî, which contain the time series of the actual
+% (keyword ‚Äúseb‚Äù). The data must be stored in a Matlab ‚Äú.mat‚Äù file which contains
+% a struct FORCING with field ‚Äúdata‚Äù, which contain the time series of the actual
 % forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures.
-% Have a look at the existing forcing files in the folder ìforcingî and prepare
+% Have a look at the existing forcing files in the folder ‚Äúforcing‚Äù and prepare
 % new forcing files in the same way. The mandatory forcing variables are air temperature
 % (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2),
 % incoming short-wave radiation (Sin, in W/m2), absolute humidity (q, in
@@ -228,8 +228,8 @@ classdef FORCING_slope_seb < matlab.mixin.Copyable
             SW_diff = SW_diff_total * sky_view_factor; %Reduction of diffuse SW by sky view factor
             
             % Calculation of reflected SW
-            
-            SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) * sky_view_factor;
+
+            SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) * (1 - sky_view_factor); % Corrected RBZ Aug-21
             
             %Calculation of reprojected direct SW
             

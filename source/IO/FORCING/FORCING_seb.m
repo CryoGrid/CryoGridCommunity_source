@@ -1,10 +1,10 @@
 %========================================================================
 % CryoGrid FORCING class FORCING_seb
 % simple model forcing for GROUND classes computing the surface energy balance 
-% (keyword ìsebî). The data must be stored in a Matlab ì.matî file which contains 
-% a struct FORCING with field ìdataî, which contain the time series of the actual 
+% (keyword ‚Äúseb‚Äù). The data must be stored in a Matlab ‚Äú.mat‚Äù file which contains 
+% a struct FORCING with field ‚Äúdata‚Äù, which contain the time series of the actual 
 % forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures. 
-% Have a look at the existing forcing files in the folder ìforcingî and prepare 
+% Have a look at the existing forcing files in the folder ‚Äúforcing‚Äù and prepare 
 % new forcing files in the same way. The mandatory forcing variables are air temperature 
 % (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2), 
 % incoming short-wave radiation (Sin, in W/m2), absolute humidity (q, in 
@@ -46,6 +46,8 @@ classdef FORCING_seb < matlab.mixin.Copyable
 
             forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
+%             forcing.PARA.area = [];         % area of the grid cell [m2] 
+            forcing.PARA.slope_angle = [];
         end
         
         

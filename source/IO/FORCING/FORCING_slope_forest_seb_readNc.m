@@ -81,7 +81,7 @@ classdef FORCING_slope_forest_seb_readNc < FORCING_slope_seb_readNc %matlab.mixi
              % e.g. remote sensing data. Call this field "fc" (between 0 and 1).
              % Also requires canopy transmissivity "tauc", canopy height "hc", and a
              % canopy extinction coefficient "muc". Example values are provided below.
-             % See Link & Marks (1999), Garren & Marks (2005), and Bair et al. (2016)
+             % See Link & Marks (1999), Garen & Marks (2005), and Bair et al. (2016)
              % for more on these parametrizations.
              
              % Canopy parameters (may have to read these in from external data). These

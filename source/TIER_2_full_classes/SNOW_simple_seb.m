@@ -74,9 +74,10 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             
             snow.CONST.rho_w = [];  % water density
             snow.CONST.rho_i = [];  %ice density
+            
+            snow.CONST.Tmfw = []; % melt/freeze temperature of water [K]
         end
-        
-        
+
         function snow = finalize_init(snow, tile)
             snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
@@ -86,7 +87,7 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
             snow.TEMP.d_energy = snow.STATVAR.energy.*0;
         end
         
-        
+
         %---time integration------
         %separate functions for CHILD pphase of snow cover
         
@@ -206,7 +207,7 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
         
         %-----non-mandatory functions-------
         function snow = surface_energy_balance(snow, forcing)
-            snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
+            snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ snow.CONST.Tmfw).^4;
             snow.STATVAR.Sout = snow.PARA.albedo .*  forcing.TEMP.Sin;
             snow.STATVAR.Qh = Q_h(snow, forcing);
             snow.STATVAR.Qe = Q_eq_potET(snow, forcing);

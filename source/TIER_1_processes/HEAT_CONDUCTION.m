@@ -128,10 +128,9 @@ classdef HEAT_CONDUCTION < BASE
             
         end
         
-        function ground = thermalConductivity_CLM4_5_Xice(ground)
-            
+        function ground = thermalConductivity_CLM4_5_Xice(ground)    
             k_dry_organic = 0.05; %slightly nonsense...
-                        
+
             waterIce = (ground.STATVAR.waterIce+ground.STATVAR.XwaterIce)./ground.STATVAR.layerThick ./ ground.STATVAR.area;
             water = (ground.STATVAR.water+ground.STATVAR.Xwater)./ground.STATVAR.layerThick ./ ground.STATVAR.area;
             ice = (ground.STATVAR.ice+ground.STATVAR.Xice) ./ ground.STATVAR.layerThick./ ground.STATVAR.area;
@@ -140,10 +139,10 @@ classdef HEAT_CONDUCTION < BASE
             porosity = 1 - mineral - organic;
             organic_fraction = organic ./ (mineral + organic);
             saturation = waterIce./porosity;
-            
+          
             k_solids = organic_fraction .* ground.CONST.k_o + (1- organic_fraction) .* ground.CONST.k_m;
             k_sat = k_solids.^(1-porosity) .* ground.CONST.k_w .^(water./waterIce.* porosity) .* ground.CONST.k_i .^(ice./waterIce.* porosity);
-            
+
             bulk_density = 2700 .* (1-porosity);
             k_dry_mineral = (0.135 .* bulk_density + 64.7) ./ (2700 - 0.947 .* bulk_density);
             k_dry = organic_fraction .* k_dry_organic + (1- organic_fraction) .* k_dry_mineral;
@@ -151,7 +150,6 @@ classdef HEAT_CONDUCTION < BASE
             Kersten_number = double(ground.STATVAR.T>=0) .* max(0, log(saturation) ./ log(10) + 1) +  double(ground.STATVAR.T<0) .* saturation;
             
             ground.STATVAR.thermCond = Kersten_number .* k_sat + (1- Kersten_number) .* k_dry;
-            
         end
         
         function snow = conductivity_snow_Yen(snow)
@@ -165,7 +163,7 @@ classdef HEAT_CONDUCTION < BASE
             k1 = -0.06023;
             k2 = 2.5425;
             k3 = 289.99-273.15;
-            snow.STATVAR.thermCond + snow.STATVAR.thermCond +  max(0,k1-k2./(snow.STATVAR.T-k3));% tile.FORCING.TEMP.p ./ 1.05e5 .*
+            snow.STATVAR.thermCond = snow.STATVAR.thermCond +  max(0,k1-k2./(snow.STATVAR.T-k3));% tile.FORCING.TEMP.p ./ 1.05e5 .*
             
         end
         
@@ -189,7 +187,20 @@ classdef HEAT_CONDUCTION < BASE
             thermCond_Yen = ki.*(snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area).^1.88;
             
             snow.STATVAR.thermCond = max(thermCond_Sturm, thermCond_Yen);
+        end            
+
+        function snow = conductivity_snow_Jordan(snow)
+            % Alternative snow conductivity parameterization, based on
+            % "Jordan, R. (1991). A one-dimensional temperature model for a snow cover" 
+            % R. B. Zweigel, July 2022
+            k_ice = snow.CONST.k_i;
+            k_air = snow.CONST.k_a;
+            rho_ice = snow.CONST.rho_i;
             
+            rho = rho_ice .* snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area;
+            snow.STATVAR.thermCond = k_air + (7.75e-5.*rho + 1.105e-6*rho.^2)*(k_ice-k_air);
+            % Note that k_ice in Yen's parameteruization is made
+            % temperature dependent!
         end
         
     end

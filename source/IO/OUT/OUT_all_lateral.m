@@ -68,7 +68,10 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
             else
                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
             end
+            
             out.TEMP = struct();
+            out.TEMP.count = 0;
+            out.TEMP.time = 0;
         end
         
         %-------time integration----------------
@@ -83,16 +86,22 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
              forcing = tile.FORCING;
              run_name = tile.PARA.run_name;
              result_path = tile.PARA.result_path;
+
              timestep = tile.timestep;
              out_tag = out.PARA.tag;
-             
-            
 
-            if t>=out.OUTPUT_TIME
-        				% It is time to collect output
-                % Store the current state of the model in the out structure.
-                
-                disp([datestr(t)])
+             out.TEMP.count = out.TEMP.count + 1;
+             out.TEMP.time = out.TEMP.time + tile.timestep;
+             
+%           --- Write OUTPUT ---
+            if t==out.OUTPUT_TIME
+                %if id == 1
+                avg_timestep = out.TEMP.time/out.TEMP.count;
+                disp([datestr(t,'dd-mmm-yyyy HH:MM') ' Average timestep: ' num2str(avg_timestep)])
+                out.TEMP.count = 0;
+                out.TEMP.time = 0;
+                %end
+                %labBarrier
 
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
@@ -171,6 +180,7 @@ classdef OUT_all_lateral < matlab.mixin.Copyable
                         % If save_interval is not defined, we will save at the very end of the model run
                         % and thus do not need to update SAVE_TIME (update would fail because save_interval is nan)
 					end
+
 
                 end
             end

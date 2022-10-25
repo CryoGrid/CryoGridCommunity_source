@@ -32,7 +32,8 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
        function ground = finalize_init(ground, tile)
            ground = finalize_init@GROUND_freezeC_RichardsEqW_seb(ground, tile);
            ground.CHILD = 0; % no snow
-           ground.IA_CHILD = 0;
+           ground.IA_CHILD = 0;           
+           ground.TEMP.SW_split = 0;
        end
 
        
@@ -74,7 +75,9 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
                 ground.STATVAR.ice = ground.STATVAR.ice .* reduction;
                 ground.STATVAR.mineral = ground.STATVAR.mineral .* reduction;
                 ground.STATVAR.organic = ground.STATVAR.organic .* reduction;
-                
+                                
+                ground.TEMP.SW_split = 1; % To avoind calling SW of snow CHILD twice
+
                 %-------------
                 
                 ground.CHILD.STATVAR.Lstar = ground.STATVAR.Lstar;
@@ -103,7 +106,31 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
         end
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
-            [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_seb(ground, S_down);
+            
+            if ground.CHILD ~= 0 && ground.TEMP.SW_split == 0
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                ground_fraction = 1 - snow_fraction;
+                [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_seb(ground, S_down.*ground_fraction);
+                ground.TEMP.SW_split = 1; % To circumnavigate CHILD when penetrat_SW(ground) is called below snow
+                [ground.CHILD, S_up2] = penetrate_SW(ground.CHILD, S_down.*snow_fraction);
+                S_up = S_up + sum(S_up2); % snow_crocus splits SW into spectral bands
+            else
+                [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_seb(ground, S_down);
+
+            end
+        end
+        
+        function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features SW penetration
+            
+            if ground.CHILD == 0
+                [ground, L_up] = penetrate_LW@GROUND_freezeC_RichardsEqW_seb(ground, L_down);
+            else
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                ground_fraction = 1 - snow_fraction;
+                [ground, L_up_GROUND] = penetrate_LW_no_transmission_GROUND_snow(ground, L_down.*ground_fraction);
+                [ground.CHILD, L_up_SNOW] = penetrate_LW(ground.CHILD, L_down.*snow_fraction);
+                L_up = L_up_GROUND + L_up_SNOW;
+            end
         end
         
         function ground = get_boundary_condition_l(ground, tile)
@@ -151,6 +178,7 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
                 ground.CHILD = compute_diagnostic_CHILD(ground.CHILD, tile);
                 
             end
+            ground.TEMP.SW_split = 0; % used to avoid erronous splitting of SW to snow CHILD
         end
         
         function ground = check_trigger(ground, tile)
@@ -176,6 +204,18 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
                     ground.IA_PREVIOUS = ground.IA_CHILD; 
                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
                     ground.IA_CHILD = 0;
+                    
+                    if ~isequal(tile.TOP_CLASS,ground.PREVIOUS) % Snow is not top, need to find IA between snow and top_class
+                        % Copied and adapted from tile builder
+                        ia_class = get_IA_class(class(tile.TOP_CLASS), class(ground.PREVIOUS));
+                        tile.TOP_CLASS.IA_NEXT = ia_class;
+                        tile.TOP_CLASS.IA_NEXT.PREVIOUS = tile.TOP_CLASS;
+                        tile.TOP_CLASS.IA_NEXT.NEXT = tile.TOP_CLASS.NEXT;
+                        tile.TOP_CLASS.NEXT.IA_PREVIOUS = tile.TOP_CLASS.IA_NEXT;
+                        
+                        finalize_init(tile.TOP_CLASS.IA_NEXT, tile);
+                    end
+                    
                 end
             end
         end
@@ -186,6 +226,39 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
         function ground = reset_timestamps(ground, tile)
             if ground.CHILD ~= 0
                 ground.CHILD = reset_timestamps(ground.CHILD, tile);
+            end
+        end
+        
+        function z0 = get_z0_surface(ground)
+            if ground.CHILD ~= 0 % Snow is a CHILD
+                z0g = ground.PARA.z0;
+                z0s = ground.CHILD.PARA.z0;
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                z0 = z0g*(1-snow_fraction) + z0s*snow_fraction;
+            else
+                z0 = ground.PARA.z0;
+            end
+        end
+        
+        function albedo = get_albedo(ground)
+            if ground.CHILD ~= 0 % combined albedo from ground and snowCHILD
+                a_g = get_albedo@GROUND_freezeC_RichardsEqW_seb(ground);
+                a_s = get_albedo(ground.CHILD);
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                albedo = a_s*snow_fraction + a_g*(1-snow_fraction);
+            else
+                albedo = get_albedo@GROUND_freezeC_RichardsEqW_seb(ground);
+            end
+        end
+        
+        function T = get_surface_T(ground, tile)
+            if ground.CHILD ~= 0
+                Tg = get_surface_T@GROUND_freezeC_RichardsEqW_seb(ground, tile);
+                Ts = get_surface_T(ground.CHILD, tile);
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                T = Ts*snow_fraction + Tg*(1-snow_fraction);
+            else
+                T = get_surface_T@GROUND_freezeC_RichardsEqW_seb(ground, tile);
             end
         end
         

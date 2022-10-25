@@ -199,7 +199,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Karra
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water; 
             ground.STATVAR.waterIce = min(ground.STATVAR.waterIce, ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.mineral - ground.STATVAR.organic); %prevent small rounding errors 
             ground.STATVAR.excessWater = ground.STATVAR.excessWater + timestep .* ground.TEMP.surface_runoff;
-        end
+       end
         
         function ground = compute_diagnostic_first_cell(ground, tile)
             forcing = tile.FORCING;
@@ -325,6 +325,7 @@ classdef GROUND_freezeC_bucketW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_Karra
         function ground = get_boundary_condition_u_water2(ground, forcing)
            ground = get_boundary_condition_u_water2@WATER_FLUXES(ground, forcing);
         end
+        
         function ground = get_derivative_water2(ground)
             ground = get_derivative_water2@WATER_FLUXES(ground);
         end

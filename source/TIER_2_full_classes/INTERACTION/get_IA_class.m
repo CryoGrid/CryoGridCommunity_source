@@ -27,9 +27,6 @@ if strcmp(below_class(end-8:end), 'FLIP_FLOP')
     below_class = below_class(1:end-10);
 end
 
-
-
-
 if strcmp(above_class, 'GROUND_freeW_seb')
     if strcmp(below_class, 'GROUND_freeW_seb') || strcmp(below_class, 'GROUND_freezeC_seb')
         ia_class = IA_HEAT11();
@@ -435,6 +432,7 @@ elseif strcmp(above_class, 'SNOW_simple_ubT')
     
 end
 
+
 if ia_class == 0
     switch above_class
         case {'GROUND_fcSimple_salt_ubtf', 'GROUND_fcSimple_salt_ubtf_snow',...
@@ -475,8 +473,7 @@ if ia_class == 0
                     ia_class = IA_HEAT11();
             end
     end
-    
-    
+  
 end
 end
 
