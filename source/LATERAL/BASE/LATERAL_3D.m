@@ -178,9 +178,9 @@ classdef LATERAL_3D < matlab.mixin.Copyable
                     
                     %compute ground surface elevation 
                     CURRENT = lateral.TOP.NEXT;
-                    lateral.STATVAR.groundSurfaceElevation = [];
+                    lateral.STATVAR.ground_surface_elevation = [];
                     while ~(strcmp(class(CURRENT), 'Bottom')) && isempty(lateral.STATVAR.groundSurfaceElevation)
-                        lateral.STATVAR.groundSurfaceElevation = get_groundSurfaceElevation(CURRENT);
+                        lateral.STATVAR.ground_surface_elevation = get_groundSurfaceElevation(CURRENT);
                         CURRENT = CURRENT.NEXT;
                     end
                     
