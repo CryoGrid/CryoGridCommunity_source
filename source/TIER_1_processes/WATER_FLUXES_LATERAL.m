@@ -894,9 +894,9 @@ classdef WATER_FLUXES_LATERAL < BASE
             hardBottom = [hardBottom; hardBottom_next];
             %add one cell based on NEXT 
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
-            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
-                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
-            end
+%             if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+%                 lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+%             end
             %lateral.PARENT.STATVAR.water_available = 0;
             
             mobile_water = depths .* 0; %m3 - water than can be added 
@@ -1040,9 +1040,9 @@ classdef WATER_FLUXES_LATERAL < BASE
             hardBottom = [hardBottom; hardBottom_next];
             %add one cell based on NEXT 
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
-            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
-                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
-            end
+%             if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+%                 lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+%             end
             %lateral.PARENT.STATVAR.water_available = 0;
             
             mobile_water = depths .* 0; %m3 - water than can be added 
@@ -1387,9 +1387,9 @@ classdef WATER_FLUXES_LATERAL < BASE
 
             
             depths = ground.STATVAR.upperPos - cumsum([0; ground.STATVAR.layerThick]);
-            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
-                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
-            end
+%             if isempty(lateral.PARENT.STATVAR.ground_surface_elevation)
+%                 lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+%             end
 
             lateral.TEMP.open_system = 1;
             lateral.PARENT.STATVAR.water_table_top_cell =  0; %water level is not split between cells!
@@ -1453,9 +1453,9 @@ classdef WATER_FLUXES_LATERAL < BASE
         %LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ
         function ground = lateral3D_pull_water_unconfined_aquifer_RichardsEq_simple(ground, lateral)
             
-            if isempty(lateral.PARENT.STATVAR.ground_surface_elevation) %this must be made a dedicated function since hillslope must also work when just using heat!
-                lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
-            end
+%             if isempty(lateral.PARENT.STATVAR.ground_surface_elevation) %this must be made a dedicated function since hillslope must also work when just using heat!
+%                 lateral.PARENT.STATVAR.ground_surface_elevation = ground.STATVAR.upperPos;
+%             end
             
             depths = ground.STATVAR.upperPos - cumsum(ground.STATVAR.layerThick) + ground.STATVAR.layerThick./2; %midpoints!
             saturation = (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area);

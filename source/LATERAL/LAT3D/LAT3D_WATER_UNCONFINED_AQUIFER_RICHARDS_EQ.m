@@ -66,7 +66,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ < BASE_LATERAL
             lateral.PARENT.STATVAR.matric_potential_head = [];
             lateral.PARENT.STATVAR.hydrostatic_head = 0;
             lateral.PARENT.STATVAR.T_water = [];
-            lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
+        %    lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
             
             lateral.TEMP.open_system = 1; %start with open system
 
