@@ -1,6 +1,5 @@
 %========================================================================
 % CryoGrid FORCING class FORCING_ubT_lbT_fixed
-%
 % simple model forcing for GROUND classes depending only on fixed upper
 % and lower boundary temperatures
 %
@@ -15,7 +14,7 @@
 %========================================================================
 
 
-classdef FORCING_ubT_lbT_fixed < FORCING_base
+classdef FORCING_ubT_lbT_fixed < matlab.mixin.Copyable
     
     properties
         forcing_index
@@ -53,9 +52,10 @@ classdef FORCING_ubT_lbT_fixed < FORCING_base
  
         
         function forcing = finalize_init(forcing, tile)
-
-            forcing = set_start_and_end_time(forcing); % assign start/end time
-
+            % FINALIZE_INIT  Performs all additional property
+            %   initializations and modifications. Checks for some (but not
+            %   all) data validity.
+            
             forcing.STATUS = 1;
 
             % handle start time
@@ -88,10 +88,28 @@ classdef FORCING_ubT_lbT_fixed < FORCING_base
             forcing.TEMP.t = t;
         end
 
+        function xls_out = write_excel(forcing)
+			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
+			error('This function is not implemented/updated for this specific class')
+            xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};
+        end
+
         function fig = plot(forcing)
 			error('This function is not implemented/updated for this specific class')
         end
 
     end
+
+    
+    methods(Static)
+        function value = lin_interp(t, posit, times, data)
+			% t       is the current time
+			% times   is the vector of times at which forcing data are available
+			% data    is the vector of forcing data (on parameter)
+			% posit   is an index into the time vector to the largest specified time step before current time 
+            value = data(posit,1) + (data(posit+1,1) - data(posit,1)).*(t-times(posit,1))./(times(2,1)-times(1,1));
+        end        
+    end
+    
 
 end

@@ -223,6 +223,11 @@ classdef SNOW_simple_seb < SEB & HEAT_CONDUCTION & SNOW & WATER_FLUXES_LATERAL &
                 
         %-----LATERAL-------------------
         
+        function gse = get_groundSurfaceElevation(ground)
+           gse = []; 
+        end
+        
+        
         %-----LAT_REMOVE_SURFACE_WATER-----
         function snow = lateral_push_remove_surfaceWater(snow, lateral)
             snow = lateral_push_remove_surfaceWater_simple(snow, lateral);

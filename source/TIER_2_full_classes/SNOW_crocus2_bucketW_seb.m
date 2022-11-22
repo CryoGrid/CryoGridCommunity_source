@@ -507,6 +507,10 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
         
         %-----LATERAL-------------------
         
+        function gse = get_groundSurfaceElevation(ground)
+           gse = []; 
+        end
+        
 %         %-----LAT_REMOVE_SURFACE_WATER-----
 %         function snow = lateral_push_remove_water_seepage(snow, lateral)
 %             snow = lateral_push_remove_water_seepage_snow(snow, lateral);

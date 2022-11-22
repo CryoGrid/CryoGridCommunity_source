@@ -268,6 +268,10 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         
         %-----LATERAL-------------------
         
+        function gse = get_groundSurfaceElevation(ground)
+           gse = []; 
+        end
+        
         %-----LAT_REMOVE_SURFACE_WATER-----
         function ground = lateral_push_remove_surfaceWater(ground, lateral)
             ground = lateral_push_remove_surfaceWater_simple(ground, lateral);

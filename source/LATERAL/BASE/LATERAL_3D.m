@@ -176,6 +176,15 @@ classdef LATERAL_3D < matlab.mixin.Copyable
                         CURRENT = CURRENT.PREVIOUS;
                     end
                     
+                    %compute ground surface elevation 
+                    CURRENT = lateral.TOP.NEXT;
+                    lateral.STATVAR.groundSurfaceElevation = [];
+                    while ~(strcmp(class(CURRENT), 'Bottom')) && isempty(lateral.STATVAR.groundSurfaceElevation)
+                        lateral.STATVAR.groundSurfaceElevation = get_groundSurfaceElevation(CURRENT);
+                        CURRENT = CURRENT.NEXT;
+                    end
+                    
+                    
                     %PULL information from individual stratigraphy classes
                     for i=1:size(lateral.IA_CLASSES,1)
                         if lateral.ACTIVE(i,1)
