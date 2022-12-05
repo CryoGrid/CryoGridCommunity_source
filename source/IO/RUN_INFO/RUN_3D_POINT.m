@@ -30,14 +30,9 @@ classdef RUN_3D_POINT < matlab.mixin.Copyable
         
         function run_info = provide_PARA(run_info)
 
-            run_info.PARA.3D_point_class = [];
-            run_info.PARA.3D_point_class_index = [];
+            run_info.PARA.point_3D_class = [];
+            run_info.PARA.point_3D_class_index = [];
             
-%             run_info.PARA.number_of_tiles = []; %3;
-%             run_info.PARA.param_file_number = []; %[1;2;3];            
-%             run_info.PARA.connected = [];
-%             run_info.PARA.contact_length = [];
-%             run_info.PARA.distance = [];
 
             run_info.PARA.tile_class = [];
             run_info.PARA.tile_class_index = [];
@@ -55,7 +50,7 @@ classdef RUN_3D_POINT < matlab.mixin.Copyable
         
         function run_info = finalize_init(run_info)
  
-            run_info.SPATIAL = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.point_class){run_info.PARA.point_class_index,1});
+            run_info.SPATIAL = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.point_3D_class){run_info.PARA.point_3D_class_index,1});
             run_info.SPATIAL.RUN_INFO = run_info;
             run_info.SPATIAL = finalize_init(run_info.SPATIAL);
             
@@ -92,10 +87,17 @@ classdef RUN_3D_POINT < matlab.mixin.Copyable
             tile.RUN_INFO = run_info;
             run_info.TILE = tile;
             
+%             %this is double and in principle unnecessary, potentially
+%             %remove this, then all references to these fields in LATERAL need to be changed!! 
+%             run_info.PARA.connected = run_info.SPATIAL.PARA.connected;
+%             run_info.PARA.contact_length = run_info.SPATIAL.PARA.contact_length;
+%             run_info.PARA.distance = run_info.SPATIAL.PARA.distance;
+%             %end remove!
+            
             fn = fieldnames(run_info.SPATIAL.STATVAR);
             for i=1:size(fn,1) 
                 if ~isempty(run_info.SPATIAL.STATVAR.(fn{i,1}))
-                    tile.PARA.(fn{i,1}) = run_info.SPATIAL.STATVAR.(fn{i,1});
+                    tile.PARA.(fn{i,1}) = run_info.SPATIAL.STATVAR.(fn{i,1})(run_info.PARA.worker_number,1);
                 end
             end
             

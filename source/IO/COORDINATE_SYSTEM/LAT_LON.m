@@ -68,6 +68,7 @@ classdef LAT_LON < matlab.mixin.Copyable
                     proj.STATVAR.(fn{i,1})(~mask) = [];
             end
             
+
             %load data sets
             for i=1:size(proj.PARA.data_class,1)
                 data_class = copy(proj.RUN_INFO.PPROVIDER.CLASSES.(proj.PARA.data_class{i,1}){proj.PARA.data_class_index(i,1),1});

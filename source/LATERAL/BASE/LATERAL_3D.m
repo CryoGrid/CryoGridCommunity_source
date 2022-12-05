@@ -87,12 +87,19 @@ classdef LATERAL_3D < matlab.mixin.Copyable
             lateral.ENSEMBLE={};
             lateral.ACTIVE = zeros(size(lateral.IA_CLASSES,1),1);
             
-            lateral.PARA.connected = tile.RUN_INFO.PARA.connected;
-            lateral.PARA.contact_length = tile.RUN_INFO.PARA.contact_length;
-            lateral.PARA.distance = tile.RUN_INFO.PARA.distance;
-            lateral.PARA.worker_number = tile.RUN_INFO.PARA.worker_number;
-            lateral.PARA.num_realizations = tile.RUN_INFO.PARA.number_of_tiles;
+%             lateral.PARA.connected = tile.RUN_INFO.PARA.connected;
+%             lateral.PARA.contact_length = tile.RUN_INFO.PARA.contact_length;
+%             lateral.PARA.distance = tile.RUN_INFO.PARA.distance;
+%             lateral.PARA.worker_number = tile.RUN_INFO.PARA.worker_number;
+%             lateral.PARA.num_realizations = tile.RUN_INFO.PARA.number_of_tiles;
             
+            lateral.PARA.connected = tile.RUN_INFO.SPATIAL.PARA.connected;
+            lateral.PARA.contact_length = tile.RUN_INFO.SPATIAL.PARA.contact_length;
+            lateral.PARA.distance = tile.RUN_INFO.SPATIAL.PARA.distance;
+            
+            lateral.PARA.num_realizations = tile.RUN_INFO.SPATIAL.PARA.number_of_tiles;
+            
+            lateral.PARA.worker_number = tile.RUN_INFO.PARA.worker_number;
             lateral.STATVAR.index = lateral.PARA.worker_number; % this is double, but it is necessary to store the index also in STATVAR
         
             %lateral.PARA.is_active = 1; %can be used to switch off lateral interactions temporarily

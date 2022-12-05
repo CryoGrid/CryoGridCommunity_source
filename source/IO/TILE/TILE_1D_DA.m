@@ -39,11 +39,11 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
             tile.PARA.builder = [];
             
             %new_init
-            tile.PARA.latitude = [];
-            tile.PARA.longitude = [];
-            tile.PARA.altitude = [];
+%             tile.PARA.latitude = [];
+%             tile.PARA.longitude = [];
+%             tile.PARA.altitude = [];
             tile.PARA.domain_depth = [];
-            tile.PARA.area = [];
+%             tile.PARA.area = [];
             
             tile.PARA.forcing_class = [];
             tile.PARA.forcing_class_index = [];
@@ -74,6 +74,9 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
 
             tile.PARA.unit_conversion_class = 'UNIT_CONVERSION_standard'; %can be overwritten if needed
             
+            %set default values of necessary parameters
+            tile.PARA.area = 1;
+            tile.PARA.altitude = 0;
         end
         
         function tile = provide_CONST(tile)

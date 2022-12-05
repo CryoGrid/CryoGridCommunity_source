@@ -20,6 +20,13 @@ classdef READ_FORCING_mat < READ_FORCING_base
 
             times = data.t_span;
         end
+        
+        %for TopoScale
+        function data = read_mat_ERA4D(forcing, full_file)  
+            data = load(full_file, 'era');
+            data = data.era;
+        end
+
 
     end    
     

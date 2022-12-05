@@ -16,7 +16,7 @@ classdef RUN_SPATIAL_SPINUP < matlab.mixin.Copyable
         
         function run_info = provide_PARA(run_info)
 
-            %run_info.PARA.parallelized = [];
+            run_info.PARA.number_of_cores = [];
 
             %run_info.PARA.number_of_cells_per_tile = [];
             
@@ -41,7 +41,6 @@ classdef RUN_SPATIAL_SPINUP < matlab.mixin.Copyable
         function run_info = finalize_init(run_info)
             
             disp('get spatial data')
-            %provided by coordinate system MODIS LST classes
             run_info.SPATIAL = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.projection_class){run_info.PARA.projection_class_index,1});
             run_info.SPATIAL.RUN_INFO = run_info;
             run_info.SPATIAL = finalize_init(run_info.SPATIAL);
@@ -51,28 +50,59 @@ classdef RUN_SPATIAL_SPINUP < matlab.mixin.Copyable
         function [run_info, tile] = run_model(run_info)
             
             tile = 0;
-            for run_number = 1:size(run_info.SPATIAL.STATVAR.key,1)
-                
-                for i=1:size(run_info.SPATIAL.ACTION,1)
-                    run_info.SPATIAL.ACTION{i,1} = assign_tile_properties(run_info.SPATIAL.ACTION{i,1}, run_number); %writes the provider class
+            if run_info.PARA.number_of_cores > 1
+                parpool(run_info.PARA.number_of_cores)
+                spmd
+                    for run_number = 1:size(run_info.SPATIAL.STATVAR.key,1)
+                        
+                        for ai=1:size(run_info.SPATIAL.ACTION,1)
+                            run_info.SPATIAL.ACTION{ai,1} = assign_tile_properties(run_info.SPATIAL.ACTION{ai,1}, run_number); %writes the provider class
+                        end
+                        
+                        disp(['running grid cell ' num2str(run_number)])
+                        %as normal 1D run
+                        for i=1:size(run_info.PARA.tile_class,1)
+                            disp(['running tile number ' num2str(i)])
+                            for j=1:run_info.PARA.number_of_runs_per_tile(i,1)
+                                disp(['running round ' num2str(j)])
+                                
+                                new_tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{i,1}){run_info.PARA.tile_class_index(i,1),1});
+                                new_tile.RUN_INFO = run_info;
+                                new_tile = finalize_init(new_tile);
+                                tile = new_tile;
+                                run_info.TILE = tile;
+                                
+                                [tile.PARA.latitude tile.PARA.longitude]
+                                
+                                tile = run_model(tile);  %time integration
+                            end
+                        end
+                    end
                 end
-                
-                disp(['running grid cell ' num2str(run_number)])
-                    %as normal 1D run                
-                for i=1:size(run_info.PARA.tile_class,1) %can be parallelized
-                    disp(['running tile number ' num2str(i)])
-                    for j=1:run_info.PARA.number_of_runs_per_tile(i,1)
-                        disp(['running round ' num2str(j)])
-                                                
-                        new_tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{i,1}){run_info.PARA.tile_class_index(i,1),1});
-                        new_tile.RUN_INFO = run_info;
-                        new_tile = finalize_init(new_tile);
-                        tile = new_tile;
-                        run_info.TILE = tile;
-                        
-                        [tile.PARA.latitude tile.PARA.longitude]
-                        
-                        tile = run_model(tile);  %time integration
+                delete(gcp('nocreate'));
+            else
+                for run_number = 1:size(run_info.SPATIAL.STATVAR.key,1)    
+                    for i=1:size(run_info.SPATIAL.ACTION,1)
+                        run_info.SPATIAL.ACTION{i,1} = assign_tile_properties(run_info.SPATIAL.ACTION{i,1}, run_number); %writes the provider class
+                    end
+                    
+                    disp(['running grid cell ' num2str(run_number)])
+                    %as normal 1D run
+                    for i=1:size(run_info.PARA.tile_class,1) 
+                        disp(['running tile number ' num2str(i)])
+                        for j=1:run_info.PARA.number_of_runs_per_tile(i,1)
+                            disp(['running round ' num2str(j)])
+                            
+                            new_tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{i,1}){run_info.PARA.tile_class_index(i,1),1});
+                            new_tile.RUN_INFO = run_info;
+                            new_tile = finalize_init(new_tile);
+                            tile = new_tile;
+                            run_info.TILE = tile;
+                            
+                            [tile.PARA.latitude tile.PARA.longitude]
+                            
+                            tile = run_model(tile);  %time integration
+                        end
                     end
                 end
             end

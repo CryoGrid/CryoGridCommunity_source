@@ -322,7 +322,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             
             snow.STATVAR.layerThick(1) =  snow.STATVAR.layerThickSnowFirstCell;
             %new snow
-            if snow.TEMP.snowfall >0
+            if snow.TEMP.snowfall > 0
                 snow = advance_prognostic_new_snow_crocus(snow, timestep);
                 %merge with uppermost layer
                 
