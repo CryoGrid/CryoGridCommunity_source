@@ -192,6 +192,21 @@ classdef HEAT_CONDUCTION < BASE
             
         end
         
+        
+        function snow = conductivity_snow_Jordan(snow)
+            % Alternative snow conductivity parameterization, based on
+            % "Jordan, R. (1991). A one-dimensional temperature model for a snow cover" 
+            % R. B. Zweigel, July 2022
+            k_ice = snow.CONST.k_i;
+            k_air = snow.CONST.k_a;
+            rho_ice = snow.CONST.rho_i;
+            
+            rho = rho_ice .* snow.STATVAR.waterIce./snow.STATVAR.layerThick./ snow.STATVAR.area;
+            snow.STATVAR.thermCond = k_air + (7.75e-5.*rho + 1.105e-6*rho.^2)*(k_ice-k_air);
+            % Note that k_ice in Yen's parameteruization is made
+            % temperature dependent!
+        end
+        
     end
 end
 

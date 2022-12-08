@@ -15,7 +15,7 @@ classdef POINT_DEM < DEM_BASE
             point.PARA.number_of_horizon_bins = []; %multiples of 4!
             point.PARA.DEM_folder = [];
             point.PARA.DEM_filename = [];
-            
+            point.PARA.reproject2utm = 1; %select 1 when using a geographic coordinate system and computing more than just altitude; select 0 to speed up altitde computation in big DEMs
         end
         
         function point = provide_STATVAR(point)

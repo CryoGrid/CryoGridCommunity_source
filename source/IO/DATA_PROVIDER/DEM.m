@@ -12,7 +12,8 @@ classdef DEM < DEM_BASE
             dem.PARA.DEM_folder = [];
             dem.PARA.DEM_filename = [];
             
-            
+            dem.PARA.reproject2utm = [];
+
         end
         
         function dem = provide_STATVAR(dem)
@@ -42,7 +43,21 @@ classdef DEM < DEM_BASE
         end
         
         function dem = load_data(dem)
-            [dem.TEMP.X_target, dem.TEMP.Y_target] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude, dem.PARENT.STATVAR.longitude);
+            if ~strcmp(dem.TEMP.info.RasterReference.CoordinateSystemType, 'geographic') 
+                %[dem.TEMP.X_target, dem.TEMP.Y_target] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARA.latitude, dem.PARA.longitude);
+                [dem.TEMP.X_target, dem.TEMP.Y_target] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude, dem.PARENT.STATVAR.longitude);
+            else
+                if dem.PARA.reproject2utm
+                    [dem.TEMP.X_target,dem.TEMP.Y_target] = ll2utm(dem, dem.PARENT.STATVAR.latitude, dem.PARENT.STATVAR.longitude, dem.TEMP.utm_zone);
+                else
+                    dem.TEMP.X_target = dem.PARENT.STATVAR.longitude;
+                    dem.TEMP.Y_target = dem.PARENT.STATVAR.latitude;
+                    %[LAT,LON]=projinv(info.CoordinateReferenceSystem,X,Y);
+                end
+            end
+            
+            
+            %[dem.TEMP.X_target, dem.TEMP.Y_target] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude, dem.PARENT.STATVAR.longitude);
             
             dem.PARENT.STATVAR.altitude = dem.PARENT.STATVAR.longitude.*0;
             dem.PARENT.STATVAR.slope_angle = dem.PARENT.STATVAR.longitude.*0;
@@ -51,9 +66,24 @@ classdef DEM < DEM_BASE
             dem.PARENT.STATVAR.horizon_bins = dem.PARENT.STATVAR.longitude.*0;
             dem.PARENT.STATVAR.horizon_angles = dem.PARENT.STATVAR.longitude.*0;
             
-            [X1, Y1] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude - 0.1, dem.PARENT.STATVAR.longitude);
-            [X2, Y2] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude + 0.1, dem.PARENT.STATVAR.longitude);
-            dem.TEMP.offset_angle_trueNorth = atand((X1-X2)./(Y1-Y2)); %offset grid North and true North 
+            if ~strcmp(dem.TEMP.info.RasterReference.CoordinateSystemType, 'geographic')
+                [X1, Y1] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude - 0.1, dem.PARENT.STATVAR.longitude);
+                [X2, Y2] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude + 0.1, dem.PARENT.STATVAR.longitude);
+                dem.TEMP.offset_angle_trueNorth = atand((X1-X2)./(Y1-Y2)); %offset grid North and true North
+            else
+                if dem.PARA.reproject2utm
+                    [X1,Y1] = ll2utm(dem, dem.PARENT.STATVAR.latitude-0.1, dem.PARENT.STATVAR.longitude, dem.TEMP.utm_zone);
+                    [X2,Y2] = ll2utm(dem, dem.PARENT.STATVAR.latitude+0.1, dem.PARENT.STATVAR.longitude, dem.TEMP.utm_zone);
+                    dem.TEMP.offset_angle_trueNorth = atand((X1-X2)./(Y1-Y2)); %offset grid North and true North
+                else
+                    dem.TEMP.offset_angle_trueNorth = 0;
+                end
+            end
+            
+            
+%             [X1, Y1] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude - 0.1, dem.PARENT.STATVAR.longitude);
+%             [X2, Y2] = projfwd(dem.TEMP.info.CoordinateReferenceSystem, dem.PARENT.STATVAR.latitude + 0.1, dem.PARENT.STATVAR.longitude);
+%             dem.TEMP.offset_angle_trueNorth = atand((X1-X2)./(Y1-Y2)); %offset grid North and true North 
 
             for i=1:size(dem.PARA.variables,1)
                 a = str2func(['get_' dem.PARA.variables{i,1}]);

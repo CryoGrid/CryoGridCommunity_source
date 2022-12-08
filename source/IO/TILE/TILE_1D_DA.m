@@ -39,11 +39,11 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
             tile.PARA.builder = [];
             
             %new_init
-%             tile.PARA.latitude = [];
-%             tile.PARA.longitude = [];
-%             tile.PARA.altitude = [];
+            tile.PARA.latitude = [];
+            tile.PARA.longitude = [];
+            tile.PARA.altitude = [];
             tile.PARA.domain_depth = [];
-%             tile.PARA.area = [];
+            tile.PARA.area = [];
             
             tile.PARA.forcing_class = [];
             tile.PARA.forcing_class_index = [];

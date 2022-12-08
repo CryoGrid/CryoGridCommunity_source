@@ -208,6 +208,34 @@ classdef SNOW < BASE
             end
         end
         
+        function snow = get_snow_properties_vanKampenhout(snow, forcing)
+            % Snow properties function similar to
+            % get_snow_properties_crocus(...), but with new snow density
+            % according to van Kampenhout et al. (2017) https://doi.org/10.1002/2017MS000988
+            % R.B. Zweigel, July 2022
+            
+            if snow.TEMP.snowfall >0
+                windspeed = forcing.TEMP.wind;
+                T_air = forcing.TEMP.Tair;
+                
+                T_fus=0;  %degree C
+                rho_Tair = double(T_air > T_fus+2).*( 50 + 1.7*17^(3/2) ) ...
+                    + double(T_air > T_fus-15 & T_air <= T_fus+2).*( 50 + 1.7*(T_air-T_fus+15)^(3/2) ) ...
+                    + double(T_air <= T_fus-15).*( -3.8328*(T_air-T_fus) - 0.0333*(T_air-T_fus)^2);
+                rho_wind = 266.861*(.5*(1+tanh(windspeed/5)))^8.8;
+                snow.TEMP.newSnow.STATVAR.density = rho_Tair + rho_wind;
+                snow.TEMP.newSnow.STATVAR.density = snow.TEMP.newSnow.STATVAR.density .*1000 ./920;
+                
+                snow.TEMP.newSnow.STATVAR.d = min(max(1.29-0.17.*windspeed,0.2),1);
+                snow.TEMP.newSnow.STATVAR.s = min(max(0.08.*windspeed + 0.38,0.5),0.9);
+                snow.TEMP.newSnow.STATVAR.gs = 0.1e-3+(1-snow.TEMP.newSnow.STATVAR.d).*(0.3e-3-0.1e-3.*snow.TEMP.newSnow.STATVAR.s);
+                snow.TEMP.newSnow.STATVAR.time_snowfall = forcing.TEMP.t;
+                
+                snow.TEMP.newSnow.STATVAR.top_snow_date = forcing.TEMP.t;
+                snow.TEMP.newSnow.STATVAR.bottom_snow_date = forcing.TEMP.t; % a few minites earluer
+            end
+        end
+        
         %crocus snow microphycics, Vionnet et al., 2012
         function snow = get_T_gradient_snow(snow)
             

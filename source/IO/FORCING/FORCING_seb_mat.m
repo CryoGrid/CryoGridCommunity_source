@@ -47,9 +47,9 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
             forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
-            forcing.PARA.all_rain_T = [];     % Temperature above which all precipitation is considered as rain
-            forcing.PARA.all_snow_T = [];     % Temperature below which all precipitation is considered as snow
-            forcing.PARA.albedo_surrounding_terrain = [];
+%             forcing.PARA.all_rain_T = [];     % Temperature above which all precipitation is considered as rain
+%             forcing.PARA.all_snow_T = [];     % Temperature below which all precipitation is considered as snow
+%             forcing.PARA.albedo_surrounding_terrain = [];
             forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
         end

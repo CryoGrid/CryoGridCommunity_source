@@ -41,7 +41,8 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow.PARA.timescale_winddrift = []; %48; %timescale of snow compaction for wind drift [hours!!]
             snow.PARA.max_wind_slab_density = []; %350;
             snow.PARA.wind_factor_fresh_snow = []; %26;
-            snow.PARA.albedo_age_factor = [];
+            snow.PARA.albedo_age_factor = [];            
+            snow.PARA.snow_property_function = []; % function to be used for new snoe properties
             
             snow.PARA.conductivity_function = [];
             snow.PARA.dt_max = [];  %maximum possible timestep [sec]
@@ -111,6 +112,9 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             if isempty(snow.PARA.conductivity_function) || sum(isnan(snow.PARA.conductivity_function))>0
                 snow.PARA.conductivity_function = 'conductivity_snow_Yen';
             end
+            if isempty(snow.PARA.snow_property_function) || sum(isnan(snow.PARA.snow_property_function))>0
+                snow.PARA.snow_property_function = 'get_snow_properties_crocus';
+            end
             
             if ~isempty(snow.PARA.crocus_version) || sum(isnan(snow.PARA.crocus_version))==0
                 if strcmp(snow.PARA.crocus_version, 'normal')
@@ -149,7 +153,9 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow = get_boundary_condition_SNOW_u(snow, forcing);
             snow = get_boundary_condition_u_water_SNOW2(snow, forcing);
             
-            snow = get_snow_properties_crocus(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
+            snow_property_function = str2func(snow.PARA.snow_property_function);
+            snow = snow_property_function(snow,forcing);
+            %snow = get_snow_properties_crocus(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
             
             snow = surface_energy_balance(snow, forcing);
  %           snow = get_sublimation(snow, forcing);
@@ -164,7 +170,9 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow = get_boundary_condition_allSNOW_rain_u(snow, forcing); %add full snow, but rain only for snow-covered part
             snow = get_boundary_condition_u_water_SNOW2(snow, forcing);
             
-            snow = get_snow_properties_crocus(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
+            snow_property_function = str2func(snow.PARA.snow_property_function);
+            snow = snow_property_function(snow,forcing);
+           % snow = get_snow_properties_crocus(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
             
             snow = surface_energy_balance(snow, forcing); %this works including penetration of SW radiation through the CHILD snow
   %          snow = get_sublimation(snow, forcing);
@@ -178,7 +186,9 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             forcing = tile.FORCING;
             snow = get_boundary_condition_allSNOW_u(snow, forcing); %add all snow, no rain
             
-            snow = get_snow_properties_crocus(snow,forcing);
+            snow_property_function = str2func(snow.PARA.snow_property_function);
+            snow = snow_property_function(snow,forcing);
+            %snow = get_snow_properties_crocus(snow,forcing);
             
             snow.TEMP.F_ub = 0;
             snow.TEMP.F_lb = 0;
