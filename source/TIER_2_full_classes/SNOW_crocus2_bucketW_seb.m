@@ -323,8 +323,8 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             
             %subtract water and energy from evaporation (not checked in
             %get_timestep()
-            evap = min(snow.STATVAR.evap.* timestep, snow.STATVAR.water(1,1));
-            evap_energy = evap ./ (snow.STATVAR.evap.* timestep) .* snow.TEMP.evap_energy;
+            evap = -min(-snow.STATVAR.evaporation.* timestep, snow.STATVAR.water(1,1));
+            evap_energy = evap ./ (snow.STATVAR.evaporation.* timestep) .* snow.TEMP.evaporation_energy;
             evap_energy(isnan(evap_energy)) = 0;
             snow.STATVAR.waterIce(1,1) = snow.STATVAR.waterIce(1,1) + evap;
             snow.STATVAR.water(1,1) = snow.STATVAR.water(1,1) + evap;
@@ -373,8 +373,8 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             
             %subtract water and energy from evaporation (not checked in
             %get_timestep()
-            evap = min(snow.STATVAR.evap.* timestep, snow.STATVAR.water(1,1));
-            evap_energy = evap ./ (snow.STATVAR.evap.* timestep) .* snow.TEMP.evap_energy;
+            evap = -min(-snow.STATVAR.evaporation.* timestep, snow.STATVAR.water(1,1));
+            evap_energy = evap ./ (snow.STATVAR.evap.* timestep) .* snow.TEMP.evaporation_energy;
             evap_energy(isnan(evap_energy)) = 0;
             snow.STATVAR.waterIce(1,1) = snow.STATVAR.waterIce(1,1) + evap;
             snow.STATVAR.water(1,1) = snow.STATVAR.water(1,1) + evap;

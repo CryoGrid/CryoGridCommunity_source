@@ -55,13 +55,29 @@ classdef SNOW < BASE
             timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
         
+%         function timestep = get_timestep_SNOW(snow) %at maximum timestep maximum half the cell is melted under melting conditions, otherwise normal heat conduction timestep
+%             %             timestep = min(double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
+%             %                 double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area));
+%             timestep = min(double(snow.TEMP.d_energy>0 & snow.STATVAR.energy >= - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
+%                 double(snow.TEMP.d_energy<0 & snow.STATVAR.energy >= - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .*0.5 .*  ((-snow.STATVAR.ice.*snow.CONST.L_f -snow.STATVAR.energy) ./ snow.TEMP.d_energy) + ...
+%                 double( snow.STATVAR.energy < - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .* snow.CONST.c_i .* (snow.STATVAR.ice./snow.STATVAR.layerThick./ snow.STATVAR.area) .*0.5 ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area));
+%             
+%             timestep(isnan(timestep)) = snow.PARA.dt_max;
+%         end
+        
         function timestep = get_timestep_SNOW(snow) %at maximum timestep maximum half the cell is melted under melting conditions, otherwise normal heat conduction timestep
-%             timestep = min(double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
-%                 double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area));
-            timestep = min(double(snow.TEMP.d_energy>0 & snow.STATVAR.energy >= - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
-                double(snow.TEMP.d_energy<0 & snow.STATVAR.energy >= - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .*0.5 .*  ((-snow.STATVAR.ice.*snow.CONST.L_f -snow.STATVAR.energy) ./ snow.TEMP.d_energy) + ...
-                double( snow.STATVAR.energy < - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .* snow.CONST.c_i .* (snow.STATVAR.ice./snow.STATVAR.layerThick./ snow.STATVAR.area) .*0.5 ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area));
-             
+            %           Updated with threshold distinguishing melting condition
+            %           depending on field capacity rather than energy. RBZ 23/11/22
+%             field_capacity = max((snow.STATVAR.area.*snow.STATVAR.layerThick - snow.STATVAR.ice).*snow.PARA.field_capacity, snow.STATVAR.area.*snow.STATVAR.layerThick./1e6);
+%             timestep = min(double(snow.TEMP.d_energy>0 & snow.STATVAR.water > .5.* field_capacity) .*0.25 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
+%                 double(snow.TEMP.d_energy<0 & snow.STATVAR.water > .5.* field_capacity) .*0.25 .*  ((-snow.STATVAR.waterIce.*snow.CONST.L_f -snow.STATVAR.energy) ./ snow.TEMP.d_energy) + ...
+%                 double( snow.STATVAR.water <= .5.* field_capacity) .* snow.CONST.c_i .* (snow.STATVAR.ice./snow.STATVAR.layerThick./ snow.STATVAR.area) .*0.25 ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area));
+            
+            melting_conditions = snow.STATVAR.energy > - 0.999.*snow.STATVAR.waterIce .*snow.CONST.L_f;
+            timestep = min(double(snow.TEMP.d_energy>0 & melting_conditions) .* min(-snow.STATVAR.energy ./snow.TEMP.d_energy, 0.2 .* snow.PARA.swe_per_cell .*snow.STATVAR.area.* snow.CONST.L_f ./ snow.TEMP.d_energy) + ...
+                double(snow.TEMP.d_energy<0 & melting_conditions) .* min((-snow.STATVAR.waterIce .*snow.CONST.L_f - snow.STATVAR.energy) ./snow.TEMP.d_energy, -0.2 .* snow.PARA.swe_per_cell .* snow.STATVAR.area .* snow.CONST.L_f  ./ snow.TEMP.d_energy) + ...
+                double(~melting_conditions) .* snow.CONST.c_i .* (snow.STATVAR.ice./snow.STATVAR.layerThick./ snow.STATVAR.area) .*0.5 ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area));
+       
             timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
         
@@ -70,21 +86,24 @@ classdef SNOW < BASE
             
 %             timestep = double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
 %                 double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area);
-            timestep = double(snow.TEMP.d_energy>0 & snow.STATVAR.energy >= - 0.95) .* snow.STATVAR.ice.*snow.CONST.L_f .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
-                double(snow.TEMP.d_energy<0 & snow.STATVAR.energy >= - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .*0.5 .*  ((-snow.STATVAR.ice.*snow.CONST.L_f -snow.STATVAR.energy) ./ snow.TEMP.d_energy) + ...
-                double( snow.STATVAR.energy < - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .* snow.CONST.c_i .* (snow.STATVAR.ice./snow.STATVAR.layerThick./ snow.STATVAR.area) .*0.5 ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area);
+%             timestep = double(snow.TEMP.d_energy>0 & snow.STATVAR.energy >= - 0.95) .* snow.STATVAR.ice.*snow.CONST.L_f .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy) + ...
+%                 double(snow.TEMP.d_energy<0 & snow.STATVAR.energy >= - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .*0.5 .*  ((-snow.STATVAR.ice.*snow.CONST.L_f -snow.STATVAR.energy) ./ snow.TEMP.d_energy) + ...
+%                 double( snow.STATVAR.energy < - 0.95.* snow.STATVAR.ice.*snow.CONST.L_f) .* snow.CONST.c_i .* (snow.STATVAR.ice./snow.STATVAR.layerThick./ snow.STATVAR.area) .*0.5 ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area);
          
          %a=double(snow.TEMP.d_energy>0 & snow.STATVAR.T >=0) .*0.5 .*  (-snow.STATVAR.energy ./ snow.TEMP.d_energy);
          %b =double(snow.TEMP.d_energy<=0 | snow.STATVAR.T < 0) .* snow.PARA.dE_max ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area);
+         melting_conditions = snow.STATVAR.energy > - 0.999 .* snow.STATVAR.waterIce .*snow.CONST.L_f;
+         timestep = min(double(snow.TEMP.d_energy>0 & melting_conditions) .* min(-0.99.*snow.STATVAR.energy ./snow.TEMP.d_energy, 0.5 .* snow.PARA.swe_per_cell .*max(snow.STATVAR.area, snow.NEXT.STATVAR.area(1) .* 1e-4).* snow.CONST.L_f ./ snow.TEMP.d_energy) + ...
+             double(snow.TEMP.d_energy<0 & melting_conditions) .* min((-snow.STATVAR.waterIce .*snow.CONST.L_f - snow.STATVAR.energy) ./snow.TEMP.d_energy, -0.2 .* snow.PARA.swe_per_cell .* snow.STATVAR.area .* snow.CONST.L_f  ./ snow.TEMP.d_energy) + ...
+             double(~melting_conditions) .* snow.CONST.c_i .* (snow.STATVAR.ice./snow.STATVAR.layerThick./ snow.STATVAR.area) .*0.5 ./ (abs(snow.TEMP.d_energy) ./ snow.STATVAR.layerThick./ snow.STATVAR.area));
          
          
             timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
         
         function timestep = get_timestep_SNOW_sublimation(snow) 
-            timestep = double(snow.TEMP.sublimation_energy > 0) .*0.25 .*  (-snow.STATVAR.energy(1,1) ./ snow.TEMP.sublimation_energy) +  double(snow.TEMP.sublimation_energy <= 0) .* snow.PARA.dt_max;
+            timestep = double(snow.TEMP.sublimation_energy < 0) .*0.25 .*  (snow.STATVAR.energy(1,1) ./ snow.TEMP.sublimation_energy) +  double(snow.TEMP.sublimation_energy >= 0) .* snow.PARA.dt_max;
              
-                
             timestep(isnan(timestep)) = snow.PARA.dt_max;
         end
         

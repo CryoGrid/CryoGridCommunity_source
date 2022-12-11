@@ -149,18 +149,18 @@ classdef SEB < BASE
                 Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
                 seb.STATVAR.sublimation = -Q_e ./(seb.CONST.rho_w .* seb.CONST.L_s) .* seb.STATVAR.area(1);
                 seb.TEMP.sublimation_energy = seb.STATVAR.sublimation .* (seb.STATVAR.T(1) .* seb.CONST.c_i - seb.CONST.L_f);
-                seb.STATVAR.evap = 0;
-                seb.STATVAR.evap_energy = 0;
+                seb.STATVAR.evaporation = 0;
+                seb.TEMP.evaporation_energy = 0;
             else
                 evap_fraction = max(0, min(water_fraction./0.1,1));
                 sublim_fraction = 1 - evap_fraction;
                 Qe_sublim = -sublim_fraction .* rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
                 Qe_evap = -evap_fraction .* rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
                 
-                seb.STATVAR.sublimation = - Qe_sublim ./(seb.CONST.rho_w .* L_i) .* seb.STATVAR.area(1);
+                seb.STATVAR.sublimation =  -Qe_sublim ./(seb.CONST.rho_w .* L_i) .* seb.STATVAR.area(1);
                 seb.TEMP.sublimation_energy = seb.STATVAR.sublimation .* (seb.STATVAR.T(1) .* seb.CONST.c_i - seb.CONST.L_f);
-                seb.STATVAR.evap = - Qe_evap ./(seb.CONST.rho_w .* L_w) .* seb.STATVAR.area(1);
-                seb.TEMP.evap_energy = seb.STATVAR.evap .* seb.STATVAR.T(1) .* seb.CONST.c_w;
+                seb.STATVAR.evaporation =  -Qe_evap ./(seb.CONST.rho_w .* L_w) .* seb.STATVAR.area(1);
+                seb.TEMP.evaporation_energy = seb.STATVAR.sublimation .* seb.STATVAR.T(1) .* seb.CONST.c_w;
                 
                 Q_e = evap_fraction .* Qe_evap + sublim_fraction .* Qe_sublim;
             end
@@ -207,11 +207,11 @@ classdef SEB < BASE
 %             betaCLM4_5
 
             seb.STATVAR.Qe = -rho.*latent_heat.*betaCLM4_5.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q - q_first_cell)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
-            seb.STATVAR.evap = water_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
-            seb.STATVAR.sublim = ice_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
-            seb.STATVAR.evap_energy =  seb.STATVAR.evap.*  (double(seb.STATVAR.T(1,1)>=0) .* seb.CONST.c_w .* seb.STATVAR.T(1,1) + ...
+            seb.STATVAR.evaporation = -water_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
+            seb.STATVAR.sublimation = -ice_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
+            seb.TEMP.evaporation_energy =  seb.STATVAR.evaporation.*  (double(seb.STATVAR.T(1,1)>=0) .* seb.CONST.c_w .* seb.STATVAR.T(1,1) + ...
                 double(seb.STATVAR.T(1,1)<0) .* seb.CONST.c_i .* seb.STATVAR.T(1,1)); 
-            seb.STATVAR.sublim_energy =  seb.STATVAR.sublim .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f); 
+            seb.TEMP.sublimation_energy =  seb.STATVAR.sublimation .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f); 
         end
         
         function seb = Q_evap_CLM4_5_Xice(seb, forcing)
@@ -243,11 +243,11 @@ classdef SEB < BASE
             betaCLM4_5 = 1 +  double(reduce_yes_no) .* (-1 +  0.25 .* (1-(cos(pi() .* vol_water_first_cell ./ seb.STATVAR.field_capacity(1,1)))).^2);
 
             seb.STATVAR.Qe = -rho.*latent_heat.*betaCLM4_5.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q - q_first_cell)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
-            seb.STATVAR.evap = water_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
-            seb.STATVAR.sublim = ice_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
-            seb.STATVAR.evap_energy =  seb.STATVAR.evap.*  (double(seb.STATVAR.T(1,1)>=0) .* seb.CONST.c_w .* seb.STATVAR.T(1,1) + ...
+            seb.STATVAR.evaporation = -water_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
+            seb.STATVAR.sublimation = -ice_fraction .* seb.STATVAR.Qe ./ (latent_heat .* seb.CONST.rho_w);
+            seb.TEMP.evaporation_energy =  seb.STATVAR.evaporation.*  (double(seb.STATVAR.T(1,1)>=0) .* seb.CONST.c_w .* seb.STATVAR.T(1,1) + ...
                 double(seb.STATVAR.T(1,1)<0) .* seb.CONST.c_i .* seb.STATVAR.T(1,1)); 
-            seb.STATVAR.sublim_energy =  seb.STATVAR.sublim .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f); 
+            seb.TEMP.sublimation_energy =  seb.STATVAR.sublimation .* (seb.CONST.c_i .* seb.STATVAR.T(1,1) - seb.CONST.L_f); 
         end
         
         %sensible heat flux
@@ -471,6 +471,7 @@ classdef SEB < BASE
             F_ub_water = -seb.STATVAR.Qe ./ (L_v.*seb.CONST.rho_w) .* seb.STATVAR.area(1,1);
             F_ub_water_energy = F_ub_water .* seb.CONST.c_w .* seb.STATVAR.T(1,1); %[J/sec]
             
+            seb.STATVAR.evaporation = F_ub_water;
             seb.TEMP.d_water(1) = seb.TEMP.d_water(1)  + F_ub_water;
             seb.TEMP.d_water_energy(1) = seb.TEMP.d_water_energy(1)  + F_ub_water_energy;
         end

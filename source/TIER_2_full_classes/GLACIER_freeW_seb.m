@@ -102,14 +102,14 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             ground.STATVAR.Qe = 0;
             ground.STATVAR.runoff = 0;
             ground.STATVAR.smb = 0; 
-            ground.STATVAR.sublimation = 0; 
+
             
             ground.TEMP.d_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET_energy = ground.STATVAR.energy.*0;
-            ground.TEMP.sublimation = 0;
+            ground.STATVAR.sublimation = 0;
             ground.TEMP.sublimation_energy = 0; 
         end
         
@@ -170,7 +170,7 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             ground.STATVAR.waterIce = ground.STATVAR.waterIce + timestep .* ground.TEMP.d_water; 
             ground.STATVAR.layerThick = ground.STATVAR.layerThick + timestep .* ground.TEMP.d_water ./ ground.STATVAR.area(1,1); 
             %ground.STATVAR.waterIce(1) = ground.STATVAR.waterIce(1) + timestep .* ground.TEMP.sublimation;
-            ground.STATVAR.layerThick(1) = ground.STATVAR.layerThick(1) + timestep .* ground.TEMP.sublimation ./ ground.STATVAR.area(1,1);
+            ground.STATVAR.layerThick(1) = ground.STATVAR.layerThick(1) + timestep .* ground.STATVAR.sublimation ./ ground.STATVAR.area(1,1);
             %smb
             %ground.STATVAR.sublimation = ground.STATVAR.sublimation + timestep .* ground.TEMP.sublimation;
             ground.STATVAR.smb = ground.STATVAR.smb +  timestep.*ground.TEMP.F_water .* ground.STATVAR.area(1,1);% + timestep .* ground.TEMP.sublimation; 
@@ -207,7 +207,7 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             ground.TEMP.d_water_energy = ground.STATVAR.energy.*0;
             ground.TEMP.d_water_ET_energy = ground.STATVAR.energy.*0;
             ground.TEMP.sublimation_energy = 0; 
-            ground.TEMP.sublimation = 0; 
+            ground.STATVAR.sublimation = 0; 
         end
         
         function ground = check_trigger(ground, tile)
@@ -226,8 +226,8 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             ground.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe) .* ground.STATVAR.area(1);
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
 
-            ground.TEMP.sublimation = -ground.STATVAR.Qe ./(ground.CONST.rho_w .* ground.CONST.L_s) .* ground.STATVAR.area(1);
-            ground.TEMP.sublimation_energy =  ground.TEMP.sublimation .* (ground.STATVAR.T(1) .* ground.CONST.c_i - ground.CONST.L_f);
+            ground.STATVAR.sublimation = -ground.STATVAR.Qe ./(ground.CONST.rho_w .* ground.CONST.L_s) .* ground.STATVAR.area(1);
+            ground.TEMP.sublimation_energy =  ground.STATVAR.sublimation .* (ground.STATVAR.T(1) .* ground.CONST.c_i - ground.CONST.L_f);
 
         end
         
