@@ -308,7 +308,9 @@ classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW &
             snow = conductivity_snow_Yen(snow);
         end
         
-
+        function yesNo = is_ground_surface(snow)
+            yesNo = 0;
+        end
                 
         %-----LATERAL-------------------
         

@@ -34,7 +34,7 @@
 %
 %========================================================================
 
-classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
+classdef FORCING_slope_seb_mat < FORCING_base & READ_FORCING_mat
     
     methods
         
@@ -47,6 +47,7 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
             forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
+            forcing.PARA.albedo_surrounding_terrain = [];
             forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
         end
@@ -65,7 +66,7 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
         
         function forcing = finalize_init(forcing, tile)
             
-            variables = {'rainfall'; 'snowfall'; 'Tair'; 'Lin'; 'Sin'; 'q'; 'wind'; 'p'};
+            variables = {'rainfall'; 'snowfall'; 'Tair'; 'Lin'; 'Sin'; 'q'; 'wind'; 'p'; 'S_TOA'};
             [data, timestamp] = read_mat(forcing, [forcing.PARA.forcing_path forcing.PARA.filename], variables);
             
             for i=1:size(variables,1)
@@ -81,7 +82,24 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             forcing = check_and_correct(forcing); % Remove known errors
             forcing = set_start_and_end_time(forcing); % assign start/end time
             forcing = initialize_TEMP(forcing);
-
+            forcing = initialize_TEMP_slope(forcing);
+            
+            forcing = reduce_precip_slope(forcing, tile);
+            
+            forcing = SolarAzEl(forcing, tile);
+            
+            %make own function?
+            if ~isfield(forcing.DATA, 'S_TOA')
+                mu0=max(sind(forcing.DATA.sunElevation),0); % Trunacte negative values.
+                sunset=mu0<cosd(89);%(mu0==0); % Sunset switch.
+                forcing.DATA.S_TOA = 1370.*mu0;
+            end
+            
+            forcing = split_Sin(forcing); % split Sin in dir and dif
+            forcing = terrain_corr_Sin_dif(forcing, tile);
+            forcing = reproject_Sin_dir(forcing, tile);
+            forcing.DATA.Sin = forcing.DATA.Sin_dir + forcing.DATA.Sin_dif;
+            
             %set pressure to mean pressure at corresponding altitude (international
             %altitude formula) if not provided by the forcing time series
             if ~isfield(forcing.DATA, 'p')
@@ -94,6 +112,7 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
         
         function forcing = interpolate_forcing(forcing, tile)
             forcing = interpolate_forcing@FORCING_base(forcing, tile);
+            forcing = terrain_shade(forcing, tile);
                         
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
@@ -122,10 +141,10 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             forcing.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
             
             forcing.PARA.default_value.rain_fraction = {1};  
-            forcing.PARA.comment.rain_fraction = {'rainfall fraction assumed in simulations (rainfall from the forcing data file is multiplied by this parameter)'};
+            forcing.PARA.comment.rain_fraction = {'rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
             
             forcing.PARA.default_value.snow_fraction = {1};  
-            forcing.PARA.comment.snow_fraction = {'snowfall fraction assumed in simulations (rainfall from the forcing data file is multiplied by this parameter)'};
+            forcing.PARA.comment.snow_fraction = {'snowfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
 
             forcing.PARA.default_value.heatFlux_lb = {0.05};
             forcing.PARA.comment.heatFlux_lb = {'heat flux at the lower boundary [W/m2] - positive values correspond to energy gain'};

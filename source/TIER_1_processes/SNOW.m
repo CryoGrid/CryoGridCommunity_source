@@ -235,7 +235,7 @@ classdef SNOW < BASE
             
             if snow.TEMP.snowfall >0
                 windspeed = forcing.TEMP.wind;
-                T_air = forcing.TEMP.Tair;
+                T_air = min(forcing.TEMP.Tair, 0);
                 
                 T_fus=0;  %degree C
                 rho_Tair = double(T_air > T_fus+2).*( 50 + 1.7*17^(3/2) ) ...
@@ -402,7 +402,15 @@ classdef SNOW < BASE
                 ground.IA_CHILD.NEXT = ground;
                 ground.IA_CHILD.PREVIOUS = snow;
                 
-                ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
+                %ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
+                %added to make compatible with vegetation class,
+                %get_IA_class gives empty array if above_class is Top
+                ia_class = get_IA_class(class(snow.PREVIOUS),class(ground));
+                ground.IA_PREVIOUS = ia_class;
+                ground.PREVIOUS.IA_NEXT = ia_class;
+                ground.IA_PREVIOUS.NEXT = ground;
+                ground.IA_PREVIOUS.PREVIOUS = snow.PREVIOUS;
+%                 finalize_init(ground.IA_PREVIOUS, tile);
                 
                 %snow.NEXT =[];  %cut all dependencies, except for snow.NEXT which keeps being pointed to snow.PARENT, so that SW radiation can be transmitted
                 snow.PREVIOUS =[];
@@ -431,7 +439,14 @@ classdef SNOW < BASE
                 ground.IA_CHILD.NEXT = ground;
                 ground.IA_CHILD.PREVIOUS = snow;
                 
-                ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
+                %ground.IA_PREVIOUS=[]; %change to get_ia_class, if there is a possibility for another class on top of the snow cover
+                %added to make compatible with vegetation class
+                ia_class = get_IA_class(class(snow.PREVIOUS),class(ground));
+                ground.IA_PREVIOUS = ia_class;
+                ground.PREVIOUS.IA_NEXT = ia_class;
+                ground.IA_PREVIOUS.NEXT = ground;
+                ground.IA_PREVIOUS.PREVIOUS = snow.PREVIOUS;
+                finalize_init(ground.IA_PREVIOUS, tile);
                 
                 %snow.NEXT =[];  %cut all dependencies, except for snow.NEXT which keeps being pointed to snow.PARENT, so that SW radiation can be transmitted
                 snow.PREVIOUS =[];
@@ -497,6 +512,15 @@ classdef SNOW < BASE
 
                 snow = ground; %assign snow pointer to ground to return to regular stratigraphy
             end
+        end
+        
+        %---------Vegetation----------
+        function snow = get_boundary_condition_allSNOW_rain_canopy_m(snow, tile) %snow from entire area (PARENT+CHILD), rain only from snow-covered part (CHILD)
+            forcing = tile.FORCING;
+            snow.TEMP.snowfall = forcing.TEMP.snowfall ./1000 ./(24.*3600) .* (snow.PARENT.STATVAR.area(1,1) + snow.STATVAR.area); %snowfall is in mm/day -> [m3/sec]
+            snow.TEMP.rainfall = snow.PARENT.PREVIOUS.TEMP.rain_thru .* snow.STATVAR.area;
+            snow.TEMP.snow_energy = snow.TEMP.snowfall .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);  %[J/sec]
+            snow.TEMP.rain_energy = snow.TEMP.rainfall .* max(0, forcing.TEMP.Tair) .* snow.CONST.c_w;
         end
         
     end

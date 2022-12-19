@@ -111,12 +111,43 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                 ground.STATVAR.Xwater = total_Xwater;
             end
         end
+
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
-            [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_Xice_seb(ground, S_down);
+            if ground.CHILD ~= 0
+                snow_fraction = ground.CHILD.STATVAR.area(1)/ground.STATVAR.area(1);
+                ground_fraction = 1 - snow_fraction;
+                [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_Xice_seb(ground, S_down.*ground_fraction);
+                [ground.CHILD, S_up2] = penetrate_SW(ground.CHILD, S_down.*snow_fraction);
+                S_up = S_up + sum(S_up2); % snow_crocus splits SW into spectral bands
+            else
+                [ground, S_up] = penetrate_SW@GROUND_freezeC_RichardsEqW_Xice_seb(ground, S_down);
+            end
         end
         
+        function [ground, S_up] = penetrate_SW_PARENT(ground, S_down)  %mandatory function when used with class that features SW penetration
+            [ground, S_up] = penetrate_SW_PARENT@GROUND_freezeC_RichardsEqW_Xice_seb(ground, S_down);
+        end
         
+        function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features SW penetration
+            % Lin is in W, not W/m2!
+            if ground.CHILD ~= 0
+                snow_fraction = ground.CHILD.STATVAR.area./ground.STATVAR.area(1);
+                ground_fraction = 1 - snow_fraction;
+                L_up_ground = ground_fraction .*(1-ground.PARA.epsilon) .* L_down  + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ ground.CONST.Tmfw).^4 .*ground.STATVAR.area(1);
+                L_up_snow = snow_fraction .*(1-ground.CHILD.PARA.epsilon) .* L_down + ground.CHILD.PARA.epsilon .* ground.CHILD.CONST.sigma .* (ground.CHILD.STATVAR.T+ ground.CHILD.CONST.Tmfw).^4 .*ground.CHILD.STATVAR.area(1);
+                L_up = L_up_ground + L_up_snow;
+                ground.STATVAR.Lout = L_up./ground.STATVAR.area(1);
+                ground.STATVAR.Lin = L_down./ground.STATVAR.area(1);
+                %ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + L_down - L_up;
+                ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + L_down.* ground_fraction - L_up_ground;
+                ground.CHILD.TEMP.d_energy(1,1) = ground.CHILD.TEMP.d_energy(1,1) + L_down.* snow_fraction - L_up_snow;
+            else
+                [ground, L_up] = penetrate_LW@GROUND_freezeC_RichardsEqW_Xice_seb(ground, L_down);
+            end
+        end
+        
+       
         function ground = get_boundary_condition_l(ground, tile)
               ground = get_boundary_condition_l@GROUND_freezeC_RichardsEqW_Xice_seb(ground, tile);
         end
@@ -180,11 +211,29 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
                     ground.CHILD.STATVAR.area = ground.STATVAR.area(1,1);
                     ground.CHILD.STATVAR.layerThick = snow_volume ./ ground.CHILD.STATVAR.area;
                    
+%                     %make snow a real class
+%                     ground.CHILD.PARENT = 0;
+%                     ground.CHILD.PREVIOUS = ground.PREVIOUS;
+%                     ground.CHILD.NEXT = ground;
+%                     ground.PREVIOUS.NEXT = ground.CHILD;
+%                     ground.PREVIOUS = ground.CHILD;
+%                     ground.CHILD = 0;
+%                     ground.IA_PREVIOUS = ground.IA_CHILD; 
+%                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
+%                     ground.IA_CHILD = 0;
+                    
                     %make snow a real class
                     ground.CHILD.PARENT = 0;
                     ground.CHILD.PREVIOUS = ground.PREVIOUS;
                     ground.CHILD.NEXT = ground;
                     ground.PREVIOUS.NEXT = ground.CHILD;
+                    ia_class = get_IA_class(class(ground.PREVIOUS), class(ground.CHILD));
+                    ground.PREVIOUS.IA_NEXT = ia_class;
+                    ground.CHILD.IA_PREVIOUS = ia_class;
+                    ground.CHILD.IA_PREVIOUS.NEXT = ground.CHILD;
+                    ground.CHILD.IA_PREVIOUS.PREVIOUS = ground.PREVIOUS;
+                    finalize_init(ground.CHILD.IA_PREVIOUS, tile);
+                    
                     ground.PREVIOUS = ground.CHILD;
                     ground.CHILD = 0;
                     ground.IA_PREVIOUS = ground.IA_CHILD; 
@@ -194,6 +243,35 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb_snow < GROUND_freezeC_RichardsEqW_X
             end
         end
         
+        function z0 = get_z0_surface(ground)
+            if ground.CHILD ~= 0
+                snow_fraction = ground.CHILD.STATVAR.area/ground.STATVAR.area(1);
+                ground_fraction = 1 - snow_fraction;
+                z0 = snow_fraction .* get_z0_surface(ground.CHILD) +  ground_fraction .* ground.PARA.z0;
+            else
+                z0 = ground.PARA.z0;
+            end
+        end
+        
+        function albedo = get_albedo(ground)
+            if ground.CHILD ~= 0
+                snow_fraction = ground.CHILD.STATVAR.area/ground.STATVAR.area(1);
+                ground_fraction = 1 - snow_fraction;
+                albedo = snow_fraction .* get_albedo(ground.CHILD) +  ground_fraction .* ground.PARA.albedo;
+            else
+                albedo = ground.PARA.albedo;
+            end
+        end
+        
+        function Ts = get_surface_T(ground, tile)
+            if ground.CHILD ~= 0
+                snow_fraction = ground.CHILD.STATVAR.area/ground.STATVAR.area(1);
+                ground_fraction = 1 - snow_fraction;
+                Ts = snow_fraction .* get_surface_T(ground.CHILD) +  ground_fraction .* ground.STATVAR.T(1);
+            else
+                Ts = ground.STATVAR.T(1);
+            end
+        end
                 
         %----------
         %reset timestamp when changing TILES

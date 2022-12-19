@@ -265,6 +265,9 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow = conductivity_snow_Yen(snow);
         end
         
+        function yesNo = is_ground_surface(snow)
+            yesNo = 0;
+        end
         
         %-----LATERAL-------------------
         

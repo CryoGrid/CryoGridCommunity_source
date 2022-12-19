@@ -47,6 +47,9 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
             forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
+%             forcing.PARA.all_rain_T = [];     % Temperature above which all precipitation is considered as rain
+%             forcing.PARA.all_snow_T = [];     % Temperature below which all precipitation is considered as snow
+%             forcing.PARA.albedo_surrounding_terrain = [];
             forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
         end
@@ -66,7 +69,7 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
         function forcing = finalize_init(forcing, tile)
             
             variables = {'rainfall'; 'snowfall'; 'Tair'; 'Lin'; 'Sin'; 'q'; 'wind'; 'p'};
-            [data, timestamp] = read_mat(forcing, [forcing.PARA.forcing_path forcing.PARA.filename], variables);
+            [data, times] = read_mat([forcing.PARA.forcing_path forcing.PARA.filename], variables);
             
             for i=1:size(variables,1)
                 if isfield(data, variables{i,1})
@@ -76,12 +79,12 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
 
             forcing.DATA.rainfall = data.rainfall.*forcing.PARA.rain_fraction;
             forcing.DATA.snowfall = data.snowfall.*forcing.PARA.snow_fraction;
-            forcing.DATA.timeForcing = timestamp;
+            forcing.DATA.timeForcing = times;
             
             forcing = check_and_correct(forcing); % Remove known errors
             forcing = set_start_and_end_time(forcing); % assign start/end time
             forcing = initialize_TEMP(forcing);
-
+            
             %set pressure to mean pressure at corresponding altitude (international
             %altitude formula) if not provided by the forcing time series
             if ~isfield(forcing.DATA, 'p')
@@ -94,7 +97,7 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
         
         function forcing = interpolate_forcing(forcing, tile)
             forcing = interpolate_forcing@FORCING_base(forcing, tile);
-                        
+            
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
         end
@@ -122,10 +125,10 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             forcing.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
             
             forcing.PARA.default_value.rain_fraction = {1};  
-            forcing.PARA.comment.rain_fraction = {'rainfall fraction assumed in simulations (rainfall from the forcing data file is multiplied by this parameter)'};
+            forcing.PARA.comment.rain_fraction = {'rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
             
             forcing.PARA.default_value.snow_fraction = {1};  
-            forcing.PARA.comment.snow_fraction = {'snowfall fraction assumed in simulations (rainfall from the forcing data file is multiplied by this parameter)'};
+            forcing.PARA.comment.snow_fraction = {'snowfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
 
             forcing.PARA.default_value.heatFlux_lb = {0.05};
             forcing.PARA.comment.heatFlux_lb = {'heat flux at the lower boundary [W/m2] - positive values correspond to energy gain'};

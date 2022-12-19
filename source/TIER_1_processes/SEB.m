@@ -86,9 +86,9 @@ classdef SEB < BASE
             L_i = latent_heat_sublimation(seb, TForcing); % 1e3.*2834.1; %latent heat of sublimation
             
             if TForcing<=273.15
-                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-0.622.*satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
             else
-                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb,z./Lstar, z0./Lstar)).*(q-satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar)  ...
+                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb,z./Lstar, z0./Lstar)).*(q-0.622.*satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar)  ...
                     + rs.*uz.*kappa.^2./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)));
             end
         end
@@ -115,9 +115,9 @@ classdef SEB < BASE
             L_i = latent_heat_sublimation(seb, TForcing); % 1e3.*2834.1; %latent heat of sublimation
 
             if TForcing<=273.15
-                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-0.622.*satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
             else
-                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-0.622.*satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
             end
         end
         
@@ -146,7 +146,7 @@ classdef SEB < BASE
             L_i = latent_heat_sublimation(seb, TForcing); % 1e3.*2834.1; %latent heat of sublimation
 
             if TForcing<273.15 || water_fraction <= 0
-                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-0.622.*satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
                 seb.STATVAR.sublimation = -Q_e ./(seb.CONST.rho_w .* seb.CONST.L_s) .* seb.STATVAR.area(1);
                 seb.TEMP.sublimation_energy = seb.STATVAR.sublimation .* (seb.STATVAR.T(1) .* seb.CONST.c_i - seb.CONST.L_f);
                 seb.STATVAR.evaporation = 0;
@@ -154,15 +154,16 @@ classdef SEB < BASE
             else
                 evap_fraction = max(0, min(water_fraction./0.1,1));
                 sublim_fraction = 1 - evap_fraction;
-                Qe_sublim = -sublim_fraction .* rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
-                Qe_evap = -evap_fraction .* rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Qe_sublim = -sublim_fraction .* rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-0.622.*satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                Qe_evap = -evap_fraction .* rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-0.622.*satPresWater(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
                 
                 seb.STATVAR.sublimation =  -Qe_sublim ./(seb.CONST.rho_w .* L_i) .* seb.STATVAR.area(1);
                 seb.TEMP.sublimation_energy = seb.STATVAR.sublimation .* (seb.STATVAR.T(1) .* seb.CONST.c_i - seb.CONST.L_f);
                 seb.STATVAR.evaporation =  -Qe_evap ./(seb.CONST.rho_w .* L_w) .* seb.STATVAR.area(1);
                 seb.TEMP.evaporation_energy = seb.STATVAR.sublimation .* seb.STATVAR.T(1) .* seb.CONST.c_w;
                 
-                Q_e = evap_fraction .* Qe_evap + sublim_fraction .* Qe_sublim;
+               % Q_e = evap_fraction .* Qe_evap + sublim_fraction .* Qe_sublim;
+                Q_e = Qe_evap + Qe_sublim;
             end
         end
         
@@ -197,7 +198,7 @@ classdef SEB < BASE
             
 %             saturation_fraction_air_first_cell
             %this might be wrong if the ground is frozen?
-            q_first_cell = sat_pressure_first_cell .* saturation_fraction_air_first_cell ./ p;
+            q_first_cell = 0.622.*sat_pressure_first_cell .* saturation_fraction_air_first_cell ./ p;
             
             vol_water_first_cell = seb.STATVAR.water(1,1) ./ (seb.STATVAR.layerThick(1,1) .* seb.STATVAR.area(1,1)); 
             reduce_yes_no = vol_water_first_cell < seb.STATVAR.field_capacity(1,1) && forcing.TEMP.q < q_first_cell;
@@ -236,7 +237,7 @@ classdef SEB < BASE
             
 %             saturation_fraction_air_first_cell
             %this might be wrong if the ground is frozen?
-            q_first_cell = sat_pressure_first_cell .* saturation_fraction_air_first_cell ./ p;
+            q_first_cell = 0.622.*sat_pressure_first_cell .* saturation_fraction_air_first_cell ./ p;
             
             vol_water_first_cell = seb.STATVAR.water(1,1) ./ (seb.STATVAR.layerThick(1,1) .* seb.STATVAR.area(1,1) - seb.STATVAR.XwaterIce(1,1)); 
             reduce_yes_no = vol_water_first_cell < seb.STATVAR.field_capacity(1,1) && forcing.TEMP.q < q_first_cell && ~(seb.STATVAR.XwaterIce(1,1) > 1e-5.*seb.STATVAR.area(1,1));
@@ -287,11 +288,11 @@ classdef SEB < BASE
         end
         
         function p = satPresWater(seb, T) %saturation pressure water, Magnus formula
-            p=0.622.* 6.112 .* 100 .* exp(17.62.*(T-273.15)./(243.12-273.15+T));
+            p = 6.112 .* 100 .* exp(17.62.*(T-273.15)./(243.12-273.15+T));
         end
         
         function p = satPresIce(seb, T) %saturation pressure ice, Magnus formula
-            p= 0.622.*6.112.* 100.* exp(22.46.*(T-273.15)./(272.61-273.15+T));
+            p = 6.112.* 100.* exp(22.46.*(T-273.15)./(272.61-273.15+T));
         end
         
         %---penetration of short-wave radiation---
@@ -345,6 +346,9 @@ classdef SEB < BASE
             %S_up and S_down are spectrally resolved when provided as
             %row array, using e.g. spectral_ranges = [0.71 0.21 0.08]; 
             %SW extinction is assumed constant throughout class 
+            
+            S_down = S_down .* seb.PARA.spectral_ranges; %For now, all penetrateSW classes take and deliver bulk values/ sums, could e changed with IA classes if needed 
+            
             cut_off = 0.1.* seb.STATVAR.area(1,1); %[W/m2], radiation is not penetrated further if cutoff is reached
             
             S_up = seb.TEMP.spectral_albedo .* S_down;
@@ -362,7 +366,7 @@ classdef SEB < BASE
                 i = min(i, size(seb.STATVAR.layerThick,1));
                 seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_down); % .* seb.STATVAR.area(i,1);
             else %end of class reached, radiation penetrated on to next class
-                [seb.NEXT, S_up2] = penetrate_SW(seb.NEXT, S_down); %call mandatory function recursively for following class
+                [seb.NEXT, S_up2] = penetrate_SW_PARENT(seb.NEXT, S_down); %call mandatory function recursively for following class -> coming from SNOW, one always wants the PARENt class
                 %NOTE: no check performed that NEXT is not Bottom, must always be used with class below!
                 i = size(seb.STATVAR.layerThick,1); %penetrate bottom up
                 while i>=1 && sum(S_up2) >= cut_off
@@ -377,8 +381,52 @@ classdef SEB < BASE
                 else
                     S_up = S_up + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!! 
                 end
-            end         
+            end    
+            S_up = sum(S_up);
         end
+        
+%         function [seb, S_up] = penetrate_SW_transmission_spectral_CHILD(seb, S_down)  %used with variable albedo and SW exticntion coefficient
+%             %S_up and S_down are spectrally resolved when provided as
+%             %row array, using e.g. spectral_ranges = [0.71 0.21 0.08]; 
+%             %SW extinction is assumed constant throughout class 
+%             
+%             S_down = S_down .* seb.PARA.spectral_ranges; %For now, all penetrateSW classes take and deliver bulk values/ sums, could e changed with IA classes if needed 
+%             
+%             cut_off = 0.1.* seb.STATVAR.area(1,1); %[W/m2], radiation is not penetrated further if cutoff is reached
+%             
+%             S_up = seb.TEMP.spectral_albedo .* S_down;
+%             S_down = (1 - seb.TEMP.spectral_albedo) .* S_down;
+%             
+%             i=1;
+%             while i<=size(seb.STATVAR.layerThick,1) && sum(S_down) >= cut_off
+%                 reduction = exp(-seb.TEMP.SW_extinction(i,:) .* seb.STATVAR.layerThick(i,1));  
+%                 seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_down .* (1-reduction)); % .* seb.STATVAR.area(i,1);
+%                 S_down = reduction .* S_down;
+%                 i = i+1;
+%             end
+%             
+%             if sum(S_down) < cut_off  %all radiation absorbed, only S_up goes out
+%                 i = min(i, size(seb.STATVAR.layerThick,1));
+%                 seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_down); % .* seb.STATVAR.area(i,1);
+%             else %end of class reached, radiation penetrated on to next class
+%                 [seb.NEXT, S_up2] = penetrate_SW_PARENT(seb.NEXT, S_down); %call mandatory function recursively for following class
+%                 %NOTE: no check performed that NEXT is not Bottom, must always be used with class below!
+%                 i = size(seb.STATVAR.layerThick,1); %penetrate bottom up
+%                 while i>=1 && sum(S_up2) >= cut_off
+%                     reduction = exp(-seb.TEMP.SW_extinction(i,:) .* seb.STATVAR.layerThick(i,1));
+%                     seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_up2 .* (1-reduction));% .* seb.STATVAR.area(i,1);
+%                     S_up2 = reduction .* S_up2;
+%                     i = i-1;
+%                 end
+%                 if sum(S_up2) < cut_off  %all radiation absorbed, only S_up goes out
+%                     i = max(i, 1);
+%                     seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_up2); % .* seb.STATVAR.area(i,1);
+%                 else
+%                     S_up = S_up + S_up2;  %add the uppwelling SW radiation to reflected, multiple reflections not accounted for!! 
+%                 end
+%             end    
+%             S_up = sum(S_up);
+%         end
         
         
         %calculates derivatives of water (i.e. water fluxes) due to evapotranspiration

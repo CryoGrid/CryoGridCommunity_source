@@ -174,6 +174,19 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
+        function [ground, S_up] = penetrate_SW_PARENT(ground, S_down)  %mandatory function when used with class that features SW penetration
+            [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
+        end
+        
+        function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features LW penetration
+%             [ground, L_up] = penetrate_LW_no_transmission(ground, L_down);
+            % Lin is in W, not W/m2!
+            L_up = (1-ground.PARA.epsilon) .* L_down + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ ground.CONST.Tmfw).^4 .*ground.STATVAR.area(1);
+            ground.STATVAR.Lin = L_down./ground.STATVAR.area(1);
+            ground.STATVAR.Lout = L_up./ground.STATVAR.area(1);
+            ground.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + L_down - L_up;
+        end
+        
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
@@ -261,10 +274,10 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             
             ground = set_TEMP_2zero(ground);
             
-            if sum(isnan(ground.STATVAR.waterIce))>0 || sum(isnan(ground.STATVAR.XwaterIce))>0 || sum(isnan(ground.STATVAR.T))>0 || sum(isnan(ground.STATVAR.water))>0 ...
-                    || sum(isnan(ground.STATVAR.Xwater))>0 || sum(isnan(ground.STATVAR.Xice))>0 || sum(isnan(ground.STATVAR.water))>0 || sum(isnan(ground.STATVAR.ice))>0 || sum(isnan(ground.STATVAR.energy))>0
-                'Hallo'
-            end
+%             if sum(isnan(ground.STATVAR.waterIce))>0 || sum(isnan(ground.STATVAR.XwaterIce))>0 || sum(isnan(ground.STATVAR.T))>0 || sum(isnan(ground.STATVAR.water))>0 ...
+%                     || sum(isnan(ground.STATVAR.Xwater))>0 || sum(isnan(ground.STATVAR.Xice))>0 || sum(isnan(ground.STATVAR.water))>0 || sum(isnan(ground.STATVAR.ice))>0 || sum(isnan(ground.STATVAR.energy))>0
+%                 'Hallo'
+%             end
         end
         
         function ground = check_trigger(ground, tile)
@@ -309,6 +322,8 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             
             ground.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe) .* ground.STATVAR.area(1);
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
+            ground.STATVAR.Lin = forcing.TEMP.Lin;
+            ground.STATVAR.Sin = forcing.TEMP.Sin;
             
             %water -> evaporation
             ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) +  ground.STATVAR.evaporation.* ground.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
@@ -319,6 +334,18 @@ classdef GROUND_freezeC_RichardsEqW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CU
             conductivity_function = str2func(ground.PARA.conductivity_function);
             ground = conductivity_function(ground);
            % ground = conductivity_mixing_squares_Xice(ground);
+        end
+        
+        function z0 = get_z0_surface(ground)
+            z0 = ground.PARA.z0;
+        end
+        
+        function albedo = get_albedo(ground)
+            albedo = ground.PARA.albedo;
+        end
+        
+        function Tg = get_surface_T(ground, tile)
+            Tg = ground.STATVAR.T(1);
         end
         
         

@@ -206,16 +206,16 @@ classdef GROUND_freeW_seb_verticalWall < SEB & HEAT_CONDUCTION & HEAT_FLUXES_LAT
             g=9.81;
                     
             if isempty(ground.STATVAR.water_bucket) % only for first time step to set up saturation
-                ground.STATVAR.water_bucket = ground.STATVAR.water(1) * ground.PARA.water_bucket_depth;
-                ground.STATVAR.saturation = ground.STATVAR.water_bucket / ground.PARA.water_bucket_depth;
+                ground.STATVAR.water_bucket = ground.STATVAR.water(1) .* ground.PARA.water_bucket_depth;
+                ground.STATVAR.saturation = ground.STATVAR.water_bucket ./ ground.PARA.water_bucket_depth;
             end
                 
             if TForcing<273.15 % for below-zero temperatures
-                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)).*(q-satPresIce(ground, TForcing)./p)./(log(z./z0));
+                Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)).*(q-0.622.*satPresIce(ground, TForcing)./p)./(log(z./z0));
                 saturation = 0; %Only saturation is set to 0 for negative temperatures so that bucket water remains during frozen periods without getting changed
                 Q_e = saturation * Q_e; %Always 0 for negative temperatures
             else
-                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)).*(q-satPresWater(ground, TForcing)./p)./(log(z./z0));
+                Q_e = -rho.*L_w.*kappa.*uz.*kappa./(log(z./z0)).*(q-0.622.*satPresWater(ground, TForcing)./p)./(log(z./z0));
                 if Q_e > 0 %in case of evaporation: Qe is reduced by multiplication of saturation
                     Q_e = ground.STATVAR.saturation * Q_e;
                 elseif Q_e < 0 %in case of condensation: no reduction of Qe

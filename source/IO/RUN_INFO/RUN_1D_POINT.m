@@ -38,14 +38,21 @@ classdef RUN_1D_POINT < matlab.mixin.Copyable
         
         
         function run_info = finalize_init(run_info)
- 
+            
+            run_info.SPATIAL.STATVAR.latitude = 60;
+            run_info.SPATIAL.STATVAR.longitude = 10;
+            run_info.SPATIAL.STATVAR.altitude = 0;
+            run_info.SPATIAL.STATVAR.area = 1;
+            run_info.SPATIAL.STATVAR.slope_angle = 0;
+            run_info.SPATIAL.STATVAR.aspect = 0;
+            run_info.SPATIAL.STATVAR.skyview_factor = 0;
+            run_info.SPATIAL.STATVAR.horizon_bins = 0;
+            run_info.SPATIAL.STATVAR.horizon_angles = 0;
+            
             if ~isempty(run_info.PARA.point_class) && sum(isnan(run_info.PARA.point_class))==0
                 run_info.SPATIAL = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.point_class){run_info.PARA.point_class_index,1});
                 run_info.SPATIAL.RUN_INFO = run_info;
                 run_info.SPATIAL = finalize_init(run_info.SPATIAL);
-            else
-                run_info.SPATIAL.STATVAR.altitude = 0;
-                run_info.SPATIAL.STATVAR.area = 1;
             end
             
         end

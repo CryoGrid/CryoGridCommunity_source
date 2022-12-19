@@ -41,12 +41,13 @@ classdef POINT_SLOPE < matlab.mixin.Copyable
             point.STATVAR.skyview_factor = point.PARA.skyview_factor;
             
             point.PARA.horizon_angles = point.PARA.horizon_angles';
-            point.STATVAR.horizon_bins = point.PARA.horizon_angles(:,1);
-            point.STATVAR.horizon_angles = point.PARA.horizon_angles(:,2);
+            %append 360 degree
+            point.STATVAR.horizon_bins = [point.PARA.horizon_angles(:,1); 360];
+            point.STATVAR.horizon_angles = [point.PARA.horizon_angles(:,2); point.PARA.horizon_angles(1,2)];
             
             if isempty(point.PARA.horizon_angles) || sum(isnan(point.PARA.horizon_angles(:)))>0
-                point.STATVAR.horizon_bins = 0;
-                point.STATVAR.horizon_angles = 0;
+                point.STATVAR.horizon_bins = [0; 360];
+                point.STATVAR.horizon_angles = [0; 0];
             end
             if isempty(point.PARA.skyview_factor) || sum(isnan(point.PARA.skyview_factor))>0
                 

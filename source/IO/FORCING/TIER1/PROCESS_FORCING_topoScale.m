@@ -262,9 +262,101 @@ classdef PROCESS_FORCING_topoScale < FORCING_base
 
         end
         
-        
      
-        
+        function forcing = interpolate_sl(forcing, tile)
+            disp('interpolating surface level data')
+            era = forcing.TEMP.era;
+            if length(double(era.lat))>1 && length(double(era.lon))>1
+                single_cell=0;
+            else
+                single_cell=1;
+            end
+            if single_cell
+                ind_lon=1;
+                ind_lat=1;
+            else
+                dist_lat = abs(tile.PARA.latitude - era.lat);
+                dist_lon=abs(tile.PARA.longitude-era.lon);
+                [dist_lat, ind_lat] = sort(dist_lat);
+                [dist_lon, ind_lon] = sort(dist_lon);
+                
+                dist_lat=dist_lat(1:2);
+                ind_lat = ind_lat(1:2);
+                weights_lat = 1 - dist_lat./sum(dist_lat);
+                dist_lon=dist_lon(1:2);
+                ind_lon = ind_lon(1:2);
+                weights_lon = 1 - dist_lon./sum(dist_lon);
+            end
+            
+            era_T_sl  = double(era.T2(ind_lon, ind_lat, :)) .* era.T_sf;
+            era_wind_sl = sqrt(double(era.u10(ind_lon, ind_lat, :)).^2 + double(era.v10(ind_lon, ind_lat, :)) .^2) .* era.wind_sf;
+            era_Lin_sl = double(era.LW(ind_lon, ind_lat, :)).*era.rad_sf;
+            era_Sin_sl = double(era.SW(ind_lon, ind_lat, :)).*era.rad_sf;
+            era_precip_sl = double(era.P(ind_lon, ind_lat, :)).*era.P_sf;
+            era_p_sl = double(era.ps(ind_lon, ind_lat, :)) .* era.ps_sf;
+            era_Td_sl = double(era.Td2(ind_lon, ind_lat, :)).* era.T_sf;
+            
+            if ~single_cell
+                era_T_sl = reshape(era_T_sl, 4,1, size(era_T_sl,3));
+                era_wind_sl = reshape(era_wind_sl, 4,1, size(era_wind_sl,3));
+                era_Lin_sl = reshape(era_Lin_sl, 4,1, size(era_Lin_sl,3));
+                era_Sin_sl = reshape(era_Sin_sl, 4,1, size(era_Sin_sl,3));
+                era_precip_sl = reshape(era_precip_sl, 4,1, size(era_precip_sl,3));
+                era_p_sl = reshape(era_p_sl, 4,1, size(era_p_sl,3));
+                era_Td_sl = (reshape(era_Td_sl, 4,1, size(era_Td_sl,3))) ;
+            end
+
+            era_q_sl = 0.622 .* (double(era_T_sl>=0) .* satPresWater(forcing, era_Td_sl+273.15) + double(era_T_sl<0) .* satPresIce(forcing, era_Td_sl+273.15)) ./ era_p_sl;
+            
+            if ~single_cell
+                weights_lat = repmat(weights_lat', 2, 1, 1,size(era_T_sl,3));
+                weights_lat=reshape(weights_lat, 4, 1 , size(era_T_sl,3));
+                weights_lon = repmat(weights_lon, 1, 2, 1, size(era_T_sl,3));
+                weights_lon=reshape(weights_lon, 4, 1 , size(era_T_sl,3));
+                
+                era_wind_sl = era_wind_sl .* weights_lat;
+                era_wind_sl = (era_wind_sl(1:2,:,:) +era_wind_sl(3:4,:,:));
+                era_q_sl = era_q_sl .* double(weights_lat);
+                era_q_sl = (era_q_sl(1:2,:,:) + era_q_sl(3:4,:,:));
+                era_Lin_sl = era_Lin_sl .* weights_lat;
+                era_Lin_sl = (era_Lin_sl(1:2,:,:) + era_Lin_sl(3:4,:,:));
+                era_T_sl = double(era_T_sl).*era.T_sf .* weights_lat;
+                era_T_sl = (era_T_sl(1:2,:,:) + era_T_sl(3:4,:,:));
+                era_Sin_sl = era_Sin_sl .* weights_lat;
+                era_Sin_sl = (era_Sin_sl(1:2,:,:) + era_Sin_sl(3:4,:,:));
+                era_precip_sl = era_precip_sl .* weights_lat;
+                era_precip_sl = (era_precip_sl(1:2,:,:) + era_precip_sl(3:4,:,:));
+                era_p_sl = era_p_sl .* weights_lat;
+                era_p_sl = (era_p_sl(1:2,:,:) + era_p_sl(3:4,:,:));
+                
+                weights_lon = (weights_lon(1:2,:,:) + weights_lon(3:4,:,:))./2;
+                era_T_sl = squeeze(sum(era_T_sl .* weights_lon,1)) .* era.T_sf;
+                era_wind_sl = squeeze(sum(era_wind_sl .* weights_lon,1)) .* era.wind_sf;
+                era_q_sl = squeeze(sum(era_q_sl .* double(weights_lon),1));
+                era_Lin_sl = squeeze(sum(era_Lin_sl .* weights_lon,1));
+                era_Sin_sl = squeeze(sum(era_Sin_sl .* weights_lon,1));
+                era_precip_sl = squeeze(sum(era_precip_sl .* weights_lon,1));
+                era_p_sl = squeeze(sum(era_p_sl .* weights_lon,1));
+            else
+                era_T_sl = squeeze(era_T_sl);
+                era_wind_sl = squeeze(era_wind_sl);
+                era_q_sl = squeeze(era_q_sl);
+                era_Lin_sl = squeeze(era_Lin_sl);
+                era_Sin_sl = squeeze(era_Sin_sl);
+                era_precip_sl = squeeze(era_precip_sl);
+                era_p_sl = squeeze(era_p_sl);
+            end
+            
+            forcing.DATA.Tair = double(era_T_sl);
+            forcing.DATA.q = double(era_q_sl);
+            forcing.DATA.wind = double(era_wind_sl);
+            forcing.DATA.Sin =  double(era_Sin_sl);
+            forcing.DATA.Lin = double(era_Lin_sl);
+            forcing.DATA.p = double(era_p_sl);
+            forcing.DATA.precip = double(era_precip_sl) .*24;  %mm/hour to mm/day
+            forcing.DATA.timeForcing = era.t';
+
+        end
         
         
     end

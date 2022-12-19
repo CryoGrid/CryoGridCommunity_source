@@ -49,7 +49,7 @@ classdef FORCING_base < matlab.mixin.Copyable
         
         function forcing = initialize_TEMP_slope(forcing)
             % additional TEMPs required for runs on slopes
-            forcing.TEMP.S_TOA=0;
+%             forcing.TEMP.S_TOA=0;
             %             forcing.TEMP.albedo_foot=0;
             forcing.TEMP.Sin_dif = 0;
             forcing.TEMP.Sin_dir = 0;
@@ -183,7 +183,7 @@ classdef FORCING_base < matlab.mixin.Copyable
             % Calculation the solar azimuth and elevation angle relative to
             % the coordinates of the site (revised after Darin C. Koblick)
             % ->CHANGED to Kris script
-            forcing = SolarAzEl(forcing, tile);
+%             forcing = SolarAzEl(forcing, tile);
             
             alpha = forcing.DATA.azimuth.*pi/180; %Degree to radians of the azimuth
             beta = forcing.DATA.sunElevation.*pi/180; %Degree to radians of elevation

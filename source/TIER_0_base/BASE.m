@@ -150,6 +150,14 @@ classdef BASE < matlab.mixin.Copyable
            gse = ground.STATVAR.upperPos; 
         end
         
+        function yesNo = is_ground_surface(ground)
+            yesNo = 1;
+        end
+            
+        function yesNo = is_surface(ground)
+            yesNo = 1;
+        end
+        
         %-------------param file generation-----
         function ground = param_file_info(ground)
              ground = provide_PARA(ground);

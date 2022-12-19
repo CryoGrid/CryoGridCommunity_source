@@ -146,11 +146,29 @@ classdef GLACIER_freeW_seb_snow < GLACIER_freeW_seb
                     ground.CHILD.STATVAR.area = ground.STATVAR.area(1,1);
                     ground.CHILD.STATVAR.layerThick = snow_volume ./ ground.CHILD.STATVAR.area;
                    
+%                     %make snow a real class
+%                     ground.CHILD.PARENT = 0;
+%                     ground.CHILD.PREVIOUS = ground.PREVIOUS;
+%                     ground.CHILD.NEXT = ground;
+%                     ground.PREVIOUS.NEXT = ground.CHILD;
+%                     ground.PREVIOUS = ground.CHILD;
+%                     ground.CHILD = 0;
+%                     ground.IA_PREVIOUS = ground.IA_CHILD; 
+%                     ground.PREVIOUS.IA_NEXT = ground.IA_CHILD;
+%                     ground.IA_CHILD = 0;
+
                     %make snow a real class
                     ground.CHILD.PARENT = 0;
                     ground.CHILD.PREVIOUS = ground.PREVIOUS;
                     ground.CHILD.NEXT = ground;
                     ground.PREVIOUS.NEXT = ground.CHILD;
+                    ia_class = get_IA_class(class(ground.PREVIOUS), class(ground.CHILD));
+                    ground.PREVIOUS.IA_NEXT = ia_class;
+                    ground.CHILD.IA_PREVIOUS = ia_class;
+                    ground.CHILD.IA_PREVIOUS.NEXT = ground.CHILD;
+                    ground.CHILD.IA_PREVIOUS.PREVIOUS = ground.PREVIOUS;
+                    finalize_init(ground.CHILD.IA_PREVIOUS, tile);
+                    
                     ground.PREVIOUS = ground.CHILD;
                     ground.CHILD = 0;
                     ground.IA_PREVIOUS = ground.IA_CHILD; 

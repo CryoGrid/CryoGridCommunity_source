@@ -1173,6 +1173,30 @@ rand_factor = 1e-6 .* (2.*rand(size(ground.STATVAR.waterIce,1),1) -1);
             ground.STATVAR.satHydraulicConductivity = permeability./ ground.STATVAR.viscosity_water .*ground.CONST.rho_w .* ground.CONST.g; %m
             ground.STATVAR.hydraulicConductivity = ground.STATVAR.satHydraulicConductivity .* saturation.^0.5 .* (1 - (1 - saturation.^(n./(n+1))).^(1-1./n)).^2 .* 10.^(-7.*ice_saturation); %dall amico
         end
+        
+        %--------------VEGETATION------------------
+        function ground = get_boundary_condition_water_SNOW_canopy_m(ground, tile) % as function above, but for snow below canopy
+            forcing = tile.FORCING;
+            rainfall = ground.PARENT.PREVIOUS.TEMP.rain_thru .* ground.STATVAR.area(1);  
+            
+            %partition already here in infiltration and surface runoff,
+            %considering ET losses and potentially external fluxes
+            remaining_pore_space = ground.STATVAR.layerThick(1).* ground.STATVAR.area(1) - ground.STATVAR.mineral(1) - ground.STATVAR.organic(1) - ground.STATVAR.ice(1);
+            saturation_first_cell = (ground.STATVAR.waterIce(1) - ground.PARA.field_capacity .* remaining_pore_space) ./ ...
+                (ground.STATVAR.layerThick(1).*ground.STATVAR.area(1) - remaining_pore_space); 
+            saturation_first_cell = max(0,min(1,saturation_first_cell)); % 0 water at field capacity, 1: water at saturation
+            %NEW SW
+            saturation_first_cell(saturation_first_cell >= (1 - 1e-9)) = 1;
+            
+            ground.TEMP.F_ub_water = rainfall .* reduction_factor_in(saturation_first_cell, ground);
+            ground.TEMP.surface_runoff = rainfall - ground.TEMP.F_ub_water;  %route this to surface pool
+            
+            ground.TEMP.T_rainWater =  max(0,forcing.TEMP.Tair);
+            ground.TEMP.F_ub_water_energy = ground.TEMP.F_ub_water .* ground.CONST.c_w .* ground.TEMP.T_rainWater;
+            
+            ground.TEMP.d_water(1) = ground.TEMP.d_water(1) + ground.TEMP.F_ub_water;
+            ground.TEMP.d_water_energy(1) = ground.TEMP.d_water_energy(1) + ground.TEMP.F_ub_water_energy;
+        end
     end
 end
 

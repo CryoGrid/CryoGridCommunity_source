@@ -33,7 +33,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.PARA.hydraulicConductivity = []; %hydraulic conductivity of snow [m/sec]
             snow.PARA.swe_per_cell = [];  %target SWE per grid cell [m]
             
-            snow.PARA.slope = [];  %slope angle [-]
+   %         snow.PARA.slope = [];  %slope angle [-]
             snow.PARA.timescale_winddrift = []; %timescale of snow compaction for wind drift [hours!!]
             snow.PARA.max_wind_slab_density = [];
             snow.PARA.wind_factor_fresh_snow = [];
@@ -96,6 +96,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.CONST.sigma = []; %Stefan-Boltzmann constant
             snow.CONST.kappa = []; % von Karman constant
             snow.CONST.L_s = [];  %latent heat of sublimation, evaporation handled in a dedicated function
+            snow.CONST.Tmfw = []; % Freezing temperature of water in C
             
             snow.CONST.cp = [];  % specific heat capacity at constant pressure of air
             snow.CONST.g = [];   % gravitational acceleration Earth surface
@@ -133,6 +134,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             
             snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
             snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
+            snow.PARA.slope = tile.PARA.slope_angle; 
             
             snow = initialize_zero_snow_BASE(snow);  %initialize all values to be zero
             snow.PARA.spectral_ranges = [snow.PARA.SW_spectral_range1 snow.PARA.SW_spectral_range2 1 - snow.PARA.SW_spectral_range1 - snow.PARA.SW_spectral_range2];
@@ -144,7 +146,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         end
         
         %---time integration------
-        %separate functions for CHILD pphase of snow cover
+        %separate functions for CHILD phase of snow cover
         
         function snow = get_boundary_condition_u(snow, tile) 
             forcing = tile.FORCING;
@@ -235,8 +237,38 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
 
         end
         
+        function snow = get_boundary_condition_m_CHILD(snow, tile)
+            forcing = tile.FORCING;
+            snow = get_boundary_condition_allSNOW_rain_canopy_m(snow, tile);%add full snow, but rain only for snow-covered part
+            snow = get_boundary_condition_u_water_SNOW(snow, forcing);
+            
+            snow_property_function = str2func(snow.PARA.snow_property_function);
+            snow = snow_property_function(snow,forcing); %makes a TEMP variable newSnow that contains all information on the fresh snow - which is merged in the diagnostic step
+            
+            snow.STATVAR.Qh = get_boundary_condition_m_Qh_CLM5(snow, forcing);
+            snow.STATVAR.Qe = Q_e_CLM5_snow(snow, forcing);
+            snow = get_sublimation(snow, forcing);
+            
+            %this must be multiplied by area??? is this the fluxes in the
+            %canopy, therefore the minus-sign?
+            snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + (-snow.STATVAR.Qh - snow.STATVAR.Qe);
+        end
+        
        function [snow, S_up] = penetrate_SW(snow, S_down)  %mandatory function when used with class that features SW penetration
             [snow, S_up] = penetrate_SW_transmission_spectral(snow, S_down);
+       end
+       
+       function [snow, S_up] = penetrate_SW_CHILD(snow, S_down)  %mandatory function when used with class that features SW penetration
+            [snow, S_up] = penetrate_SW_transmission_spectral_CHILD(snow, S_down);
+        end
+        
+        function [snow, L_up] = penetrate_LW(snow, L_down)
+            %[snow, L_up] = penetrate_LW_no_transmission(snow, L_down);
+            % Lin is in W, not W/m2!
+            L_up = (1-snow.PARA.epsilon) .* L_down + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ snow.CONST.Tmfw).^4 .*snow.STATVAR.area(1);
+            snow.STATVAR.Lin = L_down./snow.STATVAR.area(1);
+            snow.STATVAR.Lout = L_up./snow.STATVAR.area(1);
+            snow.TEMP.d_energy(1,1) = snow.TEMP.d_energy(1,1) + L_down - L_up;
         end
         
         function snow = get_boundary_condition_l(snow, tile)
@@ -324,6 +356,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.STATVAR.waterIce(1,1) = snow.STATVAR.waterIce(1,1) + evap;
             snow.STATVAR.water(1,1) = snow.STATVAR.water(1,1) + evap;
             snow.STATVAR.energy(1,1) = snow.STATVAR.energy(1,1) + evap_energy;
+            snow.STATVAR.layerThick(1,1) = max(snow.STATVAR.layerThick(1,1), snow.STATVAR.waterIce(1,1)./snow.STATVAR.area(1,1));
             
             %new snow
             if snow.TEMP.snowfall >0
@@ -374,6 +407,7 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.STATVAR.waterIce(1,1) = snow.STATVAR.waterIce(1,1) + evap;
             snow.STATVAR.water(1,1) = snow.STATVAR.water(1,1) + evap;
             snow.STATVAR.energy(1,1) = snow.STATVAR.energy(1,1) + evap_energy;
+            snow.STATVAR.volume = max(snow.STATVAR.volume, snow.STATVAR.waterIce(1,1));
             
             %new snow and merge
             if snow.TEMP.snowfall >0
@@ -472,8 +506,9 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
         function snow = surface_energy_balance(snow, forcing)
             snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
             
-            [snow, S_up] = penetrate_SW(snow, snow.PARA.spectral_ranges .* forcing.TEMP.Sin .* snow.STATVAR.area(1)); %distribute SW radiation
-            snow.STATVAR.Sout = sum(S_up) ./ snow.STATVAR.area(1);
+            [snow, S_up] = penetrate_SW(snow, forcing.TEMP.Sin .* snow.STATVAR.area(1)); %distribute SW radiation
+            %[snow, S_up] = penetrate_SW(snow, forcing.TEMP.Sin .* snow.STATVAR.area(1) ); % moved splitting of SW to subfunction, to allow for use below other classes. RBZ 25022022
+            snow.STATVAR.Sout = S_up ./ snow.STATVAR.area(1);
             
             snow.STATVAR.Qh = Q_h(snow, forcing);
             snow.STATVAR.Qe = Q_eq_potET_snow(snow, forcing);
@@ -481,6 +516,20 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.TEMP.F_ub = (forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Qh - snow.STATVAR.Qe) .* snow.STATVAR.area(1);
             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.F_ub;
         end
+        
+%         function snow = surface_energy_balance_CHILD(snow, forcing)
+%             snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
+%             
+%             [snow, S_up] = penetrate_SW_CHILD(snow, forcing.TEMP.Sin .* snow.STATVAR.area(1)); %distribute SW radiation
+%             %[snow, S_up] = penetrate_SW(snow, forcing.TEMP.Sin .* snow.STATVAR.area(1) ); % moved splitting of SW to subfunction, to allow for use below other classes. RBZ 25022022
+%             snow.STATVAR.Sout = S_up ./ snow.STATVAR.area(1);
+%             
+%             snow.STATVAR.Qh = Q_h(snow, forcing);
+%             snow.STATVAR.Qe = Q_eq_potET_snow(snow, forcing);
+%             
+%             snow.TEMP.F_ub = (forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Qh - snow.STATVAR.Qe) .* snow.STATVAR.area(1);
+%             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.F_ub;
+%         end
         
 %         
 %         function snow = conductivity(snow)
@@ -498,6 +547,23 @@ classdef SNOW_crocus_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_F
             snow.STATVAR.time_snowfall = snow.STATVAR.time_snowfall - tile.TEMP.time_difference;
             snow.STATVAR.top_snow_date = snow.STATVAR.top_snow_date - tile.TEMP.time_difference;
             snow.STATVAR.bottom_snow_date = snow.STATVAR.bottom_snow_date - tile.TEMP.time_difference;
+        end
+        
+        function yesNo = is_ground_surface(snow)
+            yesNo = 0;
+        end
+        
+                
+        function z0 = get_z0_surface(snow)
+            z0 = snow.PARA.z0;
+        end
+        
+        function albedo = get_albedo(snow)
+           albedo = snow.STATVAR.albedo;
+        end
+        
+        function Ts = get_surface_T(snow, tile)
+            Ts = snow.STATVAR.T(1);
         end
         
         %-----LATERAL-------------------

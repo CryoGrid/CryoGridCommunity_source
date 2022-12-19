@@ -176,6 +176,19 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
+        function [ground, S_up] = penetrate_SW_PARENT(ground, S_down)  %mandatory function when used with class that features SW penetration
+            [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
+        end
+        
+        function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features SW penetration
+            %[ground, L_up] = penetrate_LW_no_transmission(ground, L_down);
+            % Lin is in W, not W/m2!
+            L_up = (1-ground.PARA.epsilon) .* L_down + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ ground.CONST.Tmfw).^4 .*ground.STATVAR.area(1);
+            seb.STATVAR.Lin = L_down./ground.STATVAR.area(1);
+            seb.STATVAR.Lout = L_up./ground.STATVAR.area(1);
+            seb.TEMP.d_energy(1,1) = ground.TEMP.d_energy(1,1) + L_down - L_up;
+        end
+        
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
@@ -254,6 +267,8 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.STATVAR.Sout = ground.PARA.albedo .*  forcing.TEMP.Sin;
             ground.STATVAR.Qh = Q_h(ground, forcing);
             ground = Q_evap_CLM4_5(ground, forcing);
+            ground.STATVAR.Sin = forcing.TEMP.Sin;
+            ground.STATVAR.Lin = forcing.TEMP.Lin;
             
             ground.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - ground.STATVAR.Lout - ground.STATVAR.Sout - ground.STATVAR.Qh - ground.STATVAR.Qe) .* ground.STATVAR.area(1);
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
@@ -264,11 +279,24 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
 
         end
         
+       
         function ground = conductivity(ground)
             conductivity_function = str2func(ground.PARA.conductivity_function);
             ground = conductivity_function(ground);
             %ground = thermalConductivity_CLM4_5(ground);
             %ground = conductivity_mixing_squares(ground);
+        end
+        
+        function z0 = get_z0_surface(ground)
+            z0 = ground.PARA.z0;
+        end
+        
+        function albedo = get_albedo(ground)
+            albedo = ground.PARA.albedo;
+        end
+        
+        function Tg = get_surface_T(ground, tile)
+            Tg = ground.STATVAR.T(1);
         end
         
         %-----LATERAL-------------------

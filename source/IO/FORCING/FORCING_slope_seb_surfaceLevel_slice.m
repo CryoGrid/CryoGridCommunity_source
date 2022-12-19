@@ -1,4 +1,4 @@
-classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PROCESS_FORCING_topoScale
+classdef FORCING_slope_seb_surfaceLevel_slice < FORCING_base & READ_FORCING_NC & PROCESS_FORCING_topoScale
     
     properties
         
@@ -10,8 +10,6 @@ classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PR
             forcing.PARA.nc_folder = [];   %filename of Matlab file containing forcing data
             forcing.PARA.forcing_path = [];
             forcing.PARA.time_resolution_input = [];
-            forcing.PARA.top_pressure_level = [];
-            forcing.PARA.bottom_pressure_level = [];
             forcing.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
@@ -43,9 +41,9 @@ classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PR
             forcing.TEMP.current_quarter = floor((forcing.TEMP.current_month-1)./3)+1;
             forcing.TEMP.current_year = year(forcing.PARA.start_time);
             
-            forcing = load_ERA_slice(forcing);
+            forcing = load_ERA_sl_slice(forcing);
 
-            forcing = process_topoScale(forcing, tile);
+            forcing = interpolate_sl(forcing, tile);
             forcing.TEMP.era = []; 
             
             forcing = split_precip_Tair(forcing); % distinguish snow-/rainfall
@@ -61,6 +59,14 @@ classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PR
             forcing = reduce_precip_slope(forcing, tile);
             
             forcing = SolarAzEl(forcing, tile);
+            %make own function?
+            if ~isfield(forcing.DATA, 'S_TOA')
+                mu0=max(sind(forcing.DATA.sunElevation),0); % Trunacte negative values.
+                sunset=mu0<cosd(89);%(mu0==0); % Sunset switch.
+                forcing.DATA.S_TOA = 1370.*mu0;
+            end
+            
+            forcing = split_Sin(forcing);
             forcing = terrain_corr_Sin_dif(forcing, tile);
             forcing = reproject_Sin_dir(forcing, tile);
             forcing = terrain_shade(forcing, tile);
@@ -97,8 +103,9 @@ classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PR
                         forcing.TEMP.current_year = forcing.TEMP.current_year +1;
                 end
                 
-                forcing = load_ERA_slice(forcing); %overwrites forcing.DATA
-                forcing = process_topoScale(forcing, tile);
+                forcing.DATA.S_TOA = []; 
+                forcing = load_ERA_sl_slice(forcing); %overwrites forcing.DATA
+                forcing = interpolate_sl(forcing, tile);
                 forcing.TEMP.era = [];
                 
                 forcing = split_precip_Tair(forcing); % distinguish snow-/rainfall
@@ -110,6 +117,13 @@ classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PR
                 forcing = reduce_precip_slope(forcing, tile);
                 
                 forcing = SolarAzEl(forcing, tile);
+                %make own function?
+                if ~isfield(forcing.DATA, 'S_TOA') || isempty(forcing.DATA.S_TOA) 
+                    mu0=max(sind(forcing.DATA.sunElevation),0); % Trunacte negative values.
+                    sunset=mu0<cosd(89);%(mu0==0); % Sunset switch.
+                    forcing.DATA.S_TOA = 1370.*mu0;
+                end
+                forcing = split_Sin(forcing);
                 forcing = terrain_corr_Sin_dif(forcing, tile);
                 forcing = reproject_Sin_dir(forcing, tile);
                 forcing = terrain_shade(forcing, tile);
