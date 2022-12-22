@@ -68,7 +68,7 @@ classdef FORCING_slope_seb_surfaceLevel < FORCING_base & READ_FORCING_mat & PROC
             forcing = terrain_shade(forcing, tile);
             forcing = terrain_corr_Lin(forcing, tile);
             forcing.DATA.Sin = forcing.DATA.Sin_dir + forcing.DATA.Sin_dif;
-            
+            forcing = condense_precip(forcing);
         end
         
         

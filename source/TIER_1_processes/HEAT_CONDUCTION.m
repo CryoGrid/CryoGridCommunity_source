@@ -104,7 +104,7 @@ classdef HEAT_CONDUCTION < BASE
         
         function ground = thermalConductivity_CLM4_5(ground)
             
-            k_dry_organic = 0.05; %slightly nonsense...
+            k_dry_organic = 0.2; % 0.1; after moss in https://gmd.copernicus.org/articles/13/2259/2020/#bib1.bibx7&gid=1&pid=1 %original: 0.05; %slightly nonsense...
                         
             waterIce = ground.STATVAR.waterIce./ground.STATVAR.layerThick ./ ground.STATVAR.area;
             water = ground.STATVAR.water./ground.STATVAR.layerThick ./ ground.STATVAR.area;
@@ -130,7 +130,7 @@ classdef HEAT_CONDUCTION < BASE
         
         function ground = thermalConductivity_CLM4_5_Xice(ground)
             
-            k_dry_organic = 0.05; %slightly nonsense...
+            k_dry_organic = 0.2; %0.1; % after moss in https://gmd.copernicus.org/articles/13/2259/2020/#bib1.bibx7&gid=1&pid=1 %original: 0.05; %slightly nonsense...
                         
             waterIce = (ground.STATVAR.waterIce+ground.STATVAR.XwaterIce)./ground.STATVAR.layerThick ./ ground.STATVAR.area;
             water = (ground.STATVAR.water+ground.STATVAR.Xwater)./ground.STATVAR.layerThick ./ ground.STATVAR.area;

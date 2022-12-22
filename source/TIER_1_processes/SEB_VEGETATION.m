@@ -11,10 +11,10 @@ classdef SEB_VEGETATION < BASE
             Tz = forcing.TEMP.Tair+273.15;
             Lstar = seb.STATVAR.Lstar;
             p = forcing.TEMP.p;
-%             Qh = seb.STATVAR.Qh+seb.NEXT.STATVAR.Qh; % Qh of whole system (canopy + ground)
-%             Qe = seb.STATVAR.Qe+seb.NEXT.STATVAR.Qe;
-            Qh = seb.STATVAR.Qh; % Qh of whole system (canopy + ground)
-            Qe = seb.STATVAR.Qe;
+            Qh = seb.STATVAR.Qh+seb.NEXT.STATVAR.Qh; % Qh of whole system (canopy + ground)
+            Qe = seb.STATVAR.Qe+seb.NEXT.STATVAR.Qe;
+           % Qh = seb.STATVAR.Qh; % Qh of whole system (canopy + ground)
+           % Qe = seb.STATVAR.Qe;
             
             rho = rho_air_moist(seb, tile);
             cp = seb.CONST.cp;
@@ -37,46 +37,68 @@ classdef SEB_VEGETATION < BASE
             seb.STATVAR.u_star = u_star;
         end
         
-        function result = psi_H_CLM5(seb, zeta1, zeta2) % heat/vapor stability function
+                %atmospheric stability functions
+        function res = psi_H_CLM5(seb, zeta1, zeta2) % atmospheric stability function heat/water 
             
-            zeta_h = seb.PARA.zeta_h;
-            if zeta1 <= 0 % Unstable
-                if zeta1 < zeta_h % very unstable
-                    result = -log(-zeta_h) + log(-zeta1) - 0.8*( (-zeta_h)^(-1/3) - (-zeta1)^(-1/3) ) ...
-                        + 2*log( 1/2 + (1-16*zeta_h)^.5 ) - 2*log( 1/2 + (1-16*zeta2)^.5 );
-                else
-                    result = 2*log( 1/2 + (1-16*zeta1)^.5 ) - 2*log( 1/2 + (1-16*zeta2)^.5 );
-                end
-            else % stable
-                if zeta1 > 1 % very stable
-                    result = -4*log(zeta1) - 5 - zeta1 + 1 + 5*zeta2;
-                else
-                    result = -5*zeta1 + 5*zeta2 ;
-                end
+            if zeta1<=0
+                res= 1.9.*atanh((1 - 11.6.*zeta1).^0.5) + log(zeta1) - (1.9.*atanh((1 - 11.6.*zeta2).^0.5) + log(zeta2));
+            else
+                res=((-5 + 5^0.5).*log(-3 + 5^0.5- 2.*zeta1) - (5 + 5^0.5).*log(3 + 5^0.5 + 2.*zeta1))/2  - (((-5 + 5^0.5).*log(-3 + 5^0.5- 2.*zeta2) - (5 + 5^0.5).*log(3 + 5^0.5 + 2.*zeta2))/2);
             end
         end
         
-        function result = psi_M_CLM5(seb, zeta1, zeta2) % momentum stability function
-            zeta_m = seb.PARA.zeta_m;
+        function res = psi_M_CLM5(seb, zeta1, zeta2) %atmospheric stability function momentum 
             
-            if zeta1 <= 0 % Unstable
-                
-                if zeta1 < zeta_m % very unstable
-                    result = -log(-zeta_m) + log(-zeta1) - 1.14*( (-zeta1)^(1/3) - (-zeta_m)^(1/3) ) ...
-                        + (2*log(1/2 + (1-16*zeta_m)^.25/2) + log(1/2 + (1-16*zeta_m)^.5/2) -2*atan((1-16*zeta_m)^.25) + pi/2) ...
-                        - (2*log(1/2 + (1-16*zeta2)^.25/2) + log(1/2 + (1-16*zeta2)^.5/2) -2*atan((1-16*zeta2)^.25) + pi/2);
-                else
-                    result = (2*log(1/2 + (1-16*zeta1)^.25/2) + log(1/2 + (1-16*zeta1)^.5/2) -2*atan((1-16*zeta1)^.25) + pi/2) ...
-                        - (2*log(1/2 + (1-16*zeta2)^.25/2) + log(1/2 + (1-16*zeta2)^.5/2) -2*atan((1-16*zeta2)^.25) + pi/2);
-                end
-            else % stable
-                if zeta1 > 1 % very stable
-                    result = -4*log(zeta1) - 5 - zeta1 + 1 + 5*zeta2;
-                else
-                    result = 5*zeta2 - 5*zeta1;
-                end
+            if zeta1<=0
+                res=-2.*atan((1 - 19.*zeta1).^(1/4)) + 2.* log(1 + (1 - 19.*zeta1).^(1/4)) + log(1 + (1 - 19.*zeta1).^0.5) - ...
+                    (-2.*atan((1 - 19.*zeta2).^(1/4)) + 2.* log(1 + (1 - 19.*zeta2).^(1/4)) + log(1 + (1 - 19.*zeta2).^0.5));
+            else
+                res=-19.5.*(1 + zeta1).^(1/3) - 7.5367.*atan(0.57735 - 1.72489.*(1 + zeta1).^(1/3)) + 4.35131.*log(3+4.4814.*(1+zeta1).^(1/3)) - 2.17566.*log(3 - 4.4814.*(1 + zeta1).^(1/3) + 6.69433.*(1 + zeta1).^(2/3)) - ...
+                    (-19.5.*(1 + zeta2).^(1/3) - 7.5367.*atan(0.57735 - 1.72489.*(1 + zeta2).^(1/3)) + 4.35131.*log(3+4.4814.*(1+zeta2).^(1/3)) - 2.17566.*log(3 - 4.4814.*(1 + zeta2).^(1/3) + 6.69433.*(1 + zeta2).^(2/3))) ;
             end
         end
+        
+        
+%         function result = psi_H_CLM5(seb, zeta1, zeta2) % heat/vapor stability function
+%             
+%             zeta_h = seb.PARA.zeta_h;
+%             if zeta1 <= 0 % Unstable
+%                 if zeta1 < zeta_h % very unstable
+%                     result = -log(-zeta_h) + log(-zeta1) - 0.8*( (-zeta_h)^(-1/3) - (-zeta1)^(-1/3) ) ...
+%                         + 2*log( 1/2 + (1-16*zeta_h)^.5 ) - 2*log( 1/2 + (1-16*zeta2)^.5 );
+%                 else
+%                     result = 2*log( 1/2 + (1-16*zeta1)^.5 ) - 2*log( 1/2 + (1-16*zeta2)^.5 );
+%                 end
+%             else % stable
+%                 if zeta1 > 1 % very stable
+%                     result = -4*log(zeta1) - 5 - zeta1 + 1 + 5*zeta2;
+%                 else
+%                     result = -5*zeta1 + 5*zeta2 ;
+%                 end
+%             end
+%         end
+%         
+%         function result = psi_M_CLM5(seb, zeta1, zeta2) % momentum stability function
+%             zeta_m = seb.PARA.zeta_m;
+%             
+%             if zeta1 <= 0 % Unstable
+%                 
+%                 if zeta1 < zeta_m % very unstable
+%                     result = -log(-zeta_m) + log(-zeta1) - 1.14*( (-zeta1)^(1/3) - (-zeta_m)^(1/3) ) ...
+%                         + (2*log(1/2 + (1-16*zeta_m)^.25/2) + log(1/2 + (1-16*zeta_m)^.5/2) -2*atan((1-16*zeta_m)^.25) + pi/2) ...
+%                         - (2*log(1/2 + (1-16*zeta2)^.25/2) + log(1/2 + (1-16*zeta2)^.5/2) -2*atan((1-16*zeta2)^.25) + pi/2);
+%                 else
+%                     result = (2*log(1/2 + (1-16*zeta1)^.25/2) + log(1/2 + (1-16*zeta1)^.5/2) -2*atan((1-16*zeta1)^.25) + pi/2) ...
+%                         - (2*log(1/2 + (1-16*zeta2)^.25/2) + log(1/2 + (1-16*zeta2)^.5/2) -2*atan((1-16*zeta2)^.25) + pi/2);
+%                 end
+%             else % stable
+%                 if zeta1 > 1 % very stable
+%                     result = -4*log(zeta1) - 5 - zeta1 + 1 + 5*zeta2;
+%                 else
+%                     result = 5*zeta2 - 5*zeta1;
+%                 end
+%             end
+%         end
         
 %         %NOT IN USE
 %           % Latent heat flux from evaporation + transpiration as in CLM5
@@ -326,7 +348,16 @@ classdef SEB_VEGETATION < BASE
             %seb.TEMP.r_a = min(1e4,seb.TEMP.r_a); %CHECK THIS, STILL NECESSARY?
             seb.TEMP.r_b = 1./Cv*(u_star./d_leaf).^(-.5); % Eq. 5.122 leaf boundary layer resistance
             seb.TEMP.r_a_prime = 1/(Cs.*u_star); % Eq. 5.116 aerodynamic resistance to heat/water vapor transfer soil - canopy air
-            seb.TEMP.r_soil = double(get_humidity_surface(seb.IA_NEXT, tile) < q_s) .* ground_resistance_evap(seb.IA_NEXT, tile); % resistance to water vapor flux within the soil matrix
+
+%             dT = min(0, max(-8, get_surface_T(seb.NEXT, tile) - seb.STATVAR.T(1) ) );
+%             seb.TEMP.r_a_prime = seb.TEMP.r_a_prime ./exp(dT/2);
+
+%             %stability from bulk richardson number, u_star: Wind at canopy height, d: height where this wind seppd is measured 
+%             Ri = 9.81.*(seb.STATVAR.Ts - get_surface_T(seb.NEXT, tile)).* d ./ u_star.^2 ./ (0.5.*(seb.STATVAR.Ts + get_surface_T(seb.NEXT, tile)) + seb.CONST.Tmfw);
+%             reduction_factor = double(Ri<=0) + double(Ri>0) .* ((1+15.*Ri).*(1+5.*Ri).^0.5).^-1; %based on https://journals.ametsoc.org/view/journals/apme/23/2/1520-0450_1984_023_0222_tioaso_2_0_co_2.xml
+%             seb.TEMP.r_a_prime = seb.TEMP.r_a_prime .* reduction_factor;
+
+            seb.TEMP.r_soil = double(get_humidity_surface(seb.IA_NEXT, tile) > q_s) .* ground_resistance_evap(seb.IA_NEXT, tile); % resistance to water vapor flux within the soil matrix
             if seb.STATVAR.LAI > 0 % Transpiring leaves present
                 seb.TEMP.r_canopy = 1./(seb.TEMP.C_leaf.*k_s);   
             else % No leaves -> no transpiration
@@ -577,7 +608,13 @@ classdef SEB_VEGETATION < BASE
             
             Sout = Sin_dif.*I_out_from_dif + Sin_dir.*I_out_from_dir;
             
-            seb.TEMP.S_abs = Sin + S_up - S_down - Sout;
+            %seb.TEMP.S_abs = Sin + S_up - S_down - Sout;
+            %corrected SW Dec 2022, S outgoing from ground passes canopy
+            %without being absorbed, other than for long-wave radition
+            %where two-way transfer is calculated. So outgoing S above
+            %canopy is Sout + Sup, the layer below absorbs S_down - S_up, so absorbed in canopy is 
+            %Sin - (Sout + Sup) - (S_down - S_up) = Sin - Sout - S_down;
+            seb.TEMP.S_abs = Sin - S_down - Sout;
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.S_abs;
             seb.TEMP.S_down = S_down./seb.STATVAR.area(1);
             seb.TEMP.S_up = S_up./seb.STATVAR.area(1);

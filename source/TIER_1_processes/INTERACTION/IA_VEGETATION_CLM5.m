@@ -35,7 +35,7 @@ classdef IA_VEGETATION_CLM5 < IA_WATER
             f_root = ia_soil.NEXT.STATVAR.f_root;
             psi_wilt = ia_soil.PREVIOUS.PARA.psi_wilt;
             
-            beta = sum(f_root.*max(0,1-psi./psi_wilt));
+            beta = sum(f_root.*max(0,1-psi./psi_wilt) .* double(ia_soil.NEXT.STATVAR.T>=0));
         end
        
         function ia_soil = get_water_transpiration(ia_soil)

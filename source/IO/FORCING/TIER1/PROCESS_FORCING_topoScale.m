@@ -320,7 +320,7 @@ classdef PROCESS_FORCING_topoScale < FORCING_base
                 era_q_sl = (era_q_sl(1:2,:,:) + era_q_sl(3:4,:,:));
                 era_Lin_sl = era_Lin_sl .* weights_lat;
                 era_Lin_sl = (era_Lin_sl(1:2,:,:) + era_Lin_sl(3:4,:,:));
-                era_T_sl = double(era_T_sl).*era.T_sf .* weights_lat;
+                era_T_sl = double(era_T_sl) .* weights_lat;
                 era_T_sl = (era_T_sl(1:2,:,:) + era_T_sl(3:4,:,:));
                 era_Sin_sl = era_Sin_sl .* weights_lat;
                 era_Sin_sl = (era_Sin_sl(1:2,:,:) + era_Sin_sl(3:4,:,:));
@@ -330,8 +330,8 @@ classdef PROCESS_FORCING_topoScale < FORCING_base
                 era_p_sl = (era_p_sl(1:2,:,:) + era_p_sl(3:4,:,:));
                 
                 weights_lon = (weights_lon(1:2,:,:) + weights_lon(3:4,:,:))./2;
-                era_T_sl = squeeze(sum(era_T_sl .* weights_lon,1)) .* era.T_sf;
-                era_wind_sl = squeeze(sum(era_wind_sl .* weights_lon,1)) .* era.wind_sf;
+                era_T_sl = squeeze(sum(era_T_sl .* weights_lon,1));
+                era_wind_sl = squeeze(sum(era_wind_sl .* weights_lon,1));
                 era_q_sl = squeeze(sum(era_q_sl .* double(weights_lon),1));
                 era_Lin_sl = squeeze(sum(era_Lin_sl .* weights_lon,1));
                 era_Sin_sl = squeeze(sum(era_Sin_sl .* weights_lon,1));
