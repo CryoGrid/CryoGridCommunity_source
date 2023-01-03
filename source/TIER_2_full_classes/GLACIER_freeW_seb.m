@@ -137,6 +137,10 @@ classdef GLACIER_freeW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_FLUXES_
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
+        function [ground, S_up] = penetrate_SW_PARENT(ground, S_down)  %mandatory function when used with class that features SW penetration
+            [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
+        end
+        
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
             ground.TEMP.F_water = 0; 

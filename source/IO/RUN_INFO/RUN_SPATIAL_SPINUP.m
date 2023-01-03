@@ -1,3 +1,11 @@
+%========================================================================
+% CryoGrid RUN_INFO class RUN_SPATIAL_SPINUP
+% RUN_INFO class for spatially distributed runs (using an appropriate 
+% SPATIAL_REFERENCE class, DATA_PROVIDER classes and FORCING classes)
+% which can run several TILE classes per point sequentially for model spin-up 
+%
+% S. westermann, Dec 2022
+%========================================================================
 
 classdef RUN_SPATIAL_SPINUP < matlab.mixin.Copyable
     
@@ -53,7 +61,7 @@ classdef RUN_SPATIAL_SPINUP < matlab.mixin.Copyable
             if run_info.PARA.number_of_cores > 1
                 parpool(run_info.PARA.number_of_cores)
                 spmd
-                    for run_number = 1:size(run_info.SPATIAL.STATVAR.key,1)
+                    for run_number = 1:size(run_info.SPATIAL.STATVAR.key,1) %this is still wrong, does not distribute the load over workers, must be taken from ESA_CCI
                         
                         for ai=1:size(run_info.SPATIAL.ACTION,1)
                             run_info.SPATIAL.ACTION{ai,1} = assign_tile_properties(run_info.SPATIAL.ACTION{ai,1}, run_number); %writes the provider class
@@ -108,6 +116,35 @@ classdef RUN_SPATIAL_SPINUP < matlab.mixin.Copyable
             end
             
         end
+        
+        
+        
+        %-------------param file generation-----
+        function run_info = param_file_info(run_info)
+            run_info = provide_PARA(run_info);
+
+            run_info.PARA.STATVAR = [];
+            run_info.PARA.class_category = 'RUN_INFO';
+            run_info.PARA.default_value = [];
+            run_info.PARA.comment = [];
+            
+            run_info.PARA.comment.number_of_cores = {'number of cores to be used for calculation'};
+            run_info.PARA.default_value.number_of_cores = {2};
+            
+            run_info.PARA.options.tile_class.name =  'H_LIST';
+            run_info.PARA.options.tile_class.entries_x = {'TILE_1D_standard' 'TILE_1D_standard'};
+            
+            run_info.PARA.options.tile_class_index.name =  'H_LIST'; 
+            run_info.PARA.options.tile_class_index.entries_x = {1 2};
+            
+            run_info.PARA.options.number_of_runs_per_tile.name =  'H_LIST'; % 
+            run_info.PARA.options.number_of_runs_per_tile.entries_x = {1 1};
+            
+            run_info.PARA.comment.projection_class = {'projection class providing providing information on the locations and additinal data for each target point'};
+            
+        end
+        
+        
             
 %             number_of_tiles = ceil(run_info.PARA.total_number_of_cells ./ run_info.PARA.number_of_cells_per_tile);
 %             domains_per_worker = max(1, floor(number_of_tiles ./ run_info.PARA.num_ranks - 1e-12));

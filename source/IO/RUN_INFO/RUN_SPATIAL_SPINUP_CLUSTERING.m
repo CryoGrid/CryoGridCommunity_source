@@ -1,3 +1,10 @@
+%========================================================================
+% CryoGrid RUN_INFO class RUN_SPATIAL_SPINUP
+% as RUN_SPATIAL, but providing the possibility to apply clustering to
+% reduce the number of points, using an appropriate CLUSERING class
+%
+% S. westermann, Dec 2022
+%========================================================================
 
 classdef RUN_SPATIAL_SPINUP_CLUSTERING < matlab.mixin.Copyable
     
@@ -120,6 +127,33 @@ classdef RUN_SPATIAL_SPINUP_CLUSTERING < matlab.mixin.Copyable
         end
         
         
+        
+        %-------------param file generation-----
+        function run_info = param_file_info(run_info)
+            run_info = provide_PARA(run_info);
+
+            run_info.PARA.STATVAR = [];
+            run_info.PARA.class_category = 'RUN_INFO';
+            run_info.PARA.default_value = [];
+            run_info.PARA.comment = [];
+            
+            run_info.PARA.comment.number_of_cores = {'number of cores to be used for calculation'};
+            run_info.PARA.default_value.number_of_cores = {2};
+            
+            run_info.PARA.options.tile_class.name =  'H_LIST';
+            run_info.PARA.options.tile_class.entries_x = {'TILE_1D_standard' 'TILE_1D_standard'};
+            
+            run_info.PARA.options.tile_class_index.name =  'H_LIST'; 
+            run_info.PARA.options.tile_class_index.entries_x = {1 2};
+            
+            run_info.PARA.options.number_of_runs_per_tile.name =  'H_LIST'; % 
+            run_info.PARA.options.number_of_runs_per_tile.entries_x = {1 1};
+            
+            run_info.PARA.comment.projection_class = {'projection class providing providing information on the locations and additional data for each target point'};
+            
+            run_info.PARA.comment.clustering_class = {'clustering class to select representative clusters considering the properties of the different target points'};
+                        
+        end
         
     end
 end

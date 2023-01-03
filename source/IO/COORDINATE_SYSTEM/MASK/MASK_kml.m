@@ -1,3 +1,11 @@
+%========================================================================
+% CryoGrid MASK class MASK_kml
+% selects a region of interest as the inside of a kml track
+%
+% S. Westermann, Jan 2021
+% S. Westermann, Dec 2022
+%========================================================================
+
 classdef MASK_kml < matlab.mixin.Copyable
 
     
@@ -222,6 +230,22 @@ classdef MASK_kml < matlab.mixin.Copyable
             end
         end
             
+        
+        
+        %-------------param file generation-----
+        function mask = param_file_info(mask)
+            mask = provide_PARA(mask);
+            
+            mask.PARA.STATVAR = [];
+            mask.PARA.class_category = 'MASK';
+            mask.PARA.options = [];
+            
+            mask.PARA.comment.kml_file_path = {'folder where kml file is located'};
+            mask.PARA.comment.kml_filename = {'kml file name'};
+            
+            mask.PARA.comment.additive = {'1: region inside kml track added to existing selection; 0: region inside kml track subtracted from existing selection'};
+            mask.PARA.default_value.additive = {0};
+        end
             
     end
 end

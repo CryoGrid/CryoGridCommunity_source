@@ -1,3 +1,12 @@
+%========================================================================
+% CryoGrid MASK class MASK_point_selection
+% selects the region of interest as the closest coordinates to a 
+% list of target coordinates provided in a file 
+%
+% S. Westermann, Jan 2021
+% S. Westermann, Dec 2022
+%========================================================================
+
 classdef MASK_point_selection < matlab.mixin.Copyable
 
     
@@ -71,6 +80,23 @@ classdef MASK_point_selection < matlab.mixin.Copyable
                 mask.PARENT.STATVAR.mask = mask.PARENT.STATVAR.mask & mask_temp;
             end
 
+        end
+        
+        
+        
+        %-------------param file generation-----
+        function mask = param_file_info(mask)
+            mask = provide_PARA(mask);
+            
+            mask.PARA.STATVAR = [];
+            mask.PARA.class_category = 'MASK';
+            mask.PARA.options = [];
+
+            mask.PARA.comment.point_file_path = {'folder where mat-file with target points '};
+            mask.PARA.comment.filename = {'name of mat-file with targte points'};
+            
+            mask.PARA.comment.additive = {'1: region inside kml track added to existing selection; 0: region inside kml track subtracted from existing selection'};
+            mask.PARA.default_value.additive = {0};
         end
 
     end

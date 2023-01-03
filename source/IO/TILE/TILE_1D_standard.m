@@ -658,13 +658,10 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     tile.PARA.(parameters{i,1})=[];
                 end
                 
-%                 tile.PARA.comment.latitude = {'geographic coordinate, e.g. 70.956'};
-%                 tile.PARA.comment.longitude = {'geographic coordinate, e.g. -158.123'};
-%                 tile.PARA.comment.altitude = {'altitude [m]'};
+
                 tile.PARA.default_value.domain_depth = {100};
                 tile.PARA.comment.domain_depth = {'vertical depth of the model domain [m]'};
-%                 tile.PARA.default_value.area = {1};
-%                 tile.PARA.comment.area = {'area of the model domain [m2]'};
+
                 tile.PARA.default_value.forcing_class = {'FORCING_seb'};
                 tile.PARA.default_value.forcing_class_index = {1};
                 tile.PARA.default_value.grid_class = {'GRID_user_defined'};
@@ -699,13 +696,9 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     tile.PARA.(parameters{i,1})=[];
                 end
                 
-%                 tile.PARA.comment.latitude = {'geographic coordinate, e.g. 70.956'};
-%                 tile.PARA.comment.longitude = {'geographic coordinate, e.g. -158.123'};
-%                 tile.PARA.comment.altitude = {'altitude [m]'};
                 tile.PARA.default_value.domain_depth = {100};
                 tile.PARA.comment.domain_depth = {'vertical depth of the model domain [m]'};
-%                 tile.PARA.default_value.area = {1};
-%                 tile.PARA.comment.area = {'area of the model domain [m2]'};
+
                 tile.PARA.default_value.forcing_class = {'FORCING_seb'};
                 tile.PARA.default_value.forcing_class_index = {1};
                 tile.PARA.default_value.grid_class = {'GRID_user_defined'};

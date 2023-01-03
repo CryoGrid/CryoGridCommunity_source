@@ -239,30 +239,7 @@ classdef FORCING_base < matlab.mixin.Copyable
             %done later!!
         end
         
-        function forcing = condense_precip(forcing)
-            
-            window_size = 7.*8; %one week, make dependent on timestep?
-            vars={'rainfall'; 'snowfall'};
-            for k=1:size(vars,1)
-                precip = forcing.DATA.(vars{k,1});
-                precip2=precip.*0;
-                for i=1:window_size:size(precip,1)
-                    [a,b]= sort(precip(i:min(length(precip),i+window_size-1)));
-                    a(a==0)=[];
-                    for j=1:floor(0.75.*size(a,1))
-                        ind = floor(rand().*size(a,1)/5);
-                        a(end-ind)=a(end-ind)+ a(j);
-                        a(j) = 0;
-                    end
-                    a=[zeros(size(b,1)-size(a,1),1); a];
-                    
-                    c=a*0;
-                    c(b) = a;
-                    precip2(i:min(length(precip),i+window_size-1)) =c;
-                end
-                forcing.DATA.(vars{k,1}) = precip2;
-            end
-        end
+
         
         %%%%% ----- Support functions ----- %%%%%
         
@@ -277,7 +254,7 @@ classdef FORCING_base < matlab.mixin.Copyable
         end
         
         %Juditah's script, not used anymore - this is just a random choice, not
-        %sure whichone is better
+        %sure which one is better
         
 %         function forcing = SolarAzEl(forcing, tile)
 %             % SolarAzEl will ingest a Universal Time, and specific site location on earth

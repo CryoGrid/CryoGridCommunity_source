@@ -1,17 +1,12 @@
 %========================================================================
-% CryoGrid RUN_INFO class RUN_3D_STANDARD
+% CryoGrid RUN_INFO class RUN_3D_POINT
 % RUN_INFO class designed to run several TILE class in parallel, including
 % the possibility for laterally coupled TILE classes with the LATERAL class
-% LATERAL_3D. The topological relationships between the TILE classes are
-% provided in this class
-% RUN_3D_STANDARD can also be used for parallel runs of several independent
-% TILE classes, e.g. for a sensitivity analysis. Note that RUN_3D_STANDARD
-% does not offer the possibility to combine parallel and sequential
-% simulations of TILE classes, which would be required to run a large number 
-% of TILE classes
+% LATERAL_3D. 
 % Matlab parallel computing toolbox is required!
-
+%
 % S. Westermann, Jan 2021
+% S. Westermann, Dec 2022
 %========================================================================
 
 classdef RUN_3D_POINT < matlab.mixin.Copyable
@@ -32,7 +27,6 @@ classdef RUN_3D_POINT < matlab.mixin.Copyable
 
             run_info.PARA.point_3D_class = [];
             run_info.PARA.point_3D_class_index = [];
-            
 
             run_info.PARA.tile_class = [];
             run_info.PARA.tile_class_index = [];
@@ -114,34 +108,17 @@ classdef RUN_3D_POINT < matlab.mixin.Copyable
             run_info.PARA.STATVAR = [];
             run_info.PARA.class_category = 'RUN_INFO';
             
-            run_info.PARA.default_value.number_of_tiles = {3};
-            run_info.PARA.comment.number_of_tiles = {'number of tiles/cores'};
-            
-            run_info.PARA.options.param_file_number.name =  'H_LIST';
-            run_info.PARA.options.param_file_number.entries_x = {1 2 3};
-            
-
-            run_info.PARA.options.connected.name = 'MATRIX';
-            run_info.PARA.options.connected.entries_matrix = {'0' '1' '0'; '1' '0' '1'; '0' '1' '0'};
-            run_info.PARA.comment.connected = {'1 if connected'};
-            
-            run_info.PARA.options.contact_length.name = 'MATRIX';
-            run_info.PARA.options.contact_length.entries_matrix = {'0' '1' '0'; '1' '0' '1'; '0' '1' '0'};
-            run_info.PARA.comment.contact_length = {'lateral contact length between tiles'};
-
-            run_info.PARA.options.distance.name = 'MATRIX';
-            run_info.PARA.options.distance.entries_matrix = {'0' '1' '0'; '1' '0' '1'; '0' '1' '0'};
-            run_info.PARA.comment.distance = {'distance between tiles'};
-            
             run_info.PARA.default_value.tile_class = {'TILE_1D_standard'};
             run_info.PARA.comment.tile_class = {'TILE class'};
             
             run_info.PARA.default_value.tile_class_index = {1};
             run_info.PARA.comment.tile_class_index = {'TILE class index'};
+            
+            run_info.PARA.default_value.point_3D_class = {'POINT_3D_SIMPLE'};
+            run_info.PARA.comment.point_3D_class = {'3D point class containing information on locations and topological relationships between tiles'};
+            
+            run_info.PARA.default_value.point_3D_class_index = {1};
         end
-        
-        
-
         
     end
 end

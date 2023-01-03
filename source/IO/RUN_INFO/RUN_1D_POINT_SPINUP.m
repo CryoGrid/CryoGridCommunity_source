@@ -1,5 +1,5 @@
 %========================================================================
-% CryoGrid RUN_INFO class RUN_1D_SPINUP
+% CryoGrid RUN_INFO class RUN_1D_POINT_SPINUP
 % RUN_INFO class which runs several TILE class sequentially
 % can be used for model spin-up when using TILE_BUILDER classes which
 % initialize subsequent TILE classesbased on the results of the previous
@@ -8,7 +8,9 @@
 % e.g. for a sensitivity analysis
 
 % S. Westermann, Jan 2021
+% S. westermann, Dec 2022
 %========================================================================
+
 classdef RUN_1D_POINT_SPINUP < matlab.mixin.Copyable
     
     properties
@@ -73,9 +75,7 @@ classdef RUN_1D_POINT_SPINUP < matlab.mixin.Copyable
                 disp(['running tile number ' num2str(i)])
                 for j=1:run_info.PARA.number_of_runs_per_tile(i,1)
                     disp(['running round ' num2str(j)])
-                    
-%                     run_info = customize(run_info);
-                    
+                                        
                     new_tile = copy(run_info.PPROVIDER.CLASSES.(run_info.PARA.tile_class{i,1}){run_info.PARA.tile_class_index(i,1),1});
                     fn = fieldnames(run_info.SPATIAL.STATVAR);
                     for k=1:size(fn,1)  %be careful, does not work if empty array (and not NaN) is willingly assigned to a parameter
@@ -96,16 +96,6 @@ classdef RUN_1D_POINT_SPINUP < matlab.mixin.Copyable
         end
  
         
-        function run_info = customize(run_info)
-            %FUNCTION TO BE EDITED BY USER - when inheriting from this class
-            %here customizations can be done by directly writing pprovider
-            %one can for example change parameters in the different
-            %subsurface classes
-            %run_info.PPROVIDER.FUNCTIONAL_CLASSES.XX = YY;
-            
-            
-        end
-        
         
         %-------------param file generation-----
         function run_info = param_file_info(run_info)
@@ -124,6 +114,9 @@ classdef RUN_1D_POINT_SPINUP < matlab.mixin.Copyable
             
             run_info.PARA.options.number_of_runs_per_tile.name =  'H_LIST'; % 
             run_info.PARA.options.number_of_runs_per_tile.entries_x = {1 1};
+            
+            run_info.PARA.comment.point_class = {'point class providing information on the location; if empty, no location, altitude = 0m and area = 1m2 is assumed'};
+            
         end
         
         

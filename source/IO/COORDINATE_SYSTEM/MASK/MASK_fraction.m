@@ -1,3 +1,12 @@
+%========================================================================
+% CryoGrid MASK class MASK_fraction
+% splits the target points in a number of sections. This provides an 
+% additional level of parallelization for very large data sets, which can
+% be useful on clusters with defined walltime.
+%
+% S. Westermann, Dec 2022
+%========================================================================
+
 classdef MASK_fraction < matlab.mixin.Copyable
 
     
@@ -43,6 +52,21 @@ classdef MASK_fraction < matlab.mixin.Copyable
 
         end
         
+        
+        
+        %-------------param file generation-----
+        function mask = param_file_info(mask)
+            mask = provide_PARA(mask);
+            
+            mask.PARA.STATVAR = [];
+            mask.PARA.class_category = 'MASK';
+            mask.PARA.default_value = [];
+            mask.PARA.options = [];
+            
+            mask.PARA.comment.section = {'number of currently modeled section [1 ... number_of_sections]'};
+            
+            mask.PARA.comment.number_of_sections = {'number of sections in which the data set is split'};
+        end
  
     end
 end

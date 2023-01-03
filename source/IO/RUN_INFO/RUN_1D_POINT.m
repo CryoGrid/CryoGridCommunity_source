@@ -4,6 +4,7 @@
 % used for simplest possible simulation setup with only a single model run 
 
 % S. Westermann, Jan 2021
+% S. Westermann, Dec 2022 
 %========================================================================
 classdef RUN_1D_POINT < matlab.mixin.Copyable
     
@@ -79,7 +80,7 @@ classdef RUN_1D_POINT < matlab.mixin.Copyable
         
         
         function [run_info, tile] = run_model(run_info)
-            %run_info = customize(run_info)
+
             [run_info, tile] = setup_run(run_info);
             tile = run_model(tile);  %time integration
         end
@@ -100,6 +101,7 @@ classdef RUN_1D_POINT < matlab.mixin.Copyable
             out.PARA.default_value.tile_class_index = {1};
             out.PARA.comment.tile_class_index = {'TILE class index'};
             
+            out.PARA.comment.point_class = {'point class providing information on the location; no location, altitude = 0m and area = 1m2 if empty'};
         end
         
         

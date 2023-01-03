@@ -333,6 +333,9 @@ elseif strcmp(above_class, 'SNOW_crocus_bucketW_seb_vegetation')
         
     elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow')
         ia_class = IA_HEAT11_WATER11_RichardsEq_SNOW_XICE();
+    
+    elseif strcmp(below_class, 'VEGETATION_CLM5_seb_snow')
+        ia_class = IA_SEB_vegetation_CLM5_SNOW();
     end
     
 elseif strcmp(above_class, 'SNOW_crocus2_bucketW_seb')
@@ -353,8 +356,10 @@ elseif strcmp(above_class, 'SNOW_crocus2_bucketW_seb')
         
     elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow')
         ia_class = IA_HEAT11_WATER11_RichardsEq_SNOW_XICE();
-    end
     
+    elseif strcmp(below_class, 'VEGETATION_CLM5_seb_snow')
+        ia_class = IA_SEB_vegetation_CLM5_SNOW();
+    end
     
     %-----------store_flip_flop -----
     
@@ -407,6 +412,19 @@ elseif strcmp(above_class, 'VEGETATION_CLM5_seb')
         
     elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow') 
         ia_class = IA_SEB_vegetation_CLM5_GROUND_Xice_snow();
+    end
+    
+       % ---------- VEGETATION with SNOW in canopy-----------
+    
+elseif strcmp(above_class, 'VEGETATION_CLM5_seb_snow')
+    if strcmp(below_class, 'SNOW_crocus_bucketW_seb') || strcmp(below_class, 'SNOW_crocus2_bucketW_seb')
+        ia_class = IA_SEB_vegetation_CLM5_SNOW();
+        
+    elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb_snow')
+        ia_class = IA_SEB_vegetation_CLM5_GROUND_snow();
+        
+    elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow') 
+        ia_class = IA_SEB_vegetation_CLM5_snow_GROUND_Xice_snow();
     end
     
     %--------MULTI-TILE----

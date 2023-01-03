@@ -1,3 +1,10 @@
+%========================================================================
+% CryoGrid SPATIAL_REFERENCE class POINT_SLOPE
+% POINT class providing information for a single target point on a slope.
+% Recommended for simple simulations in sloping terrain.
+%
+% S. Westermann, Dec 2022
+%========================================================================
 
 classdef POINT_SLOPE < matlab.mixin.Copyable
 
@@ -79,7 +86,38 @@ classdef POINT_SLOPE < matlab.mixin.Copyable
         end
         
  
-        
+        %-------------param file generation-----
+        function point = param_file_info(point)
+            point = provide_PARA(point);
+            
+            point.PARA.STATVAR = [];
+            point.PARA.class_category = 'SPATIAL_REFERENCE';
+            
+            point.PARA.comment.latitude = {'latitude in decimal degrees'};
+            point.PARA.default_value.latitude = {78.9};
+            
+            point.PARA.comment.longitude = {'longitude in decimal degrees'};
+            point.PARA.default_value.longitude = {11.1};
+            
+            point.PARA.comment.altitude = {'altitude in m a.s.l.'};
+            point.PARA.default_value.altitude = {10};
+            
+            point.PARA.comment.area = {'area of target point in m2'};
+            point.PARA.default_value.area = {1};
+            
+            point.PARA.comment.slope_angle = {'angle of the slope in degrees (0 degrees = flat)'};  
+            point.PARA.default_value.slope_angle = {10};
+            
+            point.PARA.comment.aspect = {'aspect of the slope in degrees (0: S; 90: E; 180: N; 270: W)'};  ;  
+            point.PARA.default_value.aspect = {180};
+            
+            point.PARA.comment.skyview_factor = {'skyview factor, if empty calculated from slope and horizon angles (recommeded in most situations)'};    
+            
+            point.PARA.comment.horizon_angles = {'horizon angles (0: flat, no terrain shading; 90: all direct raiation blocked) at selected angles, linear interolation between; the default corresponds to shading in S direction for sun angles < 30 degrees'};
+            point.PARA.options.horizon_angles.name = 'MATRIX';
+            point.PARA.options.horizon_angles.entries_matrix = {'0' '90' '180' '270'; '30' '0' '0' '0'}; 
+            
+        end
     end
 end
 

@@ -1,5 +1,5 @@
 %========================================================================
-% CryoGrid FORCING class FORCING_seb
+% CryoGrid FORCING class FORCING_seb_mat
 %
 % simple model forcing for GROUND classes computing the surface energy 
 % balance (keyword "seb"). 
@@ -15,11 +15,11 @@
 % rainfall:  Rainfall (in mm/day)
 % snowfall:  Snowfall (in mm/day)
 % q:         absolute humidity (in kg water vapor / kg air)
-% p:         air pressure (OPTIONAL, in hPa)
+% p:         air pressure (OPTIONAL, in Pa)
 % wind:       wind speed (in m/sec)
 % 
 % All forcing variables must be discretized identically, and one array of
-% timestamps must be provided (t_stamp, in Matlab time / increment 1 
+% timestamps must be provided (t_span or timeForcing, in Matlab time / increment 1 
 % corresponds to one day). 
 %
 % IMPORTANT POINT: the time series must be equally spaced in time, and this 
@@ -49,6 +49,9 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
             forcing.PARA.heatFlux_lb = [];  % heat flux at the lower boundary [W/m2] - positive values correspond to energy gain
             forcing.PARA.airT_height = [];  % height above ground at which air temperature (and wind speed!) from the forcing data are applied.
+            
+            forcing.PARA.post_proc_class = [];  %optional post-processing classes
+            forcing.PARA.post_proc_class_index = [];
         end
         
         
@@ -89,6 +92,14 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
                 forcing.DATA.p=forcing.DATA.Tair.*0 + 1013.25.*100.*(1-0.0065./288.15.*altitude).^5.255;
             end
             
+            %optional post-processing with dedicated classes
+            if ~isempty(forcing.PARA.post_proc_class) && sum(isnan(forcing.PARA.post_proc_class_index)) == 0
+                for i=1:size(forcing.PARA.post_proc_class,1)
+                    post_proc_class = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(forcing.PARA.post_proc_class{i,1}){forcing.PARA.post_proc_class_index(i,1),1});
+                    post_proc_class = finalize_init(post_proc_class, tile);
+                    forcing = post_process(post_proc_class, forcing, tile);
+                end
+            end
         end
         
         
@@ -110,7 +121,7 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             
             forcing.PARA.comment.filename = {'filename of Matlab file containing forcing data'};
             
-            forcing.PARA.default_value.forcing_path = {'forcing/'};
+            forcing.PARA.default_value.forcing_path = {'../CryoGridCommunity_forcing/'};
             forcing.PARA.comment.forcing_path = {'path where forcing data file is located'};
             
             forcing.PARA.comment.start_time = {'start time of the simulations (must be within the range of data in forcing file) - year month day'};
@@ -132,7 +143,12 @@ classdef FORCING_seb_mat < FORCING_base & READ_FORCING_mat
             
             forcing.PARA.default_value.airT_height = {2};  
             forcing.PARA.comment.airT_height = {'height above ground surface where air temperature from forcing data is applied'};
-
+            
+            forcing.PARA.comment.post_proc_class = {'list of postprocessing classes to modify forcing data in user-defined ways; no post-processing applied when empty'};
+            forcing.PARA.options.post_proc_class.name = 'H_LIST';
+            
+            forcing.PARA.comment.post_proc_class_index = {''};
+            forcing.PARA.options.post_proc_class_index.name = 'H_LIST';
         end
     end
 end

@@ -161,6 +161,10 @@ classdef VEGETATION_CLM5_seb < SEB & SEB_VEGETATION & WATER_FLUXES & VEGETATION
             [canopy, S_up] = penetrate_SW_CLM5(canopy, S_down);
         end
         
+        function [canopy, S_up] = penetrate_SW_PARENT(canopy, S_down)  %mandatory function when used with class that features SW penetration
+            [canopy, S_up] = penetrate_SW_CLM5(canopy, S_down);
+        end
+        
         function canopy = get_boundary_condition_l(canopy, tile)
             % MUST be used with soil class below - No lower boundary condition
         end
@@ -243,5 +247,124 @@ classdef VEGETATION_CLM5_seb < SEB & SEB_VEGETATION & WATER_FLUXES & VEGETATION
             canopy.IA_GROUND = get_water_transpiration(canopy.IA_GROUND);
         end
     
+        
+        
+        %-------------param file generation-----
+        function canopy = param_file_info(canopy)
+            canopy = provide_PARA(canopy);
+
+            canopy.PARA.STATVAR = [];
+            canopy.PARA.class_category = 'VEGETATION';
+            canopy.PARA.options = [];
+
+            canopy.PARA.comment.t_leafsprout = {'DayOfYear when leaves emerge (135 = 15. May)'};
+            canopy.PARA.default_value.t_leafsprout = {'152'};
+
+            canopy.PARA.comment.t_leaffall = {'DayOfYear when leaves fall (274 = 1. Oct.)'};
+            canopy.PARA.default_value.t_leaffall = {'274'};
+
+            canopy.PARA.comment.kv = {'parameter to adjust for non-cylinderness of trees'};
+            canopy.PARA.default_value.kv = {0.5};
+
+            canopy.PARA.comment.D_bh = {'mean breast-height diameter of trees'};
+            canopy.PARA.default_value.D_bh = {0.28};
+
+            canopy.PARA.comment.N_tree = {'stand density (number of trees per area)'};
+            canopy.PARA.default_value.N_tree = {0.15};
+
+            canopy.PARA.comment.rho_wood = {'Density of dry wood'};
+            canopy.PARA.default_value.rho_wood = {500};
+
+            canopy.PARA.comment.SLA = {'Specific leaf area (leaf area per unit mass of carbon)'};
+            canopy.PARA.default_value.SLA = {23};
+            
+            canopy.PARA.comment.f_carbon = {'mass of carbon per leaf dry mass'};
+            canopy.PARA.default_value.f_carbon = {0.5};
+
+            canopy.PARA.comment.f_water = {'mass of water per leaf total mass'};
+            canopy.PARA.default_value.f_water = {0.45};
+
+            canopy.PARA.comment.nir_fraction = {'fraction of Sin that is in the NIR spectrum'};
+            canopy.PARA.default_value.nir_fraction = {0.3};
+
+            canopy.PARA.comment.LAI = {'Leaf area index'};
+            canopy.PARA.default_value.LAI = {1.5};
+
+            canopy.PARA.comment.SAI = {'Stem area index'};
+            canopy.PARA.default_value.SAI = {1};
+
+            canopy.PARA.comment.Khi_L = {'departure of leaf angles from a random distribution'};
+            canopy.PARA.default_value.Khi_L = {0.01};
+           
+            canopy.PARA.comment.alpha_leaf_vis = {'leaf reflectence in the VIS'};
+            canopy.PARA.default_value.alpha_leaf_vis = {0.07};
+
+            canopy.PARA.comment.alpha_stem_vis = {'stem reflectence in the VIS'};
+            canopy.PARA.default_value.alpha_stem_vis = {0.16};
+
+            canopy.PARA.comment.tau_leaf_vis = {'leaf transmittance in the VIS'};
+            canopy.PARA.default_value.tau_leaf_vis = {0.05};
+
+            canopy.PARA.comment.tau_stem_vis = {'stem transmittance in the VIS'};
+            canopy.PARA.default_value.tau_stem_vis = {0.001};
+
+            canopy.PARA.comment.alpha_leaf_nir = {'leaf reflectence in the NIR'};
+            canopy.PARA.default_value.alpha_leaf_nir = {0.35};
+
+            canopy.PARA.comment.alpha_stem_nir = {'stem reflectence in the NIR'};
+            canopy.PARA.default_value.alpha_stem_nir = {0.39};
+
+            canopy.PARA.comment.tau_leaf_nir = {'leaf transmittance in the NIR'};
+            canopy.PARA.default_value.tau_leaf_nir = {0.1};
+
+            canopy.PARA.comment.tau_stem_nir = {'stem transmittance in the NIR'};
+            canopy.PARA.default_value.tau_stem_nir = {0.001};
+
+            canopy.PARA.comment.dT_max = {'max temperature change per timestep [K]'};
+            canopy.PARA.default_value.dT_max = {1};
+
+            canopy.PARA.comment.dt_max = {'maximum timestep [sec]'};
+            canopy.PARA.default_value.dt_max = {3600};
+
+            canopy.PARA.comment.Cv = {'turbulent transfer coefficient between canopy surface and canopy air'};
+            canopy.PARA.default_value.Cv = {0.01};
+
+            canopy.PARA.comment.d_leaf = {'characteristic dimension of leaves in direction of wind flow'};
+            canopy.PARA.default_value.d_leaf = {0.04};
+            
+            canopy.PARA.comment.Cs_dense = {'dense canopy turbulent transfer coefficient (Dickinson et al. 1993)'};
+            canopy.PARA.default_value.Cs_dense = {0.004};
+
+            canopy.PARA.comment.R_z0 = {'ratio of momentum roughness length'};
+            canopy.PARA.default_value.R_z0 = {0.055};
+
+            canopy.PARA.comment.R_d = {'ratio of displacement height to canopy height'};
+            canopy.PARA.default_value.R_d = {0.67};
+            
+            canopy.PARA.comment.Dmax = {'Maximum dry soil layer thickness, 15 mm'};
+            canopy.PARA.default_value.Dmax = {0.015};
+
+            canopy.PARA.comment.Wmax = {'water holding capacity of canopy per unit area (L+S)'}; 
+            canopy.PARA.default_value.Wmax = {0.0001}; 
+            
+            canopy.PARA.comment.beta_root = {'root distribution parameter (CLM5)'};
+            canopy.PARA.default_value.beta_root = {0.943};
+
+            canopy.PARA.comment.C_leaf_max = {'maximum leaf conductance'};
+            canopy.PARA.default_value.C_leaf_max = {0.01};
+
+            canopy.PARA.comment.k_shelter = {'shelter factor, between 0.5 - 1 (Carlson, 1991)'};
+            canopy.PARA.default_value.k_shelter = {0.5};
+
+            canopy.PARA.comment.psi_wilt = {'water potential at permanent wilting point (-15 bar)'};
+            canopy.PARA.default_value.psi_wilt = {-150};
+
+            canopy.PARA.comment.zeta_m = {'threshold for very unstable atm. Conditions wrt. Heat/vapor fluxes'};
+            canopy.PARA.default_value.zeta_m = {-0.465};
+
+            canopy.PARA.comment.zeta_h = {'threshold for very unstable atm. Conditions wrt. mass fluxes'};
+            canopy.PARA.default_value.zeta_h = {-1.574};
+
+        end
     end
 end

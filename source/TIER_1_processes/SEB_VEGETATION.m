@@ -615,11 +615,15 @@ classdef SEB_VEGETATION < BASE
             %canopy is Sout + Sup, the layer below absorbs S_down - S_up, so absorbed in canopy is 
             %Sin - (Sout + Sup) - (S_down - S_up) = Sin - Sout - S_down;
             seb.TEMP.S_abs = Sin - S_down - Sout;
+%             if isempty(seb.TEMP.S_abs) || length(seb.TEMP.S_abs)>1
+%                 disp('hallo')
+%             end
             seb.TEMP.d_energy(1) = seb.TEMP.d_energy(1) + seb.TEMP.S_abs;
             seb.TEMP.S_down = S_down./seb.STATVAR.area(1);
             seb.TEMP.S_up = S_up./seb.STATVAR.area(1);
             seb.STATVAR.Sin = Sin./seb.STATVAR.area(1);
             seb.STATVAR.Sout = Sout./seb.STATVAR.area(1);
+            Sout = Sout+S_up; %Sout is the total upwelling radition
          end
         
 %         %NOT IN USE NOW, BUT COULD BE USED LATER
@@ -681,6 +685,8 @@ classdef SEB_VEGETATION < BASE
             
             canopy.TEMP.rain_thru = rain_thru ./ canopy.STATVAR.area(1); %CHANGED SW Dec 2022, to resolve problems with double-counting during CHILD phase
         end 
+        
+
         
 %         function ground = get_boundary_condition_water_SNOW_canopy_m(ground, tile) % as function above, but for snow below canopy
 %             forcing = tile.FORCING;

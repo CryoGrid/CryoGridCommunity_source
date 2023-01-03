@@ -1,3 +1,15 @@
+%========================================================================
+% CryoGrid SPATIAL_REFERENCE class COORDINATES_FROM_FILE
+% Defines the locations of the target points as the grid coordinates of an 
+% existing raster file. The region of interest can be selected by optional
+% mask classes. For each point, data (e.g. calculated from DEM, or
+% other sources) are read by data provder classes. Based on these data, 
+% data mask classes can be used to further constrain the modeled domain. 
+% NOTE: currently only fucntional for UTM coordinates  
+%
+% S. Westermann, Dec 2022
+%========================================================================
+
 %defines a regular grid in geographical coordinates, with fixed resolution
 
 classdef COORDINATES_FROM_FILE < matlab.mixin.Copyable
@@ -114,8 +126,43 @@ classdef COORDINATES_FROM_FILE < matlab.mixin.Copyable
 
         end
         
- 
         
+        
+        %-------------param file generation-----
+        function proj = param_file_info(proj)
+            proj = provide_PARA(proj);
+            
+            proj.PARA.STATVAR = [];
+            proj.PARA.class_category = 'SPATIAL_REFERENCE';
+            proj.PARA.default_value = [];
+            
+            proj.PARA.comment.proj_file_folder = {'folder where data set providing the spatial reference is located'};
+
+            proj.PARA.comment.proj_file_name = {'file name of data set providing the spatial reference'};
+            
+            proj.PARA.comment.mask_class = {'list of mask classes, constains the region of interest based on the coordinates'};
+            proj.PARA.options.mask_class.name = 'H_LIST';
+%             proj.PARA.options.mask_class.entries_x = {};
+            proj.PARA.options.mask_class_index.name = 'H_LIST';
+            
+            proj.PARA.comment.data_class = {'list of data provider classes, provide data for each target location'};
+            proj.PARA.options.data_class.name = 'H_LIST';
+%             proj.PARA.options.data_class.entries_x = {''};
+            proj.PARA.options.data_class_index.name = 'H_LIST';
+            
+            proj.PARA.comment.data_mask_class = {'list of data mask classes, constrains the region of interest based on the data provided by data provider classes'};
+            proj.PARA.options.data_mask_class.name = 'H_LIST';
+%             proj.PARA.options.data_mask_class.entries_x = {''};
+            proj.PARA.options.data_mask_class_index.name = 'H_LIST';
+
+            proj.PARA.comment.assign_tile_properties_class = {'translates the data to changes to the classes used in the simulations for each point, basically cutomizing the "parameter file" for each taret location'};
+            proj.PARA.options.assign_tile_properties_class.name = 'H_LIST';
+            proj.PARA.options.assign_tile_properties_class.entries_x = {'update_one2one' 'tag_out_w_run_number'};   
+            
+            proj.PARA.options.assign_tile_properties_class_index.name = 'H_LIST';
+            proj.PARA.options.assign_tile_properties_class_index.entries_x = {'1' '1'};   
+        end
+  
     end
 end
 

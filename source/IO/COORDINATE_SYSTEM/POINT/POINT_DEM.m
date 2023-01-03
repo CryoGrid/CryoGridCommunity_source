@@ -1,3 +1,13 @@
+%========================================================================
+% CryoGrid SPATIAL_REFERENCE class POINT_DEM
+% POINT class deriving information for a single target point from a digital 
+% elevation model (DEM),including slope, aspect and terrain shading. The 
+% class can ingest Copernicus 30m DEMs downloaded from 
+% https://portal.opentopography.org/   
+%
+% S. Westermann, Dec 2022
+%========================================================================
+
 
 classdef POINT_DEM < DEM_BASE
     properties
@@ -174,6 +184,37 @@ classdef POINT_DEM < DEM_BASE
 %             
         end
         
+        
+        %-------------param file generation-----
+        function point = param_file_info(point)
+            point = provide_PARA(point);
+            
+            point.PARA.STATVAR = [];
+            point.PARA.class_category = 'SPATIAL_REFERENCE';
+            
+            point.PARA.comment.latitude = {'latitude in decimal degrees'};
+            point.PARA.default_value.latitude = {78.9};
+            
+            point.PARA.comment.longitude = {'longitude in decimal degrees'};
+            point.PARA.default_value.longitude = {11.1};
+            
+            point.PARA.comment.area = {'area of target point in m2'};
+            point.PARA.default_value.area = {1};
+            
+            point.PARA.comment.variables = {'properties calculated from DEM: altitude OR altitude, slope_angle, aspect OR altitude, slope_angle, aspect, horizon_angles'};
+            point.PARA.options.variables.name = 'H_LIST';
+            point.PARA.options.variables.entries_x = {'altitude' 'slope_angle' 'aspect' 'horizon_angles'};
+                        
+            point.PARA.comment.number_of_horizon_bins = {'number of angular points for which horizon is calculated; must be multiple of 4'};  
+            point.PARA.default_value.number_of_horizon_bins = {24};
+            
+            point.PARA.comment.DEM_folder = {'folder in which DEM file is located'}; 
+            
+            point.PARA.comment.DEM_filename = {'name of DEM file'}; 
+            
+            point.PARA.comment.reproject2utm = {'select 1 when using a DEM in geographic coordinates (or similar) and computing more than just altitude; select 0 to speed up altitde computation in big DEMs'};
+            point.PARA.default_value.reproject2utm = {1};
+        end
         
     end
 end

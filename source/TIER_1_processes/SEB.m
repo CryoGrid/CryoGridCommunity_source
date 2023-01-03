@@ -366,8 +366,9 @@ classdef SEB < BASE
                 i = min(i, size(seb.STATVAR.layerThick,1));
                 seb.TEMP.d_energy(i,1) = seb.TEMP.d_energy(i,1) + sum(S_down); % .* seb.STATVAR.area(i,1);
             else %end of class reached, radiation penetrated on to next class
-                [seb.NEXT, S_up2] = penetrate_SW_PARENT(seb.NEXT, S_down); %call mandatory function recursively for following class -> coming from SNOW, one always wants the PARENt class
+                [seb.NEXT, S_up2] = penetrate_SW_PARENT(seb.NEXT, sum(S_down)); %call mandatory function recursively for following class -> coming from SNOW, one always wants the PARENt class
                 %NOTE: no check performed that NEXT is not Bottom, must always be used with class below!
+                S_up2 = S_up2 .* seb.PARA.spectral_ranges;
                 i = size(seb.STATVAR.layerThick,1); %penetrate bottom up
                 while i>=1 && sum(S_up2) >= cut_off
                     reduction = exp(-seb.TEMP.SW_extinction(i,:) .* seb.STATVAR.layerThick(i,1));

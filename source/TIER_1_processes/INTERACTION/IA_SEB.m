@@ -174,6 +174,32 @@ classdef IA_SEB < IA_BASE
             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + (-snow.STATVAR.Qh - snow.STATVAR.Qe).*snow.STATVAR.area(1);
         end
         
+        function ia_seb_water = get_boundary_condition_m_vegetation_snow_CHILD_below(ia_seb_water, tile)
+            % SEB and water balance of child below a canopy with snow, excluding radiation
+            forcing = tile.FORCING;
+            snow = ia_seb_water.NEXT.CHILD;
+            vegetation = ia_seb_water.NEXT.PREVIOUS;
+            
+            %replaces
+            %snow = get_boundary_condition_allSNOW_rain_canopy_m(snow, tile); %add full snow, but rain only for snow-covered part
+            snow.TEMP.snowfall = vegetation.TEMP.snow_thru .* (snow.PARENT.STATVAR.area(1,1) + snow.STATVAR.area); %snowfall is in mm/day -> [m3/sec]
+            %snow.TEMP.rainfall = vegetation.TEMP.rain_thru .* snow.STATVAR.area;
+            snow.TEMP.snow_energy = vegetation.TEMP.snow_thru .* (min(0, forcing.TEMP.Tair) .* snow.CONST.c_i - snow.CONST.L_f);  %[J/sec]
+            %snow.TEMP.rain_energy = vegetation.TEMP.rain_thru .* max(0, forcing.TEMP.Tair) .* snow.CONST.c_w;
+        
+            %rainfall handled here
+            snow = get_boundary_condition_water_SNOW_canopy_m(snow, tile);
+            
+            snow_property_function = str2func(snow.PARA.snow_property_function);
+            snow = snow_property_function(snow,forcing);
+            
+            ia_seb_water = get_boundary_condition_Qh_CLM5_CHILD_m(ia_seb_water, tile);
+            ia_seb_water = get_boundary_condition_Qe_CLM5_CHILD_m(ia_seb_water, tile);
+            
+            snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + (-snow.STATVAR.Qh - snow.STATVAR.Qe).*snow.STATVAR.area(1);
+        end
+        
+        
         function ia_seb_water = get_boundary_condition_Qh_CLM5_CHILD_m(ia_seb_water, tile)
             % ground sensible heat flux as described in CLM5
             stratigraphy1 = ia_seb_water.PREVIOUS; % vegetation

@@ -1,4 +1,9 @@
-%defines a regular grid in geographical coordinates, with fixed resolution
+%========================================================================
+% CryoGrid CLUSTERING class K_MEANS
+% CLUSTERING class applying K-means clustering to spatial data
+%
+% K. Aalstad, S. Westermann, Dec 2022
+%========================================================================
 
 classdef K_MEANS < matlab.mixin.Copyable
 
@@ -56,8 +61,31 @@ classdef K_MEANS < matlab.mixin.Copyable
             end
             cluster.STATVAR.cluster_number = cn;
             cluster.STATVAR.sample_centroid_index = indsc;
-        end
+         end
         
+        
+         
+         %-------------param file generation-----
+         function cluster = param_file_info(cluster)
+             cluster = provide_PARA(cluster);
+             
+             cluster.PARA.STATVAR = [];
+             cluster.PARA.class_category = 'CLUSTERING';
+             
+             cluster.PARA.comment.number_of_clusters = {'number of clusters'};
+             
+             cluster.PARA.comment.max_iterations = {'maximum number of interations, interrupts k-means algorithm if no convergence is reached'};
+             cluster.PARA.default_value.max_iterations = {1000};
+             
+             cluster.PARA.comment.cluster_variable_class = {'list of classes providing the data to which the clustering is applied'};
+             cluster.PARA.options.cluster_variable_class.name = 'H_LIST';
+             cluster.PARA.options.cluster_variable_class.entries_x = {'CLUSTER_RAW_VARIABLES' 'CLUSTER_SLOPE_ASPECT'};
+             
+             cluster.PARA.options.cluster_variable_class_index.name = 'H_LIST';
+             cluster.PARA.options.cluster_variable_class_index.entries_x = {'1' '1'};
+             
+         end
+         
     end
 end
 
