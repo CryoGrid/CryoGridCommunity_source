@@ -39,12 +39,7 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
             tile.PARA.builder = [];
             
             %new_init
-            tile.PARA.latitude = [];
-            tile.PARA.longitude = [];
-            tile.PARA.altitude = [];
             tile.PARA.domain_depth = [];
-            tile.PARA.area = [];
-            
             tile.PARA.forcing_class = [];
             tile.PARA.forcing_class_index = [];
             tile.PARA.grid_class = [];
@@ -229,11 +224,11 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
                 disp(['PARA builder in class ' class(tile) ' not assigned'])
             end
             if strcmp(tile.PARA.builder, 'new_init')
-                parameters = {'latitude'; 'longitude'; 'altitude'; 'domain_depth'; 'area'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
+                parameters = {'domain_depth'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
                     'out_class_index'; 'strat_classes_class'; 'strat_classes_class_index'; 'strat_statvar_class'; 'strat_statvar_class_index'; 'lateral_class'; ...
                     'lateral_class_index'; 'lateral_IA_classes'; 'lateral_IA_classes_index'; 'DA_classes'; 'DA_classes_index'; 'ensemble_classes'; 'ensemble_classes_index'};
             elseif strcmp(tile.PARA.builder, 'new_init_steady_state')
-                parameters = {'latitude'; 'longitude'; 'altitude'; 'domain_depth'; 'area'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
+                parameters = {'domain_depth'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
                     'out_class_index'; 'strat_classes_class'; 'strat_classes_class_index'; 'strat_statvar_class'; 'strat_statvar_class_index'; 'lateral_class'; ...
                     'lateral_class_index'; 'lateral_IA_classes'; 'lateral_IA_classes_index'; 'T_first_cell'; 'start_depth_steady_state'; ...
                     'DA_classes'; 'DA_classes_index'; 'ensemble_classes'; 'ensemble_classes_index'};
@@ -412,7 +407,6 @@ classdef TILE_1D_DA < matlab.mixin.Copyable
               tile.ENSEMBLE{i,1} = finalize_init(tile.ENSEMBLE{i,1}, tile);  
             end
 
-            
             %interpolate focing data to time t
             tile = interpolate_forcing_tile(tile);
             

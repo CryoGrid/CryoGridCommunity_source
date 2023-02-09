@@ -73,6 +73,7 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
                 for i=1:size(da.STATVAR.obs_time,1)
                     if tile.t>= da.TEMP.time_next_obs(i,1)
                         da.STATVAR.modeled_obs{i,1}(da.TEMP.index_next_obs(i,1),1) = observable_operator(da.OBS_OP{i,1}, tile);
+                        disp(da.STATVAR.modeled_obs{i,1}(da.TEMP.index_next_obs(i,1),1) )
                         if da.TEMP.index_next_obs(i,1) < size(da.STATVAR.observations{i,1}, 1) %end of observations reached
                             da.TEMP.index_next_obs(i,1) = da.TEMP.index_next_obs(i,1) + 1;
                             da.TEMP.time_next_obs(i,1) = da.STATVAR.obs_time{i,1}(da.TEMP.index_next_obs(i,1),1);
