@@ -85,6 +85,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             %set default values of necessary parameters
             tile.PARA.area = 1;
             tile.PARA.altitude = 0;
+            tile.PARA.slope_angle = 0;
         end
         
         function tile = provide_CONST(tile)

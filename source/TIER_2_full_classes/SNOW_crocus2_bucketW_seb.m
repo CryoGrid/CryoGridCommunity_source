@@ -449,6 +449,7 @@ classdef SNOW_crocus2_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & HEAT_
             snow.STATVAR.upperPos = snow.NEXT.STATVAR.upperPos + sum(snow.STATVAR.layerThick);
             
             snow = calculate_albedo_crocus(snow, forcing); %albedo calculation is a diagnostic operation
+
             
             snow.TEMP.d_energy = snow.STATVAR.energy.*0;
             snow.TEMP.d_water = snow.STATVAR.energy .*0;

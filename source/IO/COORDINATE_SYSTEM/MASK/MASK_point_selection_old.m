@@ -53,7 +53,7 @@ classdef MASK_point_selection < matlab.mixin.Copyable
             %[clip_lon, clip_lat] = read_kml(mask, [mask.PARA.kml_file_path mask.PARA.filename]);
             %mask_temp = inpolygon(mask.PARENT.STATVAR.latitude,mask.PARENT.STATVAR.longitude, clip_lat,clip_lon);
             
-            mask.PARENT.STATVAR.borehole_number = mask.PARENT.STATVAR.mask .*0
+            
             mask_temp = mask.PARENT.STATVAR.mask .*0;
             %proximity_score = mask.PARENT.STATVAR.latitude.*0 + 1e20;
             if ~(mask.PARA.target_lat_max < nanmin(mask.PARENT.STATVAR.latitude(:))) && ~(mask.PARA.target_lat_min > nanmax(mask.PARENT.STATVAR.latitude(:))) ...
@@ -66,10 +66,9 @@ classdef MASK_point_selection < matlab.mixin.Copyable
                         score=(mask.PARA.target_lon(i) - mask.PARENT.STATVAR.longitude).^2 + (mask.PARA.target_lat(i) - mask.PARENT.STATVAR.latitude).^2;
                         [mini, posi] = min(score(:));
                                                 
-                        if mini < 0.05
+                        if mini < 0.02
                             mask_temp(posi) = 1;
-                            mask.PARENT.STATVAR.borehole_number(posi,1) = i;
-%                             mask.PARENT.STATVAR.properties = [mask.PARENT.STATVAR.properties; [i mini mask.PARENT.PARA.horizontal mask.PARENT.PARA.vertical mask.PARENT.STATVAR.key(posi) ] ];
+                            mask.PARENT.STATVAR.properties = [mask.PARENT.STATVAR.properties; [i mini mask.PARENT.PARA.horizontal mask.PARENT.PARA.vertical mask.PARENT.STATVAR.key(posi) ] ];
                         end
                     end
                 end

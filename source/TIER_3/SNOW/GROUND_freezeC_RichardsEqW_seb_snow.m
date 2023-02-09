@@ -124,7 +124,7 @@ classdef GROUND_freezeC_RichardsEqW_seb_snow < GROUND_freezeC_RichardsEqW_seb
              if ground.CHILD ~= 0
                 snow_fraction = ground.CHILD.STATVAR.area(1)./ground.STATVAR.area(1);
                 ground_fraction = 1 - snow_fraction;
-                L_up_ground = ground_fraction .*(1-ground.PARA.epsilon) .* L_down  + ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ ground.CONST.Tmfw).^4 .*ground.STATVAR.area(1);
+                L_up_ground = ground_fraction .*(1-ground.PARA.epsilon) .* L_down  + ground_fraction .* ground.PARA.epsilon .* ground.CONST.sigma .* (ground.STATVAR.T(1)+ ground.CONST.Tmfw).^4 .*ground.STATVAR.area(1); %area is full area here
                 L_up_snow = snow_fraction .*(1-ground.CHILD.PARA.epsilon) .* L_down  + ground.CHILD.PARA.epsilon .* ground.CHILD.CONST.sigma .* (ground.CHILD.STATVAR.T+ ground.CHILD.CONST.Tmfw).^4 .*ground.CHILD.STATVAR.area(1);
                 L_up = L_up_ground + L_up_snow;
                 ground.STATVAR.Lout = L_up./ground.STATVAR.area(1);

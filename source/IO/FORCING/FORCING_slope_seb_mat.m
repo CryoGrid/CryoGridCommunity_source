@@ -101,6 +101,7 @@ classdef FORCING_slope_seb_mat < FORCING_base & READ_FORCING_mat
             forcing = split_Sin(forcing); % split Sin in dir and dif
             forcing = terrain_corr_Sin_dif(forcing, tile);
             forcing = reproject_Sin_dir(forcing, tile);
+            forcing = terrain_shade(forcing, tile);
             forcing.DATA.Sin = forcing.DATA.Sin_dir + forcing.DATA.Sin_dif;
             
             %set pressure to mean pressure at corresponding altitude (international
@@ -124,7 +125,6 @@ classdef FORCING_slope_seb_mat < FORCING_base & READ_FORCING_mat
         
         function forcing = interpolate_forcing(forcing, tile)
             forcing = interpolate_forcing@FORCING_base(forcing, tile);
-            forcing = terrain_shade(forcing, tile);
                         
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;

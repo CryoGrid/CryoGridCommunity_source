@@ -123,7 +123,7 @@ classdef SEB < BASE
         
         %latent heat flux for potential evapotranspiration
         function Q_e = Q_eq_potET_snow(seb, forcing) 
-            
+
             uz = forcing.TEMP.wind;
             p = forcing.TEMP.p;
             q = forcing.TEMP.q;
@@ -146,7 +146,9 @@ classdef SEB < BASE
             L_i = latent_heat_sublimation(seb, TForcing); % 1e3.*2834.1; %latent heat of sublimation
 
             if TForcing<273.15 || water_fraction <= 0
+                %remove!!
                 Q_e = -rho.*L_i.*kappa.*uz.*kappa./(log(z./z0)- psi_M(seb, z./Lstar, z0./Lstar)).*(q-0.622.*satPresIce(seb, TForcing)./p)./(log(z./z0)- psi_H(seb, z./Lstar, z0./Lstar));
+                %end remove
                 seb.STATVAR.sublimation = -Q_e ./(seb.CONST.rho_w .* seb.CONST.L_s) .* seb.STATVAR.area(1);
                 seb.TEMP.sublimation_energy = seb.STATVAR.sublimation .* (seb.STATVAR.T(1) .* seb.CONST.c_i - seb.CONST.L_f);
                 seb.STATVAR.evaporation = 0;

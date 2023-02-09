@@ -6,7 +6,7 @@
 % S. Westermann, Dec 2022
 %========================================================================
 
-classdef update_one2one < matlab.mixin.Copyable
+classdef assign_range < matlab.mixin.Copyable
 
     properties
         PARA
@@ -19,7 +19,6 @@ classdef update_one2one < matlab.mixin.Copyable
 
             update.PARA.class_name = [];
             update.PARA.class_index = [];
-            update.PARA.variable = [];
             
         end
         
@@ -35,11 +34,10 @@ classdef update_one2one < matlab.mixin.Copyable
  
         end
         
-        function update = assign_tile_properties(update, run_number)
+        function update = assign_tile_properties(update, range)
             for i=1:size(update.PARA.class_name,1)
-                update.PROJ.RUN_INFO.PPROVIDER.CLASSES.(update.PARA.class_name{i,1}){update.PARA.class_index(i,1),1}.PARA.(update.PARA.variable{i,1}) = ...
-                    update.PROJ.STATVAR.(update.PARA.variable{i,1})(run_number,:);
-              
+                update.PROJ.RUN_INFO.PPROVIDER.CLASSES.(update.PARA.class_name{i,1}){update.PARA.class_index(i,1),1}.PARA.range = range;
+                 update.PROJ.RUN_INFO.PPROVIDER.CLASSES.(update.PARA.class_name{i,1}){update.PARA.class_index(i,1),1}.PARA.number_of_realizations = size(range,1);
             end
         end
         
