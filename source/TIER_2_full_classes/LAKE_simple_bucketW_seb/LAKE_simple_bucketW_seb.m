@@ -161,6 +161,10 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             [ground, S_up] = penetrate_SW_transmission_bulk(ground, S_down);
         end
         
+        function [ground, S_up] = penetrate_SW_PARENT(ground, S_down)  %mandatory function when used with class that features SW penetration
+            [ground, S_up] = penetrate_SW_transmission_bulk(ground, S_down);
+        end
+        
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);
@@ -198,7 +202,7 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             
             ground = move_ice_up(ground);
             ground = stratify(ground);
-            ground = regrid_split(ground, {'layerThick'; 'energy'; 'waterIce'; 'mineral'; 'organic'});
+            ground = regrid_split(ground, {'layerThick'; 'energy'; 'waterIce'; 'mineral'; 'organic'}, {'area'; 'thermCond'}, 'waterIce');
             ground = get_T_water_freeW(ground);
             ground = conductivity(ground);
             
@@ -326,9 +330,9 @@ classdef LAKE_simple_bucketW_seb < SEB & HEAT_CONDUCTION & LAKE & WATER_FLUXES &
             ground = regrid_full@REGRID(ground, variable_list);
         end
         
-        function ground = regrid_split(ground, variable_list)
-            ground = regrid_split@REGRID(ground, variable_list);
-        end
+%         function ground = regrid_split(ground, variable_list)
+%             ground = regrid_split@REGRID(ground, variable_list);
+%         end
         
         
         %-------------param file generation-----

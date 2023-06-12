@@ -58,11 +58,15 @@ classdef LANDCOVER_CCI < matlab.mixin.Copyable
             delta_300m_lat = 1/360;
             delta_300m_lon = 1/360;
            
-            roi_start_index_lat = max(1, round((90 - (max_lat + delta_1km_lat/2))./delta_300m_lat + 1)-1);
-            roi_start_index_lon = max(1, round((180 + (min_lon - delta_1km_lon/2))./delta_300m_lon + 1)-1);
+           % roi_start_index_lat = max(1, round((90 - (max_lat + delta_1km_lat/2))./delta_300m_lat + 1)-1);
+           % roi_start_index_lon = max(1, round((180 + (min_lon - delta_1km_lon/2))./delta_300m_lon + 1)-1);
+            roi_start_index_lat = max(1, round((90 - (max_lat + delta_1km_lat/2))./delta_300m_lat + 1)-7);
+            roi_start_index_lon = max(1, round((180 + (min_lon - delta_1km_lon/2))./delta_300m_lon + 1)-7);
             
-            number_of_elements_lat = min(180/delta_300m_lat, round((max_lat - min_lat + delta_1km_lat) ./ delta_300m_lat)+2);
-            number_of_elements_lon = min(360/delta_300m_lon, round((max_lon - min_lon + delta_1km_lon) ./ delta_300m_lon)+2);
+          %  number_of_elements_lat = min(180/delta_300m_lat, round((max_lat - min_lat + delta_1km_lat) ./ delta_300m_lat)+2);
+          %  number_of_elements_lon = min(360/delta_300m_lon, round((max_lon - min_lon + delta_1km_lon) ./ delta_300m_lon)+2);
+            number_of_elements_lat = min(180/delta_300m_lat-roi_start_index_lat+1, round((max_lat - min_lat + delta_1km_lat) ./ delta_300m_lat)+14);
+            number_of_elements_lon = min(360/delta_300m_lon-roi_start_index_lon+1, round((max_lon - min_lon + delta_1km_lon) ./ delta_300m_lon)+14);
             
             landcover = double(ncread([lc.PARA.landcover_path lc.PARA.landcover_file], 'lc', [roi_start_index_lat roi_start_index_lon], [number_of_elements_lat number_of_elements_lon], [1 1]));
             
@@ -70,18 +74,26 @@ classdef LANDCOVER_CCI < matlab.mixin.Copyable
                 target_latitude = lc.PARENT.STATVAR.latitude(i,1);
                 target_longitude = lc.PARENT.STATVAR.longitude(i,1); %make sure longitude is indeed -180->180
                 
-                index_1km_lat = round((90 - target_latitude + delta_1km_lat/2) ./ delta_1km_lat);
-                index_1km_lon = round((180 + target_longitude + delta_1km_lon/2) ./ delta_1km_lon);
+                index_1km_lat = max(1, round((90 - target_latitude + delta_1km_lat/2) ./ delta_1km_lat));
+                index_1km_lon = max(1, round((180 + target_longitude + delta_1km_lon/2) ./ delta_1km_lon));
                 
                 start_index_300m_lat = round((index_1km_lat - 1) .*  delta_1km_lat ./ delta_300m_lat.*1e6) ./1e6; %0 ; 3.6
                 end_index_300m_lat = round(index_1km_lat .*  delta_1km_lat ./ delta_300m_lat .* 1e6) ./1e6; % 3.6  ; 7.2
+	%	end_index_300m_lat(floor(end_index_300m_lat)-floor(start_index_300m_lat)+1 > number_of_elements_lat) = floor(start_index_300m_lat) + number_of_elements_lat - 2;
                 start_index_300m_lon = round((index_1km_lon - 1) .*  delta_1km_lon ./ delta_300m_lon .*1e6) ./1e6;
                 end_index_300m_lon = round(index_1km_lon .*  delta_1km_lon ./ delta_300m_lon .* 1e6) ./1e6;
+	%	end_index_300m_lon(floor(end_index_300m_lon)-floor(start_index_300m_lon)+1 > number_of_elements_lon) = floor(start_index_300m_lon) + number_of_elements_lon - 2;
+
                 
-                start_index_300m_lat2 = floor(start_index_300m_lat + 1); %1 ; 4
-                end_index_300m_lat2 = floor(end_index_300m_lat + 1); %4 ; 8
-                start_index_300m_lon2 = floor(start_index_300m_lon + 1);
-                end_index_300m_lon2 = floor(end_index_300m_lon + 1);
+                %start_index_300m_lat2 = ceil(start_index_300m_lat); % floor(start_index_300m_lat + 1); 
+                %end_index_300m_lat2 = ceil(end_index_300m_lat); %floor(end_index_300m_lat + 1); 
+                %start_index_300m_lon2 = ceil(start_index_300m_lon); %floor(start_index_300m_lon + 1);
+                %end_index_300m_lon2 = ceil(end_index_300m_lon); %floor(end_index_300m_lon + 1);
+                
+                start_index_300m_lat2 = floor(start_index_300m_lat + 1); %ceil(start_index_300m_lat); % ; 
+                end_index_300m_lat2 = ceil(end_index_300m_lat); %floor(end_index_300m_lat + 1); 
+                start_index_300m_lon2 = floor(start_index_300m_lon + 1); %ceil(start_index_300m_lon);
+                end_index_300m_lon2 = ceil(end_index_300m_lon); %floor(end_index_300m_lon + 1);
                 
                 weight_300m = ones(end_index_300m_lat2 - start_index_300m_lat2 + 1, end_index_300m_lon2 - start_index_300m_lon2 + 1);
                 weight_300m(1,:) = weight_300m(1,:) .*(start_index_300m_lat2 - start_index_300m_lat);
@@ -128,8 +140,8 @@ classdef LANDCOVER_CCI < matlab.mixin.Copyable
             roi_start_index_lat = max(1, round((90 - (max_lat + delta_1km_lat/2))./delta_yedoma + 1)-1);
             roi_start_index_lon = max(1, round((180 + (min_lon - delta_1km_lon/2))./delta_yedoma + 1)-1);
             
-            number_of_elements_lat = min(180/delta_yedoma, round((max_lat - min_lat + delta_1km_lat) ./ delta_yedoma)+2);
-            number_of_elements_lon = min(360/delta_yedoma, round((max_lon - min_lon + delta_1km_lon) ./ delta_yedoma)+2);
+            number_of_elements_lat = min(180/delta_yedoma-roi_start_index_lat+1, round((max_lat - min_lat + delta_1km_lat) ./ delta_yedoma)+2);
+            number_of_elements_lon = min(360/delta_yedoma-roi_start_index_lon+1, round((max_lon - min_lon + delta_1km_lon) ./ delta_yedoma)+2);
             yedoma = double(ncread([lc.PARA.yedoma_path lc.PARA.yedoma_file], 'yedoma', [roi_start_index_lat roi_start_index_lon], [number_of_elements_lat number_of_elements_lon], [1 1]));
             
             lat_yedoma_start = 90-delta_yedoma/2 - (roi_start_index_lat-1) .* delta_yedoma; %latitude of 1st Yedoma pixel in ROI

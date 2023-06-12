@@ -28,7 +28,7 @@ classdef get_snowfall_melt < FORCING_base
 
             post_proc.PARA.emissivity_snow = 0.99; % Snow emissivity (assumed known).
             
-            post_proc.PARA.taus=0.01; % Threshold snowfall for resetting to maximum [m w.e.].
+            post_proc.PARA.taus=0.0025; % Threshold snowfall for resetting to maximum [m w.e.].
             post_proc.PARA.taua=0.008; % Time constant for snow albedo change in non-melting conditions [/day].
             post_proc.PARA.tauf=0.24; % Time constant for snow albedo change in melting conditions [/day].
             
@@ -147,9 +147,9 @@ classdef get_snowfall_melt < FORCING_base
                 new_snow = mean(post_proc.STATVAR.ERA_snowfall_downscaled(:, (i-1)*4+1:i*4), 2); %in mm/day
                 
                 %bare
-                net_acc = new_snow - daily_melt_depth_bare; % Net accumulation for one day time-step.
+                net_acc = new_snow - max(0,daily_melt_depth_bare); % Net accumulation for one day time-step.
                 accumulation = net_acc>0;
-                post_proc.STATVAR.albedo_bare(accumulation,1) = post_proc.STATVAR.albedo_bare(accumulation,1) + min(1,net_acc(accumulation,1)./post_proc.PARA.taus) .* ...
+                post_proc.STATVAR.albedo_bare(accumulation,1) = post_proc.STATVAR.albedo_bare(accumulation,1) + min(1,net_acc(accumulation,1)./(post_proc.PARA.taus .* 1000)) .* ...
                     (post_proc.PARA.albsmax_bare - post_proc.STATVAR.albedo_bare(accumulation,1));
 
                 no_melting = (net_acc==0); % "Steady" case (linear decay)
@@ -160,9 +160,9 @@ classdef get_snowfall_melt < FORCING_base
                 post_proc.STATVAR.albedo_bare(post_proc.STATVAR.albedo_bare < post_proc.PARA.albsmin_bare) = post_proc.PARA.albsmin_bare;
                 
                 %forest
-                net_acc = new_snow - daily_melt_depth_forest; % Net accumulation for one day time-step.
+                net_acc = new_snow - max(0,daily_melt_depth_forest); % Net accumulation for one day time-step.
                 accumulation = net_acc>0;
-                post_proc.STATVAR.albedo_forest(accumulation,1) = post_proc.STATVAR.albedo_forest(accumulation,1) + min(1,net_acc(accumulation,1)./post_proc.PARA.taus) .* ...
+                post_proc.STATVAR.albedo_forest(accumulation,1) = post_proc.STATVAR.albedo_forest(accumulation,1) + min(1,net_acc(accumulation,1)./(post_proc.PARA.taus.*1000)) .* ...
                     (post_proc.PARA.albsmax_forest - post_proc.STATVAR.albedo_forest(accumulation,1));
                 
                 no_melting = (net_acc==0); % "Steady" case (linear decay)

@@ -80,7 +80,7 @@ classdef GROUND_freeW_ubtf < HEAT_CONDUCTION &  UB_TEMPERATURE_FORCING
             end            
 
             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;
             ground.STATVAR.area = tile.PARA.area + ground.STATVAR.T .* 0;
             
             ground = get_E_freeW(ground);

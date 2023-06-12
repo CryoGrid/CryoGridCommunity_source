@@ -254,6 +254,7 @@ classdef ERA5_PREPROCESS_CCI < FORCING_seb_CCI_full
                 output = ncread(fname, variable, [ era.TEMP.lon_index_start era.TEMP.lat_index_start time_index_start], [era.TEMP.lon_index_end - era.TEMP.lon_index_start+1 era.TEMP.lat_index_end - era.TEMP.lat_index_start+1 time_number_of_values], [1 1 1]);
                 output0degree = ncread(fname, variable, [ 1 era.TEMP.lat_index_start time_index_start], [1 era.TEMP.lat_index_end - era.TEMP.lat_index_start+1 time_number_of_values], [1 1 1]); %read first "line" of longitude = 0 degree
                 output = cat(1, output, output0degree); %concat in dimension1 (longitude)
+		era.TEMP.lon_index_end=era.TEMP.lon_index_end+1;
             end
             
         end
@@ -269,6 +270,7 @@ classdef ERA5_PREPROCESS_CCI < FORCING_seb_CCI_full
                 output = ncread(fname, variable, [ era.TEMP.lon_index_start era.TEMP.lat_index_start 1 time_index_start], [era.TEMP.lon_index_end - era.TEMP.lon_index_start+1 era.TEMP.lat_index_end - era.TEMP.lat_index_start+1 Inf time_number_of_values], [1 1 1 1]);
                 output0degree = ncread(fname, variable, [ 1 era.TEMP.lat_index_start 1 time_index_start], [1 era.TEMP.lat_index_end - era.TEMP.lat_index_start+1 Inf time_number_of_values], [1 1 1 1]); %read first "line" of longitude
                 output = cat(1, output, output0degree); %concat in dimension1 (longitude)
+		era.TEMP.lon_index_end=era.TEMP.lon_index_end+1;
             end
         end
         

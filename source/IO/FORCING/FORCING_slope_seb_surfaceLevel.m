@@ -90,6 +90,8 @@ classdef FORCING_slope_seb_surfaceLevel < FORCING_base & READ_FORCING_mat & PROC
 
             forcing = reduce_precip_slope(forcing, tile);
             
+            forcing = convert_accumulated2instantaneous_Sin(forcing, tile);
+            
             forcing = SolarAzEl(forcing, tile);
             %make own function?
             if ~isfield(forcing.DATA, 'S_TOA')

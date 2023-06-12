@@ -50,25 +50,23 @@ classdef MASK_point_selection < matlab.mixin.Copyable
 
         function mask = apply_mask(mask)
             
-            %[clip_lon, clip_lat] = read_kml(mask, [mask.PARA.kml_file_path mask.PARA.filename]);
-            %mask_temp = inpolygon(mask.PARENT.STATVAR.latitude,mask.PARENT.STATVAR.longitude, clip_lat,clip_lon);
-            
-            mask.PARENT.STATVAR.borehole_number = mask.PARENT.STATVAR.mask .*0
+            mask.PARENT.PARA.borehole_number = mask.PARA.target_lat .*0;
             mask_temp = mask.PARENT.STATVAR.mask .*0;
-            %proximity_score = mask.PARENT.STATVAR.latitude.*0 + 1e20;
+
             if ~(mask.PARA.target_lat_max < nanmin(mask.PARENT.STATVAR.latitude(:))) && ~(mask.PARA.target_lat_min > nanmax(mask.PARENT.STATVAR.latitude(:))) ...
                             && ~(mask.PARA.target_lon_max < nanmin(mask.PARENT.STATVAR.longitude(:))) && ~(mask.PARA.target_lon_min > nanmax(mask.PARENT.STATVAR.longitude(:)))
-                        
                 for i=1:size(mask.PARA.target_lat,1)
                     if mask.PARA.target_lat(i) > nanmin(mask.PARENT.STATVAR.latitude(:))-0.1 && mask.PARA.target_lat(i) < nanmax(mask.PARENT.STATVAR.latitude(:))+ 0.1 ...
                             && mask.PARA.target_lon(i) > nanmin(mask.PARENT.STATVAR.longitude(:)) - 0.1 && mask.PARA.target_lon(i) < nanmax(mask.PARENT.STATVAR.longitude(:)) + 0.1
                         
                         score=(mask.PARA.target_lon(i) - mask.PARENT.STATVAR.longitude).^2 + (mask.PARA.target_lat(i) - mask.PARENT.STATVAR.latitude).^2;
-                        [mini, posi] = min(score(:));
+                        [mini, posi] = mink(score(:),50);
+                        score = distance(mask.PARA.target_lat(i),mask.PARA.target_lon(i),  mask.PARENT.STATVAR.latitude(posi), mask.PARENT.STATVAR.longitude(posi));
+                        [mini2, posi2] = min(score);
                                                 
-                        if mini < 0.05
-                            mask_temp(posi) = 1;
-                            mask.PARENT.STATVAR.borehole_number(posi,1) = i;
+                        if mini2 < 0.01
+                            mask_temp(posi(posi2),1) = 1;
+                            mask.PARENT.PARA.borehole_number(i) = posi(posi2);
 %                             mask.PARENT.STATVAR.properties = [mask.PARENT.STATVAR.properties; [i mini mask.PARENT.PARA.horizontal mask.PARENT.PARA.vertical mask.PARENT.STATVAR.key(posi) ] ];
                         end
                     end

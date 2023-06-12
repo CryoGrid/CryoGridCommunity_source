@@ -62,7 +62,7 @@ classdef REGRID < BASE
         
         %simple merge function, merges cells if minimum thickness is
         %reached ATTENTION: this function should be renamed to regrid_merge
-        function ground = regrid_split(ground, variable_list) 
+        function ground = regrid_split(ground, variable_list, intensive_variables, intensive_scaling_variable) 
             top_pos = ground.STATVAR.top_depth_rel2groundSurface;
             min_thickness = ground.PARA.target_layerThick(1,1);
 
@@ -70,6 +70,7 @@ classdef REGRID < BASE
             
             while ~isempty(regrid)
                 first_cell = double(regrid(end,1)==1);
+                ground = merge_cells_intensive(ground, regrid(end,1)-1+first_cell, regrid(end,1)+first_cell, intensive_variables, intensive_scaling_variable);
                 ground = merge_cells_extensive(ground, regrid(end,1)-1+first_cell, regrid(end,1)+first_cell, variable_list);
                 regrid(end,:) =[];
             end

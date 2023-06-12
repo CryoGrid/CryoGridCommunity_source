@@ -143,7 +143,7 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             
 
             %3. map statvar to grid, using STRATIGRAPHY_STATVAR classes 
-            for i=1:size(tile.PARA.strat_statvar_class,1)
+            for i=1:size(tile.PARA.strat_statvar_class,1) %this is only a single class
                 for j = tile.PARA.strat_statvar_class_index_start(i,1):tile.PARA.strat_statvar_class_index_end(i,1)
                     tile.STRATIGRAPHY{i,j} = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(tile.PARA.strat_statvar_class{i,1}){j,1});
                     tile.STRATIGRAPHY{i,j} = finalize_init(tile.STRATIGRAPHY{i,j}, tile); 
@@ -310,7 +310,7 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             PARA_new = tile.PARA;
             tile.PARA = tile.RUN_INFO.TILE.PARA;
             fn = fieldnames(PARA_new);
-            for i=1:size(fn,2)
+            for i=1:size(fn,1)
                 tile.PARA.(fn{i,1}) = PARA_new.(fn{i,1});
             end
 
@@ -346,7 +346,7 @@ classdef TILE_ESA_CCI2 < matlab.mixin.Copyable
             PARA_new = tile.PARA;
             tile.PARA = tile.RUN_INFO.TILE.PARA;
             fn = fieldnames(PARA_new);
-            for i=1:size(fn,2)
+            for i=1:size(fn,1)
                 tile.PARA.(fn{i,1}) = PARA_new.(fn{i,1});
             end
             

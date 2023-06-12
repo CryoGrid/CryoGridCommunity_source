@@ -72,6 +72,10 @@ classdef OUT_TwaterIce < matlab.mixin.Copyable
             else
                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
             end
+            
+            if ~isempty(out.PARA.tag) && ~all(isnan(out.PARA.tag)) && isnumeric(out.PARA.tag)
+                out.PARA.tag = num2str(out.PARA.tag);
+            end
                         
         end
         

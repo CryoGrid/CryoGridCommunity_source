@@ -18,7 +18,7 @@ classdef RUN_ENSEMBLE < matlab.mixin.Copyable
         function run_info = provide_PARA(run_info)
 
             
-            run_info.PARA.number_of_tiles = []; 
+            run_info.PARA.ensemble_size = []; 
 
             run_info.PARA.tile_class = [];
             run_info.PARA.tile_class_index = [];
@@ -59,7 +59,7 @@ classdef RUN_ENSEMBLE < matlab.mixin.Copyable
         
         function [run_info, tile] = run_model(run_info)
 
-            parpool(run_info.PARA.number_of_tiles)
+            parpool(run_info.PARA.ensemble_size)
             spmd
                 run_info.PARA.worker_number = labindex;
                                 
@@ -77,6 +77,8 @@ classdef RUN_ENSEMBLE < matlab.mixin.Copyable
                     end
                 end
                 
+                tile.PARA.worker_number = run_info.PARA.worker_number;
+                tile.PARA.ensemble_size = run_info.PARA.ensemble_size;
                 tile = finalize_init(tile);
                 
                 tile.PARA.run_name = [tile.PARA.run_name '_' num2str(run_info.PARA.worker_number)];
@@ -94,8 +96,8 @@ classdef RUN_ENSEMBLE < matlab.mixin.Copyable
 %             out.PARA.options = [];
 %             out.PARA.class_category = 'RUN_INFO';
 %             
-%             out.PARA.default_value.number_of_tiles = {30};
-%             out.PARA.comment.number_of_tiles = {'number of ensemble members/cores'};
+%             out.PARA.default_value.ensemble_size = {30};
+%             out.PARA.comment.ensemble_size = {'number of ensemble members/cores'};
 %             
 %             out.PARA.default_value.tile_class = {'TILE_1D_standard'};
 %             out.PARA.comment.tile_class = {'TILE class'};

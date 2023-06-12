@@ -193,7 +193,7 @@ classdef FORCING_base < matlab.mixin.Copyable
             delta_angle_face=acos(dot(face_vec', sun_vec')').*180./pi; %angle between the radiation and the normal on the slope in degrees
             
             Sin_sun_direction = Sin_dir./cos(delta_angle_surf_norm.*pi./180); %direct Sin in direction of the sun
-            Sin_face_direction = double(delta_angle_surf_norm < 85 & delta_angle_face < 85) .* Sin_sun_direction.*cos(delta_angle_face.*pi/180); % Direct Sin in direction of surface face
+            Sin_face_direction = double(delta_angle_surf_norm < 89.5 & delta_angle_face < 89.5) .* Sin_sun_direction.*cos(delta_angle_face.*pi/180); % Direct Sin in direction of surface face
             
             forcing.DATA.Sin_dir = Sin_face_direction;
         end
@@ -220,7 +220,7 @@ classdef FORCING_base < matlab.mixin.Copyable
             
             for i = 1:length(variables)
                 if ~strcmp(variables{i},'t') && isfield(forcing.DATA, variables{i})
-                    forcing.TEMP.(variables{i}) = forcing.DATA.(variables{i})(posit,1)+(forcing.DATA.(variables{i})(posit+1,1)-forcing.DATA.(variables{i})(posit,1)).*t_weight;
+                    forcing.TEMP.(variables{i}) = forcing.DATA.(variables{i})(posit,:)+(forcing.DATA.(variables{i})(posit+1,:)-forcing.DATA.(variables{i})(posit,:)).*t_weight;
                 end
             end
             forcing.TEMP.t = t;
@@ -361,6 +361,30 @@ classdef FORCING_base < matlab.mixin.Copyable
             forcing.DATA.azimuth = rad2deg(forcing.DATA.azimuth);
             forcing.DATA.azimuth(forcing.DATA.azimuth<0) = forcing.DATA.azimuth(forcing.DATA.azimuth<0) + 360;
             forcing.DATA.sunElevation = 90-rad2deg(forcing.DATA.sunElevation);
+        end
+        
+        %correct for the fact that ERA5 stores radiation as accumulated for
+        %the 1h BEFORE the timestamp -> solution: caluclate average mu0 and
+        %mu0 at the end of the interval = actual timestamp and scale with
+        %this: CLEAN SOLUTION -> download hourly data and do this for the
+        %timestep before and after, average between the two. Interpolate
+        %for Lin, this has exactly the same issue, although it does not
+        %interfere with the terrain scaling here!
+        function forcing = convert_accumulated2instantaneous_Sin(forcing, tile)            
+            
+            number_of_increments = 10;
+            averaging_interval = 1; %in hours, 1 hour for ERA5
+            timeForcing = repmat(forcing.DATA.timeForcing,1,number_of_increments);
+            offset = linspace(-1,0,number_of_increments) .* averaging_interval./24;
+            offset = repmat(offset, size(timeForcing,1),1);
+            timeForcing = timeForcing + offset; 
+            [azimuth,sunElevation] = solargeom(forcing, timeForcing ,tile.PARA.latitude,tile.PARA.longitude);
+            sunElevation = 90-rad2deg(sunElevation);
+            mu0=max(sind(sunElevation),0); % Trunacte negative values.
+            scaling_factor = mu0(:, end) ./ mean(mu0, 2); 
+            scaling_factor(isnan(scaling_factor)) = 0;
+            forcing.DATA.Sin = forcing.DATA.Sin .* scaling_factor;
+  
         end
         
         %Kris script, used now to be consistent with TopoScale

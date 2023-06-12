@@ -39,6 +39,12 @@ classdef POINT_SIMPLE < matlab.mixin.Copyable
             point.STATVAR.longitude = point.PARA.longitude;
             point.STATVAR.altitude = point.PARA.altitude;
             point.STATVAR.area = point.PARA.area;
+            
+            point.STATVAR.slope_angle = 0;     %
+            point.STATVAR.aspect = 0;     %
+            point.STATVAR.skyview_factor = 0;     %
+            point.STATVAR.horizon_angles = 0;   
+            point.STATVAR.horizon_bins = 0;
         end
         
 

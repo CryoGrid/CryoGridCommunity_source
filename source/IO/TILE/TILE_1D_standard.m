@@ -49,12 +49,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             tile.PARA.builder = [];
             
             %new_init
-%             tile.PARA.latitude = [];
-%             tile.PARA.longitude = [];
-%             tile.PARA.altitude = [];
-            tile.PARA.domain_depth = [];
-%             tile.PARA.area = [];
-            
+            tile.PARA.domain_depth = [];            
             tile.PARA.forcing_class = [];
             tile.PARA.forcing_class_index = [];
             tile.PARA.grid_class = [];
@@ -291,7 +286,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             for i=1:size(class_list,1)
                 variables = fieldnames(CURRENT.STATVAR);
                 range = (tile.GRID.STATVAR.MIDPOINTS > class_depths(i,1) & tile.GRID.STATVAR.MIDPOINTS <= class_depths(i+1,1));
-                %CURRENT.STATVAR.layerThick = tile.GRID.STATVAR.LAYERTHICK(range,1);
                 CURRENT.STATVAR.upperPos = tile.PARA.altitude - class_depths(i,1);
                 CURRENT.STATVAR.lowerPos = tile.PARA.altitude - class_depths(i+1,1);
                 for j=1:size(variables,1)

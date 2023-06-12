@@ -98,6 +98,9 @@ classdef FORCING_slope_seb_topoScale < FORCING_base & READ_FORCING_mat & PROCESS
             forcing = initialize_TEMP_slope(forcing);
             
             forcing = reduce_precip_slope(forcing, tile);
+            
+            forcing = convert_accumulated2instantaneous_Sin(forcing, tile);
+
             forcing = SolarAzEl(forcing, tile);
             
             forcing = terrain_corr_Sin_dif(forcing, tile);
@@ -105,6 +108,10 @@ classdef FORCING_slope_seb_topoScale < FORCING_base & READ_FORCING_mat & PROCESS
             forcing = terrain_shade(forcing, tile);
             forcing = terrain_corr_Lin(forcing, tile);
             forcing.DATA.Sin = forcing.DATA.Sin_dir + forcing.DATA.Sin_dif;
+            
+%             %reassign unphysical rainfall
+%             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
+%             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
             
             %optional post-processing with dedicated classes
             if ~isempty(forcing.PARA.post_proc_class) && sum(isnan(forcing.PARA.post_proc_class_index)) == 0
@@ -120,8 +127,6 @@ classdef FORCING_slope_seb_topoScale < FORCING_base & READ_FORCING_mat & PROCESS
         function forcing = interpolate_forcing(forcing, tile)
             forcing = interpolate_forcing@FORCING_base(forcing, tile);
             
-            forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
-            forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
         end
         
         

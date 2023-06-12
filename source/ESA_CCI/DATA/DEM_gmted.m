@@ -37,13 +37,15 @@ classdef DEM_gmted < matlab.mixin.Copyable
             maxLong = max(dem.PARENT.STATVAR.longitude);
             
             %read global DEM - this can be problematic, 17GB file size!!
-            [DEM, R]= geotiffread([dem.PARA.DEM_path dem.PARA.DEM_file]);
-            DEM_latitudes= R.LatitudeLimits;
-            DEM_longitudes= R.LongitudeLimits;
+            %[DEM, R]= geotiffread([dem.PARA.DEM_path dem.PARA.DEM_file]);
+%             DEM_latitudes= R.LatitudeLimits;
+%             DEM_longitudes= R.LongitudeLimits;
             
-            %make a separate list of longitudes and latitudes pixels from DEM
-            DEM_latitude_list=linspace(max(DEM_latitudes), min(DEM_latitudes), size(DEM,1))';
-            DEM_longitude_list=linspace(min(DEM_longitudes), max(DEM_longitudes), size(DEM,2));
+%             %make a separate list of longitudes and latitudes pixels from DEM
+%             DEM_latitude_list=linspace(max(DEM_latitudes), min(DEM_latitudes), size(DEM,1))';
+%             DEM_longitude_list=linspace(min(DEM_longitudes), max(DEM_longitudes), size(DEM,2));
+            DEM_latitude_list = ncread([dem.PARA.DEM_path dem.PARA.DEM_file], 'latitude');
+            DEM_longitude_list = ncread([dem.PARA.DEM_path dem.PARA.DEM_file], 'longitude');
             
             %Find the indeces of coordinates in the list that corresponds with MODIS extent coordinates
             [mini, maxPosLat]=min(abs(maxLat-DEM_latitude_list)); %finding an index of an value where where the difference between MODIS latitude and DEM latitude is the smallest
@@ -56,12 +58,12 @@ classdef DEM_gmted < matlab.mixin.Copyable
             minPosLon=max(1,minPosLon-5);
             
             [mini, maxPosLon]=min(abs(maxLong-DEM_longitude_list));
-            maxPosLon=min(size(DEM_longitude_list,2),maxPosLon+5);
+            maxPosLon=min(size(DEM_longitude_list,1),maxPosLon+5);
             
             %subset the DEM based on indexes from coordinate lists to MODIS extent
-            DEM=DEM(maxPosLat:minPosLat, minPosLon:maxPosLon);
-            DEM=double(DEM);
-            
+%             DEM=DEM(maxPosLat:minPosLat, minPosLon:maxPosLon);
+%             DEM=double(DEM);
+            DEM = double(ncread([dem.PARA.DEM_path dem.PARA.DEM_file], 'dem', [maxPosLat minPosLon], [minPosLat-maxPosLat+1  maxPosLon-minPosLon+1], [1 1]));
             %subset DEM coordinate vectors
             DEM_latitude_list = DEM_latitude_list(maxPosLat:minPosLat);
             DEM_longitude_list = DEM_longitude_list(minPosLon:maxPosLon);

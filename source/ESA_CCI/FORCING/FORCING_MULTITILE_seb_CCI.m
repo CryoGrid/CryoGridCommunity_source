@@ -5,7 +5,7 @@
 % dim2: annual 8d values; dim3: years
 %========================================================================
 
-classdef FORCING_seb_CCI_no_preproc < matlab.mixin.Copyable
+classdef FORCING_MULTITILE_seb_CCI < matlab.mixin.Copyable
     
     properties
         PARA
@@ -43,6 +43,9 @@ classdef FORCING_seb_CCI_no_preproc < matlab.mixin.Copyable
             
             forcing.PARA.start_time = [];
             forcing.PARA.end_time = [];
+            
+            forcing.PARA.snowfall_factor = []; %comes from ensemble
+            forcing.PARA.bare_forest_fraction = [];
         end
         
         
@@ -95,7 +98,7 @@ classdef FORCING_seb_CCI_no_preproc < matlab.mixin.Copyable
                 
                 ERA_lat = ncread([forcing.PARA.ERA_path filename], 'latitude');
                 ERA_lon = ncread([forcing.PARA.ERA_path filename], 'longitude');
-                ERA_lon =[ERA_lon; single(360)]; %add the 0-degree-longitude to the end as 360-degree-longitude
+                %ERA_lon =[ERA_lon; single(360)]; %add the 0-degree-longitude to the end as 360-degree-longitude
                 
                 max_target_lat = min(round(max(tile.PARA.latitude) *4) /4 + 0.25, 90) ;  %ERA5 in 0.25 degree resolution
                 min_target_lat= max(round(min(tile.PARA.latitude)*4) /4 - 0.25, -90);
@@ -118,10 +121,17 @@ classdef FORCING_seb_CCI_no_preproc < matlab.mixin.Copyable
                 filename = forcing.PARA.filename_SURF_geopotential;
                 filename(19:22) = num2str(test_year);
                 
-                %forcing.TEMP.z_surface = ncread_with_360_degree(forcing, [forcing.PARA.ERA_path filename], 'z', 1, 1) ./ forcing.CONST.g;
-                forcing.TEMP.z_surface = ncread([forcing.PARA.ERA_path filename], 'z', [forcing.TEMP.lon_index_start forcing.TEMP.lat_index_start], ...
-                    [forcing.TEMP.lon_index_end - forcing.TEMP.lon_index_start+1 forcing.TEMP.lat_index_end - forcing.TEMP.lat_index_start+1], [1 1]) ./ forcing.CONST.g;
-                
+%                 %forcing.TEMP.z_surface = ncread_with_360_degree(forcing, [forcing.PARA.ERA_path filename], 'z', 1, 1) ./ forcing.CONST.g;
+%                 forcing.TEMP.z_surface = ncread([forcing.PARA.ERA_path filename], 'z', [forcing.TEMP.lon_index_start forcing.TEMP.lat_index_start 1], ...
+%                     [forcing.TEMP.lon_index_end - forcing.TEMP.lon_index_start+1 forcing.TEMP.lat_index_end - forcing.TEMP.lat_index_start+1 1], [1 1 1]) ./ forcing.CONST.g;
+                info = ncinfo([forcing.PARA.ERA_path filename], 'z');
+                if size(info.Dimensions,2)==2
+                    forcing.TEMP.z_surface = ncread([forcing.PARA.ERA_path filename], 'z', [forcing.TEMP.lon_index_start forcing.TEMP.lat_index_start], ...
+                        [forcing.TEMP.lon_index_end - forcing.TEMP.lon_index_start+1 forcing.TEMP.lat_index_end - forcing.TEMP.lat_index_start+1], [1 1]) ./ forcing.CONST.g;
+                else
+                    forcing.TEMP.z_surface = ncread([forcing.PARA.ERA_path filename], 'z', [forcing.TEMP.lon_index_start forcing.TEMP.lat_index_start 1], ...
+                        [forcing.TEMP.lon_index_end - forcing.TEMP.lon_index_start+1 forcing.TEMP.lat_index_end - forcing.TEMP.lat_index_start+1 1], [1 1 1]) ./ forcing.CONST.g;
+                end
                 [forcing.TEMP.ERA_lon_mesh, forcing.TEMP.ERA_lat_mesh] = meshgrid(ERA_lon(forcing.TEMP.lon_index_start:forcing.TEMP.lon_index_end), ERA_lat(forcing.TEMP.lat_index_start:forcing.TEMP.lat_index_end));
                 
                 forcing.TEMP.interpolated_ERA_orography = single(interp2(forcing.TEMP.ERA_lon_mesh , forcing.TEMP.ERA_lat_mesh, forcing.TEMP.z_surface', target_lon, tile.PARA.latitude, 'cubic'));
@@ -402,9 +412,21 @@ classdef FORCING_seb_CCI_no_preproc < matlab.mixin.Copyable
                     end
                 end
                 
-                tile.RUN_INFO.PPROVIDER.STORAGE.FORCING_seb_CCI_full.DATA = forcing.DATA;
+                tile.RUN_INFO.PPROVIDER.STORAGE.FORCING_MULTITILE_seb_CCI.DATA = forcing.DATA;
+                tile.RUN_INFO.PPROVIDER.STORAGE.FORCING_MULTITILE_seb_CCI.PARA = forcing.PARA;
             else
-                forcing.DATA = tile.RUN_INFO.PPROVIDER.STORAGE.FORCING_seb_CCI_full.DATA;
+                %use old PARA, but overwrite all newly set values - start
+                %and endtime must be set new!!!
+                PARA_new = forcing.PARA;
+                forcing.PARA = tile.RUN_INFO.PPROVIDER.STORAGE.FORCING_MULTITILE_seb_CCI.PARA;
+                fn = fieldnames(PARA_new);
+                for i=1:size(fn,1)
+                    if ~isempty(PARA_new.(fn{i,1}))
+                        forcing.PARA.(fn{i,1}) = PARA_new.(fn{i,1});
+                    end
+                end
+
+                forcing.DATA = tile.RUN_INFO.PPROVIDER.STORAGE.FORCING_MULTITILE_seb_CCI.DATA;
                 variables = {'ERA_melt_bare'; 'ERA_melt_forest'; 'ERA_snowfall_downscaled'; 'ERA_T_downscaled'; 'final_av_T'; 'final_MODIS_weight'};
             end
             
@@ -416,12 +438,24 @@ classdef FORCING_seb_CCI_no_preproc < matlab.mixin.Copyable
             %Reshape variables to 2D
             variables = [variables; {'timestamp'}];
             for i=1:size(variables,1)
-                forcing.DATA.(variables{i,1}) = reshape(forcing.DATA.(variables{i,1}), size(forcing.DATA.(variables{i,1}),1), size(forcing.DATA.(variables{i,1}),2).* size(forcing.DATA.(variables{i,1}),3));
-                %append the last value so that simulations do not crash
-                %after last timestamp
-                forcing.DATA.(variables{i,1}) = double([forcing.DATA.(variables{i,1}) forcing.DATA.(variables{i,1})(:,end)]);
+                forcing.DATA.(variables{i,1}) = double(reshape(forcing.DATA.(variables{i,1}), size(forcing.DATA.(variables{i,1}),1), size(forcing.DATA.(variables{i,1}),2).* size(forcing.DATA.(variables{i,1}),3)));
             end
-            forcing.DATA.timestamp(:,end) = forcing.PARA.end_time + 1;
+            
+            %append the last value so that simulations do not crash
+            %after last timestamp
+            if forcing.DATA.timestamp(1,end) < forcing.PARA.end_time+1
+                for i=1:size(variables,1)
+                    forcing.DATA.(variables{i,1}) = [forcing.DATA.(variables{i,1}) forcing.DATA.(variables{i,1})(:,end)];
+                end
+                forcing.DATA.timestamp(1,end) = forcing.PARA.end_time + 1;
+            end
+               
+            if forcing.DATA.timestamp(1,1) > forcing.PARA.start_time-1
+                for i=1:size(variables,1)
+                    forcing.DATA.(variables{i,1}) = [forcing.DATA.(variables{i,1})(:,1) forcing.DATA.(variables{i,1})];
+                end
+                forcing.DATA.timestamp(1,1) = forcing.PARA.start_time - 1;
+            end
             
             forcing.TEMP = []; %delete all TEMP used in the post_processing
             
@@ -434,20 +468,28 @@ classdef FORCING_seb_CCI_no_preproc < matlab.mixin.Copyable
             forcing.TEMP.number_of_substeps  =  round((forcing.DATA.timestamp(1, forcing.TEMP.index+1) - forcing.DATA.timestamp(1, forcing.TEMP.index)) .* forcing.CONST.day_sec ./ tile.timestep) ;
             forcing.TEMP.fraction = round((forcing.PARA.start_time - forcing.DATA.timestamp(1, forcing.TEMP.index)) ./ ...
                 (forcing.DATA.timestamp(1, forcing.TEMP.index+1) - forcing.DATA.timestamp(1, forcing.TEMP.index)) .* forcing.TEMP.number_of_substeps);
+            
         end
         
         
         %interpolate the actual forcing field DATA based on tile.t
         function forcing = interpolate_forcing(forcing, tile)
+
             forcing.TEMP.surfT = double((forcing.DATA.final_av_T(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
                 (forcing.DATA.final_av_T(:, forcing.TEMP.index+1) - forcing.DATA.final_av_T(:, forcing.TEMP.index)))');
-            forcing.TEMP.snowfall = double((forcing.DATA.ERA_snowfall_downscaled(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
-                (forcing.DATA.ERA_snowfall_downscaled(:, forcing.TEMP.index+1) - forcing.DATA.ERA_snowfall_downscaled(:, forcing.TEMP.index)))').*0;
+            forcing.TEMP.surfT = repmat(forcing.TEMP.surfT, 1, tile.PARA.ensemble_size);
             
-            forcing.TEMP.melt_bare = double((forcing.DATA.ERA_melt_bare(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
+            forcing.TEMP.snowfall = double((forcing.DATA.ERA_snowfall_downscaled(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
+                (forcing.DATA.ERA_snowfall_downscaled(:, forcing.TEMP.index+1) - forcing.DATA.ERA_snowfall_downscaled(:, forcing.TEMP.index)))');
+            forcing.TEMP.snowfall = repmat(forcing.TEMP.snowfall, 1, tile.PARA.ensemble_size) .* forcing.PARA.snowfall_factor;
+            
+            melt_bare = double((forcing.DATA.ERA_melt_bare(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
                 (forcing.DATA.ERA_melt_bare(:, forcing.TEMP.index+1) - forcing.DATA.ERA_melt_bare(:, forcing.TEMP.index)))');
-            forcing.TEMP.melt_forest = double((forcing.DATA.ERA_melt_forest(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
+            melt_forest = double((forcing.DATA.ERA_melt_forest(:,forcing.TEMP.index) + forcing.TEMP.fraction./forcing.TEMP.number_of_substeps .* ...
                 (forcing.DATA.ERA_melt_forest(:, forcing.TEMP.index+1) - forcing.DATA.ERA_melt_forest(:, forcing.TEMP.index)))');
+            forcing.TEMP.melt = repmat(melt_bare, 1, tile.PARA.ensemble_size) .* (1 - forcing.PARA.bare_forest_fraction) + ...
+                repmat(melt_forest, 1, tile.PARA.ensemble_size) .* forcing.PARA.bare_forest_fraction;
+
             
             forcing.TEMP.fraction =  forcing.TEMP.fraction + 1;
             

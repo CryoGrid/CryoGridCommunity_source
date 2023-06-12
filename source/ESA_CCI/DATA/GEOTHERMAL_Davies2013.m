@@ -29,17 +29,11 @@ classdef GEOTHERMAL_Davies2013 < matlab.mixin.Copyable
         
         function heat_flux = load_data(heat_flux)
 
-            heat_flux.PARENT.STATVAR.geothermal = heat_flux.PARENT.STATVAR.latitude .* 0+0.05;
+          %  heat_flux.PARENT.STATVAR.geothermal = heat_flux.PARENT.STATVAR.latitude .* 0+0.05;
             
-%             load([heat_flux.PARA.geothermal_path 'heatflowDavies2013.mat']);
-%             heat_flux = interp2(lat_mat, lon_mat, heat_flow_mat, heat_flux.PARENT.STATVAR.latitude, heat_flux.PARENT.STATVAR.longitude)./1000;  %map in W/mK
-       end
-
-%         function heat_flux = get_geothermal_heatflux(geothermal, run_info)
-%             load([geothermal.PARA.geothermal_path 'heatflowDavies2013.mat']);
-%             heat_flux = interp2(lat_mat, lon_mat, heat_flow_mat, run_info.STATVAR.latitude, run_info.STATVAR.longitude)./1000;  %map in W/mK
-%             
-%         end
+            load([heat_flux.PARA.geothermal_path heat_flux.PARA.geothermal_file]);
+            heat_flux.PARENT.STATVAR.geothermal = interp2(lat_mat, lon_mat, heat_flow_mat, heat_flux.PARENT.STATVAR.latitude, heat_flux.PARENT.STATVAR.longitude)./1000;  %map in W/mK
+        end
         
         
     end

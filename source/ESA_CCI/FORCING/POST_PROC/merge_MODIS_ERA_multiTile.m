@@ -78,7 +78,7 @@ classdef merge_MODIS_ERA_multiTile < merge_MODIS_ERA
                         
                         %find closest pixel in MODIS file
                         [dist, closest_pixel_id] = min((tile.PARA.longitude(range_in_tile(j),1) - MODIS_lon).^2 + (tile.PARA.latitude(range_in_tile(j),1) - MODIS_lat).^2);
-                        if dist < (MODIS_delta_lat).^2 + (MODIS_delta_lon).^2 %pixel actually available in MODIS file
+                        if 1 %dist < (MODIS_delta_lat).^2 + (MODIS_delta_lon).^2 %pixel actually available in MODIS file
                             
                             MOD_LST_Day_1km = single(ncread(fname, 'MOD_LST_Day_1km', [closest_pixel_id 1], [1 Inf])).*0.02;
                             MOD_LST_Night_1km = single(ncread(fname, 'MOD_LST_Night_1km', [closest_pixel_id 1], [1 Inf])).*0.02;

@@ -73,7 +73,7 @@ classdef SNOW_simple_ubtf_mf < HEAT_CONDUCTION & UB_TEMPERATURE_FORCING & SNOW &
         
         function snow = finalize_init(snow, tile) 
             snow.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
-            snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
+%             snow.PARA.airT_height = tile.FORCING.PARA.airT_height;
             snow.PARA.latitude = tile.PARA.latitude;
             
             snow = initialize_zero_snow_BASE(snow); 

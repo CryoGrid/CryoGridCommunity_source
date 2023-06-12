@@ -1,7 +1,5 @@
 %========================================================================
-% CryoGrid ASSIGN_TILE_PROPERTIES class update_one2one
-% updates variables that have the same name in the CryoGrid class as
-% provided by the DATA_PROVODER class
+%works together with the RUN_INFO..._NMPI class
 %
 % S. Westermann, Dec 2022
 %========================================================================
@@ -41,22 +39,26 @@ classdef ESA_CCI_global_run_MODIS_deg < matlab.mixin.Copyable
                 pos = max(1, min(length(still2do), ceil(rand(1) .* length(still2do))));
                 update.PARA.MODIS_tile_number = progress_list(still2do(pos));
             end
-            tile_str = ['_' num2str(MODIS_deg_list(update.PARA.MODIS_tile_number,2)) '_' num2str(MODIS_deg_list(update.PARA.MODIS_tile_number,1)) ...
+            tile_str = ['_' num2str(MODIS_deg_list(update.PARA.MODIS_tile_number,1)) '_' num2str(MODIS_deg_list(update.PARA.MODIS_tile_number,2)) ...
                 '_' num2str(MODIS_deg_list(update.PARA.MODIS_tile_number,3)) '_' num2str(MODIS_deg_list(update.PARA.MODIS_tile_number,4))];
             run_info.PARA.run_name = [run_info.PARA.run_name tile_str];
-            run_info.PPROVIDER.CLASSES.COORDINATES_FROM_FILE_CCI{1,1}.PARA.proj_file_name = ['MODIS_' tile_str '_2019.nc'];
-            run_info.PPROVIDER.CLASSES.merge_MODIS_ERA{1,1}.PARA.MODIS_file = ['MODIS_' tile_str];
+            run_info.PPROVIDER.CLASSES.COORDINATES_FROM_FILE_CCI{1,1}.PARA.proj_file_name = ['MODIS' tile_str '_2019.nc'];
+            run_info.PPROVIDER.CLASSES.merge_MODIS_ERA{1,1}.PARA.MODIS_file = ['MODIS' tile_str];
             if run_info.PARA.worker_number ==  1
                 progress_list(update.PARA.MODIS_tile_number,1) = 1;
-                save([update.PARA.deg_tile_list_folder update.PARA.deg_tile_list_file] '(MODIS_deg_list', 'progress_list');
+                save([update.PARA.deg_tile_list_folder update.PARA.deg_tile_list_file], 'MODIS_deg_list', 'progress_list');
             end
         end
         
         function update = finalize_progress_list(update, run_info)
             load([update.PARA.deg_tile_list_folder update.PARA.deg_tile_list_file]);
             if run_info.PARA.worker_number ==  1
-                progress_list(update.PARA.MODIS_tile_number,2) = 1;
-                save([update.PARA.deg_tile_list_folder update.PARA.deg_tile_list_file] '(MODIS_deg_list', 'progress_list');
+                progress_list(update.PARA.MODIS_tile_number,2) = progress_list(update.PARA.MODIS_tile_number,2) + 1;
+                if progress_list(update.PARA.MODIS_tile_number,2) == run_info.PARA.number_of_cores
+                    progress_list(update.PARA.MODIS_tile_number,2) = -1;
+                end
+                    
+                save([update.PARA.deg_tile_list_folder update.PARA.deg_tile_list_file], 'MODIS_deg_list', 'progress_list');
             end
         end
         

@@ -81,8 +81,6 @@ classdef ENSEMBLE_ESA_CCI < matlab.mixin.Copyable
                         stratigraphy_fraction =  max(0, min(1, stratigraphy_intercept (1,j) + fraction .* stratigraphy_slope(1,j)));
                         ensemble.STATVAR.stratigraphy(i, index+k) = j + 0.1.* stratigraphy_fraction;
                         
-                        %PROFILE.stratigraphy(i, index+k) = j + 0.1.* (0.5.*double(ensemble_size_per_class(i,j) == 1) +  (order(k,1)-1)./(max(0.1, ensemble_size_per_class(i,j)-1))); %CHANGED
-                        %PROFILE.stratigraphy(i, index+k) = j;
                         
                         %waterTable_fraction = max(0, min(1, water_table_intercept(1,j) + fraction .* water_table_slope(1,j)));
                         ensemble.STATVAR.water_table_depth(i,index+k) = max(0, min(1, water_table_intercept(1,j) + fraction .* water_table_slope(1,j)));

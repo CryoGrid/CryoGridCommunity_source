@@ -468,6 +468,13 @@ elseif strcmp(above_class, 'SNOW_simple_ubT')
         ia_class = IA_HEAT11_SALT01();
     end
     
+elseif strcmp(above_class, 'GROUND_house')
+    ia_class = IA_HEAT11();
+    
+elseif strcmp(above_class, 'GROUND_house_on_poles')
+    ia_class = IA_thermRadiation11();
+    
+    
 end
 
 if ia_class == 0

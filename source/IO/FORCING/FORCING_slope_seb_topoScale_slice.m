@@ -99,6 +99,8 @@ classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PR
 
             forcing = reduce_precip_slope(forcing, tile);
             
+            forcing = convert_accumulated2instantaneous_Sin(forcing, tile);
+
             forcing = SolarAzEl(forcing, tile);
             forcing = terrain_corr_Sin_dif(forcing, tile);
             forcing = reproject_Sin_dir(forcing, tile);
@@ -156,6 +158,8 @@ classdef FORCING_slope_seb_topoScale_slice < FORCING_base & READ_FORCING_NC & PR
                 forcing = check_and_correct(forcing); % Remove known errors
                 forcing = reduce_precip_slope(forcing, tile);
                 
+                forcing = convert_accumulated2instantaneous_Sin(forcing, tile);
+
                 forcing = SolarAzEl(forcing, tile);
                 forcing = terrain_corr_Sin_dif(forcing, tile);
                 forcing = reproject_Sin_dir(forcing, tile);
