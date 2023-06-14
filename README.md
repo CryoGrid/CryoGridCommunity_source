@@ -11,6 +11,6 @@ A manuscript "The CryoGrid community model - a multi-physics toolbox for climate
 ## Getting started
 
 Both [CryoGridCommunity_source](https://github.com/CryoGrid/CryoGridCommunity_source) and [CryoGridCommunity_run](https://github.com/CryoGrid/CryoGridCommunity_run) are required. See [CryoGridCommunity_run](https://github.com/CryoGrid/CryoGridCommunity_run) for details.
-An instruction video on downloading the cryoGrid community model and running simple simulations is available here: https://www.youtube.com/watch?v=L1GIurc5_J4&t=372s
-The parameter files and mdoel forcing data for the simple simulations from the video are available here: http://files.artek.byg.dtu.dk/files/cryogrid/CryoGridExamples/CryoGrid_simpleExamples.zip 
+An instruction video on downloading the CryoGrid community model and running simple simulations is available here: https://www.youtube.com/watch?v=L1GIurc5_J4&t=372s
+The parameter files and model forcing data for the simple simulations from the video can be downloaded here: http://files.artek.byg.dtu.dk/files/cryogrid/CryoGridExamples/CryoGrid_simpleExamples.zip 
 
