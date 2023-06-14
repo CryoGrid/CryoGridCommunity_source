@@ -96,7 +96,7 @@ classdef GROUND_freeW_bucketW_convection_seb < SEB & HEAT_CONDUCTION & WATER_FLU
                 unit_converter = unit_converter();
                 ground = convert_normal(unit_converter, ground, tile);
         end        
-            
+
         function ground = finalize_init(ground, tile)
 %             ground.PARA.heatFlux_lb = tile.FORCING.PARA.heatFlux_lb;
 %             ground.PARA.airT_height = tile.FORCING.PARA.airT_height;

@@ -1,38 +1,14 @@
 %========================================================================
-% CryoGrid FORCING class FORCING_slope_seb
-% simple model forcing for GROUND classes computing the surface energy balance
-% (keyword “seb”). The data must be stored in a Matlab “.mat” file which contains
-% a struct FORCING with field “data”, which contain the time series of the actual
-% forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures.
-% Have a look at the existing forcing files in the folder “forcing” and prepare
-% new forcing files in the same way. The mandatory forcing variables are air temperature
-% (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2),
-% incoming short-.wave radiation (Sin, in W/m2), absolute humidity (q, in
-% kg water vapor / kg air), wind speed (wind, in m/sec), rainfall (rainfall, in mm/day),
-% snowfall (snowfall, in mm/day) and timestamp (t_span,
-% in Matlab time / increment 1 corresponds to one day).
-% IMPORTANT POINT: the time series must be equally spaced in time, and this must be
-% really exact. When reading the timestamps from an existing data set (e.g. an Excel file),
-% rounding errors can result in small differences in the forcing timestep, often less
-% than a second off. In this case, it is better to manually compile a new, equally spaced
-% timestep in Matlab.
-% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
-% Edited (changes for slopes) were made by J. Schmidt, December 2020
-% The forcing data need in addition for the slope:
-%       S_TOA: Short-wave radiation at the top of the atmosphere
-%       albedo_foot: albedo at the foot of the slope (can vary in time for
-%           example with a snow layer
-%   Not-mandatory (just applicable if there is a water body at the foot of
-%   the slope):
-%       seaT: seawater temperature
-%       seaIce: 0 = time steps without sea ice; 1 = time steps with sea ice
+% Same as FORCING_slope_seb_readNC, with small adaptations to fit with 
+% Vegetation classes.
+% R. B. Zweigel, August 2021
 %========================================================================
 
-classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
+classdef FORCING_slope_seb_readNc2 < SEB %matlab.mixin.Copyable
     
     properties
         DATA            % forcing data time series
-        STATUS
+        STATUS        
     end
     
     
@@ -40,14 +16,14 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
         
         %mandatory functions
         
-        function forcing = provide_PARA(forcing)
-            % INITIALIZE_PARA  Initializes PARA structure, setting the variables in PARA.
-            
+        function forcing = provide_PARA(forcing)         
+            % INITIALIZE_PARA  Initializes PARA structure, setting the variables in PARA.  
+
             forcing.PARA.forcing_path = [];
             forcing.PARA.start_time = []; % start time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.end_time = [];   % end time of the simulations (must be within the range of data in forcing file)
             forcing.PARA.rain_fraction = [];  %rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)
-            forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)
+            forcing.PARA.snow_fraction = [];  %snowfall fraction assumed in sumulations (snowfall from the forcing data file is multiplied by this parameter)        
             forcing.PARA.all_rain_T = [];
             forcing.PARA.all_snow_T = [];
             forcing.PARA.slope_angle = []; %slope angle in degrees
@@ -67,11 +43,11 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
         function forcing = provide_STATVAR(forcing)
             
         end
-        
+
         
         function forcing = finalize_init(forcing, tile)
             
-            
+          
             %variables = {'t2m'; 'd2m'; 'u10'; 'v10'; 'ssrd'; 'strd'; 'tp'};
             variables = {'t2m'; 'd2m'; 'u10'; 'v10'; 'ssrd'; 'strd'; 'tp'; 'sp'; 'tisr'};
             for i=1:size(variables,1)
@@ -79,16 +55,16 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             end
             temp.time = ncread([forcing.PARA.forcing_path 't2m.nc'], 'time');
             
-%             temp.info = ncinfo([forcing.PARA.forcing_path 't2m.nc']);
-%             Index1 = find(contains({temp.info.Variables.Name},'time'));
-%             Index2 = find(contains({temp.info.Variables(Index1).Attributes.Name},'units'));
-%             reference = split(temp.info.Variables(Index1).Attributes(Index2).Value);
-%             reference = reference(3);
-%             reference_date = split(reference,"-");
-%             reference_date = str2double(reference_date);
-%             forcing.DATA.timeForcing = datenum(reference_date(1),reference_date(2),reference_date(3)) + double(temp.time)./24;
+            temp.info = ncinfo([forcing.PARA.forcing_path 't2m.nc']);
+            Index1 = find(contains({temp.info.Variables.Name},'time'));
+            Index2 = find(contains({temp.info.Variables(Index1).Attributes.Name},'units'));
+            reference = split(temp.info.Variables(Index1).Attributes(Index2).Value);
+            reference = reference(3);
+            reference_date = split(reference,"-");
+            reference_date = str2double(reference_date);
+            forcing.DATA.timeForcing = datenum(reference_date(1),reference_date(2),reference_date(3)) + double(temp.time)./24;
             
-            forcing.DATA.timeForcing = datenum(1900,1,1) + double(temp.time)./24;
+            %forcing.DATA.timeForcing = datenum(1900,1,1) + double(temp.time)./24;
             forcing.DATA.Tair = temp.t2m - forcing.CONST.Tmfw;
             forcing.DATA.wind = sqrt(temp.u10.^2 + temp.u10.^2);
             forcing.DATA.Sin = temp.ssrd./3600;
@@ -96,16 +72,15 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             forcing.DATA.Lin = temp.strd./3600;
             forcing.DATA.Lin = [0;0;forcing.DATA.Lin];
             forcing.DATA.p = temp.sp; %in [Pa]!900.*100 + forcing.DATA.Tair.*0;
-            forcing.DATA.q = 0.622.*(double(forcing.DATA.Tair<0).*satPresIce(forcing, temp.d2m) + double(forcing.DATA.Tair>=0).*satPresWater(forcing, temp.d2m))./ forcing.DATA.p;
+            forcing.DATA.q = (double(forcing.DATA.Tair<0).*satPresIce(forcing, temp.d2m) + double(forcing.DATA.Tair>=0).*satPresWater(forcing, temp.d2m))./ forcing.DATA.p;
             
             forcing.DATA.S_TOA = temp.tisr ./ 3600;
             forcing.DATA.S_TOA = [0;0;forcing.DATA.S_TOA];
             
-            %             size(temp.tp)
-            %             size(forcing.DATA.Tair)
+%             size(temp.tp)
+%             size(forcing.DATA.Tair)
             
             temp.tp = [0;0; temp.tp]; %append missing first two timesteps
-            
             forcing.DATA.snowfall = temp.tp .*24.*1000 .* (double(forcing.DATA.Tair <= forcing.PARA.all_snow_T)  + ...
                 double(forcing.DATA.Tair > forcing.PARA.all_snow_T & forcing.DATA.Tair <= forcing.PARA.all_rain_T) .* ...
                 (forcing.DATA.Tair - forcing.PARA.all_snow_T) ./ max(1e-12, (forcing.PARA.all_rain_T - forcing.PARA.all_snow_T)));
@@ -114,21 +89,21 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
                 (1 - (forcing.DATA.Tair - forcing.PARA.all_snow_T) ./ max(1e-12, (forcing.PARA.all_rain_T - forcing.PARA.all_snow_T))));
             forcing.DATA.rainfall = forcing.DATA.rainfall .* forcing.PARA.rain_fraction.*cosd(forcing.PARA.slope_angle);
             forcing.DATA.snowfall = forcing.DATA.snowfall .* forcing.PARA.snow_fraction.*cosd(forcing.PARA.slope_angle);
-
+            
             forcing.DATA.albedo_foot = forcing.PARA.albedo_surrounding_terrain; %Albedo at the foot of the slope
+
             
-            
-            %             % Additional forcing data for slopes:
-            %             forcing.DATA.S_TOA = temp.FORCING.data.S_TOA; %short-wave radiation at the top of the atmosphere
-            
-            %
-            %             % Non-mandatory forcing data for slopes:
-            %             if isfield(temp.FORCING.data,'seaT') == 1
-            %                 forcing.DATA.seaT = temp.FORCING.data.seaT; %seawater temperature
-            %             end
-            %             if isfield(temp.FORCING.data,'seaIce') == 1
-            %                 forcing.DATA.seaIce = temp.FORCING.data.seaIce; %time steps with (1) or without (0) sea ice
-            %             end
+%             % Additional forcing data for slopes:
+%             forcing.DATA.S_TOA = temp.FORCING.data.S_TOA; %short-wave radiation at the top of the atmosphere
+
+%             
+%             % Non-mandatory forcing data for slopes:
+%             if isfield(temp.FORCING.data,'seaT') == 1
+%                 forcing.DATA.seaT = temp.FORCING.data.seaT; %seawater temperature
+%             end
+%             if isfield(temp.FORCING.data,'seaIce') == 1
+%                 forcing.DATA.seaIce = temp.FORCING.data.seaIce; %time steps with (1) or without (0) sea ice
+%             end
             
             if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1))~=0
                 disp('timestamp of forcing data is not in regular intervals -> check, fix and restart')
@@ -170,19 +145,22 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             % Additional forcing data for slopes:
             forcing.TEMP.S_TOA=0;
             forcing.TEMP.albedo_foot=0;
-
-            % Non-mandatory forcing data for slopes:
-            %             if isfield(temp.FORCING.data,'seaT') == 1
-            %                 forcing.TEMP.seaT=0;
-            %             end
-            %             if isfield(temp.FORCING.data,'seaIce') == 1
-            %                 forcing.TEMP.seaIce=0;
-            %             end
+            forcing.TEMP.Sin_dif = 0;
+            forcing.TEMP.Sin_dir = 0;
+            forcing.TEMP.sunElevation = 0;
             
-            forcing = scale_radiation(tile.PARA, forcing);
+            % Non-mandatory forcing data for slopes:
+%             if isfield(temp.FORCING.data,'seaT') == 1
+%                 forcing.TEMP.seaT=0;
+%             end
+%             if isfield(temp.FORCING.data,'seaIce') == 1
+%                 forcing.TEMP.seaIce=0;
+%             end
+            
+             forcing = scale_radiation(tile.PARA, forcing);
         end
-        
-        
+            
+
         function forcing = interpolate_forcing(forcing, tile)
             t = tile.t;
             
@@ -207,11 +185,15 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             forcing.TEMP.rainfall = forcing.TEMP.rainfall + double(forcing.TEMP.Tair > 2) .* forcing.TEMP.snowfall;  %reassign unphysical snowfall
             forcing.TEMP.snowfall = double(forcing.TEMP.Tair <= 2) .* forcing.TEMP.snowfall;
             
+            forcing.TEMP.Sin_dif=forcing.DATA.Sin_dif(posit,1)+(forcing.DATA.Sin_dif(posit+1,1)-forcing.DATA.Sin_dif(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            forcing.TEMP.Sin_dir=forcing.DATA.Sin_dir(posit,1)+(forcing.DATA.Sin_dir(posit+1,1)-forcing.DATA.Sin_dir(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+            forcing.TEMP.sunElevation=forcing.DATA.sunElevation(posit,1)+(forcing.DATA.sunElevation(posit+1,1)-forcing.DATA.sunElevation(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
+
             forcing.TEMP.t = t;
             
         end
         
-        
+
         
         % non-mandatory functions
         
@@ -225,7 +207,7 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             % 3. Calculation of the reflected Sin on the foot of the slope
             % 4. Reduction of Lin by a sky view factor
             % 5. Calculation of long-wave emission of the close environment
-            
+        
             lat = PARA.latitude;
             lon = PARA.longitude;
             alt = PARA.altitude / 1000;
@@ -243,57 +225,59 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             kt = forcing.DATA.Sin ./ forcing.DATA.S_TOA; %clearness index, see Fiddes(2014)
             kt(isnan(kt))=0;
             kd = 0.952 - 1.041.*exp(-exp(2.300 - 4.702 .* kt)); %diffuse fraction, see Fiddes(2014)
-            kd(isnan(kd))=0;
+            kd(isnan(kd))=0; 
             kd = max(0,kd);
             
             SW_diff_total = kd .* forcing.DATA.Sin; %Amount of total diffuse SW
             SW_dir_total = (1 - kd) .* forcing.DATA.Sin; %Amount of total direct SW
             
             %Calculation of diffuse SW
-            
+
             SW_diff = SW_diff_total .* sky_view_factor; %Reduction of diffuse SW by sky view factor
-            
+
             % Calculation of reflected SW
+
             SW_refl = (forcing.DATA.Sin .* forcing.DATA.albedo_foot) .* (1 - sky_view_factor); % corrected RBZ Aug-21
             
             %Calculation of reprojected direct SW
-            
+
             surf_norm_vec = repmat([0.0,0.0,1.0], size(forcing.DATA.Sin,1), 1); %Unit vector on the horizontal
             sigma = forcing.CONST.sigma; %5.670373e-08; %Stefan-Boltzman constant
-            
+
             alpha = aspect.*pi./180; %Degree to radians of exposition of the slope
             beta = (90-slope_angle).*pi./180; %Degree to radians of inclination of the slope
             face_vec = repmat([sin(alpha).*cos(beta) cos(alpha).*cos(beta) sin(beta)], size(forcing.DATA.Sin,1), 1); %Unit vector of the slope
-            
+
             % Calculation the solar azimuth and elevation angle relative to
             % the coordinates of the site (revised after Darin C. Koblick)
             [Az,El] = SolarAzEl(PARA,forcing); %Calculation of the azimuth and elevation of the sun
-            %             i_end = size(Az);
-            %
-            %             for i = 1 : i_end(1,1)
-            
-            alpha = Az.*pi/180; %Degree to radians of the azimuth
-            beta = El.*pi/180; %Degree to radians of elevation
-            sun_vec = [sin(alpha).*cos(beta) cos(alpha).*cos(beta) sin(beta)]; %Unit vector of the radiation
-            
-            %                 size(surf_norm_vec)
-            %                 size(sun_vec)
-            
-            delta_angle_surf_norm = acos(dot(surf_norm_vec' ,sun_vec')').*180./pi; %angle between the radiation and the normal on the horizontal in degrees
-            delta_angle_face=acos(dot(face_vec', sun_vec')').*180./pi; %angle between the radiation and the normal on the slope in degrees
-            
-            Sin_sun_direction = SW_dir_total./cos(delta_angle_surf_norm.*pi./180); %Sin in direction of the sun
-            
-            %                 if delta_angle_surf_norm(i,1)<85 && delta_angle_face(i,1)<85
-            %                     %Sun has to be at least 5 degrees above the horizon and has to shine at
-            %                     %least with 85 degrees on the wall (otherwise values get too high)
-            %                     Sin_face_direction(i,1)=Sin_sun_direction(i,1)*cos(delta_angle_face(i,1)*pi/180); %Sin normal to the slope
-            %                 else %Sun is under the horizon
-            %                     Sin_face_direction(i,1)=0.0; %No short-wave radiation if sun is under the horizon or behind the wall
-            %                 end
-            Sin_face_direction = double(delta_angle_surf_norm < 85 & delta_angle_face < 85) .* Sin_sun_direction.*cos(delta_angle_face.*pi/180);
+%             i_end = size(Az);
+% 
+%             for i = 1 : i_end(1,1)
+                
+                alpha = Az.*pi/180; %Degree to radians of the azimuth
+                beta = El.*pi/180; %Degree to radians of elevation
+                sun_vec = [sin(alpha).*cos(beta) cos(alpha).*cos(beta) sin(beta)]; %Unit vector of the radiation
+                
+%                 size(surf_norm_vec)
+%                 size(sun_vec)
+                
+                delta_angle_surf_norm = acos(dot(surf_norm_vec' ,sun_vec')').*180./pi; %angle between the radiation and the normal on the horizontal in degrees
+                delta_angle_face=acos(dot(face_vec', sun_vec')').*180./pi; %angle between the radiation and the normal on the slope in degrees
+                
+                Sin_sun_direction = SW_dir_total./cos(delta_angle_surf_norm.*pi./180); %Sin in direction of the sun
+                
+%                 if delta_angle_surf_norm(i,1)<85 && delta_angle_face(i,1)<85
+%                     %Sun has to be at least 5 degrees above the horizon and has to shine at
+%                     %least with 85 degrees on the wall (otherwise values get too high)
+%                     Sin_face_direction(i,1)=Sin_sun_direction(i,1)*cos(delta_angle_face(i,1)*pi/180); %Sin normal to the slope
+%                 else %Sun is under the horizon
+%                     Sin_face_direction(i,1)=0.0; %No short-wave radiation if sun is under the horizon or behind the wall
+%                 end
+                Sin_face_direction = double(delta_angle_surf_norm < 85 & delta_angle_face < 85) .* Sin_sun_direction.*cos(delta_angle_face.*pi/180); 
             
             % Calculation of Lin
+
 %             if isfield(forcing.DATA,'seaT') == 1 %water at the foot of the slope
 %                 if forcing.DATA.seaIce(i,1) == 0 %no sea ice --> take sea temperature
 %                 Lin(i,1) = sky_view_factor * forcing.DATA.Lin(i,1) + (1 - sky_view_factor) * sigma * (forcing.DATA.seaT(i,1) + 273.15)^4; %T of ocean for calculation
@@ -304,7 +288,7 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             Lin = sky_view_factor .* forcing.DATA.Lin + (1 - sky_view_factor) .* sigma .* (forcing.DATA.Tair + forcing.CONST.Tmfw).^4; %Tair for calculation
 %             end
          
-         %end
+            %end
             
             forcing.DATA.Sin = Sin_face_direction + SW_diff + SW_refl;
             forcing.DATA.Lin = Lin;
@@ -317,8 +301,8 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             forcing.DATA.sunElevation = El;
             
         end
-        
-        
+            
+
         function [Az,El] = SolarAzEl(PARA,forcing)
             % SolarAzEl will ingest a Universal Time, and specific site location on earth
             % it will then output the solar Azimuth and Elevation angles relative to
@@ -415,65 +399,11 @@ classdef FORCING_slope_seb_readNc < SEB %matlab.mixin.Copyable
             %Find the h and AZ
             Az = atan2(yhor,xhor).*(180./pi) + 180; %Az(i,1)
             El = asin(zhor).*(180./pi); %El(i,1)  %in degrees
-            
-            %clearvars -except Az El Lat Lon Alt UTC path_out name forcing
-            % end
+
+                %clearvars -except Az El Lat Lon Alt UTC path_out name forcing
+           % end
         end
-        
-        
+
                 
-        %-------------param file generation-----
-        function forcing = param_file_info(forcing)
-            forcing = provide_PARA(forcing);
-
-            
-            forcing.PARA.STATVAR = [];
-            forcing.PARA.class_category = 'FORCING';
-            
-            forcing.PARA.comment.filename = {'filename of Matlab file containing forcing data'};
-            
-            forcing.PARA.default_value.forcing_path = {'forcing/'};
-            forcing.PARA.comment.forcing_path = {'path where forcing data file is located'};
-            
-            forcing.PARA.comment.start_time = {'start time of the simulations (must be within the range of data in forcing file) - year month day'};
-            forcing.PARA.options.start_time.name =  'H_LIST';
-            forcing.PARA.options.start_time.entries_x = {'year' 'month' 'day'};
-            
-            forcing.PARA.comment.end_time = {'end_time time of the simulations (must be within the range of data in forcing file) - year month day'};
-            forcing.PARA.options.end_time.name =  'H_LIST'; % 
-            forcing.PARA.options.end_time.entries_x = {'year' 'month' 'day'};
-            
-            forcing.PARA.default_value.rain_fraction = {1};  
-            forcing.PARA.comment.rain_fraction = {'rainfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
-            
-            forcing.PARA.default_value.snow_fraction = {1};  
-            forcing.PARA.comment.snow_fraction = {'snowfall fraction assumed in sumulations (rainfall from the forcing data file is multiplied by this parameter)'};
-
-            forcing.PARA.default_value.all_rain_T = {0.5};
-            forcing.PARA.comment.all_rain_T = {'temperature above which all precip is rain'};
-                        
-            forcing.PARA.default_value.all_snow_T = {-0.5};
-            forcing.PARA.comment.all_snow_T = {'temperature below which all precip is snow'};
-            
-            forcing.PARA.default_value.slope_angle = {0}; 
-            forcing.PARA.comment.slope_angle = {'slope angle in degree'};
-            
-            forcing.PARA.default_value.aspect = {90}; 
-            forcing.PARA.comment.aspect = {'aspect of the slope in degrees'};
-            
-            forcing.PARA.default_value.albedo_surrounding_terrain = {0.2};
-            forcing.PARA.comment.albedo_surrounding_terrain = {'albedo of field of view from where solar radiation is reflected'};
-            
-            forcing.PARA.default_value.sky_view_factor ={1}; 
-            forcing.PARA.comment.sky_view_factor = {'sky view factor (0.5 for vertical rock walls)'};
-            
-            forcing.PARA.default_value.heatFlux_lb = {0.05};
-            forcing.PARA.comment.heatFlux_lb = {'heat flux at the lower boundary [W/m2] - positive values correspond to energy gain'};
-            
-            forcing.PARA.default_value.airT_height = {2};  
-            forcing.PARA.comment.airT_height = {'height above ground surface where air temperature from forcing data is applied'};
-
         end
-        
-    end
 end

@@ -222,5 +222,3 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER2 < BASE_LATERAL
     end
     
 end
-
-

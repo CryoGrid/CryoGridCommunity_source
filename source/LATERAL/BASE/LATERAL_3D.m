@@ -422,4 +422,3 @@ classdef LATERAL_3D < matlab.mixin.Copyable
         
     end
 end
-
