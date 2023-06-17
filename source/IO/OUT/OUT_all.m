@@ -73,8 +73,6 @@ classdef OUT_all < matlab.mixin.Copyable
             end
             
             out.TEMP = struct();
-            out.TEMP.count = 0;
-            out.TEMP.time = 0;
             
         end
         
@@ -84,7 +82,6 @@ classdef OUT_all < matlab.mixin.Copyable
             
         function out = store_OUT(out, tile)           
             
-
             t = tile.t;
             TOP = tile.TOP; 
             BOTTOM = tile.BOTTOM;
@@ -93,21 +90,12 @@ classdef OUT_all < matlab.mixin.Copyable
             result_path = tile.PARA.result_path;            
             timestep = tile.timestep;
             out_tag = out.PARA.tag;
-                  
-
-             out.TEMP.count = out.TEMP.count + 1;
-             out.TEMP.time = out.TEMP.time + tile.timestep;
             
-%           --- Write output ---
             if t>=out.OUTPUT_TIME
-                %if id == 1
-                avg_timestep = out.TEMP.time/out.TEMP.count;
-                disp([datestr(t,'dd-mmm-yyyy HH:MM') ' Average timestep: ' num2str(avg_timestep)])
-                out.TEMP.count = 0;
-                out.TEMP.time = 0;
-                %end
-                %labBarrier
+                % It is time to collect output
+                % Store the current state of the model in the out structure.
 
+                disp([datestr(t)])
                 out.TIMESTAMP=[out.TIMESTAMP t];
                 
                 CURRENT =TOP.NEXT;
@@ -142,7 +130,6 @@ classdef OUT_all < matlab.mixin.Copyable
 
                 % Set the next OUTPUT_TIME
                 out.OUTPUT_TIME = min(out.SAVE_TIME, out.OUTPUT_TIME + out.PARA.output_timestep);
-
                 
                 if t>=out.SAVE_TIME
                     % It is time to save all the collected model output to disk
@@ -165,9 +152,7 @@ classdef OUT_all < matlab.mixin.Copyable
                         out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(out.SAVE_TIME,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
                         % If save_interval is not defined, we will save at the very end of the model run
                         % and thus do not need to update SAVE_TIME (update would fail because save_interval is nan)
-                        out.OUTPUT_TIME = min(out.SAVE_TIME, out.OUTPUT_TIME + out.PARA.output_timestep); % OUTPUT_TIME is equal to SAVE_TIME when saving, need to update to avoid duplicating out of SAVE_TIME
 					end
-
                 end
             end
         end

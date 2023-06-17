@@ -19,7 +19,7 @@
 % Hydraulic conductivity: always has a value, set to zero when frozen/hard_bottom
 % Ground_surface_elevation: as before;
 % 
-% Potential = Gravitational_potential â€“ depths + Water_potential.
+% Potential = Gravitational_potential – depths + Water_potential.
 % Flux = -hyd_cond * (potential1+ ground_surface_elevation1 - potential2-ground_surface_elevation2) / distance .* cross_section;
 % Then reduce with the two water variables
 % 
@@ -66,7 +66,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ < BASE_LATERAL
             lateral.PARENT.STATVAR.matric_potential_head = [];
             lateral.PARENT.STATVAR.hydrostatic_head = 0;
             lateral.PARENT.STATVAR.T_water = [];
-            lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
+        %    lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
             
             lateral.TEMP.open_system = 1; %start with open system
 
@@ -189,3 +189,5 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_RICHARDS_EQ < BASE_LATERAL
     end
     
 end
+
+

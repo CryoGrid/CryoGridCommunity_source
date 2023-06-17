@@ -1,4 +1,4 @@
-%========================================================================
+% %========================================================================
 % CryoGrid TIER1 library class, functions related to vegetation
 % R. B. Zweigel, June 2021
 %========================================================================
@@ -112,7 +112,12 @@ classdef VEGETATION < BASE
         
         function canopy = add_canopy(canopy)
             canopy.STATVAR.LAI = canopy.PARA.LAI;
-            canopy.STATVAR.emissivity = 1 - exp(-canopy.STATVAR.LAI-canopy.STATVAR.SAI);
+            Khi_L = max(-0.4, min(0.6, canopy.PARA.Khi_L));
+            phi1 = .5 - .633.*(Khi_L) - .33.*(Khi_L).^2; % for -.4 <= Khi_L <=.6
+            phi2 = .877 .* (1-2.*phi1);
+            my_bar = 1./phi2*( 1- phi1./phi2 * log( (phi1+phi2)./phi1) );
+            canopy.STATVAR.emissivity = 1 - exp((-canopy.STATVAR.LAI-canopy.STATVAR.SAI)./my_bar);
+%             canopy.STATVAR.emissivity = 1 - exp(-canopy.STATVAR.LAI-canopy.STATVAR.SAI);
             canopy = get_heat_capacity_canopy(canopy);
             canopy = get_E_water_vegetation(canopy); % derive energy from temperature
             canopy = get_z0_d_vegetation(canopy);
@@ -120,7 +125,12 @@ classdef VEGETATION < BASE
         
         function canopy = remove_canopy(canopy)
             canopy.STATVAR.LAI = 0;
-            canopy.STATVAR.emissivity = 1 - exp(-canopy.STATVAR.LAI-canopy.STATVAR.SAI);
+            Khi_L = max(-0.4, min(0.6, canopy.PARA.Khi_L));
+            phi1 = .5 - .633.*(Khi_L) - .33.*(Khi_L).^2; % for -.4 <= Khi_L <=.6
+            phi2 = .877 .* (1-2.*phi1);
+            my_bar = 1./phi2*( 1- phi1./phi2 * log( (phi1+phi2)./phi1) );
+            canopy.STATVAR.emissivity = 1 - exp((-canopy.STATVAR.LAI-canopy.STATVAR.SAI)./my_bar);
+%             canopy.STATVAR.emissivity = 1 - exp(-canopy.STATVAR.LAI-canopy.STATVAR.SAI);
             canopy = get_heat_capacity_canopy(canopy);
             canopy = get_E_water_vegetation(canopy); % derive energy from temperature            
             canopy = get_z0_d_vegetation(canopy);

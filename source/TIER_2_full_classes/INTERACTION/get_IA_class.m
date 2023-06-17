@@ -19,15 +19,19 @@ ia_class = 0;
 %modfications of class strings
 
 %FLIP_FLOP classses have same interactions as original classes
-if strcmp(above_class(end-8:end), 'FLIP_FLOP')
+if size(above_class,2) > 10 && strcmp(above_class(end-8:end), 'FLIP_FLOP')
     above_class = above_class(1:end-10);
 end
 
-if strcmp(below_class(end-8:end), 'FLIP_FLOP')
+if size(below_class,2) > 10 && strcmp(below_class(end-8:end), 'FLIP_FLOP')
     below_class = below_class(1:end-10);
 end
 
-if strcmp(above_class, 'GROUND_freeW_seb')
+
+if strcmp(above_class, 'Top') %allows treating Top like a "normal" class, as IA class is never called between Top and the following class 
+    ia_class = IA_BASE();
+    
+elseif strcmp(above_class, 'GROUND_freeW_seb')
     if strcmp(below_class, 'GROUND_freeW_seb') || strcmp(below_class, 'GROUND_freezeC_seb')
         ia_class = IA_HEAT11();
     end
@@ -329,6 +333,9 @@ elseif strcmp(above_class, 'SNOW_crocus_bucketW_seb_vegetation')
         
     elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow')
         ia_class = IA_HEAT11_WATER11_RichardsEq_SNOW_XICE();
+    
+    elseif strcmp(below_class, 'VEGETATION_CLM5_seb_snow')
+        ia_class = IA_SEB_vegetation_CLM5_SNOW();
     end
     
 elseif strcmp(above_class, 'SNOW_crocus2_bucketW_seb')
@@ -349,8 +356,10 @@ elseif strcmp(above_class, 'SNOW_crocus2_bucketW_seb')
         
     elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow')
         ia_class = IA_HEAT11_WATER11_RichardsEq_SNOW_XICE();
-    end
     
+    elseif strcmp(below_class, 'VEGETATION_CLM5_seb_snow')
+        ia_class = IA_SEB_vegetation_CLM5_SNOW();
+    end
     
     %-----------store_flip_flop -----
     
@@ -387,6 +396,35 @@ elseif strcmp(above_class, 'GLACIER_freeW_seb_snow') %modify if more interaction
         
     elseif strcmp(below_class, 'GROUND_fcSimple_salt_seb') || strcmp(below_class, 'GROUND_fcSimple_salt_seb_snow')
         ia_class = IA_HEAT11_SALT01();
+    end
+    
+        % ---------- VEGETATION -----------
+    
+elseif strcmp(above_class, 'VEGETATION_CLM5_seb')
+    if strcmp(below_class, 'SNOW_crocus_bucketW_seb') || strcmp(below_class, 'SNOW_simple_bucketW_seb') || strcmp(below_class, 'SNOW_crocus2_bucketW_seb')
+        ia_class = IA_SEB_vegetation_CLM5_SNOW();
+        
+    elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb') || strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb')
+        ia_class = IA_SEB_vegetation_CLM5();
+        
+    elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb_snow')
+        ia_class = IA_SEB_vegetation_CLM5_GROUND_snow();
+        
+    elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow') 
+        ia_class = IA_SEB_vegetation_CLM5_GROUND_Xice_snow();
+    end
+    
+       % ---------- VEGETATION with SNOW in canopy-----------
+    
+elseif strcmp(above_class, 'VEGETATION_CLM5_seb_snow')
+    if strcmp(below_class, 'SNOW_crocus_bucketW_seb') || strcmp(below_class, 'SNOW_crocus2_bucketW_seb')
+        ia_class = IA_SEB_vegetation_CLM5_SNOW();
+        
+    elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_seb_snow')
+        ia_class = IA_SEB_vegetation_CLM5_GROUND_snow();
+        
+    elseif strcmp(below_class, 'GROUND_freezeC_RichardsEqW_Xice_seb_snow') 
+        ia_class = IA_SEB_vegetation_CLM5_snow_GROUND_Xice_snow();
     end
     
     %--------MULTI-TILE----
@@ -430,8 +468,14 @@ elseif strcmp(above_class, 'SNOW_simple_ubT')
         ia_class = IA_HEAT11_SALT01();
     end
     
+elseif strcmp(above_class, 'GROUND_house')
+    ia_class = IA_HEAT11();
+    
+elseif strcmp(above_class, 'GROUND_house_on_poles')
+    ia_class = IA_thermRadiation11();
+    
+    
 end
-
 
 if ia_class == 0
     switch above_class
@@ -473,7 +517,8 @@ if ia_class == 0
                     ia_class = IA_HEAT11();
             end
     end
-  
+    
+    
 end
 end
 

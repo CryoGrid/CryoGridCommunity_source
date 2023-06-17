@@ -180,6 +180,10 @@ classdef GROUND_freezeC_bucketW_Xice_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
         end
         
+        function [ground, S_up] = penetrate_SW_PARENT(ground, S_down)  %mandatory function when used with class that features SW penetration
+            [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
+        end
+        
         function ground = get_boundary_condition_l(ground, tile)
             forcing = tile.FORCING;
             ground.TEMP.F_lb = forcing.PARA.heatFlux_lb .* ground.STATVAR.area(end);

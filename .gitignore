@@ -18,6 +18,12 @@
 
 # ESA_CCI
 ./source/ESA_CCI/*
+./discontinued/*
+
+
+# ESA_CCI2
+source/ESA_CCI2/*
+source/ESA_CCI/GROUND/compiled/codegen/*
 
 # Windows default autosave extension
 *.asv
@@ -27,6 +33,12 @@
 
 # Compiled MEX binaries (all platforms)
 *.mex*
+
+# Compiled c code 
+*.c*
+
+# Compiled c code 
+*.h*
 
 # Simulink Code Generation
 slprj/

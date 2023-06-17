@@ -363,8 +363,8 @@ classdef GROUND_freezeC_RichardsEqW_seb_pressure < SEB & HEAT_CONDUCTION & FREEZ
             ground.TEMP.d_energy(1) = ground.TEMP.d_energy(1) + ground.TEMP.F_ub;
             
             %water -> evaporation
-            ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) -  ground.STATVAR.evap.* ground.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
-            ground.TEMP.d_water_ET_energy(1,1) = ground.TEMP.d_water_ET_energy(1,1) -  ground.STATVAR.evap_energy.* ground.STATVAR.area(1,1);
+            ground.TEMP.d_water_ET(1,1) = ground.TEMP.d_water_ET(1,1) +  ground.STATVAR.evaporation.* ground.STATVAR.area(1,1); %in m3 water per sec, put everything in uppermost grid cell
+            ground.TEMP.d_water_ET_energy(1,1) = ground.TEMP.d_water_ET_energy(1,1) +  ground.TEMP.evaporation_energy.* ground.STATVAR.area(1,1);
 
         end
         

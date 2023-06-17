@@ -49,12 +49,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             tile.PARA.builder = [];
             
             %new_init
-            tile.PARA.latitude = [];
-            tile.PARA.longitude = [];
-            tile.PARA.altitude = [];
-            tile.PARA.domain_depth = [];
-            tile.PARA.area = [];
-            
+            tile.PARA.domain_depth = [];            
             tile.PARA.forcing_class = [];
             tile.PARA.forcing_class_index = [];
             tile.PARA.grid_class = [];
@@ -82,6 +77,10 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
 
             tile.PARA.unit_conversion_class = 'UNIT_CONVERSION_standard'; %can be overwritten if needed
             
+            %set default values of necessary parameters
+            tile.PARA.area = 1;
+            tile.PARA.altitude = 0;
+            tile.PARA.slope_angle = 0;
         end
         
         function tile = provide_CONST(tile)
@@ -94,6 +93,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
 
         end
         
+
         %assemble the stratigraphy
         function tile = finalize_init(tile)
             
@@ -105,6 +105,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
 
         end
         
+
         function tile = interpolate_forcing_tile(tile)
              tile.FORCING = interpolate_forcing(tile.FORCING, tile);
         end
@@ -116,6 +117,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
         function tile = store_OUT_tile(tile)
             tile.OUT = store_OUT(tile.OUT, tile);
         end        
+        
         
         
         function tile = run_model(tile)
@@ -161,7 +163,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     tile.timestep = min(tile.timestep, get_timestep(CURRENT, tile));
                     CURRENT = CURRENT.NEXT;
                 end
-                tile.next_break_time = min(tile.LATERAL.IA_TIME, min(tile.OUT.OUTPUT_TIME, tile.OUT.SAVE_TIME));
+                tile.next_break_time = min(tile.LATERAL.IA_TIME, tile.OUT.OUTPUT_TIME);
                 tile.timestep = min(tile.timestep, (tile.next_break_time - tile.t).*tile.CONST.day_sec);
                 
                 %prognostic step - integrate prognostic variables in time
@@ -216,11 +218,11 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                 disp(['PARA builder in class ' class(tile) ' not assigned'])
             end
             if strcmp(tile.PARA.builder, 'new_init') 
-                parameters = {'latitude'; 'longitude'; 'altitude'; 'domain_depth'; 'area'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
+                parameters = {'domain_depth'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
                             'out_class_index'; 'strat_classes_class'; 'strat_classes_class_index'; 'strat_statvar_class'; 'strat_statvar_class_index'; 'lateral_class'; ...
                             'lateral_class_index'; 'lateral_IA_classes'; 'lateral_IA_classes_index'};
             elseif strcmp(tile.PARA.builder, 'new_init_steady_state')
-                parameters = {'latitude'; 'longitude'; 'altitude'; 'domain_depth'; 'area'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
+                parameters = {'domain_depth'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
                     'out_class_index'; 'strat_classes_class'; 'strat_classes_class_index'; 'strat_statvar_class'; 'strat_statvar_class_index'; 'lateral_class'; ...
                     'lateral_class_index'; 'lateral_IA_classes'; 'lateral_IA_classes_index'; 'init_steady_state_class'; 'init_steady_state_class_index';...
                     'T_first_cell'; 'start_depth_steady_state'};
@@ -284,7 +286,6 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             for i=1:size(class_list,1)
                 variables = fieldnames(CURRENT.STATVAR);
                 range = (tile.GRID.STATVAR.MIDPOINTS > class_depths(i,1) & tile.GRID.STATVAR.MIDPOINTS <= class_depths(i+1,1));
-                %CURRENT.STATVAR.layerThick = tile.GRID.STATVAR.LAYERTHICK(range,1);
                 CURRENT.STATVAR.upperPos = tile.PARA.altitude - class_depths(i,1);
                 CURRENT.STATVAR.lowerPos = tile.PARA.altitude - class_depths(i+1,1);
                 for j=1:size(variables,1)
@@ -644,21 +645,18 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             if strcmp(option, 'new_init')
                 tile.PARA.builder = [];
                 tile.PARA.default_value.builder = {'new_init'};
-                parameters = {'latitude'; 'longitude'; 'altitude'; 'domain_depth'; 'area'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
+                parameters = { 'domain_depth';  'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
                     'out_class_index'; 'strat_classes_class'; 'strat_classes_class_index'; 'strat_statvar_class'; 'strat_statvar_class_index'; 'lateral_class'; ...
-                    'lateral_class_index'; 'lateral_IA_classes'; 'lateral_IA_classes_index'};
+                    'lateral_class_index'; 'lateral_IA_classes'; 'lateral_IA_classes_index'};  %'latitude'; 'longitude'; 'altitude'; 'area';
                 
                 for i=1:size(parameters,1)
                     tile.PARA.(parameters{i,1})=[];
                 end
                 
-                tile.PARA.comment.latitude = {'geographic coordinate, e.g. 70.956'};
-                tile.PARA.comment.longitude = {'geographic coordinate, e.g. -158.123'};
-                tile.PARA.comment.altitude = {'altitude [m]'};
+
                 tile.PARA.default_value.domain_depth = {100};
                 tile.PARA.comment.domain_depth = {'vertical depth of the model domain [m]'};
-                tile.PARA.default_value.area = {1};
-                tile.PARA.comment.area = {'area of the model domain [m2]'};
+
                 tile.PARA.default_value.forcing_class = {'FORCING_seb'};
                 tile.PARA.default_value.forcing_class_index = {1};
                 tile.PARA.default_value.grid_class = {'GRID_user_defined'};
@@ -685,7 +683,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
             elseif strcmp(option, 'new_init_steady_state')
                 tile.PARA.builder = [];
                 tile.PARA.default_value.builder = {'new_init_steady_state'};
-                parameters = {'latitude'; 'longitude'; 'altitude'; 'domain_depth'; 'area'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
+                parameters = {'domain_depth'; 'forcing_class'; 'forcing_class_index'; 'grid_class'; 'grid_class_index'; 'out_class'; ...
                     'out_class_index'; 'strat_classes_class'; 'strat_classes_class_index'; 'strat_statvar_class'; 'strat_statvar_class_index'; 'lateral_class'; ...
                     'lateral_class_index'; 'lateral_IA_classes'; 'lateral_IA_classes_index'; 'init_steady_state_class'; 'init_steady_state_class_index';...
                     'T_first_cell'; 'start_depth_steady_state'};
@@ -693,13 +691,9 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     tile.PARA.(parameters{i,1})=[];
                 end
                 
-                tile.PARA.comment.latitude = {'geographic coordinate, e.g. 70.956'};
-                tile.PARA.comment.longitude = {'geographic coordinate, e.g. -158.123'};
-                tile.PARA.comment.altitude = {'altitude [m]'};
                 tile.PARA.default_value.domain_depth = {100};
                 tile.PARA.comment.domain_depth = {'vertical depth of the model domain [m]'};
-                tile.PARA.default_value.area = {1};
-                tile.PARA.comment.area = {'area of the model domain [m2]'};
+
                 tile.PARA.default_value.forcing_class = {'FORCING_seb'};
                 tile.PARA.default_value.forcing_class_index = {1};
                 tile.PARA.default_value.grid_class = {'GRID_user_defined'};

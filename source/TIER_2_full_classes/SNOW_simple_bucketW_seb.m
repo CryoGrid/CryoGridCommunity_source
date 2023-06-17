@@ -25,7 +25,6 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow.PARA.tau_1 = []; % time constants for transient albedo
             snow.PARA.tau_a = [];
             snow.PARA.tau_f = [];
-            snow.PARA.SW_extinction = [];
             
             snow.PARA.epsilon = []; %surface emissivity [-]
             snow.PARA.z0 = []; %roughness length [m]
@@ -37,9 +36,6 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             
             snow.PARA.dt_max = []; %maximum possible timestep [sec]
             snow.PARA.dE_max = []; %maximum possible energy change per timestep [J/m3]
-            
-            snow.PARA.snow_property_function = [];
-            snow.PARA.conductivity_function = [];
         end
         
         function snow = provide_STATVAR(snow)
@@ -89,7 +85,6 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             
             snow.CONST.rho_w = []; % water density
             snow.CONST.rho_i = []; %ice density
-            snow.CONST.Tmfw = [];
         end
         
         function snow = finalize_init(snow, tile)
@@ -146,14 +141,6 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             snow.STATVAR.layerThick = 0.5 .* snow.PARA.swe_per_cell ./ (snow.PARA.density ./1000); %[m] constant layerThick during CHILD phase
             snow.STATVAR.ice = 0;
             snow.STATVAR.upperPos = snow.PARENT.STATVAR.upperPos;
-        end
-        
-        function [snow, S_up] = penetrate_SW(snow, S_down)  %mandatory function when used with class that features SW penetration
-            [snow, S_up] = penetrate_SW_transmission_bulk(snow, S_down);
-        end
-        
-        function [snow, L_up] = penetrate_LW(snow, L_down)
-            [snow, L_up] = penetrate_LW_no_transmission(snow, L_down);
         end
         
         function snow = get_boundary_condition_l(snow, tile)
@@ -265,24 +252,28 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
         
         %-----non-mandatory functions-------
         function snow = surface_energy_balance(snow, forcing)
-            Lin = forcing.TEMP.Lin .* snow.STATVAR.area(1);
-            Sin = forcing.TEMP.Sin .* snow.STATVAR.area(1); 
-            [snow, Lout] = penetrate_LW(snow, Lin);
-            [snow, Sout] = penetrate_SW(snow, Sin);
+            snow.STATVAR.Lout = (1-snow.PARA.epsilon) .* forcing.TEMP.Lin + snow.PARA.epsilon .* snow.CONST.sigma .* (snow.STATVAR.T(1)+ 273.15).^4;
+            snow.STATVAR.Sout = snow.STATVAR.albedo .*  forcing.TEMP.Sin;
             snow.STATVAR.Qh = Q_h(snow, forcing);
             snow.STATVAR.Qe = Q_eq_potET(snow, forcing);
             
-            snow.TEMP.F_ub = (- snow.STATVAR.Qh - snow.STATVAR.Qe) .* snow.STATVAR.area(1);
+            snow.TEMP.F_ub = (forcing.TEMP.Sin + forcing.TEMP.Lin - snow.STATVAR.Lout - snow.STATVAR.Sout - snow.STATVAR.Qh - snow.STATVAR.Qe) .* snow.STATVAR.area(1);
             snow.TEMP.d_energy(1) = snow.TEMP.d_energy(1) + snow.TEMP.F_ub;
         end
         
         function snow = conductivity(snow)
-            conductivity_function = str2func(snow.PARA.conductivity_function);
-            snow = conductivity_function(snow);
+            snow = conductivity_snow_Yen(snow);
         end
         
+        function yesNo = is_ground_surface(snow)
+            yesNo = 0;
+        end
         
         %-----LATERAL-------------------
+        
+        function gse = get_groundSurfaceElevation(ground)
+           gse = []; 
+        end
         
         %-----LAT_REMOVE_SURFACE_WATER-----
         function ground = lateral_push_remove_surfaceWater(ground, lateral)
@@ -335,7 +326,7 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
            snow = L_star@SEB(snow, forcing); 
         end
         
-        function [snow, S_up] = penetrate_SW_no_transmission(snow, S_down)
+         function [snow, S_up] = penetrate_SW_no_transmission(snow, S_down)
              [snow, S_up] = penetrate_SW_no_transmission@SEB(snow, S_down);
          end
         
@@ -375,20 +366,9 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
             [snow, regridded_yesNo] = regrid_snow@REGRID(snow, extensive_variables, intensive_variables, intensive_scaling_variable);
         end
         
-        function z0 = get_z0_surface(snow)
-            z0 = get_z0_surface@SNOW(snow);
-        end
-        
-        function albedo = get_albedo(snow)
-           albedo = snow.STATVAR.albedo;
-        end
-        
-        function Ts = get_surface_T(snow, tile)
-            Ts = snow.STATVAR.T(1);
-        end
         
         %-------------param file generation-----
-        function ground = param_file_info(ground)
+         function ground = param_file_info(ground)
              ground = param_file_info@BASE(ground);
              
              ground.PARA.class_category = 'SNOW';
@@ -432,7 +412,6 @@ classdef SNOW_simple_bucketW_seb < SEB & HEAT_CONDUCTION & WATER_FLUXES & WATER_
              ground.PARA.default_value.dE_max = {50000};
              ground.PARA.comment.dE_max = {'maximum possible energy change per timestep [J/m3]'};
         end
-        
     end
     
 end

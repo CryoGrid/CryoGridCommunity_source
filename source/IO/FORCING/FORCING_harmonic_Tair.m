@@ -59,11 +59,6 @@ classdef FORCING_harmonic_Tair < matlab.mixin.Copyable
             
         end
         
-        function forcing = initialize_excel(forcing)
-            
-        end
- 
-        
         function forcing = finalize_init(forcing, tile)
             % FINALIZE_INIT  Performs all additional property
             %   initializations and modifications. Checks for some (but not
@@ -83,7 +78,7 @@ classdef FORCING_harmonic_Tair < matlab.mixin.Copyable
 
             % handle period, if not specified
             if isempty(forcing.PARA.period) || isnan(forcing.PARA.period)
-                forcing.PARA.period = 365.242;
+                forcing.PARA.period = 365.242;  % days in year
             end
 
             %initialize TEMP
@@ -112,11 +107,6 @@ classdef FORCING_harmonic_Tair < matlab.mixin.Copyable
             forcing.TEMP.t = t;
         end
 
-        function xls_out = write_excel(forcing)
-			% XLS_OUT  Is a cell array corresponding to the class-specific content of the parameter excel file (refer to function write_controlsheet).
-			error('This function is not implemented/updated for this specific class')
-            xls_out = {'FORCING','index',NaN,NaN;'FORCING_seb',1,NaN,NaN;NaN,NaN,NaN,NaN;'filename',NaN,NaN,NaN;'start_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the first timestamp of the forcing data set will be used';'end_time',NaN,NaN,'provide in format dd.mm.yyyy; if left empty, the last timestamp of the forcing data set will be used';'rain_fraction',1,'[-]','rainfall in forcing file multiplied by this number';'snow_fraction',1,'[-]','snowfall in forcing file multiplied by this number';'latitude',NaN,'[degree]','geographical coordinates';'longitude',NaN,'[degree]',NaN;'altitude',NaN,'[m]','a.s.l.';'domain_depth',100,'[m]','should match a GRID point, model domain extends to this depth';'heatFlux_lb',0.0500000000000000,'[W/m2]','geothermal heat flux';'airT_height',2,'[m]','height of air temperature';'FORCING_END',NaN,NaN,NaN};
-        end
 
         function fig = plot(forcing)
             TT = timetable(datetime(forcing.DATA.timeForcing,'ConvertFrom','datenum'), ...
@@ -131,18 +121,6 @@ classdef FORCING_harmonic_Tair < matlab.mixin.Copyable
             %datetick('x','mm-yyyy');
         end
 
-    end
-
-    
-    methods(Static)
-        function value = lin_interp(t, posit, times, data)
-			% t       is the current time
-			% times   is the vector of times at which forcing data are available
-			% data    is the vector of forcing data (on parameter)
-			% posit   is an index into the time vector to the largest specified time step before current time 
-            value = data(posit,1) + (data(posit+1,1) - data(posit,1)).*(t-times(posit,1))./(times(2,1)-times(1,1));
-        end        
-    end
-    
+    end    
 
 end

@@ -152,9 +152,10 @@ classdef PROVIDER_EXCEL < BASE_PROVIDER
                         end
                         
                     end
-                    %mandatory function in all classes compatible with
-                    %PROVIDER_EXCEL - REMOVED!!! - no longer necessary
-                    %new_class = initialize_excel(new_class);
+                    
+                    %ADDED SW March 2023: each class has a PARA containing its index - normally has no effect, 
+                    %but makes it possible to search for the class in TILE when doing Ensemble runs and DA 
+                    new_class.PARA.class_index = class_index; 
                     
                     provider.CLASSES.(class_name){class_index,1} = new_class;
                     if strcmp(functional_group, 'RUN_INFO') && class_index == 1

@@ -1,38 +1,31 @@
 %========================================================================
-% CryoGrid FORCING class FORCING_seb
-% simple model forcing for GROUND classes computing the surface energy balance 
-% (keyword “seb”). The data must be stored in a Matlab “.mat” file which contains 
-% a struct FORCING with field “data”, which contain the time series of the actual 
-% forcing data, e.g. FORCING.data.Tair contains the time series of air temperatures. 
-% Have a look at the existing forcing files in the folder “forcing” and prepare 
-% new forcing files in the same way. The mandatory forcing variables are air temperature 
-% (Tair, in degree Celsius), incoming long-wave radiation (Lin, in W/m2), 
-% incoming short-.wave radiation (Sin, in W/m2), absolute humidity (q, in 
-% kg water vapor / kg air), wind speed (wind, in m/sec), rainfall (rainfall, in mm/day), 
-% snowfall (snowfall, in mm/day) and timestamp (t_span, 
-% in Matlab time / increment 1 corresponds to one day). 
-% IMPORTANT POINT: the time series must be equally spaced in time, and this must be 
-% really exact. When reading the timestamps from an existing data set (e.g. an Excel file),
-% rounding errors can result in small differences in the forcing timestep, often less 
-% than a second off. In this case, it is better to manually compile a new, equally spaced 
-% timestep in Matlab.
-% S. Westermann, T. Ingeman-Nielsen, J. Scheer, October 2020
+% CryoGrid FORCING class FORCING_ubT_mat
+%
+% simple model forcing for GROUND classes depending only on an upper
+% boundary temperature (T_ub) forcing.
+%
+% The data is obtained using the READ_FORCING_mat class. See this class for
+% instructions about mat-file data format.
+%
+% The mandatory forcing variables are:
+%
+% T_ub:        Upper boundary temperature (in degree Celsius)
+%
+% One array of timestamps must be provided (t_stamp, in Matlab time / 
+% increment 1 corresponds to one day). 
+%
+% IMPORTANT POINT: the time series must be equally spaced in time, and this 
+% must be really exact. When reading the timestamps from an existing data 
+% set (e.g. an Excel file), rounding errors can result in small differences 
+% in the forcing timestep, often less than a second off. In this case, it 
+% is better to manually compile a new, equally spaced timestep in Matlab.
+%
+% T. Ingeman-Nielsen, October 2022
 %========================================================================
 
-classdef FORCING_ubT < matlab.mixin.Copyable
-    
-    properties
-        forcing_index
-        DATA            % forcing data time series
-        TEMP            % forcing data interpolated to a timestep
-        PARA            % parameters
-        STATUS         
-        CONST
-    end
-    
-    
-    methods
+classdef FORCING_ubT < FORCING_base & READ_FORCING_mat
         
+    methods
         
         function forcing = provide_PARA(forcing)         
 
@@ -55,37 +48,18 @@ classdef FORCING_ubT < matlab.mixin.Copyable
         
         function forcing = finalize_init(forcing, tile)
           
-            %temp=load(['forcing/' forcing.PARA.filename], 'FORCING');
-            temp=load([forcing.PARA.forcing_path forcing.PARA.filename], 'FORCING');
+            variables = {'T_ub'};
+            [data, times] = read_mat([forcing.PARA.forcing_path forcing.PARA.filename], variables);
             
-            forcing.DATA.T_ub = temp.FORCING.data.T_ub;
-            forcing.DATA.snow_depth = temp.FORCING.data.snow_depth;
-            forcing.DATA.timeForcing = temp.FORCING.data.t_span;
-            
-
-            
-            if std(forcing.DATA.timeForcing(2:end,1)-forcing.DATA.timeForcing(1:end-1,1)) >= 1e-10 %~=0
-                disp('timestamp of forcing data is not in regular intervals -> check, fix and restart')
-                forcing.STATUS=0;
-                return
-            else
-                forcing.STATUS=1;
+            for i=1:size(variables,1)
+                if isfield(data, variables{i,1})
+                    forcing.DATA.(variables{i,1}) = data.(variables{i,1});
+                end
             end
 
-            if isempty(forcing.PARA.start_time) || isnan(forcing.PARA.start_time(1,1)) %|| ~ischar(forcing.PARA.start_time)
-                forcing.PARA.start_time = forcing.DATA.timeForcing(1,1);
-            else
-                %forcing.PARA.start_time = datenum(forcing.PARA.start_time, 'dd.mm.yyyy');
-                forcing.PARA.start_time = datenum(forcing.PARA.start_time(1,1), forcing.PARA.start_time(2,1), forcing.PARA.start_time(3,1));
-            end
-             
-            if isempty(forcing.PARA.end_time) || isnan(forcing.PARA.end_time(1,1)) %~ischar(forcing.PARA.end_time)
-                forcing.PARA.end_time = floor(forcing.DATA.timeForcing(end,1));
-            else
-                %forcing.PARA.end_time = datenum(forcing.PARA.end_time, 'dd.mm.yyyy');
-                forcing.PARA.end_time = datenum(forcing.PARA.end_time(1,1), forcing.PARA.end_time(2,1),forcing.PARA.end_time(3,1));
-            end
-            
+            forcing = check_and_correct(forcing); % Remove known errors
+            forcing = set_start_and_end_time(forcing); % assign start/end time
+           
             %initialize TEMP
             forcing.TEMP.T_ub=0;
             forcing.TEMP.snow_depth=0;
@@ -93,21 +67,11 @@ classdef FORCING_ubT < matlab.mixin.Copyable
         end
         
         function forcing = interpolate_forcing(forcing, tile)
-            t = tile.t;
-
-            posit=floor((t-forcing.DATA.timeForcing(1,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1)))+1;
-            
-            forcing.TEMP.snow_depth=forcing.DATA.snow_depth(posit,1)+(forcing.DATA.snow_depth(posit+1,1)-forcing.DATA.snow_depth(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
-            
-            forcing.TEMP.T_ub=forcing.DATA.T_ub(posit,1)+(forcing.DATA.T_ub(posit+1,1)-forcing.DATA.T_ub(posit,1)).*(t-forcing.DATA.timeForcing(posit,1))./(forcing.DATA.timeForcing(2,1)-forcing.DATA.timeForcing(1,1));
-            
-            forcing.TEMP.T_ub = double(forcing.TEMP.snow_depth == 0 || forcing.TEMP.T_ub <0 ) .* forcing.TEMP.T_ub;
-            
-            forcing.TEMP.t = t;
+            forcing = interpolate_forcing@FORCING_base(forcing, tile);
         end
         
 
-                %-------------param file generation-----
+        %-------------param file generation-----
         function forcing = param_file_info(forcing)
             forcing = provide_PARA(forcing);
 

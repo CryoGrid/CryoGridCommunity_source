@@ -14,6 +14,7 @@ classdef BASE_PROVIDER
             provider = check_PARA_CONST(provider);
             run_info = copy(provider.RUN_INFO_CLASS);
             run_info.PPROVIDER = provider;
+            run_info = finalize_init(run_info);
         end
 
         %check if all PARA and CONST are assigned; generic function used,

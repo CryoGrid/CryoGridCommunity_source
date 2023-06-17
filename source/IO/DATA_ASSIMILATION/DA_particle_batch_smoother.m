@@ -43,7 +43,7 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
                 da.STATVAR.observations{i,1} = temp.OBS.observations;
                 da.STATVAR.obs_variance{i,1} = temp.OBS.obs_variance;
                 da.STATVAR.modeled_obs{i,1} = da.STATVAR.observations{i,1}.*NaN;
-                da.ENSEMBLE.weights = repmat(1./da.TILE.RUN_INFO.PARA.number_of_tiles, 1, da.TILE.RUN_INFO.PARA.number_of_tiles); %set equal weights before 1st DA step
+                da.ENSEMBLE.weights = repmat(1./da.TILE.PARA.ensemble_size, 1, da.TILE.PARA.ensemble_size); %set equal weights before 1st DA step
                 
                 da.OBS_OP{i,1} = copy(tile.RUN_INFO.PPROVIDER.CLASSES.(da.PARA.observable_classes{i,1}){da.PARA.observable_classes_index(i,1)});     
                 da.TEMP.first_obs_index = [da.TEMP.first_obs_index; find(da.STATVAR.obs_time{i,1} > tile.t, 1)];
@@ -73,6 +73,7 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
                 for i=1:size(da.STATVAR.obs_time,1)
                     if tile.t>= da.TEMP.time_next_obs(i,1)
                         da.STATVAR.modeled_obs{i,1}(da.TEMP.index_next_obs(i,1),1) = observable_operator(da.OBS_OP{i,1}, tile);
+                        disp(da.STATVAR.modeled_obs{i,1}(da.TEMP.index_next_obs(i,1),1) )
                         if da.TEMP.index_next_obs(i,1) < size(da.STATVAR.observations{i,1}, 1) %end of observations reached
                             da.TEMP.index_next_obs(i,1) = da.TEMP.index_next_obs(i,1) + 1;
                             da.TEMP.time_next_obs(i,1) = da.STATVAR.obs_time{i,1}(da.TEMP.index_next_obs(i,1),1);
@@ -97,29 +98,27 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
                     modeled_obs = [modeled_obs; da.STATVAR.modeled_obs{i,1}(da.TEMP.first_obs_index(i,1):da.TEMP.index_next_obs(i,1)-1,1)];  %ONLY USE THE PART IN THE OBS INTERVAL, ALSO MAKE A SIMILAR VECTOR FOR OBSERVATIONS AND VARIANCES
                 end
                 data_package = pack(da, data_package, 'modeled_obs', modeled_obs);
-                da.ENSEMBLE.modeled_obs = repmat(modeled_obs, 1, da.TILE.RUN_INFO.PARA.number_of_tiles) .* NaN;
-                da.ENSEMBLE.modeled_obs(:, da.TILE.RUN_INFO.PARA.worker_number) = modeled_obs;
+                da.ENSEMBLE.modeled_obs = repmat(modeled_obs, 1, da.TILE.PARA.ensemble_size) .* NaN;
+                da.ENSEMBLE.modeled_obs(:, da.TILE.PARA.worker_number) = modeled_obs;
                 
                 ensemble_param = []; %gather ensemble parameters in one vector
-                for i=1:size(da.TILE.ENSEMBLE, 1)
-                    variables = fieldnames(da.TILE.ENSEMBLE{i,1}.STATVAR);
-                    for j=1:size(variables,1)
-                        ensemble_param = [ensemble_param; da.TILE.ENSEMBLE{i,1}.STATVAR.(variables{j,1})];
-                    end
+                variables = fieldnames(da.TILE.ENSEMBLE.STATVAR);
+                for j=1:size(variables,1)
+                    ensemble_param = [ensemble_param; da.TILE.ENSEMBLE.STATVAR.(variables{j,1})];
                 end
                 data_package = pack(da, data_package, 'ensemble_param', ensemble_param);
-                da.ENSEMBLE.ensemble_param = repmat(ensemble_param, 1, da.TILE.RUN_INFO.PARA.number_of_tiles) .* NaN;
-                da.ENSEMBLE.ensemble_param(:, da.TILE.RUN_INFO.PARA.worker_number) = ensemble_param;
+                da.ENSEMBLE.ensemble_param = repmat(ensemble_param, 1, da.TILE.PARA.ensemble_size) .* NaN;
+                da.ENSEMBLE.ensemble_param(:, da.TILE.PARA.worker_number) = ensemble_param;
                 
                 %send
-                for i = 1:da.TILE.RUN_INFO.PARA.number_of_tiles
-                    if i~=da.TILE.RUN_INFO.PARA.worker_number
+                for i = 1:da.TILE.PARA.ensemble_size
+                    if i~=da.TILE.PARA.worker_number
                         labSend(data_package, i, 1);
                     end
                 end
                 
-                for i = 1:da.TILE.RUN_INFO.PARA.number_of_tiles
-                    if i~=da.TILE.RUN_INFO.PARA.worker_number
+                for i = 1:da.TILE.PARA.ensemble_size
+                    if i~=da.TILE.PARA.worker_number
                         data_package_in = labReceive(i, 1);
                         if ~isempty(data_package_in)
                             da = unpack(da, data_package_in, i); %read received column vector and transform into ENSEMBLE
@@ -131,17 +130,29 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
                 da = PBS(da);
                 
                 
-%                 if da.TILE.RUN_INFO.PARA.worker_number==1
-%                     da.ENSEMBLE.weights
-%                 end
+                if da.TILE.PARA.worker_number==1
+                    save('test.mat', 'da')
+                end
+                
+                %at this point the weights are known 
+                %1. determine effective sample size
+                %2. if effective sample size > threshold, save the
+                %surviving ensemble members, read them into the ones w.o.
+                %weight and then recompute ensemble parameters according to
+                %defined protocol (learning or non-learning)
+                %3. if effective ensemble size < threshold, do not save
+                %new, but reset timestamps, again read the surviving
+                %ensemble members from the last round, and recompute the
+                %ensemble parameters based on the weights of the surviving ensemble members 
+                
                 %resampling from weights
                 rng(tile.t+25) %use current time as seed for randum number generator, i.e. same sequence of random numbers will be generated by each worker
                 [weights_sorted, posi] = sort(da.ENSEMBLE.weights);
                 weights_sorted_cum = cumsum(weights_sorted);
                 weights_sorted_cum = [0 weights_sorted_cum(1, 1:end-1)];
-                resample_posi=sum(double(repmat(rand(da.TILE.RUN_INFO.PARA.number_of_tiles,1),1,da.TILE.RUN_INFO.PARA.number_of_tiles) > repmat(weights_sorted_cum, da.TILE.RUN_INFO.PARA.number_of_tiles,1)),2);
+                resample_posi=sum(double(repmat(rand(da.TILE.PARA.ensemble_size,1),1,da.TILE.PARA.ensemble_size) > repmat(weights_sorted_cum, da.TILE.PARA.ensemble_size,1)),2);
                 get_from_new_worker = [];
-                for i=1:da.TILE.RUN_INFO.PARA.number_of_tiles
+                for i=1:da.TILE.PARA.ensemble_size
                     get_from_new_worker=[get_from_new_worker; posi(resample_posi(i))];
                 end
                 
@@ -149,7 +160,7 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
                 
                 %save the stratigraphy vector and all the other TILE info
                 %in file
-                if sum(get_from_new_worker==da.TILE.RUN_INFO.PARA.worker_number)>0
+                if sum(get_from_new_worker==da.TILE.PARA.worker_number)>0
                     state = copy(tile);
                     variables = fieldnames(state);
                     for i=1:size(variables,1)
@@ -158,7 +169,7 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
                         end
                     end
 
-                    save([tile.PARA.result_path 'tile_' num2str(da.TILE.RUN_INFO.PARA.worker_number) '.mat'], 'state');
+                    save([tile.PARA.result_path 'tile_' num2str(da.TILE.PARA.worker_number) '.mat'], 'state');
                     
                 end
                 labBarrier;
@@ -166,25 +177,21 @@ classdef DA_particle_batch_smoother < matlab.mixin.Copyable
 
                 
                 %read the new stratigraphy and info from file
-                temp=load([tile.PARA.result_path 'tile_' num2str(get_from_new_worker(da.TILE.RUN_INFO.PARA.worker_number,1)) '.mat']);
+                temp=load([tile.PARA.result_path 'tile_' num2str(get_from_new_worker(da.TILE.PARA.worker_number,1)) '.mat']);
                 variables = fieldnames(temp.state);
                 for i=1:size(variables,1)
                     if ~isempty(temp.state.(variables{i,1}))
-                    %if strcmp(variables{i,1}, 'LATERAL') || strcmp(variables{i,1}, 'TOP') || strcmp(variables{i,1}, 'BOTTOM') || strcmp(variables{i,1}, 'TOP_CLASS') || strcmp(variables{i,1}, 'BOTTOM_CLASS')
                         tile.(variables{i,1}) = temp.state.(variables{i,1});
-                    %end
                     end
                 end
                 
                 labBarrier;
-                if sum(get_from_new_worker==da.TILE.RUN_INFO.PARA.worker_number)>0
-                    delete([tile.PARA.result_path 'tile_' num2str(da.TILE.RUN_INFO.PARA.worker_number) '.mat']);
+                if sum(get_from_new_worker==da.TILE.PARA.worker_number)>0
+                    delete([tile.PARA.result_path 'tile_' num2str(da.TILE.PARA.worker_number) '.mat']);
                 end
                 
-                %
-                for i=1:size(da.TILE.ENSEMBLE,1)
-                    da.TILE.ENSEMBLE{i,1} = finalize_init(da.TILE.ENSEMBLE{i,1}, da.TILE);
-                end
+                da.TILE.ENSEMBLE = recalculate_ensemble_parameters_after_DA(da.TILE.ENSEMBLE, tile)
+%                 da.TILE.ENSEMBLE = finalize_init(da.TILE.ENSEMBLE, da.TILE);
                 
                 %assign next DA_STEP_TIME
                 if strcmp(da.PARA.assimilation_frequency, 'year')

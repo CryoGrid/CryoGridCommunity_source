@@ -1,12 +1,10 @@
 %========================================================================
-% CryoGrid OUT class OUT_all
-% CryoGrid OUT class defining storage format of the output 
-% OUT_all stores identical copies of all GROUND classses (including STATVAR, TEMP, PARA) in the
-% stratigraphy for each output timestep, while lateral classes are not stored.
-% The user can specify the save date and the save interval (e.g. yearly
-% files), as well as the output timestep (e.g. 6 hourly). The output files
-% are in Matlab (".mat") format.
+% CryoGrid OUT class OUT_TwaterIce defining model output and storage 
+% OUT_TwaterIce interpolates the desired output variables to a fixed 
+% vertical grid. The output files are in Matlab (".mat") format.
+%
 % S. Westermann, T. Ingeman-Nielsen, J. Scheer, June 2021
+% S. Westermann, Oct 2022
 %========================================================================
 
 
@@ -27,9 +25,7 @@ classdef OUT_TwaterIce < matlab.mixin.Copyable
     
     
     methods
-        
-        %initialization
-        
+                
         function out = provide_PARA(out)         
 
             out.PARA.variables = [];
@@ -75,6 +71,10 @@ classdef OUT_TwaterIce < matlab.mixin.Copyable
                 out.SAVE_TIME = forcing.PARA.end_time;
             else
                 out.SAVE_TIME = min(forcing.PARA.end_time,  datenum([out.PARA.save_date num2str(str2num(datestr(forcing.PARA.start_time,'yyyy')) + out.PARA.save_interval)], 'dd.mm.yyyy'));
+            end
+            
+            if ~isempty(out.PARA.tag) && ~all(isnan(out.PARA.tag)) && isnumeric(out.PARA.tag)
+                out.PARA.tag = num2str(out.PARA.tag);
             end
                         
         end

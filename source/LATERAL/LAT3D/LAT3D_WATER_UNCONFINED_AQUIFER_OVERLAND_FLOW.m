@@ -49,7 +49,7 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
             lateral.PARENT.STATVAR.T_water = [];
             lateral.PARENT.STATVAR.water_table_top_cell = 0;      
             lateral.PARENT.STATVAR.water_depth = 0; %depth of the free water at the surface flowing according to Gauckler-Manning 
-            lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
+         %   lateral.PARENT.STATVAR.ground_surface_elevation = []; %NEW SEBASTIAN for hillslope flow between grid cells
 
             lateral.TEMP.open_system = 1; %start with open system
 
@@ -291,3 +291,5 @@ classdef LAT3D_WATER_UNCONFINED_AQUIFER_OVERLAND_FLOW < BASE_LATERAL
     end
     
 end
+
+

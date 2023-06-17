@@ -8,12 +8,13 @@ classdef Top  < matlab.mixin.Copyable
 
     properties
         NEXT
+        IA_NEXT
         STORE
         LATERAL
-        FORCING
-        TIME
-        RUN_NUMBER
-        RESULT_PATH
+%         FORCING
+%         TIME
+%         RUN_NUMBER
+%         RESULT_PATH
     end
     
     methods
