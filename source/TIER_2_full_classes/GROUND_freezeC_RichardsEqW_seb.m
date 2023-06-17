@@ -18,6 +18,7 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground.PARA.albedo = [];  %surface albedo [-]
             ground.PARA.epsilon = []; % surface emissivity [-]
             ground.PARA.z0 = []; % roughness length [m] 
+
 %             ground.PARA.permeability = [];  %permeability for fluids/gases [m2]
 
             ground.PARA.conductivity_function = [];
@@ -173,10 +174,6 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
         
         function [ground, S_up] = penetrate_SW(ground, S_down)  %mandatory function when used with class that features SW penetration
             [ground, S_up] = penetrate_SW_no_transmission(ground, S_down);
-        end  
-        
-        function [ground, L_up] = penetrate_LW(ground, L_down)  %mandatory function when used with class that features SW penetration
-            [ground, L_up] = penetrate_LW_no_transmission(ground, L_down);
         end
         
         function [ground, S_up] = penetrate_SW_PARENT(ground, S_down)  %mandatory function when used with class that features SW penetration
@@ -288,14 +285,6 @@ classdef GROUND_freezeC_RichardsEqW_seb < SEB & HEAT_CONDUCTION & FREEZE_CURVE_K
             ground = conductivity_function(ground);
             %ground = thermalConductivity_CLM4_5(ground);
             %ground = conductivity_mixing_squares(ground);
-        end
-                
-        function albedo = get_albedo(ground)
-            albedo = ground.PARA.albedo;
-        end
-        
-        function Tg = get_surface_T(ground, tile)
-            Tg = ground.STATVAR.T(1);
         end
         
         function z0 = get_z0_surface(ground)

@@ -596,7 +596,8 @@ classdef WATER_FLUXES_LATERAL < BASE
             ground.STATVAR.energy = ground.STATVAR.energy - fluxes .* inflow_temperature .* ...
                 (ground.CONST.c_w .* double(inflow_temperature>=0) + ground.CONST.c_i .* double(inflow_temperature<0));
         end
-               
+        
+        
         function ground = lateral_push_water_reservoir_RichardsEq_Xice2(ground, lateral)
             depths = ground.STATVAR.upperPos - cumsum(ground.STATVAR.layerThick) + ground.STATVAR.layerThick./2; %midpoints!
             saturation = (ground.STATVAR.waterIce + ground.STATVAR.mineral + ground.STATVAR.organic) ./ (ground.STATVAR.layerThick .* ground.STATVAR.area - ground.STATVAR.XwaterIce);
@@ -1799,3 +1800,4 @@ classdef WATER_FLUXES_LATERAL < BASE
         
     end
 end
+

@@ -93,6 +93,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
 
         end
         
+
         %assemble the stratigraphy
         function tile = finalize_init(tile)
             
@@ -104,6 +105,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
 
         end
         
+
         function tile = interpolate_forcing_tile(tile)
              tile.FORCING = interpolate_forcing(tile.FORCING, tile);
         end
@@ -115,6 +117,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
         function tile = store_OUT_tile(tile)
             tile.OUT = store_OUT(tile.OUT, tile);
         end        
+        
         
         
         function tile = run_model(tile)
@@ -160,7 +163,7 @@ classdef TILE_1D_standard < matlab.mixin.Copyable
                     tile.timestep = min(tile.timestep, get_timestep(CURRENT, tile));
                     CURRENT = CURRENT.NEXT;
                 end
-                tile.next_break_time = min(tile.LATERAL.IA_TIME, min(tile.OUT.OUTPUT_TIME, tile.OUT.SAVE_TIME));
+                tile.next_break_time = min(tile.LATERAL.IA_TIME, tile.OUT.OUTPUT_TIME);
                 tile.timestep = min(tile.timestep, (tile.next_break_time - tile.t).*tile.CONST.day_sec);
                 
                 %prognostic step - integrate prognostic variables in time

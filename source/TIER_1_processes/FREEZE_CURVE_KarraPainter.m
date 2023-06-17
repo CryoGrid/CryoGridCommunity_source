@@ -149,13 +149,13 @@ classdef FREEZE_CURVE_KarraPainter < BASE
                 ground.STATVAR.T(~linear_range) = T_nonlinear;
                 
             end
-
+            
             ground.STATVAR.water(ground.STATVAR.water > waterIce) = waterIce(ground.STATVAR.water > waterIce); %elminates small rounding errors and avoids negative ice contents
             
             ground.STATVAR.water = ground.STATVAR.water .* ground.STATVAR.layerThick .* ground.STATVAR.area;
-
-            ground.STATVAR.ice = max(0,ground.STATVAR.waterIce - ground.STATVAR.water);
-
+            %ground.STATVAR.ice = ground.STATVAR.waterIce - ground.STATVAR.water;
+            ground.STATVAR.ice = max(0, ground.STATVAR.waterIce - ground.STATVAR.water);
+                        
             
 %             for i=1:size(T_prime,1)
 %                 LUT_E_prime = ground.LUT.lut_E_prime((soil_type(i,1)-1).*LUT_size_T +(1:LUT_size_T),:);
