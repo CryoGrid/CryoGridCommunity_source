@@ -6,7 +6,7 @@ This is the community version of *CryoGrid*, a numerical model to investigate la
 
 ## Documentation
 
-A manuscript "The CryoGrid community model - a multi-physics toolbox for climate-driven simulations in the terrestrial cryosphere" has been submitted to the journal  Geoscientific Model Development which contains a description of the model and instructions to run it (Supplements 1, 3).
+The paper ["The CryoGrid community model - a multi-physics toolbox for climate-driven simulations in the terrestrial cryosphere"](https://doi.org/10.5194/gmd-16-2607-2023) in published in Geoscientific Model Development and contains a description of the model and instructions to run it (Supplements 1, 3). 
 
 ## Getting started
 
@@ -14,3 +14,6 @@ Both [CryoGridCommunity_source](https://github.com/CryoGrid/CryoGridCommunity_so
 An instruction video on downloading the CryoGrid community model and running simple simulations is available here: https://www.youtube.com/watch?v=L1GIurc5_J4&t=372s
 The parameter files and model forcing data for the simple simulations from the video can be downloaded here: http://files.artek.byg.dtu.dk/files/cryogrid/CryoGridExamples/CryoGrid_simpleExamples.zip 
 
+## Get involved
+
+There is an [email group](https://groups.google.com/g/cryogrid) for news, (high-level) discussions and invitation to the annual hackathon, as well as a [slack](https://join.slack.com/t/cryogrid/shared_invite/zt-2487oq3o5-ghOQCw2rLimIk13xft27ZQ) for debugging, (low-level) discussions, community building and other things CryoGrid-related!
